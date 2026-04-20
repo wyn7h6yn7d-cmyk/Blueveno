@@ -1,0 +1,12 @@
+export { Navbar } from "./Navbar";
+export { Hero } from "./Hero";
+export { TrustBar } from "./TrustBar";
+export { Outcomes } from "./Outcomes";
+export { FeatureGrid } from "./FeatureGrid";
+export { DeepDives } from "./DeepDives";
+export { Workflow } from "./Workflow";
+export { TraderTypes } from "./TraderTypes";
+export { Testimonials } from "./Testimonials";
+export { Faq } from "./Faq";
+export { FinalCta } from "./FinalCta";
+export { Footer } from "./Footer";
