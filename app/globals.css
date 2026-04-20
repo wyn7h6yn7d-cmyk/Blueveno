@@ -215,6 +215,30 @@ body {
     radial-gradient(ellipse 88% 48% at 50% 100%, oklch(0.26 0.08 262 / 0.11), transparent 55%);
 }
 
+/** Hero precision — cold slab, minimal bloom; no foggy multi-blob stack */
+.bg-hero-precision-field {
+  background:
+    radial-gradient(ellipse 70% 42% at 50% -8%, oklch(0.14 0.05 252 / 0.22), transparent 62%),
+    linear-gradient(180deg, oklch(0.078 0.034 266) 0%, oklch(0.052 0.038 268) 100%);
+}
+
+/** Sharper fine grid for product mocks (higher-contrast hairlines) */
+.bg-grid-fine-sharp {
+  --grid-fine: oklch(0.62 0.05 252 / 0.09);
+  background-image:
+    linear-gradient(to right, var(--grid-fine) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-fine) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/** Hero mock frame — crisp edge, controlled depth, no cobalt bloom spam */
+.shadow-hero-mock {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.11),
+    0 24px 56px -28px oklch(0 0 0 / 0.82),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.07);
+}
+
 /** Alternating marketing bands — lifted navy slab vs void */
 .bg-marketing-band {
   background: linear-gradient(
