@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 
 /** Matches `bv-void` / cinematic dark shell — browser chrome & splash tint */
 export const viewport: Viewport = {
-  themeColor: "#070a12",
+  themeColor: "#050a14",
 };
 
 export default function RootLayout({

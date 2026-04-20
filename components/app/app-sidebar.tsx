@@ -45,14 +45,14 @@ export function AppSidebarNav({ onNavigate, className }: AppSidebarNavProps) {
             className={cn(
               "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
               active
-                ? "bg-[oklch(0.45_0.1_250/0.15)] text-zinc-50 shadow-[inset_0_0_0_1px_oklch(0.55_0.14_250/0.25)]"
+                ? "bg-primary/15 text-zinc-50 shadow-[inset_0_0_0_1px_oklch(0.52_0.12_252/0.25)]"
                 : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-100",
             )}
           >
             <item.icon
               className={cn(
                 "size-4 shrink-0 transition-opacity",
-                active ? "text-[oklch(0.78_0.12_250)]" : "text-zinc-500 group-hover:text-zinc-300",
+                active ? "text-primary/90" : "text-zinc-500 group-hover:text-zinc-300",
               )}
               strokeWidth={1.75}
             />

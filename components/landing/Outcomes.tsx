@@ -1,57 +1,66 @@
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
+import { marketingCtas } from "@/lib/marketing-ctas";
 
 const outcomes = [
   {
-    title: "Patterns emerge before they dominate P&L",
-    body: "Execution history holds what narrative forgets. Blueveno connects behavior to outcome—so you see recurrence before it becomes expensive.",
+    title: "See failure modes early",
+    body: "Behavior linked to outcome—before P&L makes it loud.",
     metric: "Earlier",
-    metricLabel: "visibility into repeat failure modes",
+    hint: "Repeat patterns",
+    bars: [40, 55, 48, 62, 58, 70],
   },
   {
-    title: "Edge separates from variance",
-    body: "Tagging and slicing show what holds across conditions—so skill and luck stop sharing the same label.",
+    title: "Split edge from noise",
+    body: "Tagging and slices show what holds across conditions.",
     metric: "Sharper",
-    metricLabel: "attribution across setups and regimes",
+    hint: "Setup × regime",
+    bars: [35, 42, 50, 45, 60, 52],
   },
   {
-    title: "Discipline becomes legible",
-    body: "Rules and guardrails sit next to performance—so discretion is visible when it drifts, not when the statement arrives.",
+    title: "Make discipline visible",
+    body: "Rules beside performance—drift shows in the frame.",
     metric: "Measured",
-    metricLabel: "alignment between plan and prints",
+    hint: "Plan vs prints",
+    bars: [52, 48, 55, 50, 58, 65],
   },
 ];
 
 export function Outcomes() {
   return (
-    <Section id="outcomes" className="py-28 lg:py-36">
-      <Reveal>
-        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.68_0.12_250)]">
-          Outcomes
-        </p>
-        <h2 className="font-display mt-5 max-w-3xl text-3xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-4xl lg:text-[2.7rem] lg:leading-[1.1]">
-          Performance is built through review—not through louder intentions.
-        </h2>
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-          Traders need truth, not hope. Blueveno is where raw data becomes clarity: what occurred,
-          what it implies, and what you enforce next.
-        </p>
-      </Reveal>
+    <Section id="outcomes" className="bg-marketing-band py-28 lg:py-36">
+      <div className="mx-auto max-w-4xl text-center">
+        <Reveal>
+          <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">Outcomes</p>
+          <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+            When the tape is the judge, intent stops mattering.
+          </h2>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-500 sm:text-[17px]">
+            Behavior, rules, and P&amp;L on one surface—so you see drift before the month does.
+          </p>
+        </Reveal>
+      </div>
 
-      <div className="mt-20 grid gap-6 lg:grid-cols-3">
+      <div className="mt-20 grid gap-6 lg:grid-cols-3 lg:gap-7">
         {outcomes.map((o, i) => (
-          <Reveal key={o.title} delay={0.06 * i}>
-            <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.105_0.028_265)] p-8 shadow-bv-card transition duration-300 hover:border-[oklch(0.55_0.12_250/0.28)]">
-              <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-[oklch(0.45_0.12_250/0.09)] blur-3xl transition group-hover:bg-[oklch(0.5_0.14_250/0.14)]" />
-              <h3 className="font-display relative text-lg font-medium leading-snug tracking-tight text-zinc-100">
+          <Reveal key={o.title} delay={0.05 * i}>
+            <div className="group flex h-full flex-col rounded-2xl border border-border/80 bg-bv-surface/95 p-7 shadow-bv-card transition hover:border-primary/22 sm:p-8">
+              <h3 className="font-display text-[1.125rem] font-medium leading-snug tracking-tight text-zinc-100">
                 {o.title}
               </h3>
-              <p className="relative mt-4 flex-1 text-sm leading-relaxed text-zinc-400">{o.body}</p>
-              <div className="relative mt-10 border-t border-white/[0.07] pt-8">
-                <p className="font-display text-3xl tracking-tight text-zinc-50">{o.metric}</p>
-                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  {o.metricLabel}
-                </p>
+              <p className="mt-3.5 text-[13px] leading-relaxed text-zinc-500">{o.body}</p>
+              <div className="mt-7 flex h-11 items-end gap-0.5 rounded-lg border border-border/50 bg-black/35 px-2 py-2">
+                {o.bars.map((h, j) => (
+                  <div
+                    key={j}
+                    className="flex-1 rounded-sm bg-gradient-to-t from-bv-blue-deep to-primary"
+                    style={{ height: `${h}%` }}
+                  />
+                ))}
+              </div>
+              <div className="mt-9 border-t border-border/60 pt-7">
+                <p className="font-display text-[2rem] tracking-tight text-zinc-50">{o.metric}</p>
+                <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">{o.hint}</p>
               </div>
             </div>
           </Reveal>
@@ -60,13 +69,10 @@ export function Outcomes() {
 
       <Reveal className="mt-16 text-center">
         <a
-          href="#cta"
-          className="group inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-[oklch(0.74_0.12_250)] transition hover:text-[oklch(0.85_0.08_250)]"
+          href={marketingCtas.outcomes.loop.href}
+          className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary/80 hover:text-primary"
         >
-          Request access
-          <span aria-hidden className="transition duration-300 group-hover:translate-x-0.5">
-            →
-          </span>
+          {marketingCtas.outcomes.loop.label} →
         </a>
       </Reveal>
     </Section>

@@ -37,13 +37,13 @@ function GoogleGlyph({ className }: { className?: string }) {
 
 export function SocialAuthPlaceholder() {
   return (
-    <div className="mt-8">
+    <div className="mt-9">
       <div className="relative">
         <div className="absolute inset-0 flex items-center" aria-hidden>
           <div className="w-full border-t border-white/[0.08]" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-[oklch(0.14_0.022_262)] px-3 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
+          <span className="bg-bv-surface/90 px-3 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
             Or continue with
           </span>
         </div>
@@ -56,7 +56,7 @@ export function SocialAuthPlaceholder() {
           aria-disabled="true"
           aria-label="Google sign-in (coming soon)"
           title="Coming soon"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400 opacity-60 shadow-none backdrop-blur-sm"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-[0.65rem] border border-white/[0.08] bg-white/[0.03] font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400 opacity-60 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-sm"
         >
           <GoogleGlyph className="size-4 text-zinc-300" />
           Google
@@ -67,7 +67,7 @@ export function SocialAuthPlaceholder() {
           aria-disabled="true"
           aria-label="GitHub sign-in (coming soon)"
           title="Coming soon"
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400 opacity-60 backdrop-blur-sm"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-[0.65rem] border border-white/[0.08] bg-white/[0.03] font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400 opacity-60 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-sm"
         >
           <GithubGlyph className="size-4 text-zinc-300" />
           GitHub
@@ -75,8 +75,7 @@ export function SocialAuthPlaceholder() {
       </div>
 
       <p className="mt-3 text-center text-[10px] leading-relaxed text-zinc-600">
-        Single sign-on and OAuth will be available here in a future release. Email sign-in is the
-        default for now.
+        SSO and OAuth are planned for a later release. Email remains the default path.
       </p>
     </div>
   );

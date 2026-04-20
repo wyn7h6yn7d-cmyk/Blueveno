@@ -24,13 +24,13 @@ export function DashboardCard({
   return (
     <section
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl border border-white/[0.07] bg-[oklch(0.12_0.025_265/0.85)] shadow-bv-card backdrop-blur-sm",
+        "flex flex-col overflow-hidden rounded-xl border border-border/90 bg-bv-surface/95 shadow-bv-card",
         variant === "inset" && "bg-bv-surface-inset/80",
         className,
       )}
     >
       {(eyebrow || title || description) && (
-        <header className="border-b border-white/[0.06] px-4 py-3 sm:px-5">
+        <header className="border-b border-border/80 px-4 py-3 sm:px-5">
           <div className="flex flex-col gap-1">
             {eyebrow ? (
               <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">{eyebrow}</p>
@@ -44,7 +44,7 @@ export function DashboardCard({
       )}
       <div className="min-h-0 flex-1 p-4 sm:p-5">{children}</div>
       {footer ? (
-        <footer className="border-t border-white/[0.06] bg-white/[0.02] px-4 py-3 sm:px-5">{footer}</footer>
+        <footer className="border-t border-border/80 bg-bv-surface-inset/40 px-4 py-3 sm:px-5">{footer}</footer>
       ) : null}
     </section>
   );

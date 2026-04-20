@@ -13,13 +13,13 @@ export function PageHeader({ eyebrow, title, description, actions, className }: 
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 border-b border-white/[0.06] pb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-6",
+        "flex flex-col gap-4 border-b border-border/80 pb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-6",
         className,
       )}
     >
       <div className="min-w-0 space-y-2">
         {eyebrow ? (
-          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[oklch(0.65_0.12_250)]">
+          <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-bv-eyebrow">
             {eyebrow}
           </p>
         ) : null}

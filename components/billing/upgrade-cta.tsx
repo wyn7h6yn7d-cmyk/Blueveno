@@ -21,7 +21,7 @@ export function UpgradeCta({ feature, className, variant = "card" }: UpgradeCtaP
   const inner = (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[oklch(0.65_0.12_250)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bv-eyebrow">
           Requires {copy.minPlan} or higher
         </p>
         <p className="font-display mt-1 text-sm font-medium text-zinc-100">{copy.title}</p>
@@ -31,7 +31,7 @@ export function UpgradeCta({ feature, className, variant = "card" }: UpgradeCtaP
         href="/pricing"
         className={cn(
           buttonVariants({ variant: "default" }),
-          "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-[oklch(0.72_0.14_250)] px-4 text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)]",
+          "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-4",
         )}
       >
         Compare plans
@@ -41,13 +41,13 @@ export function UpgradeCta({ feature, className, variant = "card" }: UpgradeCtaP
   );
 
   if (variant === "inline") {
-    return <div className={cn("border-b border-white/[0.06] py-3", className)}>{inner}</div>;
+    return <div className={cn("border-b border-border/80 py-3", className)}>{inner}</div>;
   }
 
   return (
     <div
       className={cn(
-        "rounded-xl border border-[oklch(0.55_0.14_250/0.25)] bg-[linear-gradient(135deg,oklch(0.14_0.04_250/0.5),oklch(0.1_0.03_265/0.9))] p-4 sm:p-5",
+        "rounded-xl border border-primary/25 bg-[linear-gradient(135deg,oklch(0.14_0.035_262/0.55),oklch(0.1_0.032_266/0.92))] p-4 sm:p-5",
         className,
       )}
     >

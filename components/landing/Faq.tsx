@@ -3,31 +3,32 @@
 import { useState } from "react";
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
+import { marketingCtas } from "@/lib/marketing-ctas";
 
 const faqs = [
   {
-    q: "Is Blueveno only for prop traders?",
-    a: "No. Any serious trader who wants structured review and analytics benefits. Prop and firm rules are optional layers—they sit on top of the same core: truth in execution, clarity in review.",
+    q: "Only for prop traders?",
+    a: "No. Any serious trader benefits. Prop rules are an optional layer on the same core record.",
   },
   {
-    q: "Does this replace my execution platform?",
-    a: "No. Blueveno sits above execution: it organizes, enriches, and analyzes—without pretending to be a broker or router.",
+    q: "Replace my broker?",
+    a: "No. Blueveno sits above execution—journal and analytics, not routing.",
   },
   {
     q: "How automated is the journal?",
-    a: "Fills can be ingested automatically. You still add judgment—tags, screenshots, notes—because that is where edge hides.",
+    a: "Fills can ingest automatically. You still add judgment—tags, shots, notes.",
   },
   {
-    q: "Can teams share standards?",
-    a: "Yes. Shared tags, exportable recaps, and consistent structure help desks and coaches align on vocabulary and review.",
+    q: "Teams and desks?",
+    a: "Shared tags and exportable recaps so vocabulary and review align.",
   },
   {
-    q: "What about data privacy?",
-    a: "Your trading data is treated as proprietary. Access is least-privilege; product telemetry is separated from customer content by design.",
+    q: "Data privacy?",
+    a: "Trading data treated as proprietary. Least-privilege access; telemetry split from content.",
   },
   {
-    q: "Is this another crypto dashboard?",
-    a: "No. The UI is calm, precise, and institutional in tone—built for professionals, not casino optics.",
+    q: "Another crypto dashboard?",
+    a: "No. Calm, precise UI—built for professionals, not casino optics.",
   },
 ];
 
@@ -36,18 +37,19 @@ export function Faq() {
 
   return (
     <Section id="faq" className="py-28 lg:py-36">
-      <div className="mx-auto max-w-2xl text-center">
+      <div className="mx-auto max-w-4xl text-center">
         <Reveal>
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.65_0.12_250)]">
-            FAQ
-          </p>
-          <h2 className="font-display mt-5 text-3xl font-medium tracking-tight text-zinc-50 sm:text-4xl">
-            Direct answers. No theater.
+          <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">FAQ</p>
+          <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+            Straight answers.
           </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-zinc-600">
+            Scope, privacy, and what Blueveno is not.
+          </p>
         </Reveal>
       </div>
 
-      <div className="mx-auto mt-16 max-w-3xl divide-y divide-white/[0.07]">
+      <div className="mx-auto mt-14 max-w-3xl divide-y divide-border/60">
         {faqs.map((item) => {
           const isOpen = open === item.q;
           return (
@@ -55,27 +57,27 @@ export function Faq() {
               <button
                 type="button"
                 onClick={() => setOpen(isOpen ? null : item.q)}
-                className="flex w-full items-start justify-between gap-6 py-5 text-left"
+                className="flex w-full items-start justify-between gap-6 py-4 text-left"
               >
-                <span className="font-display text-[17px] text-zinc-100">{item.q}</span>
-                <span className="shrink-0 font-mono text-sm text-[oklch(0.65_0.12_250)]">
+                <span className="font-display text-[16px] leading-snug text-zinc-100">{item.q}</span>
+                <span className="shrink-0 font-mono text-sm text-primary/85">
                   {isOpen ? "−" : "+"}
                 </span>
               </button>
               {isOpen ? (
-                <p className="pb-5 text-[15px] leading-relaxed text-zinc-400">{item.a}</p>
+                <p className="pb-4 text-[15px] leading-snug text-zinc-400">{item.a}</p>
               ) : null}
             </Reveal>
           );
         })}
       </div>
 
-      <Reveal className="mt-14 text-center">
+      <Reveal className="mt-10 text-center">
         <a
-          href="#cta"
-          className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-[oklch(0.72_0.12_250)] transition hover:text-[oklch(0.82_0.08_250)]"
+          href={marketingCtas.faq.waitlist.href}
+          className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary/80 hover:text-primary"
         >
-          Request access →
+          {marketingCtas.faq.waitlist.label} →
         </a>
       </Reveal>
     </Section>

@@ -61,7 +61,7 @@ export function PnLOverviewCards({ items = defaultData, className }: PnLOverview
               <p className="font-display mt-2 text-2xl tabular-nums tracking-tight text-zinc-50 md:text-[1.65rem]">
                 {d.netUsd}
               </p>
-              <p className="mt-1 font-mono text-[13px] tabular-nums text-[oklch(0.78_0.1_250)]">{d.netR}</p>
+              <p className="mt-1 font-mono text-[13px] tabular-nums text-bv-ice/90">{d.netR}</p>
             </div>
             <div className="w-20 shrink-0 opacity-90">
               <MiniSparkline positive={d.vsPriorPositive ?? true} />

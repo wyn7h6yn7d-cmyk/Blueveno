@@ -50,7 +50,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
     "BV";
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] bg-[oklch(0.1_0.025_265/0.82)] px-3 backdrop-blur-xl supports-[backdrop-filter]:bg-[oklch(0.1_0.025_265/0.72)] md:h-[3.75rem] md:gap-4 md:px-5">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-border/80 bg-bv-raised/82 px-3 backdrop-blur-xl supports-[backdrop-filter]:bg-bv-raised/72 md:h-[3.75rem] md:gap-4 md:px-5">
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger
           className={cn(
@@ -61,8 +61,8 @@ export function AppTopbar({ user }: AppTopbarProps) {
         >
           <Menu className="size-5" strokeWidth={1.5} />
         </SheetTrigger>
-        <SheetContent side="left" className="w-[min(100%,18rem)] border-white/[0.08] bg-[oklch(0.09_0.03_265)] p-0">
-          <SheetHeader className="border-b border-white/[0.06] px-4 py-4 text-left">
+        <SheetContent side="left" className="w-[min(100%,18rem)] border-border/85 bg-bv-base p-0">
+          <SheetHeader className="border-b border-border/80 px-4 py-4 text-left">
             <SheetTitle className="font-display text-lg font-medium tracking-tight text-zinc-50">
               Blueveno
             </SheetTitle>
@@ -138,7 +138,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
           title="Notifications (placeholder)"
         >
           <Bell className="size-[18px]" strokeWidth={1.75} />
-          <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[oklch(0.65_0.2_245)] ring-2 ring-[oklch(0.1_0.025_265)]" />
+          <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-bv-cyan-electric ring-2 ring-bv-raised" />
         </Button>
 
         <DropdownMenu>
@@ -150,7 +150,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
             aria-label="Account menu"
           >
             <Avatar className="size-8">
-              <AvatarFallback className="bg-[oklch(0.45_0.12_250/0.25)] text-xs font-medium text-[oklch(0.85_0.08_250)]">
+              <AvatarFallback className="bg-primary/25 text-xs font-medium text-bv-ice">
                 {initials}
               </AvatarFallback>
             </Avatar>

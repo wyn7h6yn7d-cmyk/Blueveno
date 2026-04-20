@@ -7,7 +7,7 @@ import { LoginForm } from "@/components/auth/login-form";
 export const metadata: Metadata = {
   title: "Sign in",
   description:
-    "Sign in to Blueveno: trading journal and performance review with encrypted sessions and careful data handling.",
+    "Sign in to Blueveno—a performance workspace for serious operators. Encrypted sessions; your journal and tape stay yours.",
 };
 
 type Props = {
@@ -23,9 +23,14 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <AuthSplitLayout
+      variant="login"
       eyebrow="Sign in"
-      title="Welcome back"
-      subtitle="Access your journal, analytics, and review history. Sessions are encrypted in transit; your tape stays yours."
+      title={
+        <>
+          Welcome <span className="text-gradient-cobalt">back</span>
+        </>
+      }
+      subtitle="Return to your journal, analytics, and review history. Sessions are encrypted in transit; your tape stays under your control."
       alternatePrompt="New to Blueveno?"
       alternateHref="/signup"
       alternateLabel="Create an account"

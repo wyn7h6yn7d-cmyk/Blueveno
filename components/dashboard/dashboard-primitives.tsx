@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 
 /** Outer chrome for dashboard surfaces — matches Blueveno workstation panels */
 export const dashboardPanelClass =
-  "rounded-xl border border-white/[0.07] bg-[oklch(0.12_0.025_265/0.88)] shadow-bv-card backdrop-blur-sm";
+  "rounded-xl border border-border/85 bg-bv-surface/90 shadow-bv-card";
 
 export const dashboardInsetWellClass =
-  "rounded-lg border border-white/[0.06] bg-bv-surface-inset/90 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)]";
+  "rounded-lg border border-border/75 bg-bv-surface-inset/90 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)]";
 
 type DashboardEyebrowProps = { children: ReactNode; className?: string };
 
@@ -25,7 +25,7 @@ export function HistogramMini({ values, className }: { values: number[]; classNa
       {values.map((v, i) => (
         <div
           key={i}
-          className="flex-1 rounded-t-[2px] bg-gradient-to-t from-[oklch(0.35_0.1_260)] to-[oklch(0.62_0.14_250)]"
+          className="flex-1 rounded-t-[2px] bg-gradient-to-t from-bv-blue-deep to-primary"
           style={{ height: `${Math.max(8, (v / max) * 100)}%` }}
         />
       ))}

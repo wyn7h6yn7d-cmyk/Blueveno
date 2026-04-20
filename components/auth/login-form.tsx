@@ -6,11 +6,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { SocialAuthPlaceholder } from "@/components/auth/social-auth-placeholder";
-
-const fieldClass =
-  "h-11 rounded-xl border-white/10 bg-bv-surface-inset/90 px-3.5 text-[15px] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] placeholder:text-zinc-600 focus-visible:border-[oklch(0.62_0.12_250)] focus-visible:ring-[oklch(0.62_0.12_250)]/45";
+import { authFieldClass, authLabelClass } from "@/lib/auth-field";
+import { cn } from "@/lib/utils";
 
 type LoginFormProps = {
   callbackUrl: string;
@@ -43,75 +41,85 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
   }
 
   return (
-    <div className="border-glow-subtle rounded-2xl bg-[oklch(0.12_0.025_265/0.85)] p-6 shadow-bv-card backdrop-blur-md sm:p-8">
-      <div className="mb-6">
-        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Credentials</p>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-          Use your work email. Single sign-on (SSO) will be available in production. This build
-          supports email and password, including demo mode for testing.
-        </p>
-      </div>
-
-      <form onSubmit={onSubmit} className="space-y-5" noValidate>
-        <fieldset className="space-y-5">
-          <legend className="sr-only">Sign in with email and password</legend>
-
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-[13px] font-medium text-zinc-300">
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              inputMode="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className={cn(fieldClass)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="password" className="text-[13px] font-medium text-zinc-300">
-                Password
-              </Label>
-              <span
-                className="cursor-not-allowed font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600"
-                title="Password recovery ships in a later release"
-              >
-                Forgot?
-              </span>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className={cn(fieldClass)}
-            />
-          </div>
-
-          {error ? (
-            <p className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm text-red-200" role="alert">
-              {error}
+    <div className="relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-bv-surface/55 shadow-bv-float backdrop-blur-md">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
+      <div className="relative px-6 pb-8 pt-7 sm:px-8 sm:pb-9 sm:pt-8">
+        <div className="mb-8 flex items-start justify-between gap-4 border-b border-white/[0.06] pb-6">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">
+              Credentials
             </p>
-          ) : null}
+            <p className="mt-2 max-w-[22rem] text-[13px] leading-relaxed text-zinc-500">
+              Sign in with your work email. SSO will ship with production—this build uses email and
+              password, including demo mode for testing.
+            </p>
+          </div>
+        </div>
 
-          <Button
-            type="submit"
-            disabled={pending}
-            className="h-11 w-full rounded-xl text-[15px] font-medium shadow-[0_0_48px_-16px_oklch(0.55_0.2_250/0.45)]"
-          >
-            {pending ? "Signing in…" : "Sign in"}
-          </Button>
-        </fieldset>
-      </form>
+        <form onSubmit={onSubmit} className="space-y-6" noValidate>
+          <fieldset className="space-y-6">
+            <legend className="sr-only">Sign in with email and password</legend>
 
-      <SocialAuthPlaceholder />
+            <div className="space-y-2">
+              <Label htmlFor="email" className={authLabelClass}>
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className={cn(authFieldClass)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label htmlFor="password" className={authLabelClass}>
+                  Password
+                </Label>
+                <span
+                  className="cursor-not-allowed font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600"
+                  title="Password recovery ships in a later release"
+                >
+                  Forgot?
+                </span>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className={cn(authFieldClass)}
+              />
+            </div>
+
+            {error ? (
+              <p
+                className="rounded-[0.65rem] border border-red-500/25 bg-red-500/[0.08] px-3.5 py-2.5 text-[13px] leading-relaxed text-red-100"
+                role="alert"
+              >
+                {error}
+              </p>
+            ) : null}
+
+            <Button
+              type="submit"
+              disabled={pending}
+              className="h-12 w-full rounded-[0.65rem] text-[15px] font-medium tracking-wide shadow-bv-primary"
+            >
+              {pending ? "Signing in…" : "Sign in"}
+            </Button>
+          </fieldset>
+        </form>
+
+        <SocialAuthPlaceholder />
+      </div>
     </div>
   );
 }

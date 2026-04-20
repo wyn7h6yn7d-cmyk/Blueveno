@@ -1,43 +1,54 @@
+import { Activity, Database, Shield } from "lucide-react";
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
 
-const items = [
+const pillars = [
   {
+    icon: Database,
     label: "Data fidelity",
-    detail: "Ingestion built for clean handoff from your stack—so the record matches the tape, not a reconstructed story.",
+    line: "Fills and context stay one chain of record.",
   },
   {
+    icon: Shield,
     label: "Review integrity",
-    detail: "Fills, context, and artifacts stay bound—review cannot quietly rewrite what happened.",
+    line: "Artifacts cannot rewrite the tape.",
   },
   {
+    icon: Activity,
     label: "Capital-grade",
-    detail: "Intended for daily use when drawdowns, rules, and reputation are measured in real terms.",
+    line: "Built for daily desk use under real risk.",
   },
 ];
 
 export function TrustBar() {
   return (
-    <Section className="py-6">
+    <Section className="py-10 lg:py-12">
       <Reveal>
-        <div className="rounded-2xl border border-white/[0.07] bg-[oklch(0.095_0.028_265/0.75)] px-6 py-12 shadow-bv-card backdrop-blur-md sm:px-10 lg:px-12 lg:py-14">
-          <div className="flex flex-col gap-10 lg:flex-row lg:items-stretch lg:justify-between lg:gap-16">
-            <p className="font-display shrink-0 text-[11px] font-medium uppercase tracking-[0.38em] text-zinc-500">
-              Standards
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-b from-bv-surface/90 to-bv-base/95 shadow-bv-card">
+          <div className="pointer-events-none border-b border-border/45 bg-black/15 px-6 py-3 sm:px-8">
+            <p className="font-mono text-[9px] uppercase tracking-[0.26em] text-zinc-600">
+              Engineering contract
             </p>
-            <div className="grid flex-1 gap-8 sm:grid-cols-3">
-              {items.map((it) => (
-                <div
-                  key={it.label}
-                  className="relative border-l border-[oklch(0.55_0.12_250/0.4)] pl-5"
-                >
-                  <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[oklch(0.74_0.1_250)]">
-                    {it.label}
+          </div>
+          <div className="grid gap-px bg-border/30 sm:grid-cols-3">
+            {pillars.map((p) => (
+              <div
+                key={p.label}
+                className="flex flex-col gap-4 bg-bv-base/95 p-7 sm:p-8 lg:flex-row lg:items-start lg:gap-5"
+              >
+                <p.icon className="size-[18px] shrink-0 text-primary/95" strokeWidth={1.35} aria-hidden />
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-bv-ice/85">
+                    {p.label}
                   </p>
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-400">{it.detail}</p>
+                  <p className="mt-2.5 text-[13px] leading-relaxed text-zinc-400">{p.line}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border/50 bg-black/25 px-6 py-3.5 font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-600 sm:px-8">
+            <span>Single source of truth · execution-bound</span>
+            <span className="text-zinc-600">TLS · session isolation</span>
           </div>
         </div>
       </Reveal>

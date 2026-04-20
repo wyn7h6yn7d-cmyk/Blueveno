@@ -1,60 +1,66 @@
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
+import { marketingCtas } from "@/lib/marketing-ctas";
 
 const quotes = [
   {
-    quote:
-      "Blueveno is the first tool where my review feels like analysis—not therapy. The data and the chart stay married to the trade.",
-    role: "Independent equities trader",
-    meta: "Swing · multi-year track record",
+    quote: "Review feels like analysis—the chart stays married to the trade.",
+    role: "Independent equities",
+    meta: "Swing",
   },
   {
-    quote:
-      "We stopped debating what happened in the room. The journal entry is the artifact—coaching got concrete overnight.",
+    quote: "The journal entry is the artifact. Coaching got concrete overnight.",
     role: "Head of desk",
-    meta: "Remote prop · mid-size team",
+    meta: "Remote prop",
   },
   {
-    quote:
-      "The recap export is unfairly good. It reads like something a risk officer would sign—not a mood journal.",
+    quote: "Recap export reads like risk would sign it—not a mood journal.",
     role: "Futures operator",
-    meta: "Intraday · systematic discretion",
+    meta: "Intraday",
   },
 ];
 
 export function Testimonials() {
   return (
-    <Section className="border-y border-white/[0.06] bg-[oklch(0.088_0.026_265/0.45)] py-28 backdrop-blur-sm lg:py-36">
-      <div className="mx-auto max-w-2xl text-center">
+    <Section className="border-y border-border/80 bg-bv-base/50 py-28 backdrop-blur-sm lg:py-36">
+      <div className="mx-auto max-w-4xl text-center">
         <Reveal>
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.68_0.12_250)]">
-            Operators
-          </p>
-          <h2 className="font-display mt-5 text-3xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-4xl">
-            Trusted where performance is measured in R—not followers.
+          <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">Operators</p>
+          <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+            Measured in R—not followers.
           </h2>
-          <p className="mt-4 text-sm text-zinc-500">
-            Representative quotes from early design partners and pilot desks—illustrative, not paid
-            endorsements.
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-zinc-600">
+            Early partners and desk pilots. Paraphrased for confidentiality.
           </p>
         </Reveal>
       </div>
 
-      <div className="mt-20 grid gap-6 lg:grid-cols-3">
+      <div className="mt-16 grid gap-6 lg:grid-cols-3">
         {quotes.map((q, i) => (
-          <Reveal key={q.role} delay={0.06 * i}>
-            <figure className="flex h-full flex-col rounded-2xl border border-white/[0.07] bg-[oklch(0.095_0.028_265/0.6)] p-8 shadow-bv-card">
+          <Reveal key={q.role} delay={0.05 * i}>
+            <figure className="flex h-full flex-col rounded-2xl border border-border/80 bg-bv-surface/75 p-8 shadow-bv-card">
               <blockquote className="flex-1 text-[15px] leading-relaxed text-zinc-300">
                 “{q.quote}”
               </blockquote>
-              <figcaption className="mt-10 border-t border-white/[0.07] pt-8">
+              <figcaption className="mt-8 border-t border-white/[0.07] pt-6">
                 <p className="font-display text-sm text-zinc-200">{q.role}</p>
-                <p className="mt-1.5 font-mono text-[11px] text-zinc-500">{q.meta}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500">
+                  {q.meta}
+                </p>
               </figcaption>
             </figure>
           </Reveal>
         ))}
       </div>
+
+      <Reveal className="mt-14 text-center">
+        <a
+          href={marketingCtas.testimonials.join.href}
+          className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary/80 transition hover:text-primary"
+        >
+          {marketingCtas.testimonials.join.label} →
+        </a>
+      </Reveal>
     </Section>
   );
 }

@@ -1,60 +1,68 @@
+import { ArrowDown, LineChart, PenLine, ShieldCheck, Sparkles } from "lucide-react";
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
+import { marketingCtas } from "@/lib/marketing-ctas";
 
 const steps = [
   {
     step: "01",
     title: "Capture",
-    body: "Executions and context flow in automatically—session metadata included, excuses excluded.",
+    body: "Executions and context in—automatically.",
+    icon: Sparkles,
   },
   {
     step: "02",
     title: "Annotate",
-    body: "Tag setups, attach screenshots, log the subjective detail numbers alone cannot hold.",
+    body: "Tags, screenshots, notes on the record.",
+    icon: PenLine,
   },
   {
     step: "03",
     title: "Measure",
-    body: "Slice performance by behavior and regime—see what pays, what punishes, what repeats.",
+    body: "Slice by behavior, setup, regime.",
+    icon: LineChart,
   },
   {
     step: "04",
     title: "Enforce",
-    body: "Update playbooks, surface violations, export recaps—then bring the same standard to the next open.",
+    body: "Playbooks, violations, recaps—next session.",
+    icon: ShieldCheck,
   },
 ];
 
 export function Workflow() {
   return (
     <Section id="workflow" className="relative py-28 lg:py-36">
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 -z-10 h-px bg-gradient-to-r from-transparent via-[oklch(0.45_0.1_250/0.28)] to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 -z-10 h-px bg-gradient-to-r from-transparent via-bv-border-accent/80 to-transparent" />
 
-      <div className="mx-auto max-w-2xl text-center">
+      <div className="mx-auto max-w-4xl text-center">
         <Reveal>
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.68_0.12_250)]">
-            How it works
-          </p>
-          <h2 className="font-display mt-5 text-3xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-4xl">
-            A closed loop—every session, without heroics.
+          <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">Operating loop</p>
+          <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+            Four moves. Every session.
           </h2>
-          <p className="mt-5 text-base leading-relaxed text-zinc-400 sm:text-lg">
-            The point is not motivation. It is repeatability: capture, interpret, adjust, return.
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-500 sm:text-[17px]">
+            The same cadence whether you trade once a day or a hundred times—capture, annotate, measure,
+            enforce.
           </p>
         </Reveal>
       </div>
 
-      <div className="mt-20 grid gap-5 lg:grid-cols-4">
+      <div className="mt-16 grid gap-4 lg:grid-cols-4">
         {steps.map((s, i) => (
-          <Reveal key={s.step} delay={0.07 * i}>
-            <div className="relative flex h-full flex-col rounded-2xl border border-white/[0.07] bg-[oklch(0.1_0.028_265)] p-6 shadow-bv-card transition duration-300 hover:border-white/[0.12]">
-              <span className="font-mono text-[10px] uppercase tracking-[0.35em] text-zinc-600">
-                {s.step}
-              </span>
-              <h3 className="font-display mt-5 text-lg tracking-tight text-zinc-100">{s.title}</h3>
-              <p className="mt-3 flex-1 text-sm leading-relaxed text-zinc-500">{s.body}</p>
-              <p className="mt-8 font-mono text-[10px] text-zinc-700">
-                {i < steps.length - 1 ? "↓" : "↻"}
-              </p>
+          <Reveal key={s.step} delay={0.05 * i}>
+            <div className="relative flex h-full flex-col rounded-2xl border border-border/80 bg-bv-surface/95 p-7 shadow-bv-card">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display text-lg font-medium tabular-nums text-zinc-600">{s.step}</span>
+                <s.icon className="size-4 text-primary/85" strokeWidth={1.5} aria-hidden />
+              </div>
+              <h3 className="font-display mt-6 text-lg font-medium tracking-tight text-zinc-100">{s.title}</h3>
+              <p className="mt-2.5 flex-1 text-[13px] leading-relaxed text-zinc-500">{s.body}</p>
+              {i < steps.length - 1 ? (
+                <ArrowDown className="mt-6 size-4 text-zinc-700 lg:hidden" aria-hidden />
+              ) : (
+                <p className="mt-6 font-mono text-[10px] text-zinc-700">↻</p>
+              )}
             </div>
           </Reveal>
         ))}
@@ -62,10 +70,10 @@ export function Workflow() {
 
       <Reveal className="mt-16 text-center">
         <a
-          href="#cta"
-          className="inline-flex rounded-full border border-white/[0.1] bg-white/[0.03] px-7 py-3 text-sm font-medium text-zinc-200 shadow-bv-card transition duration-300 hover:border-[oklch(0.55_0.12_250/0.35)] hover:bg-white/[0.06]"
+          href={marketingCtas.workflow.plans.href}
+          className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary/80 hover:text-primary"
         >
-          Join the waitlist
+          {marketingCtas.workflow.plans.label} →
         </a>
       </Reveal>
     </Section>

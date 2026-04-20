@@ -12,7 +12,7 @@ type FundedAccountWidgetProps = {
 };
 
 const statusCopy = {
-  ok: { label: "Within rules", ring: "border-[oklch(0.55_0.14_250/0.35)] text-[oklch(0.78_0.1_250)]" },
+  ok: { label: "Within rules", ring: "border-primary/35 text-bv-ice/90" },
   warn: { label: "Approaching limit", ring: "border-amber-400/40 text-amber-200/90" },
   lock: { label: "Lockout", ring: "border-red-400/35 text-red-200/90" },
 };
@@ -37,7 +37,7 @@ export function FundedAccountWidget({
         </div>
         <div
           className={cn(
-            "flex size-14 shrink-0 items-center justify-center rounded-full border-2 bg-[oklch(0.08_0.03_265)] font-mono text-[11px] uppercase tracking-wide",
+            "flex size-14 shrink-0 items-center justify-center rounded-full border-2 bg-bv-surface-inset font-mono text-[11px] uppercase tracking-wide",
             s.ring,
           )}
         >

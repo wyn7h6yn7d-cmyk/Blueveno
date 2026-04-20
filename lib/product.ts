@@ -3,7 +3,7 @@
  */
 export const PRODUCT_NAME = "Blueveno";
 
-export const PRODUCT_TAGLINE = "Turn trade data into clarity, discipline, and repeatable edge.";
+export const PRODUCT_TAGLINE = "Turn trade data into clarity";
 
 export const PRODUCT_DESCRIPTION =
   "A premium trading journal and performance analytics workspace: automatic journaling, deep analytics, and review tied to your actual fills.";

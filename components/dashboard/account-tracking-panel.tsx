@@ -28,7 +28,7 @@ export function AccountTrackingPanel({
           <DashboardEyebrow>Account</DashboardEyebrow>
           <p className="mt-1 font-mono text-[11px] text-zinc-500">{label}</p>
           <p className="font-display mt-3 text-2xl tabular-nums tracking-tight text-zinc-50">{equity}</p>
-          <p className="mt-1 font-mono text-[13px] tabular-nums text-[oklch(0.78_0.1_250)]">{dayPnl} today</p>
+          <p className="mt-1 font-mono text-[13px] tabular-nums text-bv-ice/90">{dayPnl} today</p>
         </div>
         <div className="w-32 shrink-0">
           <MiniSparkline positive />

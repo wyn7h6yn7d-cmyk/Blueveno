@@ -7,7 +7,9 @@ const cols = [
     links: [
       { label: "Outcomes", href: "#outcomes" },
       { label: "Platform", href: "#platform" },
+      { label: "Product depth", href: "#product-depth" },
       { label: "Workflow", href: "#workflow" },
+      { label: "Get access", href: "#cta" },
     ],
   },
   {
@@ -30,16 +32,16 @@ const cols = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/[0.06] bg-[oklch(0.07_0.03_265)] py-20">
+    <footer className="border-t border-border/80 bg-bv-void py-20">
       <Section>
         <div className="flex flex-col gap-14 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <LogoLink className="inline-block font-display text-xl font-medium tracking-tight text-zinc-100 transition hover:text-white">
               Blueveno
             </LogoLink>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-500">
-              Trading journal and performance review for operators who treat the tape as the source
-              of truth—and review as infrastructure.
+            <p className="mt-4 max-w-xs text-sm leading-snug text-zinc-500">
+              Journal, analytics, review—tied to what printed. For traders who treat the tape as
+              evidence.
             </p>
           </div>
           <div className="grid flex-1 grid-cols-2 gap-12 sm:grid-cols-3 lg:max-w-2xl lg:gap-16">

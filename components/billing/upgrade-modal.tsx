@@ -50,7 +50,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
         aria-modal="true"
         aria-labelledby="upgrade-modal-title"
         className={cn(
-          "relative z-[101] w-full max-w-md rounded-2xl border border-white/[0.1] bg-[oklch(0.11_0.03_265)] p-6 shadow-bv-float",
+          "relative z-[101] w-full max-w-md rounded-2xl border border-border/90 bg-bv-surface p-6 shadow-bv-float",
         )}
       >
         <button
@@ -61,7 +61,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
         >
           <X className="size-4" />
         </button>
-        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[oklch(0.65_0.12_250)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-bv-eyebrow">
           {copy.minPlan}+ required
         </p>
         <h2 id="upgrade-modal-title" className="font-display mt-2 text-xl font-medium text-zinc-50">
@@ -77,7 +77,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
             onClick={() => onOpenChange(false)}
             className={cn(
               buttonVariants({ variant: "default" }),
-              "h-10 rounded-xl bg-[oklch(0.72_0.14_250)] px-4 text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)]",
+              "h-10 rounded-xl px-4",
             )}
           >
             View plans

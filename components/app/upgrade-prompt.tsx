@@ -14,15 +14,15 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border border-[oklch(0.55_0.14_250/0.28)]",
-        "bg-[linear-gradient(135deg,oklch(0.16_0.04_250/0.9),oklch(0.1_0.03_265/0.95))]",
+        "relative overflow-hidden rounded-xl border border-primary/28",
+        "bg-[linear-gradient(135deg,oklch(0.15_0.035_262/0.92),oklch(0.1_0.032_266/0.96))]",
         "p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]",
       )}
     >
-      <div className="pointer-events-none absolute -right-16 top-0 size-40 rounded-full bg-[oklch(0.55_0.2_250/0.12)] blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -right-16 top-0 size-40 rounded-full bg-primary/12 blur-3xl" aria-hidden />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 space-y-1">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[oklch(0.72_0.1_250)]">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-bv-eyebrow">
             Requires {c.minPlan} or higher
           </p>
           <p className="font-display text-base font-medium text-zinc-50">{c.title}</p>
@@ -33,7 +33,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
             href="/pricing"
             className={cn(
               buttonVariants({ variant: "default" }),
-              "inline-flex h-10 items-center gap-1.5 rounded-xl bg-[oklch(0.72_0.14_250)] px-4 text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)]",
+              "inline-flex h-10 items-center gap-1.5 rounded-xl px-4",
             )}
           >
             View plans

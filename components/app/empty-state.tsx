@@ -18,7 +18,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
         className,
       )}
     >
-      <div className="flex size-12 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-[oklch(0.62_0.12_250)]">
+      <div className="flex size-12 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-primary">
         <Icon className="size-5" strokeWidth={1.5} />
       </div>
       <h3 className="font-display mt-5 text-base font-medium text-zinc-100">{title}</h3>

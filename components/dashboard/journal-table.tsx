@@ -96,7 +96,7 @@ export function JournalTable({ rows = defaultRows, onRowClick, className }: Jour
               )}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
             >
-              <td className="sticky left-0 z-10 bg-[oklch(0.1_0.025_265/0.97)] px-4 py-2.5 font-mono text-xs text-zinc-400 backdrop-blur-sm">
+              <td className="sticky left-0 z-10 bg-bv-surface/97 px-4 py-2.5 font-mono text-xs text-zinc-400 backdrop-blur-sm">
                 {row.time}
               </td>
               <td className="px-4 py-2.5 font-medium text-zinc-100">{row.symbol}</td>

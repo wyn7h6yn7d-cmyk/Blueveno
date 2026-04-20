@@ -40,7 +40,7 @@ export function AverageRPanel({
             aria-hidden
           />
           <div
-            className="absolute inset-y-0 rounded-full bg-gradient-to-r from-[oklch(0.45_0.12_25)] via-[oklch(0.4_0.08_260)] to-[oklch(0.55_0.16_250)] opacity-90"
+            className="absolute inset-y-0 rounded-full bg-gradient-to-r from-red-900/35 via-bv-blue-deep/80 to-primary opacity-90"
             style={{ left: "38%", right: "12%" }}
           />
         </div>

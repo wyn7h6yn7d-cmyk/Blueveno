@@ -14,6 +14,7 @@ import {
   MockScreenshotReview,
   MockSessionRecap,
 } from "@/components/landing/mockups";
+import { marketingCtas } from "@/lib/marketing-ctas";
 
 const blocks: {
   eyebrow: string;
@@ -23,107 +24,114 @@ const blocks: {
 }[] = [
   {
     eyebrow: "Ingestion",
-    title: "Automatic journaling that completes the record",
-    body: "Trades arrive as structured events—time, size, context—so the journal is complete even when you would rather skip the write-up.",
+    title: "Journaling that finishes the record",
+    body: "Structured events—time, size, context—without rebuilding the day from memory.",
     mock: <MockAutoJournal />,
   },
   {
     eyebrow: "Analytics",
-    title: "Performance analytics that answer the questions you actually ask",
-    body: "Slice expectancy by setup, session, and regime. See what repeats—and what only looked good in hindsight.",
+    title: "Analytics you actually query",
+    body: "Expectancy and regime slices on one underlying record.",
     mock: <MockAnalytics />,
   },
   {
     eyebrow: "Review",
-    title: "Screenshot review bound to the fill",
-    body: "The chart moment and the account moment share one thread—so post-trade review stays specific, not nostalgic.",
+    title: "Screenshots bound to fills",
+    body: "Chart and account share one ID—review stays specific.",
     mock: <MockScreenshotReview />,
   },
   {
     eyebrow: "Playbooks",
-    title: "Setup playbooks that survive real markets",
-    body: "Conditions and non-negotiables live where you read them—then measure whether you traded the plan or the mood.",
+    title: "Playbooks that survive the session",
+    body: "Conditions where you read them; adherence next to R.",
     mock: <MockPlaybooks />,
   },
   {
     eyebrow: "Behavior",
-    title: "Behavioral tracking for what actually moves P&L",
-    body: "Surface impulses and repeat behaviors with the same rigor you apply to R-multiples—before they own the month.",
+    title: "Behavior with the same rigor as R",
+    body: "Surface impulses before they own the month.",
     mock: <MockBehavior />,
   },
   {
     eyebrow: "Recaps",
-    title: "Session recaps you can stand behind",
-    body: "Structured summaries: what worked, what broke, what you enforce next—exportable for a coach or your future self.",
+    title: "Recaps worth exporting",
+    body: "What worked, what broke, what you enforce next.",
     mock: <MockSessionRecap />,
   },
   {
     eyebrow: "Rules",
-    title: "Rule violations you see before the statement does",
-    body: "Personal and firm rules tracked alongside execution—so discretion does not collide with compliance.",
+    title: "Violations before the statement",
+    body: "Firm rules beside execution—discretion stays visible.",
     mock: <MockRuleViolations />,
   },
   {
     eyebrow: "Accounts",
-    title: "Account and prop tracking beside performance",
-    body: "Buffers, windows, and desk constraints visible next to P&L—risk stays operational, not a tab you open once a week.",
+    title: "Prop and account context in frame",
+    body: "Buffers and windows next to P&L—risk stays operational.",
     mock: <MockAccountProp />,
   },
 ];
 
 export function DeepDives() {
   return (
-    <Section size="wide" className="py-28 lg:py-36">
-      <div className="mx-auto max-w-2xl text-center">
+    <Section size="wide" id="product-depth" className="bg-marketing-band py-28 lg:py-36">
+      <div className="mx-auto max-w-4xl text-center">
         <Reveal>
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.65_0.12_250)]">
-            Inside the product
-          </p>
-          <h2 className="font-display mt-5 text-3xl font-medium tracking-tight text-zinc-50 sm:text-4xl">
-            Depth that matches the stakes—not a shallow marketing checklist.
+          <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">Product depth</p>
+          <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+            Built as one instrument—not a bundle.
           </h2>
-          <p className="mt-5 text-base leading-relaxed text-zinc-400 sm:text-lg">
-            Each layer connects to the same thesis: turn execution history into decisions you can defend.
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-500 sm:text-[17px]">
+            Scroll the layers in order. Each panel is the same underlying record—structure you can ship
+            against.
           </p>
         </Reveal>
       </div>
 
-      <div className="mt-24 space-y-28 lg:space-y-36">
+      <div className="mt-20 space-y-24 lg:space-y-28">
         {blocks.map((b, i) => (
           <div
             key={b.title}
             className={cn(
-              "flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-20",
+              "flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16 xl:gap-20",
               i % 2 === 1 && "lg:flex-row-reverse",
             )}
           >
-            <Reveal className="flex-1">
-              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[oklch(0.55_0.1_250)]">
-                {b.eyebrow}
-              </p>
-              <h3 className="font-display mt-5 text-2xl font-medium tracking-tight text-zinc-50 sm:text-3xl lg:max-w-xl">
-                {b.title}
-              </h3>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-[17px]">
-                {b.body}
-              </p>
-              <div className="mt-10 h-px max-w-xs bg-gradient-to-r from-[oklch(0.55_0.14_250/0.5)] via-white/10 to-transparent" />
-              <Link
-                href="#cta"
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }),
-                  "mt-8 -ml-2 font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-[oklch(0.75_0.1_250)]",
-                )}
-              >
-                Request access →
-              </Link>
+            <Reveal className="flex-1 lg:max-w-md">
+              <div className="flex items-baseline gap-4">
+                <span className="font-display text-3xl font-medium tabular-nums text-zinc-700">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-bv-eyebrow/85">
+                    {b.eyebrow}
+                  </p>
+                  <h3 className="font-display mt-2 text-[1.35rem] font-medium leading-snug tracking-tight text-zinc-50 sm:text-2xl">
+                    {b.title}
+                  </h3>
+                </div>
+              </div>
+              <p className="mt-4 text-[13px] leading-relaxed text-zinc-500">{b.body}</p>
+              <div className="mt-8 h-px max-w-[12rem] bg-gradient-to-r from-bv-border-accent to-transparent" />
             </Reveal>
-            <Reveal delay={0.08} className="flex-1">
+            <Reveal delay={0.06} className="min-w-0 flex-1">
               {b.mock}
             </Reveal>
           </div>
         ))}
       </div>
+
+      <Reveal className="mt-24 text-center">
+        <Link
+          href={marketingCtas.deepDives.pricing.href}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "h-11 rounded-full border-primary/35 bg-white/[0.03] px-8 font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-200 hover:bg-white/[0.06]",
+          )}
+        >
+          {marketingCtas.deepDives.pricing.label} →
+        </Link>
+      </Reveal>
     </Section>
   );
 }

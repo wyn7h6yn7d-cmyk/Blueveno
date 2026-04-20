@@ -8,6 +8,7 @@ import {
   MarketingBackground,
   Navbar,
   Outcomes,
+  ProductArchitectureStrip,
   SectionDivider,
   Testimonials,
   TraderTypes,
@@ -22,6 +23,7 @@ export default function MarketingHomePage() {
       <main>
         <Hero />
         <TrustBar />
+        <ProductArchitectureStrip />
         <SectionDivider />
         <Outcomes />
         <SectionDivider />

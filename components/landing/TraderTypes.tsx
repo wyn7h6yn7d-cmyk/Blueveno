@@ -3,31 +3,32 @@
 import { useState } from "react";
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
+import { marketingCtas } from "@/lib/marketing-ctas";
 
 const personas = [
   {
     id: "intraday",
     label: "Intraday",
-    headline: "Speed demands a journal that keeps pace",
-    copy: "Tag fast, review faster: execution quality, impulse signals, and session integrity in one place.",
+    headline: "Speed + integrity",
+    copy: "Tags and review that keep up with the tape.",
   },
   {
     id: "swing",
-    label: "Swing & position",
-    headline: "Longer holds need longer memory",
-    copy: "Keep thesis, adjustments, and outcome in one thread—analytics that respect the horizon.",
+    label: "Swing",
+    headline: "Memory across the hold",
+    copy: "Thesis, tweaks, outcome—one thread.",
   },
   {
     id: "prop",
     label: "Prop & funded",
-    headline: "Rules belong beside the button",
-    copy: "Buffers and blackout windows visible while you trade—so discretion does not fight the firm.",
+    headline: "Rules in the same frame",
+    copy: "Buffers and blackouts visible while you trade.",
   },
   {
     id: "desk",
     label: "Desk & coach",
-    headline: "Feedback travels on evidence",
-    copy: "Shared tags and exportable recaps—so coaching is specific, repeatable, and fair.",
+    headline: "Evidence-based feedback",
+    copy: "Shared tags and recaps—specific, fair.",
   },
 ];
 
@@ -36,31 +37,29 @@ export function TraderTypes() {
   const current = personas.find((p) => p.id === active) ?? personas[0];
 
   return (
-    <Section id="traders" className="py-28 lg:py-36">
-      <div className="grid gap-14 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)] lg:items-start lg:gap-20">
+    <Section id="traders" className="bg-marketing-band py-28 lg:py-36">
+      <div className="grid gap-14 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:items-start lg:gap-20">
         <div>
           <Reveal>
-            <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.65_0.12_250)]">
-              Who it is for
-            </p>
-            <h2 className="font-display mt-5 text-3xl font-medium tracking-tight text-zinc-50 sm:text-4xl">
-              One platform. Different constraints. Same standard of review.
+            <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">Who it fits</p>
+            <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+              Same rigor. Different constraints.
             </h2>
-            <p className="mt-5 text-base leading-relaxed text-zinc-400">
-              Blueveno adapts to how you operate—without diluting the rigor.
+            <p className="mt-5 text-base leading-relaxed text-zinc-500">
+              Select a profile—the UI weights journal, risk, or desk collaboration accordingly.
             </p>
           </Reveal>
 
-          <Reveal className="mt-12 space-y-2">
+          <Reveal className="mt-10 space-y-2">
             {personas.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => setActive(p.id)}
                 aria-pressed={active === p.id}
-                className={`flex w-full items-center justify-between rounded-xl border px-4 py-3.5 text-left text-sm transition ${
+                className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left text-sm transition ${
                   active === p.id
-                    ? "border-[oklch(0.55_0.14_250/0.35)] bg-[oklch(0.45_0.1_250/0.08)] text-zinc-100"
+                    ? "border-primary/35 bg-primary/10 text-zinc-100"
                     : "border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:border-white/[0.1]"
                 }`}
               >
@@ -74,36 +73,41 @@ export function TraderTypes() {
         </div>
 
         <Reveal>
-          <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.1_0.025_265)] p-8 md:p-10 lg:p-12">
-            <div className="pointer-events-none absolute -right-24 top-0 size-72 rounded-full bg-[oklch(0.4_0.12_270/0.12)] blur-3xl" />
-            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-[oklch(0.55_0.1_250)]">
-              {current.label}
-            </p>
-            <h3 className="font-display relative mt-6 text-2xl text-zinc-50 md:text-[1.75rem]">
-              {current.headline}
-            </h3>
-            <p className="relative mt-5 text-base leading-relaxed text-zinc-400">{current.copy}</p>
-            <div className="relative mt-12 grid gap-4 border-t border-white/[0.06] pt-10 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/[0.06] bg-black/20 p-5">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  What improves
-                </p>
-                <p className="mt-2 text-sm text-zinc-300">
-                  Faster review cycles, fewer blind spots, clearer accountability loops.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/[0.06] bg-black/20 p-5">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  What drops away
-                </p>
-                <p className="mt-2 text-sm text-zinc-300">
-                  Vague narratives, missing context, and surprise rule collisions.
-                </p>
+          <div className="overflow-hidden rounded-2xl border border-border/85 bg-bv-surface/95 shadow-bv-lift">
+            <div className="border-b border-white/[0.06] bg-black/25 px-5 py-3 font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">
+              Profile · {current.label}
+            </div>
+            <div className="p-6 md:p-8">
+              <h3 className="font-display text-2xl tracking-tight text-zinc-50">{current.headline}</h3>
+              <p className="mt-3 text-sm leading-snug text-zinc-400">{current.copy}</p>
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                {[
+                  { k: "Review cadence", v: "Daily" },
+                  { k: "Focus", v: "Execution quality" },
+                  { k: "Exports", v: "Desk-ready" },
+                ].map((row) => (
+                  <div
+                    key={row.k}
+                    className="rounded-xl border border-white/[0.06] bg-black/30 px-3 py-3 text-center"
+                  >
+                    <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-600">{row.k}</p>
+                    <p className="mt-1.5 font-display text-sm text-zinc-200">{row.v}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </Reveal>
       </div>
+
+      <Reveal className="mt-14 text-center">
+        <a
+          href={marketingCtas.traderTypes.review.href}
+          className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary/80 transition hover:text-primary"
+        >
+          {marketingCtas.traderTypes.review.label} →
+        </a>
+      </Reveal>
     </Section>
   );
 }

@@ -54,7 +54,7 @@ export function ExpectancyPanel({
     <section className={cn(dashboardPanelClass, "p-4 sm:p-5", className)}>
       <DashboardEyebrow>Expectancy</DashboardEyebrow>
       <p className="font-display mt-3 text-4xl tabular-nums tracking-tight text-zinc-50">{expectancyR} R</p>
-      <p className="mt-1 font-mono text-[13px] tabular-nums text-[oklch(0.78_0.1_250)]">{perTradeUsd} / trade</p>
+      <p className="mt-1 font-mono text-[13px] tabular-nums text-bv-ice/90">{perTradeUsd} / trade</p>
       <dl className="mt-5 space-y-3 border-t border-white/[0.06] pt-4 text-sm">
         <div className="flex justify-between gap-4">
           <dt className="text-zinc-500">Gross / fees</dt>

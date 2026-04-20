@@ -42,7 +42,7 @@ export function TradeDetailDrawer({
       <SheetContent
         side="right"
         showCloseButton
-        className="w-full max-w-md border-white/[0.08] bg-[oklch(0.1_0.03_265)] p-0 sm:max-w-lg"
+        className="w-full max-w-md border-border/85 bg-bv-surface p-0 sm:max-w-lg"
       >
         <SheetHeader className="border-b border-white/[0.06] px-5 py-4 text-left">
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-500">Trade</p>
@@ -80,7 +80,7 @@ export function TradeDetailDrawer({
             </div>
             <div>
               <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">R</dt>
-              <dd className="mt-1 font-mono tabular-nums text-[oklch(0.82_0.1_250)]">{t.rMultiple}</dd>
+              <dd className="mt-1 font-mono tabular-nums text-bv-ice/95">{t.rMultiple}</dd>
             </div>
           </dl>
 
@@ -102,7 +102,7 @@ export function TradeDetailDrawer({
             </div>
             <div className="rounded-lg border border-white/[0.06] bg-bv-surface-inset/60 px-3 py-2">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">MFE</p>
-              <p className="mt-1 font-mono text-sm tabular-nums text-[oklch(0.78_0.12_250)]">{t.mfe}</p>
+              <p className="mt-1 font-mono text-sm tabular-nums text-primary/90">{t.mfe}</p>
             </div>
           </div>
 

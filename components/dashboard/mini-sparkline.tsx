@@ -22,12 +22,12 @@ export function MiniSparkline({ positive = true, className }: MiniSparklineProps
     >
       <defs>
         <linearGradient id={lineGrad} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="oklch(0.5 0.14 250)" />
-          <stop offset="100%" stopColor="oklch(0.78 0.1 255)" />
+          <stop offset="0%" stopColor="oklch(0.48 0.12 252)" />
+          <stop offset="100%" stopColor="oklch(0.78 0.08 252)" />
         </linearGradient>
         <linearGradient id={areaGrad} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.55 0.18 250 / 0.22)" />
-          <stop offset="100%" stopColor="oklch(0.55 0.18 250 / 0)" />
+          <stop offset="0%" stopColor="oklch(0.5 0.14 252 / 0.18)" />
+          <stop offset="100%" stopColor="oklch(0.5 0.14 252 / 0)" />
         </linearGradient>
       </defs>
       {positive ? (
@@ -48,7 +48,7 @@ export function MiniSparkline({ positive = true, className }: MiniSparklineProps
         <path
           d="M0,10 C20,14 40,8 60,18 C80,28 100,22 120,26"
           fill="none"
-          stroke="oklch(0.65 0.14 25 / 0.9)"
+          stroke="oklch(0.62 0.14 25 / 0.85)"
           strokeWidth="1.25"
           vectorEffect="non-scaling-stroke"
         />

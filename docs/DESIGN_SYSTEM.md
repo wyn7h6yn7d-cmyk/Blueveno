@@ -26,24 +26,28 @@ Use **OKLCH** for perceptual consistency across displays.
 
 | Token | Role | OKLCH (approx.) | Usage |
 |-------|------|-----------------|--------|
-| `bv-void` | Deepest canvas | `oklch(0.07 0.03 265)` | Root background, full-bleed marketing |
-| `bv-base` | Page surface | `oklch(0.10 0.025 265)` | App shell behind content |
-| `bv-raised` | Standard surface | `oklch(0.12 0.02 260)` | Main content area (maps to `--background` in dark) |
-| `bv-surface` | Card / panel | `oklch(0.14 0.022 262)` | Cards, sidebars |
-| `bv-surface-high` | Elevated card | `oklch(0.16 0.025 260)` | Hover, nested modules |
-| `bv-surface-inset` | Recessed well | `oklch(0.09 0.03 265)` | Chart wells, table stripes, input wells |
+| `bv-void` | Deepest canvas | `oklch(0.055 0.038 268)` | Root background, full-bleed marketing |
+| `bv-base` | Page surface | `oklch(0.082 0.032 266)` | App shell behind content |
+| `bv-raised` | Standard surface | `oklch(0.108 0.03 264)` | Main content area (maps to `--background` in dark) |
+| `bv-surface` | Card / panel | `oklch(0.125 0.028 262)` | Cards, sidebars |
+| `bv-surface-high` | Elevated card | `oklch(0.148 0.026 260)` | Hover, nested modules |
+| `bv-surface-inset` | Recessed well | `oklch(0.075 0.034 268)` | Chart wells, table stripes, input wells |
 
 ### 2.2 Secondary palette (accents)
 
 | Token | Role | OKLCH (approx.) | Usage |
 |-------|------|-----------------|--------|
-| `bv-blue-deep` | Structural blue | `oklch(0.38 0.10 250)` | Dividers, chart grid, inactive series |
-| `bv-blue-accent` | Primary interactive | `oklch(0.62 0.14 250)` | Links, focus rings, key metrics (aligns with `--primary`) |
-| `bv-ice` | Highlight text | `oklch(0.90 0.03 250)` | Eyebrows, labels on dark, “cold” emphasis |
-| `bv-cyan-electric` | Emphasis | `oklch(0.72 0.18 245)` | Single KPI pulse, active tab indicator, sparkline peak—**sparingly** |
+| `bv-blue-deep` | Structural blue | `oklch(0.36 0.11 252)` | Dividers, chart grid, inactive series |
+| `bv-blue-accent` | Primary interactive | `oklch(0.62 0.13 252)` | Links, focus rings, key metrics (aligns with `--primary`) |
+| `bv-ice` | Highlight text | `oklch(0.91 0.025 250)` | Eyebrows, labels on dark, “cold” emphasis |
+| `bv-cyan-electric` | Emphasis | `oklch(0.70 0.14 250)` | Single KPI pulse, active tab indicator, sparkline peak—**sparingly** |
 | `bv-warm` | Restrained contrast | `oklch(0.78 0.08 55)` | Warnings, “attention” (not success—that stays cool green if needed) |
+| `bv-eyebrow` | Mono labels | `oklch(0.66 0.10 252)` | Section kicker text (`text-bv-eyebrow`) |
+| `bv-border-accent` | Section rules | `oklch(0.52 0.12 252 / 0.32)` | `via-bv-border-accent` on dividers |
 
 **Psychology:** Navy reads as **institutional and serious**. Ice/cyan reads as **precision and data**. Warm is **human exception**—use when the system must interrupt calm.
+
+**Primary CTA depth:** `shadow-bv-primary` combines hairline, soft cobalt bloom, and inset top highlight—use on primary buttons and key CTAs instead of one-off OKLCH shadows.
 
 ### 2.3 Foreground & borders
 
@@ -96,7 +100,7 @@ Stack from back to front:
 
 | Variant | Classes / pattern |
 |---------|-------------------|
-| **Standard** | `rounded-xl` or `rounded-2xl`, `border border-white/[0.06]`, `bg-bv-surface` or `bg-card`, subtle `shadow-bv-card` |
+| **Standard** | `rounded-xl` or `rounded-2xl`, `border border-border/80`, `bg-bv-surface` or `bg-card`, subtle `shadow-bv-card` |
 | **Nested** | Inner card uses `bv-surface-inset` or one step darker background; reduce radius by one step (`rounded-lg` inside `rounded-2xl`) |
 | **Interactive** | Hover: border `white/10`, background +`white/[0.02]`, **no** scale > 1.02 |
 
