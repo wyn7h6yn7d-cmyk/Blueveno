@@ -138,13 +138,17 @@ export function AuthSplitLayout({
                   <p className="mt-5 text-center font-mono text-[10px] leading-relaxed text-zinc-600">
                     Developer: set{" "}
                     <code className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-zinc-400">
-                      AUTH_DEMO=true
+                      NEXT_PUBLIC_SUPABASE_URL
                     </code>{" "}
-                    and use demo credentials from{" "}
+                    and{" "}
                     <code className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-zinc-400">
-                      .env
+                      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+                    </code>{" "}
+                    in{" "}
+                    <code className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-zinc-400">
+                      .env.local
                     </code>
-                    .
+                    ; create users in Supabase Auth.
                   </p>
                 ) : null}
               </div>

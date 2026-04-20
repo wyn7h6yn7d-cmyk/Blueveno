@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialAuthPlaceholder } from "@/components/auth/social-auth-placeholder";
 import { authFieldClass, authLabelClass } from "@/lib/auth-field";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 
 export function SignupForm() {
@@ -20,15 +22,40 @@ export function SignupForm() {
     setPending(true);
     setMessage(null);
     setIsError(false);
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+
+    if (!isSupabaseConfigured()) {
+      setPending(false);
+      setIsError(true);
+      setMessage("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+      return;
+    }
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback`,
+      },
     });
-    const data = (await res.json()) as { message?: string };
+
     setPending(false);
-    setIsError(!res.ok);
-    setMessage(data.message ?? `Request finished with HTTP ${res.status}.`);
+
+    if (error) {
+      setIsError(true);
+      setMessage(error.message);
+      return;
+    }
+
+    if (data.user && !data.session) {
+      setIsError(false);
+      setMessage("Check your email to confirm your account, then sign in.");
+      return;
+    }
+
+    setIsError(false);
+    setMessage("Account created. You can sign in.");
   }
 
   return (
@@ -37,12 +64,10 @@ export function SignupForm() {
       <div className="relative px-6 pb-8 pt-7 sm:px-8 sm:pb-9 sm:pt-8">
         <div className="mb-8 flex items-start justify-between gap-4 border-b border-white/[0.06] pb-6">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">
-              New workspace
-            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">New workspace</p>
             <p className="mt-2 max-w-[22rem] text-[13px] leading-relaxed text-zinc-500">
-              Full self-serve signup is still tightening with the data layer. For now, use demo
-              credentials on Sign in, or leave your details if the API accepts the request.
+              Creates a user in Supabase Auth. If email confirmation is on in your project, you&apos;ll confirm before
+              signing in.
             </p>
           </div>
         </div>

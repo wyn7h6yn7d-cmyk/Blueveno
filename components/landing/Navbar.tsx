@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSupabaseUser } from "@/lib/hooks/use-supabase-user";
 import { LogoLink } from "@/components/landing/LogoLink";
 import { marketingCtas } from "@/lib/marketing-ctas";
 
@@ -18,7 +18,7 @@ const topLinks = [{ href: "/pricing", label: "Pricing" }];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { data: session, status } = useSession();
+  const { status, user } = useSupabaseUser();
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-bv-surface/55 shadow-[0_12px_48px_-16px_rgba(0,0,0,0.55),inset_0_-1px_0_0_oklch(1_0_0_/0.045)] backdrop-blur-2xl supports-[backdrop-filter]:bg-bv-surface/50">
@@ -54,7 +54,7 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {status === "authenticated" ? (
+          {status === "authenticated" && user ? (
             <Link
               href="/app"
               className="hidden rounded-full border border-primary/40 bg-primary/14 px-4 py-2 text-[13px] text-bv-ice/95 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] transition hover:bg-primary/22 sm:inline-flex"
@@ -134,11 +134,11 @@ export function Navbar() {
               {marketingCtas.nav.conversion.label}
             </a>
             <Link
-              href={session ? "/app" : "/login"}
+              href={user ? "/app" : "/login"}
               className="rounded-full border border-white/[0.1] px-4 py-2.5 text-center text-sm text-zinc-300"
               onClick={() => setOpen(false)}
             >
-              {session ? "Workspace" : "Sign in"}
+              {user ? "Workspace" : "Sign in"}
             </Link>
           </div>
         </div>

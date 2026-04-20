@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import {
   Bell,
@@ -177,8 +177,12 @@ export function AppTopbar({ user }: AppTopbarProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => signOut({ callbackUrl: "/" })}
               className="gap-2"
+              onClick={async () => {
+                await createClient().auth.signOut();
+                router.push("/");
+                router.refresh();
+              }}
             >
               <LogOut className="size-4" />
               Sign out

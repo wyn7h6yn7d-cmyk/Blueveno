@@ -1,4 +1,4 @@
-import type { Session } from "next-auth";
+import type { AuthSession } from "@/types/auth-session";
 import type { FeatureKey } from "@/lib/features";
 import type { PlanTier } from "@/lib/billing/types";
 import { MIN_TIER_FOR_FEATURE, tierMeetsRequirement } from "@/lib/billing/matrix";
@@ -7,7 +7,7 @@ import { getEffectivePlanTier } from "@/lib/billing/resolve";
 /**
  * @deprecated Use getEffectivePlanTier — kept for existing imports.
  */
-export function getPlanTier(session: Session | null): PlanTier {
+export function getPlanTier(session: AuthSession | null): PlanTier {
   return getEffectivePlanTier(session);
 }
 
@@ -18,7 +18,7 @@ function devBypass(): boolean {
 /**
  * Core entitlement check — server components, actions, API routes.
  */
-export function hasFeature(session: Session | null, feature: FeatureKey): boolean {
+export function hasFeature(session: AuthSession | null, feature: FeatureKey): boolean {
   if (devBypass()) {
     return true;
   }
@@ -28,26 +28,26 @@ export function hasFeature(session: Session | null, feature: FeatureKey): boolea
 }
 
 /** Convenience — journal without limits */
-export function canUseUnlimitedJournal(session: Session | null): boolean {
+export function canUseUnlimitedJournal(session: AuthSession | null): boolean {
   return hasFeature(session, "journal.unlimited");
 }
 
-export function canUseAdvancedAnalytics(session: Session | null): boolean {
+export function canUseAdvancedAnalytics(session: AuthSession | null): boolean {
   return hasFeature(session, "analytics.advanced");
 }
 
-export function canUseScreenshotReview(session: Session | null): boolean {
+export function canUseScreenshotReview(session: AuthSession | null): boolean {
   return hasFeature(session, "reviews.screenshot");
 }
 
-export function canUsePlaybooks(session: Session | null): boolean {
+export function canUsePlaybooks(session: AuthSession | null): boolean {
   return hasFeature(session, "playbooks.full");
 }
 
-export function canUsePremiumReports(session: Session | null): boolean {
+export function canUsePremiumReports(session: AuthSession | null): boolean {
   return hasFeature(session, "reports.premium");
 }
 
-export function canUseAiInsights(session: Session | null): boolean {
+export function canUseAiInsights(session: AuthSession | null): boolean {
   return hasFeature(session, "ai.insights");
 }

@@ -1,65 +1,40 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import type { AuthSession } from "@/types/auth-session";
 import type { PlanTier } from "@/lib/billing/types";
+import { createClient } from "@/lib/supabase/server";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  trustHost: true,
-  session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
-  pages: { signIn: "/login" },
-  providers: [
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      authorize(credentials) {
-        const email = credentials?.email;
-        const password = credentials?.password;
-        if (typeof email !== "string" || typeof password !== "string") {
-          return null;
-        }
-        const demoOn = process.env.AUTH_DEMO === "true";
-        const demoEmail = process.env.AUTH_DEMO_EMAIL;
-        const demoPassword = process.env.AUTH_DEMO_PASSWORD;
-        if (
-          demoOn &&
-          demoEmail &&
-          demoPassword &&
-          email === demoEmail &&
-          password === demoPassword
-        ) {
-          return {
-            id: "user_demo",
-            email,
-            name: "Demo trader",
-          };
-        }
-        return null;
-      },
-    }),
-  ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.sub = user.id ?? token.sub;
-      }
-      /** Future: set token.planTier from DB user on sign-in. Demo override for billing UI: */
-      const override = process.env.BILLING_PLAN_TIER_OVERRIDE;
-      if (override === "free" || override === "pro" || override === "elite") {
-        token.planTier = override;
-      }
-      return token;
+function planFromEnv(): PlanTier | undefined {
+  const o = process.env.BILLING_PLAN_TIER_OVERRIDE;
+  if (o === "free" || o === "pro" || o === "elite") {
+    return o;
+  }
+  return undefined;
+}
+
+/**
+ * Server-only session compatible with existing billing / `Session` types.
+ * Backed by Supabase Auth (cookie session).
+ */
+export async function auth(): Promise<AuthSession | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    return null;
+  }
+
+  const meta = user.user_metadata as { full_name?: string; name?: string } | undefined;
+  const name = meta?.name ?? meta?.full_name ?? user.email?.split("@")[0] ?? null;
+  const pt = planFromEnv();
+
+  return {
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    user: {
+      id: user.id,
+      email: user.email ?? "",
+      name,
+      planTier: pt,
     },
-    session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
-      }
-      const pt = token.planTier;
-      if (session.user && (pt === "free" || pt === "pro" || pt === "elite")) {
-        session.user.planTier = pt as PlanTier;
-      }
-      return session;
-    },
-  },
-});
+  };
+}

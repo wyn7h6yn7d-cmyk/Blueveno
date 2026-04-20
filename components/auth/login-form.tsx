@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SocialAuthPlaceholder } from "@/components/auth/social-auth-placeholder";
 import { authFieldClass, authLabelClass } from "@/lib/auth-field";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 
 type LoginFormProps = {
@@ -25,17 +26,22 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
     e.preventDefault();
     setPending(true);
     setError(null);
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      callbackUrl,
-    });
-    setPending(false);
-    if (res?.error) {
-      setError("Invalid email or password.");
+
+    if (!isSupabaseConfigured()) {
+      setPending(false);
+      setError("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
       return;
     }
+
+    const supabase = createClient();
+    const { error: signError } = await supabase.auth.signInWithPassword({ email, password });
+    setPending(false);
+
+    if (signError) {
+      setError(signError.message === "Invalid login credentials" ? "Invalid email or password." : signError.message);
+      return;
+    }
+
     router.push(callbackUrl);
     router.refresh();
   }
@@ -46,12 +52,9 @@ export function LoginForm({ callbackUrl }: LoginFormProps) {
       <div className="relative px-6 pb-8 pt-7 sm:px-8 sm:pb-9 sm:pt-8">
         <div className="mb-8 flex items-start justify-between gap-4 border-b border-white/[0.06] pb-6">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">
-              Credentials
-            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Credentials</p>
             <p className="mt-2 max-w-[22rem] text-[13px] leading-relaxed text-zinc-500">
-              Sign in with your work email. SSO will ship with production—this build uses email and
-              password, including demo mode for testing.
+              Sign in with the email and password for your Supabase Auth account.
             </p>
           </div>
         </div>

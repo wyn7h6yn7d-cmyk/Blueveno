@@ -1,4 +1,4 @@
-import type { Session } from "next-auth";
+import type { AuthSession } from "@/types/auth-session";
 import type { PlanTier, SubscriptionSnapshot, SubscriptionStatus } from "@/lib/billing/types";
 
 /**
@@ -9,7 +9,7 @@ import type { PlanTier, SubscriptionSnapshot, SubscriptionStatus } from "@/lib/b
  * 2. BILLING_PLAN_TIER_OVERRIDE for local/staging demos
  * 3. free
  */
-export function getEffectivePlanTier(session: Session | null): PlanTier {
+export function getEffectivePlanTier(session: AuthSession | null): PlanTier {
   const fromSession = session?.user?.planTier;
   if (fromSession && isPlanTier(fromSession)) {
     return fromSession;
@@ -28,7 +28,7 @@ function isPlanTier(v: string): v is PlanTier {
 /**
  * Placeholder snapshot until Subscription table + Stripe webhooks populate fields.
  */
-export function getSubscriptionSnapshot(session: Session | null): SubscriptionSnapshot {
+export function getSubscriptionSnapshot(session: AuthSession | null): SubscriptionSnapshot {
   const tier = getEffectivePlanTier(session);
   const hasPaid = tier !== "free";
 
