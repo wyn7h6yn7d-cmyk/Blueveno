@@ -238,9 +238,9 @@ export function WorkflowStory() {
           const r = e.intersectionRatio;
           if (!best || r > best.ratio) best = { idx, ratio: r };
         }
-        if (best && best.ratio > 0.18) setActive(best.idx);
+        if (best && best.ratio > 0.12) setActive(best.idx);
       },
-      { threshold: [0.12, 0.22, 0.32, 0.42, 0.52], rootMargin: "-14% 0px -20% 0px" },
+      { threshold: [0.1, 0.2, 0.35, 0.5], rootMargin: "-12% 0px -18% 0px" },
     );
 
     nodes.forEach((n) => observer.observe(n));
@@ -256,23 +256,34 @@ export function WorkflowStory() {
             sectionRefs.current[i] = el;
           }}
           data-step={i}
-          className="flex min-h-[min(68vh,600px)] flex-col justify-center border-b border-white/[0.05] py-12 last:border-b-0 lg:min-h-[min(82vh,700px)] lg:py-16"
+          className={cn(
+            "scroll-mt-28 border-b border-white/[0.06] py-8 last:border-b-0 sm:py-10 lg:py-8",
+            /* Enough height for scroll-driven steps without a “void” — was min(82vh) + justify-center */
+            "min-h-[min(42vh,380px)] sm:min-h-[min(46vh,420px)] lg:min-h-[min(48vh,460px)]",
+          )}
         >
-          <div className="flex items-start gap-4">
-            <s.Icon
-              className={cn(
-                "mt-0.5 size-5 shrink-0 transition-colors duration-500",
-                active === i ? "text-primary" : "text-zinc-600",
-              )}
-              strokeWidth={1.5}
-              aria-hidden
-            />
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-bv-eyebrow/90">
-                {String(i + 1).padStart(2, "0")} · {s.title}
-              </p>
-              <p className="font-display mt-3 text-xl font-medium tracking-tight text-zinc-50 sm:text-2xl">{s.title}</p>
-              <p className="mt-2 max-w-sm text-[14px] leading-snug text-zinc-500">{s.line}</p>
+          <div className="flex h-full flex-col justify-start">
+            <div className="rounded-2xl border border-white/[0.07] bg-[oklch(0.09_0.02_265/0.85)] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)] sm:p-6">
+              <div className="flex items-start gap-4">
+                <s.Icon
+                  className={cn(
+                    "mt-0.5 size-5 shrink-0 transition-colors duration-500",
+                    active === i ? "text-primary" : "text-zinc-600",
+                  )}
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-bv-eyebrow/90">
+                    {String(i + 1).padStart(2, "0")} · {s.title}
+                  </p>
+                  <p className="font-display mt-3 text-xl font-medium tracking-tight text-zinc-50 sm:text-2xl">{s.title}</p>
+                  <p className="mt-2 max-w-md text-[15px] leading-relaxed text-zinc-400">{s.line}</p>
+                  <p className="mt-4 border-t border-white/[0.06] pt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
+                    Step {String(i + 1)} of {STEPS.length} · card updates as you scroll
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
