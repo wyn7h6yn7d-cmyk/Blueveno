@@ -49,10 +49,15 @@ const fills = [
   { t: "11:03:40", sym: "ESZ5", side: "L", qty: "2", tag: "ORB", r: "+0.35" },
 ];
 
-function SessionStrip({ label }: { label: string }) {
+function SessionStrip({ label, compact }: { label: string; compact?: boolean }) {
   return (
-    <div className="relative border-b border-white/[0.12] bg-[linear-gradient(180deg,oklch(0.09_0.03_268/1)_0%,oklch(0.055_0.035_268/1)_100%)] shadow-[inset_0_-1px_0_0_oklch(1_0_0_/0.04)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500 md:px-5">
+    <div className="relative shrink-0 border-b border-white/[0.12] bg-[linear-gradient(180deg,oklch(0.09_0.03_268/1)_0%,oklch(0.055_0.035_268/1)_100%)] shadow-[inset_0_-1px_0_0_oklch(1_0_0_/0.04)]">
+      <div
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-2 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500",
+          compact ? "px-3 py-2 md:px-4" : "px-4 py-2.5 md:px-5",
+        )}
+      >
         <span className="text-zinc-400">
           Session <span className="font-semibold tracking-[0.12em] text-zinc-100">{label}</span>
         </span>
@@ -68,28 +73,39 @@ function SessionStrip({ label }: { label: string }) {
   );
 }
 
-function KpiBand({ className }: { className?: string }) {
+function KpiBand({ className, compact }: { className?: string; compact?: boolean }) {
   return (
-    <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-4", className)}>
+    <div className={cn("grid grid-cols-2 gap-1.5 sm:grid-cols-4", compact ? "sm:gap-2" : "gap-2", className)}>
       {kpis.map((k) => (
         <div
           key={k.label}
           className={cn(
-            "group/kpi cursor-default rounded-xl border bg-bv-surface-inset px-3 py-2.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] transition-[transform,border-color,box-shadow] duration-200",
+            "group/kpi cursor-default rounded-lg border bg-bv-surface-inset shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] transition-[transform,border-color,box-shadow] duration-200",
+            compact ? "px-2 py-2" : "rounded-xl px-3 py-2.5",
             k.accent
               ? "border-primary/45 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),inset_0_0_0_1px_oklch(0.55_0.13_252/0.2)]"
               : "border-white/[0.12] hover:-translate-y-px hover:border-white/[0.18] hover:shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08)]",
           )}
         >
-          <p className="font-mono text-[8px] font-medium uppercase tracking-[0.22em] text-zinc-400">{k.label}</p>
           <p
             className={cn(
-              "font-display mt-1 text-xl tabular-nums tracking-tight md:text-2xl",
+              "font-mono font-medium uppercase tracking-[0.22em] text-zinc-400",
+              compact ? "text-[7px]" : "text-[8px]",
+            )}
+          >
+            {k.label}
+          </p>
+          <p
+            className={cn(
+              "font-display tabular-nums tracking-tight",
+              compact ? "mt-0.5 text-lg md:text-xl" : "mt-1 text-xl md:text-2xl",
               k.accent ? "text-primary" : "text-zinc-50",
             )}
           >
             {k.value}
-            {k.label === "Win %" ? <span className="text-base font-normal text-zinc-500">%</span> : null}
+            {k.label === "Win %" ? (
+              <span className={cn("font-normal text-zinc-500", compact ? "text-sm" : "text-base")}>%</span>
+            ) : null}
           </p>
         </div>
       ))}
@@ -97,20 +113,41 @@ function KpiBand({ className }: { className?: string }) {
   );
 }
 
-function EquityChart() {
+function EquityChart({ compact }: { compact?: boolean }) {
+  const hChart = compact ? "h-[7.25rem]" : "h-48 md:h-56";
   return (
-    <div className="group/chart relative overflow-hidden rounded-xl border border-primary/45 bg-[linear-gradient(165deg,oklch(0.09_0.034_268/1)_0%,oklch(0.062_0.036_268/1)_55%,oklch(0.055_0.038_268/1)_100%)] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07),inset_0_0_0_1px_oklch(0.55_0.12_252/0.15)] md:h-56">
+    <div
+      className={cn(
+        "group/chart relative overflow-hidden rounded-lg border border-primary/45 bg-[linear-gradient(165deg,oklch(0.09_0.034_268/1)_0%,oklch(0.062_0.036_268/1)_55%,oklch(0.055_0.038_268/1)_100%)] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07),inset_0_0_0_1px_oklch(0.55_0.12_252/0.15)]",
+        compact ? "rounded-lg" : "rounded-xl",
+      )}
+    >
       <div className="absolute inset-0 bg-grid-fine-sharp opacity-[0.5]" />
-      <div className="pointer-events-none absolute left-0 top-0 z-[1] flex h-full w-9 flex-col justify-between border-r border-white/[0.08] bg-black/30 py-2 pl-2 pr-1 font-mono text-[7px] tabular-nums leading-none text-zinc-500">
+      <div
+        className={cn(
+          "pointer-events-none absolute left-0 top-0 z-[1] flex h-full flex-col justify-between border-r border-white/[0.08] bg-black/30 py-1.5 pl-1.5 pr-1 font-mono tabular-nums leading-none text-zinc-500",
+          compact ? "w-7 text-[6px]" : "w-9 py-2 pl-2 text-[7px]",
+        )}
+      >
         <span>+4R</span>
         <span>0</span>
         <span>−2R</span>
       </div>
-      <div className="pointer-events-none absolute left-10 right-3 top-3 z-10 flex items-center gap-2 font-mono text-[8px] uppercase tracking-[0.2em]">
-        <span className="rounded border border-white/[0.14] bg-black/60 px-1.5 py-0.5 font-semibold text-zinc-100">Equity curve</span>
-        <span className="text-zinc-500">90 sessions · R-baseline</span>
+      <div
+        className={cn(
+          "pointer-events-none absolute right-2 z-10 flex items-center gap-1.5 font-mono uppercase tracking-[0.2em] text-zinc-500",
+          compact ? "left-8 top-2 text-[7px]" : "left-10 top-3 text-[8px]",
+        )}
+      >
+        <span className="rounded border border-white/[0.14] bg-black/60 px-1.5 py-0.5 font-semibold text-zinc-100">Equity</span>
+        {!compact ? <span>90 sessions · R-baseline</span> : <span className="hidden sm:inline">90 sess.</span>}
       </div>
-      <svg className="relative ml-9 h-48 w-[calc(100%-2.25rem)] md:h-56" viewBox="0 0 480 176" preserveAspectRatio="none" aria-hidden>
+      <svg
+        className={cn("relative", hChart, compact ? "ml-7 w-[calc(100%-1.75rem)]" : "ml-9 w-[calc(100%-2.25rem)]")}
+        viewBox="0 0 480 176"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
         <defs>
           <linearGradient id="hiFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="oklch(0.58 0.14 252 / 0.5)" />
@@ -138,42 +175,75 @@ function EquityChart() {
         />
         <circle cx="480" cy="22" r="3" fill="oklch(0.72 0.12 252)" stroke="oklch(0.09 0.03 268)" strokeWidth="1" />
       </svg>
-      <div className="absolute bottom-2.5 left-10 right-4 flex items-end justify-between gap-4 border-t border-white/[0.1] pt-2 font-mono text-[9px]">
-        <span className="text-zinc-500">Baseline · R-multiple</span>
-        <span className="font-semibold text-primary">+3.41 R · post-review</span>
+      <div
+        className={cn(
+          "absolute right-3 flex items-end justify-between gap-2 border-t border-white/[0.1] font-mono text-zinc-500",
+          compact ? "bottom-1.5 left-7 pt-1 text-[7px]" : "bottom-2.5 left-10 pt-2 text-[9px]",
+        )}
+      >
+        <span className={compact ? "truncate" : ""}>Baseline · R</span>
+        <span className="shrink-0 font-semibold text-primary">+3.41 R</span>
       </div>
     </div>
   );
 }
 
-function FillsTable({ dense }: { dense?: boolean }) {
-  const rows = dense ? fills : fills.slice(0, 3);
+function AnalyticsFillSummary() {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-lg border border-white/[0.1] bg-black/45 px-2.5 py-1.5 font-mono text-[8px] text-zinc-300 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] sm:text-[9px]">
+      <span className="uppercase tracking-[0.18em] text-zinc-500">Latest fill</span>
+      <span className="tabular-nums text-zinc-100">
+        NQ · 10:12 · Fade · <span className="font-semibold text-primary">+0.8 R</span>
+      </span>
+    </div>
+  );
+}
+
+function FillsTable({ dense, compact }: { dense?: boolean; compact?: boolean }) {
+  const rows = dense ? (compact ? fills.slice(0, 3) : fills) : fills.slice(0, 3);
   return (
     <div className="overflow-hidden rounded-xl border border-white/[0.12] bg-[linear-gradient(180deg,oklch(0.07_0.03_268/1)_0%,oklch(0.055_0.035_268/1)_100%)] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
-      <div className="flex items-center justify-between border-b border-white/[0.1] bg-white/[0.05] px-3 py-2">
-        <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-300">Session fills</span>
-        <span className="font-mono text-[8px] text-zinc-500">EST · tape-synced</span>
+      <div
+        className={cn(
+          "flex items-center justify-between border-b border-white/[0.1] bg-white/[0.05]",
+          compact ? "px-2.5 py-1.5" : "px-3 py-2",
+        )}
+      >
+        <span
+          className={cn(
+            "font-mono font-semibold uppercase tracking-[0.2em] text-zinc-300",
+            compact ? "text-[8px]" : "text-[9px]",
+          )}
+        >
+          Session fills
+        </span>
+        <span className={cn("font-mono text-zinc-500", compact ? "text-[7px]" : "text-[8px]")}>EST · synced</span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[320px] text-left text-[11px]">
+      <div className={cn(compact ? "overflow-hidden" : "overflow-x-auto")}>
+        <table className={cn("w-full text-left", compact ? "text-[10px]" : "min-w-[320px] text-[11px]")}>
           <thead>
-            <tr className="border-b border-white/[0.08] font-mono text-[8px] uppercase tracking-[0.18em] text-zinc-500">
-              <th scope="col" className="px-3 py-2 font-medium">
+            <tr
+              className={cn(
+                "border-b border-white/[0.08] font-mono uppercase tracking-[0.18em] text-zinc-500",
+                compact ? "text-[7px]" : "text-[8px]",
+              )}
+            >
+              <th scope="col" className={cn("font-medium", compact ? "px-2 py-1" : "px-3 py-2")}>
                 Time
               </th>
-              <th scope="col" className="py-2 font-medium">
+              <th scope="col" className={cn("font-medium", compact ? "py-1" : "py-2")}>
                 Sym
               </th>
-              <th scope="col" className="hidden py-2 font-medium sm:table-cell">
+              <th scope="col" className={cn("hidden font-medium sm:table-cell", compact ? "py-1" : "py-2")}>
                 Side
               </th>
-              <th scope="col" className="hidden py-2 font-medium md:table-cell">
+              <th scope="col" className={cn("hidden font-medium md:table-cell", compact ? "py-1" : "py-2")}>
                 Qty
               </th>
-              <th scope="col" className="py-2 font-medium">
+              <th scope="col" className={cn("font-medium", compact ? "py-1" : "py-2")}>
                 Tag
               </th>
-              <th scope="col" className="px-3 py-2 text-right font-medium">
+              <th scope="col" className={cn("text-right font-medium", compact ? "px-2 py-1" : "px-3 py-2")}>
                 R
               </th>
             </tr>
@@ -188,16 +258,26 @@ function FillsTable({ dense }: { dense?: boolean }) {
                   "hover:bg-white/[0.06]",
                 )}
               >
-                <td className="px-3 py-2 font-mono tabular-nums text-zinc-400">{row.t}</td>
-                <td className="py-2 font-semibold text-zinc-100">{row.sym}</td>
-                <td className="hidden py-2 font-mono text-zinc-400 sm:table-cell">{row.side}</td>
-                <td className="hidden py-2 font-mono tabular-nums text-zinc-500 md:table-cell">{row.qty}</td>
-                <td className="py-2">
-                  <span className="rounded border border-white/[0.1] bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] text-zinc-200">{row.tag}</span>
+                <td className={cn("font-mono tabular-nums text-zinc-400", compact ? "px-2 py-1" : "px-3 py-2")}>{row.t}</td>
+                <td className={cn("font-semibold text-zinc-100", compact ? "py-1" : "py-2")}>{row.sym}</td>
+                <td className={cn("hidden font-mono text-zinc-400 sm:table-cell", compact ? "py-1" : "py-2")}>{row.side}</td>
+                <td className={cn("hidden font-mono tabular-nums text-zinc-500 md:table-cell", compact ? "py-1" : "py-2")}>
+                  {row.qty}
+                </td>
+                <td className={cn(compact ? "py-1" : "py-2")}>
+                  <span
+                    className={cn(
+                      "rounded border border-white/[0.1] bg-white/[0.04] font-mono text-zinc-200",
+                      compact ? "px-1 py-0.5 text-[9px]" : "px-1.5 py-0.5 text-[10px]",
+                    )}
+                  >
+                    {row.tag}
+                  </span>
                 </td>
                 <td
                   className={cn(
-                    "px-3 py-2 text-right font-mono text-xs tabular-nums font-semibold tracking-tight",
+                    "text-right font-mono tabular-nums font-semibold tracking-tight",
+                    compact ? "px-2 py-1 text-[10px]" : "px-3 py-2 text-xs",
                     row.r.startsWith("−") ? "text-rose-300/95" : "text-zinc-50",
                   )}
                 >
@@ -212,23 +292,44 @@ function FillsTable({ dense }: { dense?: boolean }) {
   );
 }
 
-function DeskSignals() {
+function DeskSignals({ compact }: { compact?: boolean }) {
   const rows = [
     { k: "Plan drift", v: "Low", ok: true },
     { k: "Review queue", v: "2", ok: false },
     { k: "Rule surface", v: "Clear", ok: true },
   ];
   return (
-    <div className="rounded-xl border border-white/[0.12] bg-bv-surface-inset p-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]">
-      <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-zinc-300">Desk signals</p>
-      <ul className="mt-2.5 space-y-2">
+    <div
+      className={cn(
+        "rounded-lg border border-white/[0.12] bg-bv-surface-inset shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]",
+        compact ? "p-2" : "rounded-xl p-3",
+      )}
+    >
+      <p
+        className={cn(
+          "font-mono font-semibold uppercase tracking-[0.22em] text-zinc-300",
+          compact ? "text-[8px]" : "text-[9px]",
+        )}
+      >
+        Desk signals
+      </p>
+      <ul className={cn(compact ? "mt-1.5 space-y-1" : "mt-2.5 space-y-2")}>
         {rows.map((row) => (
           <li
             key={row.k}
-            className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.1] bg-black/35 px-2.5 py-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition-colors hover:border-primary/35"
+            className={cn(
+              "flex items-center justify-between gap-2 rounded-md border border-white/[0.1] bg-black/35 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition-colors hover:border-primary/35",
+              compact ? "px-2 py-1" : "rounded-lg px-2.5 py-1.5",
+            )}
           >
-            <span className="text-[11px] font-medium text-zinc-200">{row.k}</span>
-            <span className={cn("font-mono text-[10px] font-semibold tabular-nums", row.ok ? "text-primary" : "text-amber-200")}>
+            <span className={cn("font-medium text-zinc-200", compact ? "text-[10px]" : "text-[11px]")}>{row.k}</span>
+            <span
+              className={cn(
+                "font-mono font-semibold tabular-nums",
+                compact ? "text-[9px]" : "text-[10px]",
+                row.ok ? "text-primary" : "text-amber-200",
+              )}
+            >
               {row.v}
             </span>
           </li>
@@ -238,14 +339,28 @@ function DeskSignals() {
   );
 }
 
-function RiskWindowCard() {
+function RiskWindowCard({ compact }: { compact?: boolean }) {
   return (
-    <div className="flex flex-1 flex-col rounded-xl border border-dashed border-primary/45 bg-bv-void/95 p-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] transition-colors hover:border-primary/55">
-      <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-300">Risk window</p>
-      <p className="mt-3 font-display text-2xl tabular-nums font-medium text-zinc-50">0.42 R</p>
-      <p className="mt-1 font-mono text-[9px] text-zinc-500">Open exposure vs. daily limit</p>
-      <div className="mt-auto pt-4">
-        <div className="h-2 overflow-hidden rounded-sm border border-white/[0.06] bg-zinc-900 shadow-inner">
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-col rounded-lg border border-dashed border-primary/45 bg-bv-void/95 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] transition-colors hover:border-primary/55",
+        compact ? "p-2" : "rounded-xl p-3",
+      )}
+    >
+      <p
+        className={cn(
+          "font-mono font-semibold uppercase tracking-[0.2em] text-zinc-300",
+          compact ? "text-[8px]" : "text-[9px]",
+        )}
+      >
+        Risk window
+      </p>
+      <p className={cn("font-display tabular-nums font-medium text-zinc-50", compact ? "mt-1.5 text-xl" : "mt-3 text-2xl")}>
+        0.42 R
+      </p>
+      <p className={cn("font-mono text-zinc-500", compact ? "mt-0.5 text-[8px]" : "mt-1 text-[9px]")}>Vs. daily limit</p>
+      <div className={cn(compact ? "mt-2" : "mt-auto pt-4")}>
+        <div className={cn("overflow-hidden rounded-sm border border-white/[0.06] bg-zinc-900 shadow-inner", compact ? "h-1.5" : "h-2")}>
           <div className="h-full w-[42%] rounded-sm bg-gradient-to-r from-bv-blue-deep to-primary" aria-hidden />
         </div>
       </div>
@@ -253,11 +368,21 @@ function RiskWindowCard() {
   );
 }
 
-function ReviewLinkPanel() {
+function ReviewLinkPanel({ compact }: { compact?: boolean }) {
   return (
-    <div className="relative rounded-xl border border-white/[0.12] bg-bv-surface-inset p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] md:p-5">
-      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
-        <div className="group/shot relative aspect-[4/3] max-h-36 overflow-hidden rounded-lg border border-white/[0.14] bg-gradient-to-br from-zinc-800 to-bv-void shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]">
+    <div
+      className={cn(
+        "relative rounded-xl border border-white/[0.12] bg-bv-surface-inset shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]",
+        compact ? "p-3" : "p-4 md:p-5",
+      )}
+    >
+      <div className={cn("grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center", compact ? "gap-2" : "gap-4")}>
+        <div
+          className={cn(
+            "group/shot relative aspect-[4/3] overflow-hidden rounded-lg border border-white/[0.14] bg-gradient-to-br from-zinc-800 to-bv-void shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]",
+            compact ? "max-h-28" : "max-h-36",
+          )}
+        >
           <div className="absolute inset-0 bg-grid-fine-sharp opacity-[0.45]" />
           <p className="absolute left-2 top-2 rounded border border-white/[0.1] bg-black/60 px-1.5 py-0.5 font-mono text-[8px] font-medium uppercase tracking-[0.15em] text-zinc-200">
             Chart · ES 1m
@@ -273,7 +398,7 @@ function ReviewLinkPanel() {
           </div>
         </div>
 
-        <div className="relative hidden h-24 w-12 shrink-0 md:block" aria-hidden>
+        <div className={cn("relative hidden shrink-0 md:block", compact ? "h-20 w-10" : "h-24 w-12")} aria-hidden>
           <svg className="absolute inset-0 h-full w-full text-primary/55" viewBox="0 0 48 96" fill="none">
             <path
               d="M4 48 H36 Q44 48 44 56 V88"
@@ -289,35 +414,56 @@ function ReviewLinkPanel() {
           </svg>
         </div>
 
-        <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/[0.08] p-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
+        <div className={cn("rounded-lg border border-emerald-500/30 bg-emerald-500/[0.08] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]", compact ? "p-2" : "p-3")}>
           <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.2em] text-emerald-300">Linked fill</p>
-          <p className="mt-2 font-mono text-[11px] text-zinc-100">
+          <p className={cn("font-mono text-zinc-100", compact ? "mt-1 text-[10px]" : "mt-2 text-[11px]")}>
             ES · 09:44 · ORB · <span className="font-semibold text-zinc-50">+0.5 R</span>
           </p>
-          <p className="mt-2 text-[10px] leading-snug text-zinc-400">Opens on the print—no orphan frames.</p>
+          {!compact ? <p className="mt-2 text-[10px] leading-snug text-zinc-400">Opens on the print—no orphan frames.</p> : null}
         </div>
       </div>
     </div>
   );
 }
 
-function ActiveRulesCard() {
+function ActiveRulesCard({ compact }: { compact?: boolean }) {
   const rows = [
     { k: "Max loss / day", v: "−1.0 R", ok: true },
     { k: "Blackout", v: "12:00–12:30", ok: false },
     { k: "Size cap", v: "3 lots", ok: true },
   ];
   return (
-    <div className="rounded-xl border border-white/[0.12] bg-bv-surface-inset p-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]">
-      <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-zinc-300">Active rules</p>
-      <ul className="mt-2.5 space-y-2">
+    <div
+      className={cn(
+        "border border-white/[0.12] bg-bv-surface-inset shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]",
+        compact ? "rounded-lg p-2" : "rounded-xl p-3",
+      )}
+    >
+      <p
+        className={cn(
+          "font-mono font-semibold uppercase tracking-[0.22em] text-zinc-300",
+          compact ? "text-[8px]" : "text-[9px]",
+        )}
+      >
+        Active rules
+      </p>
+      <ul className={cn(compact ? "mt-1.5 space-y-1" : "mt-2.5 space-y-2")}>
         {rows.map((row) => (
           <li
             key={row.k}
-            className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.1] bg-black/35 px-2.5 py-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition-colors hover:border-primary/35"
+            className={cn(
+              "flex items-center justify-between gap-2 rounded-md border border-white/[0.1] bg-black/35 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition-colors hover:border-primary/35",
+              compact ? "px-2 py-1" : "rounded-lg px-2.5 py-1.5",
+            )}
           >
-            <span className="text-[11px] font-medium text-zinc-200">{row.k}</span>
-            <span className={cn("font-mono text-[10px] font-semibold", row.ok ? "text-primary" : "text-amber-200")}>
+            <span className={cn("font-medium text-zinc-200", compact ? "text-[10px]" : "text-[11px]")}>{row.k}</span>
+            <span
+              className={cn(
+                "font-mono font-semibold",
+                compact ? "text-[9px]" : "text-[10px]",
+                row.ok ? "text-primary" : "text-amber-200",
+              )}
+            >
               {row.v}
             </span>
           </li>
@@ -327,25 +473,37 @@ function ActiveRulesCard() {
   );
 }
 
-function FootprintStrip() {
-  const bars = Array.from({ length: 24 }).map((_, i) => {
+function FootprintStrip({ compact }: { compact?: boolean }) {
+  const n = compact ? 18 : 24;
+  const bars = Array.from({ length: n }).map((_, i) => {
     const h = 24 + ((i * 17) % 72);
-    const hot = i === 17;
+    const hot = i === Math.floor(n * 0.7);
     return { h, hot, i };
   });
   return (
-    <div className="relative border-t border-white/[0.12] bg-[linear-gradient(180deg,oklch(0.06_0.032_268/1)_0%,oklch(0.045_0.036_268/1)_100%)]">
-      <div className="flex items-end justify-between gap-2 px-3 pb-1 pt-2 font-mono text-[7px] uppercase tracking-[0.2em] text-zinc-500">
+    <div className="relative shrink-0 border-t border-white/[0.12] bg-[linear-gradient(180deg,oklch(0.06_0.032_268/1)_0%,oklch(0.045_0.036_268/1)_100%)]">
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2 px-3 font-mono uppercase tracking-[0.2em] text-zinc-500",
+          compact ? "py-1.5 text-[6px]" : "pb-1 pt-2 text-[7px]",
+        )}
+      >
         <span>Execution footprint</span>
-        <span className="text-zinc-600">Last 90m · bid/ask delta</span>
+        <span className={cn("text-zinc-600", compact && "hidden sm:inline")}>{compact ? "Δ bid/ask" : "Last 90m · bid/ask delta"}</span>
       </div>
-      <div className="flex items-end gap-px px-3 pb-3 pt-1">
-        <div className="flex h-14 w-full items-end justify-between gap-px rounded-sm border border-white/[0.08] bg-zinc-950/90 px-1.5 py-1 shadow-inner">
+      <div className={cn("flex items-end gap-px px-3", compact ? "pb-2 pt-0.5" : "pb-3 pt-1")}>
+        <div
+          className={cn(
+            "flex w-full items-end justify-between gap-px rounded-sm border border-white/[0.08] bg-zinc-950/90 px-1 shadow-inner",
+            compact ? "h-9" : "h-14 py-1",
+          )}
+        >
           {bars.map(({ h, hot, i }) => (
             <div
               key={i}
               className={cn(
-                "flex h-12 min-w-[3px] flex-1 items-end justify-center rounded-[1px]",
+                "flex min-w-[2px] flex-1 items-end justify-center rounded-[1px]",
+                compact ? "h-7" : "h-12",
                 hot ? "ring-1 ring-primary/50" : "",
               )}
             >
@@ -360,18 +518,20 @@ function FootprintStrip() {
           ))}
         </div>
       </div>
-      <div className="flex justify-between border-t border-white/[0.06] px-3 py-1.5 font-mono text-[7px] tabular-nums text-zinc-600">
-        <span>09:30</span>
-        <span className="text-zinc-500">Now</span>
-        <span>11:00</span>
-      </div>
+      {!compact ? (
+        <div className="flex justify-between border-t border-white/[0.06] px-3 py-1.5 font-mono text-[7px] tabular-nums text-zinc-600">
+          <span>09:30</span>
+          <span className="text-zinc-500">Now</span>
+          <span>11:00</span>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 function FocalRail({ children }: { children: ReactNode }) {
   return (
-    <div className="relative pl-3">
+    <div className="relative min-h-0 min-w-0 flex-1 pl-2.5">
       <div
         className="absolute bottom-1 left-0 top-1 w-px bg-gradient-to-b from-primary/80 via-primary/40 to-transparent"
         aria-hidden
@@ -383,93 +543,95 @@ function FocalRail({ children }: { children: ReactNode }) {
 
 function PanelJournal() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-grid-fine-sharp opacity-[0.42]" aria-hidden />
-      <SessionStrip label="Mon · NY morning" />
-      <div className="p-4 md:p-5">
-        <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-zinc-300">Ingest · manual judgment on top</p>
-        <div className="mt-4 space-y-4">
-          <FillsTable dense />
-          <div className="rounded-xl border border-white/[0.12] bg-black/50 px-3 py-2.5 font-mono text-[10px] text-zinc-300 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
+      <SessionStrip label="Mon · NY morning" compact />
+      <div className="min-h-0 flex-1 overflow-hidden px-3 pb-2 pt-2">
+        <p className="font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-zinc-300">Ingest · judgment on top</p>
+        <div className="mt-2 space-y-2">
+          <FillsTable dense compact />
+          <div className="rounded-lg border border-white/[0.12] bg-black/50 px-2.5 py-2 font-mono text-[9px] text-zinc-300 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
             <span className="font-semibold text-zinc-100">Note · </span>
             Size respected after first stop.
           </div>
         </div>
       </div>
-      <FootprintStrip />
+      <FootprintStrip compact />
     </div>
   );
 }
 
 function PanelAnalytics() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-grid-fine-sharp opacity-[0.42]" aria-hidden />
-      <SessionStrip label="Mon · NY morning" />
-      <div className="p-4 md:p-5">
-        <div className="mb-3 flex items-baseline justify-between gap-2">
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.24em] text-zinc-400">Performance</p>
-          <span className="font-mono text-[8px] text-zinc-600">NY · R-normalized</span>
+      <SessionStrip label="Mon · NY morning" compact />
+      <div className="flex min-h-0 flex-1 flex-col px-3 pb-2 pt-2">
+        <div className="mb-2 flex items-baseline justify-between gap-2">
+          <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.24em] text-zinc-400">Performance</p>
+          <span className="font-mono text-[7px] text-zinc-600">NY · R-norm</span>
         </div>
-        <KpiBand />
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_minmax(0,11.5rem)]">
+        <KpiBand compact className="mb-2" />
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 lg:grid-cols-[1fr_minmax(0,9.25rem)] lg:items-stretch lg:gap-2">
           <FocalRail>
-            <div className="space-y-3">
-              <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.22em] text-primary/90">Primary · equity</p>
-              <EquityChart />
-              <FillsTable />
+            <div className="flex min-h-0 flex-col gap-2">
+              <p className="font-mono text-[7px] font-semibold uppercase tracking-[0.22em] text-primary/90">Primary · equity</p>
+              <EquityChart compact />
+              <AnalyticsFillSummary />
             </div>
           </FocalRail>
-          <div className="flex flex-col gap-3">
-            <DeskSignals />
-            <RiskWindowCard />
+          <div className="flex min-h-0 flex-col gap-2">
+            <DeskSignals compact />
+            <RiskWindowCard compact />
           </div>
         </div>
       </div>
-      <FootprintStrip />
+      <FootprintStrip compact />
     </div>
   );
 }
 
 function PanelReview() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-grid-fine-sharp opacity-[0.42]" aria-hidden />
-      <SessionStrip label="Review · post-close" />
-      <div className="space-y-4 p-4 md:p-5">
-        <ReviewLinkPanel />
-        <FillsTable />
+      <SessionStrip label="Review · post-close" compact />
+      <div className="min-h-0 flex-1 space-y-2 overflow-hidden px-3 pb-2 pt-2">
+        <ReviewLinkPanel compact />
+        <FillsTable compact />
       </div>
-      <FootprintStrip />
+      <FootprintStrip compact />
     </div>
   );
 }
 
 function PanelRules() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-grid-fine-sharp opacity-[0.42]" aria-hidden />
-      <SessionStrip label="Rules · live" />
-      <div className="grid gap-4 p-4 md:p-5 lg:grid-cols-2">
-        <div className="flex flex-col gap-3">
-          <ActiveRulesCard />
-          <RiskWindowCard />
-        </div>
-        <div className="rounded-xl border border-white/[0.12] bg-black/50 p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
-          <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-zinc-300">Violation log · today</p>
-          <ul className="mt-3 space-y-2 text-[11px] text-zinc-200">
-            <li className="flex justify-between gap-2 border-b border-white/[0.1] pb-2">
-              <span>Size after halt</span>
-              <span className="font-mono font-semibold text-amber-200">Flagged</span>
-            </li>
-            <li className="flex justify-between gap-2">
-              <span>News window</span>
-              <span className="font-mono font-semibold text-primary">Clear</span>
-            </li>
-          </ul>
+      <SessionStrip label="Rules · live" compact />
+      <div className="min-h-0 flex-1 overflow-hidden px-3 pb-2 pt-2">
+        <div className="grid h-full min-h-0 gap-2 lg:grid-cols-2 lg:gap-2">
+          <div className="flex min-h-0 flex-col gap-2">
+            <ActiveRulesCard compact />
+            <RiskWindowCard compact />
+          </div>
+          <div className="rounded-lg border border-white/[0.12] bg-black/50 p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
+            <p className="font-mono text-[8px] font-semibold uppercase tracking-[0.22em] text-zinc-300">Violation log · today</p>
+            <ul className="mt-2 space-y-1.5 text-[10px] text-zinc-200">
+              <li className="flex justify-between gap-2 border-b border-white/[0.1] pb-1.5">
+                <span>Size after halt</span>
+                <span className="font-mono font-semibold text-amber-200">Flagged</span>
+              </li>
+              <li className="flex justify-between gap-2">
+                <span>News window</span>
+                <span className="font-mono font-semibold text-primary">Clear</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-      <FootprintStrip />
+      <FootprintStrip compact />
     </div>
   );
 }
@@ -540,7 +702,7 @@ export function HeroInteractiveWorkspace() {
           variant="hero"
           className="rounded-2xl transition-[border-color,box-shadow] duration-300 hover:border-primary/35 hover:shadow-[0_0_0_1px_oklch(0.58_0.12_252/0.28),0_20px_48px_-24px_oklch(0_0_0_/0.85)]"
         >
-          <div className="relative min-h-[min(28rem,70vh)]">
+          <div className="relative h-[24.5rem] overflow-hidden sm:h-[25.5rem]">
             <AnimatePresence initial={false} mode="wait" custom={!!reduceMotion}>
               <motion.div
                 key={tab}
@@ -551,7 +713,7 @@ export function HeroInteractiveWorkspace() {
                 animate="animate"
                 exit="exit"
                 transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-0 min-h-full overflow-y-auto overflow-x-hidden"
+                className="absolute inset-0 overflow-hidden"
               >
                 {tab === "journal" ? <PanelJournal /> : null}
                 {tab === "analytics" ? <PanelAnalytics /> : null}
