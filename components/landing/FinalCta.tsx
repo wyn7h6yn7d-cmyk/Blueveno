@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
 
@@ -23,16 +24,16 @@ export function FinalCta() {
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <a
                 href="mailto:hello@blueveno.com?subject=Blueveno%20early%20access"
-                className="inline-flex items-center justify-center rounded-full bg-teal-400 px-8 py-3.5 text-sm font-medium text-zinc-950 shadow-[0_0_48px_-12px_rgba(45,212,191,0.55)] transition hover:bg-teal-300"
+                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-sm font-medium text-primary-foreground shadow-[0_0_48px_-12px_oklch(0.55_0.14_250_/_0.45)] transition hover:bg-primary/90"
               >
                 Request access
               </a>
-              <a
-                href="#platform"
+              <Link
+                href="/login"
                 className="inline-flex items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.02] px-8 py-3.5 text-sm text-zinc-200 transition hover:border-white/[0.2]"
               >
-                Review the platform
-              </a>
+                Open app
+              </Link>
             </div>
             <p className="mt-8 font-mono text-[11px] text-zinc-600">
               Prefer a walkthrough? Mention “demo” in your note—we’ll reach out with a

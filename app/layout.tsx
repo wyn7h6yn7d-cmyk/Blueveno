@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+import { AuthSessionProvider } from "@/components/providers/session-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,7 +23,10 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Blueveno — Trading performance intelligence",
+  title: {
+    default: "Blueveno — Trading performance intelligence",
+    template: "%s — Blueveno",
+  },
   description:
     "Auto journaling, analytics, behavior tracking, and prop-aware workflows for traders who treat performance like a system—not a mood.",
   openGraph: {
@@ -40,9 +45,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${space.variable} ${jetbrains.variable} h-full antialiased`}
+      className={cn(
+        "dark h-full",
+        inter.variable,
+        space.variable,
+        jetbrains.variable,
+        "font-sans antialiased",
+      )}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-background text-foreground">{children}</body>
+      <body className="min-h-full bg-background text-foreground">
+        <AuthSessionProvider>{children}</AuthSessionProvider>
+      </body>
     </html>
   );
 }

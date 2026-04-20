@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 const links = [
   { href: "#outcomes", label: "Outcomes" },
@@ -13,9 +14,10 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { data: session, status } = useSession();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[#050507]/75 backdrop-blur-xl">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-6 lg:px-8">
         <Link href="/" className="group flex items-center gap-2">
           <span className="font-display text-lg font-medium tracking-tight text-zinc-100">
@@ -36,10 +38,25 @@ export function Navbar() {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {status === "authenticated" ? (
+            <Link
+              href="/dashboard"
+              className="hidden rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-primary transition hover:bg-primary/15 sm:inline-flex"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="hidden rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm text-zinc-200 transition hover:border-white/[0.18] hover:bg-white/[0.06] sm:inline-flex"
+            >
+              Sign in
+            </Link>
+          )}
           <a
             href="#cta"
-            className="hidden rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm text-zinc-200 transition hover:border-white/[0.18] hover:bg-white/[0.06] sm:inline-flex"
+            className="hidden rounded-full border border-white/[0.1] px-4 py-2 text-sm text-zinc-300 transition hover:border-white/[0.18] hover:bg-white/[0.04] lg:inline-flex"
           >
             Request access
           </a>
@@ -75,9 +92,16 @@ export function Navbar() {
                 {l.label}
               </a>
             ))}
+            <Link
+              href={session ? "/dashboard" : "/login"}
+              className="mt-2 rounded-full bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground"
+              onClick={() => setOpen(false)}
+            >
+              {session ? "Dashboard" : "Sign in"}
+            </Link>
             <a
               href="#cta"
-              className="mt-2 rounded-full bg-teal-400/90 px-4 py-2.5 text-center text-sm font-medium text-zinc-950"
+              className="rounded-full border border-white/[0.12] px-4 py-2.5 text-center text-sm text-zinc-300"
               onClick={() => setOpen(false)}
             >
               Request access

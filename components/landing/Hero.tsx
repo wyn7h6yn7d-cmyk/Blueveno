@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
 import { HeroDashboard } from "@/components/mockups/HeroDashboard";
@@ -32,12 +33,12 @@ export function Hero() {
             </p>
           </Reveal>
           <Reveal delay={0.15} className="mt-10 flex flex-wrap items-center gap-4">
-            <a
-              href="#cta"
-              className="inline-flex items-center justify-center rounded-full bg-teal-400 px-6 py-3 text-sm font-medium text-zinc-950 shadow-[0_0_40px_-8px_rgba(45,212,191,0.55)] transition hover:bg-teal-300"
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-[0_0_40px_-12px_oklch(0.55_0.14_250_/_0.45)] transition hover:bg-primary/90"
             >
-              Get early access
-            </a>
+              Sign in to workspace
+            </Link>
             <a
               href="#platform"
               className="inline-flex items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.02] px-6 py-3 text-sm text-zinc-200 transition hover:border-white/[0.2] hover:bg-white/[0.05]"
