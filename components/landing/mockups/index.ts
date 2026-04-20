@@ -1,5 +1,4 @@
 export { TerminalFrame } from "./terminal-frame";
-export { HeroTerminal } from "./hero-terminal";
 export {
   MockKpiCell,
   MockLabel,

@@ -20,14 +20,16 @@ export function TerminalFrame({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-2xl border border-border/85 bg-bv-surface",
-        variant === "hero" ? "border-glow-subtle shadow-[0_0_0_1px_oklch(0.52_0.12_252/0.12)]" : "shadow-bv-lift",
+        "group relative overflow-hidden rounded-2xl bg-bv-surface",
+        variant === "hero"
+          ? "border-glow-subtle shadow-[0_0_0_1px_oklch(0.52_0.12_252/0.14)]"
+          : "border border-white/[0.08] shadow-bv-float ring-1 ring-primary/[0.06]",
         className,
       )}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_95%_60%_at_50%_-30%,oklch(0.38_0.1_252/0.14),transparent_58%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_95%_60%_at_50%_-30%,oklch(0.42_0.11_252/0.18),transparent_58%)]"
       />
       <div
         aria-hidden

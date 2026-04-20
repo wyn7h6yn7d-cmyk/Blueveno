@@ -9,35 +9,35 @@ const phases = [
   {
     step: "01",
     title: "Journal",
-    line: "Normalized fills, tags, and context—one ledger.",
+    line: "Fills, tags, context—one ledger.",
   },
   {
     step: "02",
     title: "Analytics",
-    line: "Expectancy, slices, and distributions on that same record.",
+    line: "Expectancy and slices on that tape.",
   },
   {
     step: "03",
     title: "Review",
-    line: "Screenshots and notes bound to what printed.",
+    line: "Screenshots and notes bound to prints.",
   },
   {
     step: "04",
     title: "Accountability",
-    line: "Rules, playbooks, and recaps you can defend.",
+    line: "Rules, playbooks, defensible recaps.",
   },
 ] as const;
 
 export function ProductArchitectureStrip() {
   return (
-    <Section className="relative py-10 lg:py-14">
+    <Section className="relative py-12 lg:py-16">
       <Reveal>
-        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-b from-bv-surface/60 to-bv-void/80 shadow-bv-card">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.38_0.1_252/0.08),transparent_55%)]" aria-hidden />
-          <div className="relative border-b border-border/50 px-5 py-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.09] bg-gradient-to-b from-bv-surface-high/55 to-bv-void/90 shadow-bv-float ring-1 ring-primary/[0.06]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_55%_at_50%_-25%,oklch(0.42_0.11_252/0.14),transparent_55%)]" aria-hidden />
+          <div className="relative border-b border-border/55 px-5 py-5 bv-hairline-top sm:px-6 lg:px-8">
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-bv-eyebrow/90">Product architecture</p>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
-              Four layers on one tape—no handoffs between tools, no reconciliation drift.
+            <p className="mt-2 max-w-md text-sm leading-snug text-zinc-500">
+              One tape. Four layers. No tool handoffs.
             </p>
           </div>
           <div className="grid gap-0 lg:grid-cols-4">
@@ -54,7 +54,7 @@ export function ProductArchitectureStrip() {
                 ) : null}
                 <p className="font-display text-2xl font-medium tabular-nums text-zinc-700/90">{p.step}</p>
                 <h3 className="font-display mt-2 text-[15px] font-medium tracking-tight text-zinc-100">{p.title}</h3>
-                <p className="mt-2 text-[12px] leading-relaxed text-zinc-500">{p.line}</p>
+                <p className="mt-2 text-[12px] leading-snug text-zinc-500">{p.line}</p>
               </div>
             ))}
           </div>

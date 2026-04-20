@@ -21,7 +21,7 @@ export function Navbar() {
   const { data: session, status } = useSession();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/85 bg-bv-surface/78 shadow-[inset_0_-1px_0_0_oklch(1_0_0_/0.045)] backdrop-blur-2xl supports-[backdrop-filter]:bg-bv-surface/65">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-bv-surface/55 shadow-[0_12px_48px_-16px_rgba(0,0,0,0.55),inset_0_-1px_0_0_oklch(1_0_0_/0.045)] backdrop-blur-2xl supports-[backdrop-filter]:bg-bv-surface/50">
       <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
         <LogoLink className="group flex items-center gap-2.5 outline-none ring-offset-2 ring-offset-bv-void focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-primary">
           <span className="font-display text-lg font-medium tracking-tight text-zinc-50 transition group-hover:text-zinc-100">

@@ -5,25 +5,26 @@ import { marketingCtas } from "@/lib/marketing-ctas";
 
 export function FinalCta() {
   return (
-    <Section id="cta" className="pb-28 lg:pb-36">
+    <Section id="cta" className="relative pb-32 lg:pb-44">
       <Reveal>
         <div className="relative overflow-hidden rounded-[2rem] p-px shadow-bv-lift">
-          <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/[0.14] via-white/[0.04] to-transparent opacity-90" />
-          <div className="relative overflow-hidden rounded-[calc(2rem-1px)] border border-border/80 bg-bv-cta-panel px-6 py-16 text-center sm:px-12 sm:py-20 lg:px-20 lg:py-24">
-            <div className="pointer-events-none absolute inset-0 bg-hero-spotlight opacity-45" />
+          <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/[0.18] via-primary/[0.06] to-transparent opacity-95" />
+          <div className="relative overflow-hidden rounded-[calc(2rem-1px)] border border-white/[0.1] bg-bv-cta-panel px-6 py-16 text-center shadow-[0_0_0_1px_oklch(0.52_0.12_252/0.12)] sm:px-12 sm:py-20 lg:px-20 lg:py-24">
+            <div className="pointer-events-none absolute inset-0 bg-hero-spotlight opacity-55" />
             <div className="pointer-events-none absolute -left-32 top-0 size-96 rounded-full bg-bv-cta-bloom blur-3xl" />
             <div className="pointer-events-none absolute -right-32 bottom-0 size-96 rounded-full bg-bv-cta-bloom-soft blur-3xl" />
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.12] to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.18] to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent opacity-70" />
 
             <div className="relative mx-auto max-w-xl">
               <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-bv-eyebrow">
                 {marketingCtas.finalCta.eyebrow}
               </p>
-              <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
-                Review deserves the same rigor as execution.
+              <h2 className="font-display mt-6 text-[2rem] font-medium leading-[1.12] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+                Review as rigorous as execution.
               </h2>
-              <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-zinc-500 sm:text-[17px]">
-                We onboard in waves—tell us how you trade; we shape your workspace.
+              <p className="mx-auto mt-6 max-w-md text-sm leading-snug text-zinc-500 sm:text-[15px]">
+                Onboarding in waves—we shape the workspace to how you trade.
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                 <a
@@ -45,8 +46,8 @@ export function FinalCta() {
                   {marketingCtas.finalCta.tertiary.label}
                 </Link>
               </div>
-              <p className="mt-8 font-mono text-[11px] text-zinc-600">
-                Want a walkthrough? Mention “demo” in your note to{" "}
+              <p className="mt-8 font-mono text-[10px] leading-snug text-zinc-600">
+                Say “demo” in your note to{" "}
                 <a href={marketingCtas.finalCta.primary.href} className="text-zinc-500 underline-offset-2 hover:text-zinc-400 hover:underline">
                   hello@blueveno.com
                 </a>

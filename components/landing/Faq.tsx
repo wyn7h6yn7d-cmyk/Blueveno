@@ -8,11 +8,11 @@ import { marketingCtas } from "@/lib/marketing-ctas";
 const faqs = [
   {
     q: "Only for prop traders?",
-    a: "No. Any serious trader benefits. Prop rules are an optional layer on the same core record.",
+    a: "No. Prop rules are optional—same core record for any serious operator.",
   },
   {
     q: "Replace my broker?",
-    a: "No. Blueveno sits above execution—journal and analytics, not routing.",
+    a: "No. Sits above execution: journal and analytics, not routing.",
   },
   {
     q: "How automated is the journal?",
@@ -20,15 +20,15 @@ const faqs = [
   },
   {
     q: "Teams and desks?",
-    a: "Shared tags and exportable recaps so vocabulary and review align.",
+    a: "Shared tags and exports so vocabulary and review align.",
   },
   {
     q: "Data privacy?",
-    a: "Trading data treated as proprietary. Least-privilege access; telemetry split from content.",
+    a: "Trading data as proprietary. Least-privilege access; telemetry split from content.",
   },
   {
     q: "Another crypto dashboard?",
-    a: "No. Calm, precise UI—built for professionals, not casino optics.",
+    a: "No—calm UI for professionals, not casino optics.",
   },
 ];
 
@@ -36,20 +36,20 @@ export function Faq() {
   const [open, setOpen] = useState<string | null>(faqs[0].q);
 
   return (
-    <Section id="faq" className="py-28 lg:py-36">
-      <div className="mx-auto max-w-4xl text-center">
+    <Section id="faq" className="relative bg-marketing-stage py-32 lg:py-44">
+      <div className="mx-auto max-w-3xl text-center">
         <Reveal>
           <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">FAQ</p>
-          <h2 className="font-display mt-5 text-[2rem] font-medium leading-[1.15] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
+          <h2 className="font-display mt-6 text-[2rem] font-medium leading-[1.12] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.35rem]">
             Straight answers.
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-zinc-600">
-            Scope, privacy, and what Blueveno is not.
+          <p className="mx-auto mt-5 max-w-md text-sm leading-snug text-zinc-600">
+            Scope, privacy, what we are not.
           </p>
         </Reveal>
       </div>
 
-      <div className="mx-auto mt-14 max-w-3xl divide-y divide-border/60">
+      <div className="mx-auto mt-20 max-w-3xl divide-y divide-border/60">
         {faqs.map((item) => {
           const isOpen = open === item.q;
           return (
@@ -65,7 +65,7 @@ export function Faq() {
                 </span>
               </button>
               {isOpen ? (
-                <p className="pb-4 text-[15px] leading-snug text-zinc-400">{item.a}</p>
+                <p className="pb-4 text-[14px] leading-snug text-zinc-400">{item.a}</p>
               ) : null}
             </Reveal>
           );
@@ -74,10 +74,10 @@ export function Faq() {
 
       <Reveal className="mt-10 text-center">
         <a
-          href={marketingCtas.faq.waitlist.href}
+          href={marketingCtas.faq.close.href}
           className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary/80 hover:text-primary"
         >
-          {marketingCtas.faq.waitlist.label} →
+          {marketingCtas.faq.close.label} →
         </a>
       </Reveal>
     </Section>

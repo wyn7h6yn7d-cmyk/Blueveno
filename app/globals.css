@@ -225,6 +225,72 @@ body {
   );
 }
 
+/** Elevated “stage” — brighter slab, top key, subtle floor (premium pacing) */
+.bg-marketing-stage {
+  background:
+    radial-gradient(ellipse 100% 70% at 50% -15%, oklch(0.42 0.1 252 / 0.1), transparent 52%),
+    linear-gradient(
+      180deg,
+      oklch(0.112 0.036 262 / 0.58) 0%,
+      oklch(0.092 0.032 266 / 0.45) 52%,
+      oklch(0.098 0.034 264 / 0.52) 100%
+    );
+  box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.045);
+}
+
+/** Deep void band — cold cobalt overhead, dramatic contrast vs stage */
+.bg-marketing-depth {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 0%, oklch(0.34 0.1 252 / 0.14), transparent 58%),
+    linear-gradient(
+      180deg,
+      oklch(0.068 0.038 268 / 0.92) 0%,
+      oklch(0.078 0.034 266 / 0.96) 45%,
+      oklch(0.072 0.036 268 / 0.94) 100%
+    );
+  box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.03);
+}
+
+/** Fixed-page cinematic blooms (MarketingBackground) */
+.bg-bv-cinematic-left {
+  background: radial-gradient(
+    ellipse 52% 115% at -5% 32%,
+    oklch(0.4 0.12 252 / 0.2),
+    transparent 58%
+  );
+}
+
+.bg-bv-cinematic-right {
+  background: radial-gradient(
+    ellipse 48% 95% at 102% 38%,
+    oklch(0.36 0.1 258 / 0.14),
+    transparent 52%
+  );
+}
+
+.bg-bv-cinematic-horizon {
+  background: radial-gradient(
+    ellipse 95% 42% at 50% 108%,
+    oklch(0.3 0.09 258 / 0.16),
+    transparent 62%
+  );
+}
+
+/** Hairline for panels / sections */
+.bv-hairline-top {
+  box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.07);
+}
+
+/** Showcase / large mock frames — deeper lift + cobalt bloom */
+.shadow-bv-showcase {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.09),
+    0 0 0 1px oklch(0.52 0.12 252 / 0.1),
+    0 32px 88px -36px oklch(0 0 0 / 0.75),
+    0 0 100px -40px oklch(0.5 0.13 252 / 0.18),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.06);
+}
+
 /** Headline accent: ice → refined cobalt */
 .text-gradient-cobalt {
   background: linear-gradient(
@@ -242,10 +308,10 @@ body {
 /** Featured frame — hairline + soft cobalt bloom + inset lift (tight, not gamer glow) */
 .border-glow-subtle {
   box-shadow:
-    0 0 0 1px oklch(1 0 0 / 0.075),
-    0 22px 72px -32px oklch(0 0 0 / 0.72),
-    0 0 72px -36px oklch(0.48 0.12 252 / 0.14),
-    inset 0 1px 0 0 oklch(1 0 0 / 0.05);
+    0 0 0 1px oklch(1 0 0 / 0.09),
+    0 28px 80px -36px oklch(0 0 0 / 0.78),
+    0 0 88px -40px oklch(0.5 0.13 252 / 0.18),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.065);
 }
 
 /** App shell / hero local blooms — use instead of one-off oklch divs */
@@ -322,6 +388,23 @@ body {
   animation: scan 6s linear infinite;
 }
 
+/** Hero review tab — subtle link-line motion (respect motion-reduce in component) */
+@keyframes bv-review-link {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.animate-bv-review-link {
+  animation: bv-review-link 2.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bv-review-link {
+    animation: none;
+  }
+}
+
 /* Blue-led premium dark — deep navy foundation, cobalt + ice accents */
 .dark {
   --grid: oklch(0.55 0.06 252 / 0.055);
@@ -375,22 +458,23 @@ body {
   --bv-border-accent: oklch(0.52 0.12 252 / 0.32);
 
   --bv-shadow-card:
-    0 0 0 1px oklch(1 0 0 / 0.07),
-    0 18px 48px -20px oklch(0 0 0 / 0.62),
-    0 0 0 1px oklch(0.52 0.11 252 / 0.06),
-    inset 0 1px 0 0 oklch(1 0 0 / 0.04);
-  --bv-shadow-float:
     0 0 0 1px oklch(1 0 0 / 0.08),
-    0 24px 64px -24px oklch(0 0 0 / 0.66),
-    0 0 80px -32px oklch(0.5 0.14 252 / 0.1);
+    0 22px 56px -24px oklch(0 0 0 / 0.68),
+    0 0 0 1px oklch(0.52 0.11 252 / 0.08),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.05);
+  --bv-shadow-float:
+    0 0 0 1px oklch(1 0 0 / 0.09),
+    0 28px 72px -28px oklch(0 0 0 / 0.72),
+    0 0 96px -36px oklch(0.52 0.14 252 / 0.13);
   --bv-shadow-glow:
     0 0 0 1px oklch(1 0 0 / 0.07),
     0 0 64px -16px oklch(0.48 0.14 252 / 0.22),
     inset 0 1px 0 0 oklch(1 0 0 / 0.05);
   --bv-shadow-lift:
-    0 0 0 1px oklch(1 0 0 / 0.065),
-    0 22px 64px -26px oklch(0 0 0 / 0.64),
-    0 0 0 1px oklch(0.5 0.11 252 / 0.055);
+    0 0 0 1px oklch(1 0 0 / 0.08),
+    0 26px 72px -28px oklch(0 0 0 / 0.7),
+    0 0 0 1px oklch(0.52 0.12 252 / 0.08),
+    0 0 72px -28px oklch(0.48 0.12 252 / 0.12);
   --bv-shadow-primary:
     0 0 0 1px oklch(1 0 0 / 0.1),
     0 0 64px -18px oklch(0.48 0.14 252 / 0.32),

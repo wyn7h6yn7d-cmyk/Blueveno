@@ -1,54 +1,62 @@
 /**
- * Homepage CTA hierarchy — varied intent, no repeated “Request access” fatigue.
+ * Homepage CTA system — intent-driven hierarchy, minimal label repetition.
  *
- * 1. Hero — Primary conversion (waitlist) + main exploration (platform) + account entry (sign in).
- * 2. Nav — Short, persistent conversion (“Get access”) + standard auth links elsewhere in nav.
- * 3. Mid-page — After Platform strip: deepen into product (“Explore analytics in depth”).
- * 4. Deep dives end — Commercial / next step (“View plans & pricing”).
- * 5. Section utility — Loop (Outcomes→Workflow), personas (review), social proof (Testimonials), FAQ (waitlist).
- * 6. Final band — Strong conversion (“Get access” + “Start free”) + returning users (“Sign in”).
+ * | Layer            | Role |
+ * |-----------------|------|
+ * | Hero primary    | High-intent waitlist / desk onboarding |
+ * | Hero secondary  | Product exploration (workspace preview) |
+ * | Hero tertiary   | Returning users (sign in) |
+ * | Nav             | Short persistent conversion (not a copy-paste of hero) |
+ * | Section links   | Exploratory or next-step (loop, analytics, review, plans) |
+ * | Showcase rows   | Rotating intent per surface (signup, anchors, pricing, access) |
+ * | Final band      | Human gate + self-serve + sign in |
  */
 
 export const marketingCtas = {
   hero: {
-    /** Primary conversion — waitlist / early access */
+    /** Primary — conversion / waitlist */
     primary: { label: "Join early access", href: "#cta" as const },
-    /** Exploration — capability grid + preview */
-    secondary: { label: "View the platform", href: "#platform" as const },
-    /** Returning users */
+    /** Secondary — mid-funnel exploration */
+    secondary: { label: "Preview the workspace", href: "#platform" as const },
     tertiary: { label: "Sign in", href: "/login" as const },
   },
   nav: {
-    /** Persistent nav CTA — short, high intent */
-    conversion: { label: "Get access", href: "#cta" as const },
+    /** Persistent — short label, same destination as hero primary */
+    conversion: { label: "Early access", href: "#cta" as const },
   },
-  featureGrid: {
-    /** Mid-page: scroll into product depth */
-    exploreDepth: { label: "Explore analytics in depth", href: "#product-depth" as const },
-  },
-  deepDives: {
-    /** After product story — commercial exploration */
-    pricing: { label: "View plans & pricing", href: "/pricing" as const },
+  productShowcase: {
+    /** Optional jump from intro copy into the first surface */
+    intro: { label: "Preview the workspace", href: "#showcase-journal" as const },
+    /** One CTA per showcase row — varied intent (index-aligned in ProductShowcase) */
+    rows: [
+      { label: "Start free", href: "/signup" as const },
+      { label: "Explore analytics", href: "#showcase-analytics" as const },
+      { label: "See how review works", href: "#showcase-review" as const },
+      { label: "Preview the workspace", href: "#platform" as const },
+      { label: "Join early access", href: "#cta" as const },
+      { label: "Get access", href: "#cta" as const },
+      { label: "See plans", href: "/pricing" as const },
+      { label: "See session recaps", href: "#showcase-recap" as const },
+    ],
+    pricing: { label: "Compare plans", href: "/pricing" as const },
   },
   outcomes: {
-    /** Section utility — explain motion */
-    loop: { label: "See how the loop works", href: "#workflow" as const },
+    loop: { label: "See the operating loop", href: "#workflow" as const },
   },
   workflow: {
-    /** Section utility — plans */
-    plans: { label: "View plans & pricing", href: "/pricing" as const },
+    explore: { label: "Explore analytics", href: "#showcase-analytics" as const },
+    plans: { label: "Plans & pricing", href: "/pricing" as const },
   },
   traderTypes: {
-    /** Persona section — review promise */
-    review: { label: "See how review works", href: "#product-depth" as const },
+    review: { label: "See how review works", href: "#showcase-review" as const },
   },
   testimonials: {
-    /** Social proof → conversion */
-    join: { label: "Join early access", href: "#cta" as const },
+    /** After proof — low-friction trial */
+    next: { label: "Start free", href: "/signup" as const },
   },
   faq: {
-    /** FAQ footer — short conversion nudge */
-    waitlist: { label: "Get access", href: "#cta" as const },
+    /** Single strong close — aligns with desk outreach */
+    close: { label: "Join early access", href: "#cta" as const },
   },
   finalCta: {
     eyebrow: "Limited onboarding",

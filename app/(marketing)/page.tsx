@@ -1,7 +1,5 @@
 import {
-  DeepDives,
   Faq,
-  FeatureGrid,
   FinalCta,
   Footer,
   Hero,
@@ -9,6 +7,7 @@ import {
   Navbar,
   Outcomes,
   ProductArchitectureStrip,
+  ProductShowcase,
   SectionDivider,
   Testimonials,
   TraderTypes,
@@ -27,8 +26,7 @@ export default function MarketingHomePage() {
         <SectionDivider />
         <Outcomes />
         <SectionDivider />
-        <FeatureGrid />
-        <DeepDives />
+        <ProductShowcase />
         <SectionDivider />
         <Workflow />
         <TraderTypes />

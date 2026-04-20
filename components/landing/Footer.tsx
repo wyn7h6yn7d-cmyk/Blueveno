@@ -7,9 +7,9 @@ const cols = [
     links: [
       { label: "Outcomes", href: "#outcomes" },
       { label: "Platform", href: "#platform" },
-      { label: "Product depth", href: "#product-depth" },
+      { label: "Journaling", href: "#showcase-journal" },
       { label: "Workflow", href: "#workflow" },
-      { label: "Get access", href: "#cta" },
+      { label: "Early access", href: "#cta" },
     ],
   },
   {
@@ -39,9 +39,8 @@ export function Footer() {
             <LogoLink className="inline-block font-display text-xl font-medium tracking-tight text-zinc-100 transition hover:text-white">
               Blueveno
             </LogoLink>
-            <p className="mt-4 max-w-xs text-sm leading-snug text-zinc-500">
-              Journal, analytics, review—tied to what printed. For traders who treat the tape as
-              evidence.
+            <p className="mt-4 max-w-[16rem] text-sm leading-snug text-zinc-500">
+              Journal, analytics, review—tied to prints. For traders who use the tape as evidence.
             </p>
           </div>
           <div className="grid flex-1 grid-cols-2 gap-12 sm:grid-cols-3 lg:max-w-2xl lg:gap-16">

@@ -3,8 +3,8 @@
  */
 export function PlatformPreviewStrip() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/85 bg-bv-surface shadow-bv-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 bg-black/30 px-4 py-2.5">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-bv-surface shadow-bv-card ring-1 ring-primary/[0.06]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-black/35 px-4 py-2.5">
         <div>
           <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">Workspace</p>
           <p className="mt-0.5 font-mono text-[10px] text-zinc-400">Desk primary · NY · R-normalized</p>
@@ -70,8 +70,8 @@ export function PlatformPreviewStrip() {
               <p className="mt-1 font-display text-lg tabular-nums text-amber-200/90">2</p>
             </div>
           </div>
-          <p className="mt-3 border-t border-border/50 pt-2 font-mono text-[8px] leading-relaxed text-zinc-600">
-            Same record powers analytics, journal, and compliance—no duplicate entry.
+          <p className="mt-3 border-t border-border/50 pt-2 font-mono text-[8px] leading-snug text-zinc-600">
+            One record—analytics, journal, compliance. No duplicate entry.
           </p>
         </div>
       </div>
