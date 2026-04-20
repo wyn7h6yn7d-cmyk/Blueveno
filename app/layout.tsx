@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s — Blueveno",
   },
   description:
-    "Auto journaling, analytics, behavior tracking, and prop-aware workflows for traders who treat performance like a system—not a mood.",
+    "Premium trading journal and performance analytics—turn execution into evidence, review into edge, discipline into something you can measure.",
   openGraph: {
     title: "Blueveno — Trading performance intelligence",
     description:

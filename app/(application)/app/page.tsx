@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default async function DashboardOverviewPage() {
+export default async function AppHomePage() {
   const session = await auth();
 
   return (
@@ -11,26 +11,14 @@ export default async function DashboardOverviewPage() {
           Overview
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Session snapshot and the metrics that matter—wired to real data next.
+          Performance snapshot — wire to live metrics when the data layer lands.
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          {
-            title: "Net R (30d)",
-            value: "—",
-            hint: "Expectancy pipeline",
-          },
-          {
-            title: "Win rate",
-            value: "—",
-            hint: "Tagged trades only",
-          },
-          {
-            title: "Rule adherence",
-            value: "—",
-            hint: "Playbook vs. impulse",
-          },
+          { title: "Net R (30d)", value: "—", hint: "Expectancy pipeline" },
+          { title: "Win rate", value: "—", hint: "Tagged trades" },
+          { title: "Plan", value: "Free", hint: "Stripe → Pro" },
         ].map((k) => (
           <Card key={k.title} className="border-border/80 bg-card/50 backdrop-blur-sm">
             <CardHeader className="pb-2">
@@ -45,10 +33,9 @@ export default async function DashboardOverviewPage() {
       </div>
       <Card className="border-border/80 bg-card/40 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="font-display text-base">Signed in</CardTitle>
+          <CardTitle className="font-display text-base">Session</CardTitle>
           <CardDescription>
-            {session?.user?.email} — journal ingestion and analytics API routes ship in the
-            next milestone.
+            Signed in as {session?.user?.email}. Protected by middleware on <code className="rounded bg-muted px-1 font-mono text-xs">/app/*</code>.
           </CardDescription>
         </CardHeader>
       </Card>

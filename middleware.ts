@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 export default auth((req) => {
-  if (!req.auth && req.nextUrl.pathname.startsWith("/dashboard")) {
+  if (!req.auth && req.nextUrl.pathname.startsWith("/app")) {
     const login = new URL("/login", req.nextUrl.origin);
     login.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(login);
@@ -11,5 +11,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/app/:path*"],
 };

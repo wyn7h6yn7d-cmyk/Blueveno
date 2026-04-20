@@ -3,64 +3,70 @@ import { Section } from "./Section";
 
 const outcomes = [
   {
-    title: "Stop repeating expensive mistakes",
-    body: "Behavior tracking shows which impulses show up before drawdowns—so you intervene on process, not feelings.",
-    stat: "−38%",
-    statLabel: "typical reduction in “same mistake” repeats",
+    title: "Patterns surface before they cost you",
+    body: "Review connects behavior to outcome—so you see which impulses precede drawdowns, not which trades felt bad.",
+    metric: "Earlier",
+    metricLabel: "intervention on repeat mistakes",
   },
   {
-    title: "Know what actually pays you",
-    body: "Tagging and analytics separate luck from edge—by strategy, session, and market regime.",
-    stat: "4.2×",
-    statLabel: "faster review vs. manual spreadsheets",
+    title: "Edge separates from noise",
+    body: "Tagging and slicing show what pays under which conditions—luck stops masquerading as skill.",
+    metric: "Clearer",
+    metricLabel: "expectancy by setup and regime",
   },
   {
-    title: "Protect the downside you ignore",
-    body: "Prop-aware surfaces keep rules visible while you trade—before a violation becomes a headline.",
-    stat: "24/7",
-    statLabel: "account guardrail awareness",
+    title: "Rules stay visible while you trade",
+    body: "Firm constraints and personal guardrails live beside performance—violations surface before they compound.",
+    metric: "Aligned",
+    metricLabel: "risk posture with execution",
   },
 ];
 
 export function Outcomes() {
   return (
-    <Section id="outcomes" className="py-24 lg:py-32">
+    <Section id="outcomes" className="py-28 lg:py-36">
       <Reveal>
-        <p className="font-mono text-xs uppercase tracking-[0.25em] text-teal-400/80">
-          Outcomes first
+        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.65_0.12_250)]">
+          Outcomes
         </p>
-        <h2 className="font-display mt-4 max-w-2xl text-3xl font-medium tracking-tight text-zinc-50 sm:text-4xl">
-          Performance isn’t a vibe. It’s a set of decisions you can audit.
+        <h2 className="font-display mt-5 max-w-3xl text-3xl font-medium tracking-tight text-zinc-50 sm:text-4xl lg:text-[2.65rem] lg:leading-[1.12]">
+          Performance improves when review is systematic—not when motivation spikes.
         </h2>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-400">
-          Blueveno is built for traders who want the truth in one place: what you did, why
-          it happened, and what to change next—without drowning in spreadsheets.
+        <p className="mt-6 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg">
+          Blueveno is for traders who want the truth in one coherent system: what happened, why it
+          happened, and what to enforce next.
         </p>
       </Reveal>
-      <div className="mt-14 grid gap-6 lg:grid-cols-3">
+
+      <div className="mt-20 grid gap-6 lg:grid-cols-3">
         {outcomes.map((o, i) => (
           <Reveal key={o.title} delay={0.06 * i}>
-            <div className="group relative h-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#08090e] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-teal-500/20">
-              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-teal-500/5 blur-3xl transition group-hover:bg-teal-500/10" />
-              <p className="font-display text-lg text-zinc-100">{o.title}</p>
-              <p className="mt-3 text-sm leading-relaxed text-zinc-400">{o.body}</p>
-              <div className="mt-8 border-t border-white/[0.06] pt-6">
-                <p className="font-display text-4xl tracking-tight text-zinc-100">{o.stat}</p>
-                <p className="mt-1 font-mono text-[11px] uppercase tracking-wider text-zinc-500">
-                  {o.statLabel}
+            <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[oklch(0.11_0.025_265)] p-8 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition hover:border-[oklch(0.55_0.12_250/0.25)]">
+              <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-[oklch(0.45_0.12_250/0.08)] blur-3xl transition group-hover:bg-[oklch(0.5_0.14_250/0.12)]" />
+              <h3 className="font-display relative text-lg font-medium leading-snug text-zinc-100">
+                {o.title}
+              </h3>
+              <p className="relative mt-4 flex-1 text-sm leading-relaxed text-zinc-400">{o.body}</p>
+              <div className="relative mt-10 border-t border-white/[0.06] pt-8">
+                <p className="font-display text-3xl tracking-tight text-zinc-100">{o.metric}</p>
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                  {o.metricLabel}
                 </p>
               </div>
             </div>
           </Reveal>
         ))}
       </div>
-      <Reveal className="mt-12 text-center">
+
+      <Reveal className="mt-16 text-center">
         <a
           href="#cta"
-          className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-teal-300/90 hover:text-teal-200"
+          className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-[oklch(0.72_0.12_250)] transition hover:text-[oklch(0.82_0.08_250)]"
         >
-          See how teams use Blueveno
-          <span aria-hidden>→</span>
+          Request access
+          <span aria-hidden className="transition group-hover:translate-x-0.5">
+            →
+          </span>
         </a>
       </Reveal>
     </Section>

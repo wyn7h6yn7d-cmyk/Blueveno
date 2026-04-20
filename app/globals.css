@@ -115,12 +115,53 @@ body {
   background-size: 64px 64px;
 }
 
+.bg-grid-fine {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-vignette {
+  background: radial-gradient(
+    ellipse 85% 70% at 50% 0%,
+    transparent 0%,
+    oklch(0.08 0.03 260 / 0.85) 100%
+  );
+}
+
+.bg-hero-spotlight {
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -30%, oklch(0.48 0.18 250 / 0.22), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 85% 20%, oklch(0.35 0.12 270 / 0.12), transparent 45%);
+}
+
 .bg-radial-fade {
   background: radial-gradient(
     ellipse 80% 50% at 50% -20%,
     oklch(0.55 0.14 250 / 0.18),
     transparent 55%
   );
+}
+
+.text-gradient-electric {
+  background: linear-gradient(
+    120deg,
+    oklch(0.92 0.04 260) 0%,
+    oklch(0.72 0.18 250) 35%,
+    oklch(0.65 0.22 245) 70%,
+    oklch(0.78 0.14 255) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.border-glow-subtle {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.06),
+    0 0 80px -20px oklch(0.55 0.2 250 / 0.35),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.04);
 }
 
 .bg-noise {

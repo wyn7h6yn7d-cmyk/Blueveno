@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { LoginForm } from "@/components/auth/login-form";
@@ -16,7 +17,7 @@ export default async function LoginPage({ searchParams }: Props) {
   const session = await auth();
   const { callbackUrl } = await searchParams;
   if (session?.user) {
-    redirect(callbackUrl ?? "/dashboard");
+    redirect(callbackUrl ?? "/app");
   }
 
   return (
@@ -29,10 +30,16 @@ export default async function LoginPage({ searchParams }: Props) {
           Sign in to your performance workspace
         </h1>
       </div>
-      <LoginForm callbackUrl={callbackUrl ?? "/dashboard"} />
+      <LoginForm callbackUrl={callbackUrl ?? "/app"} />
       <p className="text-center text-xs text-muted-foreground">
         Demo: set <code className="rounded bg-muted px-1 py-0.5 font-mono">AUTH_DEMO=true</code>{" "}
         and credentials from <code className="rounded bg-muted px-1 py-0.5 font-mono">.env</code>.
+      </p>
+      <p className="text-center text-sm text-muted-foreground">
+        No account?{" "}
+        <Link href="/signup" className="text-primary hover:underline">
+          Sign up
+        </Link>
       </p>
     </div>
   );

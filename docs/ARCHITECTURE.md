@@ -41,31 +41,31 @@ This document defines the product system, app structure, design direction, data/
 
 ```
 app/
-├── (marketing)/          # Public site — strong storytelling, SEO
+├── (marketing)/          # Public site
 │   ├── layout.tsx
-│   └── page.tsx          # Homepage (TradeZella-style system, Blueveno brand)
-├── (auth)/               # Minimal chrome — sign in / sign up
+│   ├── page.tsx            # /
+│   └── pricing/page.tsx    # /pricing
+├── (auth)/                 # Auth chrome
 │   ├── layout.tsx
-│   └── login/page.tsx
-├── (dashboard)/         # Logged-in product shell (sidebar + header)
-│   ├── layout.tsx
-│   ├── dashboard/page.tsx        # Overview / KPIs
-│   ├── journal/page.tsx          # Journal list (placeholder)
-│   ├── analytics/page.tsx
-│   ├── playbooks/page.tsx
-│   ├── behavior/page.tsx
-│   ├── accounts/page.tsx
-│   └── settings/
-│       ├── page.tsx
-│       └── billing/page.tsx      # Stripe Customer Portal entry (future)
+│   ├── login/page.tsx      # /login
+│   └── signup/page.tsx     # /signup
+├── (application)/        # Route group (no URL segment)
+│   └── app/                # URL prefix /app
+│       ├── layout.tsx      # AppShell + auth check
+│       ├── page.tsx        # /app overview
+│       ├── journal|analytics|playbooks|reviews/
+│       └── settings/
+│           ├── page.tsx
+│           └── billing/page.tsx
 ├── api/
 │   ├── auth/[...nextauth]/route.ts
-│   └── webhooks/stripe/route.ts  # Signature verify + idempotency (stub)
-├── layout.tsx            # Root: fonts, dark class, providers
-└── globals.css           # Design tokens + shadcn theme
+│   ├── auth/register/route.ts    # Sign-up placeholder (501)
+│   └── webhooks/stripe/route.ts
+├── layout.tsx
+└── globals.css
 ```
 
-**Future additions (same pattern):** `/register`, `/onboarding`, `/pricing`, `/legal/*`, `/api/trpc/*` or `/api/rest/*`, `/api/inngest/*` for async jobs.
+**Future additions:** `/onboarding`, `/legal/*`, product APIs under `/api/*`.
 
 ---
 
@@ -80,7 +80,7 @@ app/
 - **Motion:** Restrained—section reveals, micro-interactions on controls; respect `prefers-reduced-motion`.  
 - **Credibility:** “Terminal-inspired” charts and KPIs without looking like a game HUD.
 
-**Implementation:** Tailwind CSS v4 + **shadcn/ui** (Base UI primitives) mapped through CSS variables in `app/globals.css`. Components live under `components/ui/*`; product-specific blocks under `components/dashboard/*`, `components/landing/*`.
+**Implementation:** Tailwind CSS v4 + **shadcn/ui** mapped through `app/globals.css`. Components: `components/ui/*`, `components/app/*` (shell, placeholders, upgrade prompts), `components/landing/*`.
 
 ---
 
@@ -109,7 +109,7 @@ app/
 
 - **Auth.js (NextAuth v5)** with **JWT sessions** for speed of iteration.  
 - **Credentials provider** gated by env (`AUTH_DEMO_*`) for local/demo—replace with **database-backed credentials** (bcrypt/argon2) or **OAuth** (Google) in production.  
-- **Middleware** protects `/dashboard/*`; unauthenticated users redirect to `/login` with `callbackUrl`.  
+- **Middleware** protects `/app/*`; unauthenticated users redirect to `/login` with `callbackUrl`.  
 - **Future:** Add **Prisma + PostgreSQL** (or Drizzle) with `User`, `Account`, `Session` tables; keep the same `auth()` API surface.
 
 ### Billing (Stripe) — readiness without locking in
@@ -117,8 +117,8 @@ app/
 - **Environment:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.  
 - **Server-only** Stripe client in `lib/billing/stripe.ts` (instantiated only when keys exist).  
 - **Webhook** at `POST /api/webhooks/stripe`: verify signature, handle `checkout.session.completed`, `customer.subscription.*`, idempotent updates to `Subscription` table (stub until DB exists).  
-- **Entitlements:** `lib/billing/entitlements.ts` — `canAccessJournal(user)` checks `subscription.status` + feature flags.  
-- **UI:** `/dashboard/settings/billing` — placeholder copy + “Manage billing” button wired when Customer Portal is configured.
+- **Entitlements:** `lib/billing/entitlements.ts` — `hasFeature()` for `journal.create`, `analytics.advanced`, `reviews.premium`.  
+- **UI:** `/app/settings/billing`; upgrade prompts → `/pricing`.
 
 ---
 
@@ -137,10 +137,10 @@ app/
 
 ### Implementation status (in repo)
 
-- [x] Route groups: `(marketing)`, `(auth)`, `(dashboard)`
+- [x] Route groups: `(marketing)`, `(auth)`, `(application)` with `/app/*` product routes
 - [x] Auth.js (NextAuth v5 beta): `auth.ts`, `/api/auth/[...nextauth]`, JWT session, demo Credentials provider
-- [x] Middleware protecting `/dashboard/*`
-- [x] Dashboard shell + placeholder module pages
+- [x] Middleware protecting `/app/*`
+- [x] `AppShell` + placeholders; feature-gated pages (journal, analytics, reviews)
 - [x] Stripe client (`getStripe`), webhook route skeleton, billing settings placeholder
 - [x] Domain types in `lib/db/types.ts`
 - [x] Design tokens: `html.dark`, blue-led `.dark` palette in `globals.css`, shadcn/ui
@@ -150,12 +150,12 @@ app/
 ## 7. Implementation order (code)
 
 1. Theme: blue-led `.dark` tokens + `html` class.  
-2. Routes: move homepage to `(marketing)`; add `(auth)/login`, `(dashboard)/*`.  
+2. Routes: `(marketing)`, `(auth)/login|signup`, `(application)/app/*`, `/pricing`.  
 3. Auth.js: `auth.ts`, API route, middleware, login UI.  
-4. Dashboard shell: layout + navigation + user menu.  
+4. App shell: layout + navigation + user menu.  
 5. Billing: `lib/billing/*`, webhook route stub, settings billing page.  
 6. Domain types: `lib/db/types.ts` for future persistence.  
-7. Marketing nav: links to `/login` and `/dashboard` where appropriate.
+7. Marketing nav: `/login`, `/signup`, `/pricing`, `/app`.
 
 ---
 
@@ -164,12 +164,13 @@ app/
 | Path | Role |
 |------|------|
 | `auth.ts` | Auth.js configuration |
-| `middleware.ts` | Protects dashboard routes |
-| `lib/billing/` | Stripe + entitlements stubs |
+| `middleware.ts` | Protects `/app/*` |
+| `lib/billing/` | Stripe + entitlements + `lib/features.ts` |
+| `lib/permissions.ts` | Server-side `assertFeature` placeholder |
 | `lib/db/types.ts` | Domain types for future ORM |
-| `app/(marketing)/` | Public marketing site |
-| `app/(auth)/` | Login |
-| `app/(dashboard)/` | Product shell + pages |
+| `app/(marketing)/` | Home + pricing |
+| `app/(auth)/` | Login + signup |
+| `app/(application)/app/` | Product shell + pages |
 | `components/landing/` | Marketing sections |
-| `components/dashboard/` | App chrome |
+| `components/app/` | App shell, placeholders, upgrade prompts |
 | `components/ui/` | shadcn primitives |

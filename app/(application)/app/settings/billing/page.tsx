@@ -10,8 +10,8 @@ export default function BillingSettingsPage() {
       <div>
         <h1 className="font-display text-2xl font-medium tracking-tight">Billing</h1>
         <p className="mt-2 text-muted-foreground">
-          Stripe Customer Portal and subscription entitlements connect here—webhook handler is
-          stubbed at <code className="rounded bg-muted px-1 font-mono text-xs">/api/webhooks/stripe</code>.
+          Stripe Customer Portal and subscription entitlements — webhook at{" "}
+          <code className="rounded bg-muted px-1 font-mono text-xs">/api/webhooks/stripe</code>.
         </p>
       </div>
       <Card className="border-border/80 bg-card/50 backdrop-blur-sm">
@@ -19,8 +19,8 @@ export default function BillingSettingsPage() {
           <CardTitle className="font-display text-base">Subscription</CardTitle>
           <CardDescription>
             {stripeReady
-              ? "Stripe is configured. Add Checkout / Portal routes when you enable paid plans."
-              : "Set STRIPE_SECRET_KEY and webhook secret to activate billing flows."}
+              ? "Stripe keys detected. Add Checkout / Portal routes when plans go live."
+              : "Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET to activate billing flows."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">

@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-type PlaceholderModuleProps = {
+type PlaceholderPageProps = {
   title: string;
   description: string;
 };
 
-export function PlaceholderModule({ title, description }: PlaceholderModuleProps) {
+export function PlaceholderPage({ title, description }: PlaceholderPageProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -14,9 +14,9 @@ export function PlaceholderModule({ title, description }: PlaceholderModuleProps
       </div>
       <Card className="border-dashed border-border/80 bg-card/30">
         <CardHeader>
-          <CardTitle className="font-display text-base text-muted-foreground">Module shell</CardTitle>
+          <CardTitle className="font-display text-base text-muted-foreground">Scaffold</CardTitle>
           <CardDescription>
-            UI route is live; connect Prisma/Drizzle models and API handlers in the data phase.
+            Connect Prisma models and server actions in the next milestone.
           </CardDescription>
         </CardHeader>
         <CardContent>

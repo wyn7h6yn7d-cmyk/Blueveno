@@ -6,13 +6,12 @@ import { signOut } from "next-auth/react";
 import {
   Activity,
   BookOpen,
-  Brain,
+  ClipboardList,
   CreditCard,
   LayoutDashboard,
   LineChart,
   LogOut,
   Settings,
-  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,21 +26,20 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const nav = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/journal", label: "Journal", icon: BookOpen },
-  { href: "/dashboard/analytics", label: "Analytics", icon: LineChart },
-  { href: "/dashboard/playbooks", label: "Playbooks", icon: Activity },
-  { href: "/dashboard/behavior", label: "Behavior", icon: Brain },
-  { href: "/dashboard/accounts", label: "Accounts", icon: Wallet },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/app", label: "Overview", icon: LayoutDashboard },
+  { href: "/app/journal", label: "Journal", icon: BookOpen },
+  { href: "/app/analytics", label: "Analytics", icon: LineChart },
+  { href: "/app/playbooks", label: "Playbooks", icon: Activity },
+  { href: "/app/reviews", label: "Reviews", icon: ClipboardList },
+  { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 
-type DashboardShellProps = {
+type AppShellProps = {
   children: React.ReactNode;
   user: { name?: string | null; email?: string | null };
 };
 
-export function DashboardShell({ children, user }: DashboardShellProps) {
+export function AppShell({ children, user }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const initials =
@@ -58,16 +56,16 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
     <div className="flex min-h-full flex-col md:flex-row">
       <aside className="sticky top-0 z-30 flex w-full shrink-0 flex-col border-b border-border/80 bg-sidebar/95 backdrop-blur-xl md:h-screen md:w-56 md:border-r md:border-b-0">
         <div className="flex h-14 items-center border-b border-border/80 px-4 md:h-16">
-          <Link href="/dashboard" className="font-display text-lg font-medium tracking-tight">
+          <Link href="/app" className="font-display text-lg font-medium tracking-tight">
             Blueveno
           </Link>
         </div>
         <nav className="flex flex-row gap-1 overflow-x-auto p-2 md:flex-col md:gap-0.5 md:p-3">
           {nav.map((item) => {
             const active =
-              item.href === "/dashboard"
-                ? pathname === "/dashboard"
-                : pathname.startsWith(item.href);
+              item.href === "/app"
+                ? pathname === "/app"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
@@ -87,7 +85,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
         </nav>
         <div className="hidden border-t border-border/80 p-3 md:block">
           <Link
-            href="/dashboard/settings/billing"
+            href="/app/settings/billing"
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-foreground"
           >
             <CreditCard className="size-4" />
@@ -105,7 +103,16 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                 "hidden md:inline-flex",
               )}
             >
-              Marketing site
+              Marketing
+            </Link>
+            <Link
+              href="/pricing"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "sm" }),
+                "hidden md:inline-flex",
+              )}
+            >
+              Pricing
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -130,10 +137,10 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+                <DropdownMenuItem onClick={() => router.push("/app/settings")}>
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings/billing")}>
+                <DropdownMenuItem onClick={() => router.push("/app/settings/billing")}>
                   Billing
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
