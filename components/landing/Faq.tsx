@@ -7,7 +7,7 @@ import { Section } from "./Section";
 const faqs = [
   {
     q: "Is Blueveno only for prop traders?",
-    a: "No. Any serious trader who wants structured review and analytics benefits. Prop and firm rules are optional layers—not the core product.",
+    a: "No. Any serious trader who wants structured review and analytics benefits. Prop and firm rules are optional layers—they sit on top of the same core: truth in execution, clarity in review.",
   },
   {
     q: "Does this replace my execution platform?",

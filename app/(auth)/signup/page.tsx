@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { SignupForm } from "@/components/auth/signup-form";
 
 export const metadata: Metadata = {
-  title: "Sign up",
-  description: "Create a Blueveno account.",
+  title: "Create account",
+  description:
+    "Create a Blueveno workspace: trading journal and performance analytics for serious operators.",
 };
 
 export default async function SignupPage() {
@@ -16,18 +18,24 @@ export default async function SignupPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <p className="font-display text-2xl font-medium tracking-tight text-foreground">Blueveno</p>
-        <h1 className="mt-3 text-lg text-muted-foreground">Create your workspace</h1>
-      </div>
-      <SignupForm />
-      <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
-        <Link href="/login" className="text-primary hover:underline">
-          Sign in
+    <AuthSplitLayout
+      eyebrow="Create account"
+      title="Start your workspace"
+      subtitle="Turn raw execution into structured review. Start on the free tier and upgrade when you need more."
+      alternatePrompt="Already registered?"
+      alternateHref="/login"
+      alternateLabel="Sign in"
+    >
+      <p className="mb-6 text-center text-[11px] leading-relaxed text-zinc-600 lg:text-left">
+        Prefer to explore first?{" "}
+        <Link
+          href="/"
+          className="font-medium text-[oklch(0.78_0.12_250)] underline-offset-4 hover:underline"
+        >
+          View the product
         </Link>
       </p>
-    </div>
+      <SignupForm />
+    </AuthSplitLayout>
   );
 }

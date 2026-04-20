@@ -1,3 +1,4 @@
+import { LogoLink } from "@/components/landing/LogoLink";
 import { Section } from "./Section";
 
 const cols = [
@@ -33,10 +34,12 @@ export function Footer() {
       <Section>
         <div className="flex flex-col gap-14 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="font-display text-xl font-medium tracking-tight text-zinc-100">Blueveno</p>
+            <LogoLink className="inline-block font-display text-xl font-medium tracking-tight text-zinc-100 transition hover:text-white">
+              Blueveno
+            </LogoLink>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-500">
-              Trading journal and performance analytics for operators who treat review as part of the
-              job—not an afterthought.
+              Trading journal and performance review for operators who treat the tape as the source
+              of truth—and review as infrastructure.
             </p>
           </div>
           <div className="grid flex-1 grid-cols-2 gap-12 sm:grid-cols-3 lg:max-w-2xl lg:gap-16">

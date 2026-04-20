@@ -1,32 +1,49 @@
+import { cn } from "@/lib/utils";
+
 type TerminalFrameProps = {
   children: React.ReactNode;
   title: string;
   className?: string;
+  /** Hero mockup uses stronger rim light; deep-dive panels stay restrained. */
+  variant?: "panel" | "hero";
 };
 
-export function TerminalFrame({ children, title, className = "" }: TerminalFrameProps) {
+export function TerminalFrame({
+  children,
+  title,
+  className = "",
+  variant = "panel",
+}: TerminalFrameProps) {
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[oklch(0.1_0.025_265)] shadow-[0_0_0_1px_oklch(1_0_0_/0.03),0_32px_100px_-40px_oklch(0.2_0.15_260/0.9),0_0_120px_-50px_oklch(0.55_0.2_250/0.25)] ${className}`}
+      className={cn(
+        "group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.1_0.025_265)]",
+        variant === "hero" ? "border-glow-subtle" : "shadow-bv-lift",
+        className,
+      )}
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,oklch(0.45_0.15_250/0.12),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-25%,oklch(0.48_0.16_250/0.14),transparent_55%)]"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-px rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-px rounded-[0.9375rem] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
         style={{
           background:
-            "linear-gradient(135deg, oklch(0.55 0.15 250 / 0.08), transparent 40%, oklch(0.45 0.1 270 / 0.06))",
+            "linear-gradient(145deg, oklch(0.55 0.14 250 / 0.07), transparent 42%, oklch(0.42 0.1 270 / 0.05))",
         }}
       />
-      <header className="relative flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
-        <span className="truncate text-zinc-400">{title}</span>
-        <span className="flex gap-1.5">
-          <span className="size-2 rounded-full bg-zinc-700" />
-          <span className="size-2 rounded-full bg-zinc-700" />
-          <span className="size-2 rounded-full bg-emerald-500/30" />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.12] to-transparent"
+      />
+      <header className="relative flex items-center justify-between gap-3 border-b border-white/[0.06] bg-black/20 px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 backdrop-blur-[2px]">
+        <span className="min-w-0 truncate text-zinc-400">{title}</span>
+        <span className="flex shrink-0 gap-1.5" aria-hidden>
+          <span className="size-2 rounded-full bg-[oklch(0.45_0.08_25/0.9)] ring-1 ring-white/[0.08]" />
+          <span className="size-2 rounded-full bg-[oklch(0.65_0.12_85/0.85)] ring-1 ring-white/[0.08]" />
+          <span className="size-2 rounded-full bg-[oklch(0.55_0.12_145/0.55)] ring-1 ring-white/[0.08]" />
         </span>
       </header>
       <div className="relative">{children}</div>

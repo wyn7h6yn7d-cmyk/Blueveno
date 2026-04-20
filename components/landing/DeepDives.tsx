@@ -23,8 +23,8 @@ const blocks: {
 }[] = [
   {
     eyebrow: "Ingestion",
-    title: "Auto journaling that finishes the record for you",
-    body: "Trades land as structured events—time, size, context—so the journal is complete even on the days you would rather skip the write-up.",
+    title: "Automatic journaling that completes the record",
+    body: "Trades arrive as structured events—time, size, context—so the journal is complete even when you would rather skip the write-up.",
     mock: <MockAutoJournal />,
   },
   {
@@ -35,19 +35,19 @@ const blocks: {
   },
   {
     eyebrow: "Review",
-    title: "Screenshot review that cannot divorce from the fill",
+    title: "Screenshot review bound to the fill",
     body: "The chart moment and the account moment share one thread—so post-trade review stays specific, not nostalgic.",
     mock: <MockScreenshotReview />,
   },
   {
     eyebrow: "Playbooks",
     title: "Setup playbooks that survive real markets",
-    body: "Write the conditions and the non-negotiables where you can read them—then track whether you traded your plan or your mood.",
+    body: "Conditions and non-negotiables live where you read them—then measure whether you traded the plan or the mood.",
     mock: <MockPlaybooks />,
   },
   {
     eyebrow: "Behavior",
-    title: "Behavioral tracking for the patterns that move P&L",
+    title: "Behavioral tracking for what actually moves P&L",
     body: "Surface impulses and repeat behaviors with the same rigor you apply to R-multiples—before they own the month.",
     mock: <MockBehavior />,
   },
@@ -65,8 +65,8 @@ const blocks: {
   },
   {
     eyebrow: "Accounts",
-    title: "Account and prop tracking in the same frame as performance",
-    body: "Buffers, windows, and desk constraints visible beside P&L—risk stays operational, not a spreadsheet you open once a week.",
+    title: "Account and prop tracking beside performance",
+    body: "Buffers, windows, and desk constraints visible next to P&L—risk stays operational, not a tab you open once a week.",
     mock: <MockAccountProp />,
   },
 ];
@@ -80,10 +80,10 @@ export function DeepDives() {
             Inside the product
           </p>
           <h2 className="font-display mt-5 text-3xl font-medium tracking-tight text-zinc-50 sm:text-4xl">
-            Depth that matches the stakes—not feature sprawl for a landing page.
+            Depth that matches the stakes—not a shallow marketing checklist.
           </h2>
           <p className="mt-5 text-base leading-relaxed text-zinc-400 sm:text-lg">
-            Each layer connects to the same thesis: turn trade data into decisions you can defend.
+            Each layer connects to the same thesis: turn execution history into decisions you can defend.
           </p>
         </Reveal>
       </div>

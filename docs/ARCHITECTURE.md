@@ -117,7 +117,7 @@ app/
 - **Environment:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.  
 - **Server-only** Stripe client in `lib/billing/stripe.ts` (instantiated only when keys exist).  
 - **Webhook** at `POST /api/webhooks/stripe`: verify signature, handle `checkout.session.completed`, `customer.subscription.*`, idempotent updates to `Subscription` table (stub until DB exists).  
-- **Entitlements:** `lib/billing/entitlements.ts` — `hasFeature()` for `journal.create`, `analytics.advanced`, `reviews.premium`.  
+- **Entitlements:** `lib/billing/` — `hasFeature()` + `MIN_TIER_FOR_FEATURE` in `matrix.ts`; feature keys in `lib/features.ts` (see `docs/BILLING.md`).  
 - **UI:** `/app/settings/billing`; upgrade prompts → `/pricing`.
 
 ---

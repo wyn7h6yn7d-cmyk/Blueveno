@@ -5,8 +5,10 @@ import {
   FinalCta,
   Footer,
   Hero,
+  MarketingBackground,
   Navbar,
   Outcomes,
+  SectionDivider,
   Testimonials,
   TraderTypes,
   TrustBar,
@@ -15,19 +17,17 @@ import {
 
 export default function MarketingHomePage() {
   return (
-    <div className="relative min-h-full overflow-x-hidden bg-[oklch(0.07_0.03_265)]">
-      <div className="pointer-events-none fixed inset-0 -z-30 bg-[oklch(0.07_0.03_265)]" />
-      <div className="pointer-events-none fixed inset-0 -z-20 bg-hero-spotlight opacity-90" />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-vignette" />
-      <div className="pointer-events-none fixed inset-0 -z-[5] bg-grid opacity-[0.28]" />
-      <div className="pointer-events-none fixed inset-0 -z-[4] bg-noise opacity-[0.25]" />
+    <MarketingBackground>
       <Navbar />
       <main>
         <Hero />
         <TrustBar />
+        <SectionDivider />
         <Outcomes />
+        <SectionDivider />
         <FeatureGrid />
         <DeepDives />
+        <SectionDivider />
         <Workflow />
         <TraderTypes />
         <Testimonials />
@@ -35,6 +35,6 @@ export default function MarketingHomePage() {
         <FinalCta />
       </main>
       <Footer />
-    </div>
+    </MarketingBackground>
   );
 }

@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import type { PlanTier } from "@/lib/billing/types";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -43,11 +44,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.sub = user.id ?? token.sub;
       }
+      /** Future: set token.planTier from DB user on sign-in. Demo override for billing UI: */
+      const override = process.env.BILLING_PLAN_TIER_OVERRIDE;
+      if (override === "free" || override === "pro" || override === "elite") {
+        token.planTier = override;
+      }
       return token;
     },
     session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+      }
+      const pt = token.planTier;
+      if (session.user && (pt === "free" || pt === "pro" || pt === "elite")) {
+        session.user.planTier = pt as PlanTier;
       }
       return session;
     },

@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { PRODUCT_DESCRIPTION, PRODUCT_TAGLINE } from "@/lib/product";
 import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -24,17 +25,20 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Blueveno — Trading performance intelligence",
+    default: `Blueveno — ${PRODUCT_TAGLINE}`,
     template: "%s — Blueveno",
   },
-  description:
-    "Premium trading journal and performance analytics—turn execution into evidence, review into edge, discipline into something you can measure.",
+  description: PRODUCT_DESCRIPTION,
   openGraph: {
-    title: "Blueveno — Trading performance intelligence",
-    description:
-      "The trading journal and analytics platform built for serious operators.",
+    title: `Blueveno — ${PRODUCT_TAGLINE}`,
+    description: PRODUCT_DESCRIPTION,
     type: "website",
   },
+};
+
+/** Matches `bv-void` / cinematic dark shell — browser chrome & splash tint */
+export const viewport: Viewport = {
+  themeColor: "#070a12",
 };
 
 export default function RootLayout({

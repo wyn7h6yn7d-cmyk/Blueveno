@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="bv-bg" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0b0e16" />
+      <stop offset="1" stop-color="#070a12" />
+    </linearGradient>
+    <linearGradient id="bv-line" x1="7" y1="21" x2="25" y2="9" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5b7cff" />
+      <stop offset="0.55" stop-color="#7c9aff" />
+      <stop offset="1" stop-color="#a8bcff" />
+    </linearGradient>
+    <linearGradient id="bv-rim" x1="16" y1="0" x2="16" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.14" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.03" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#bv-bg)" />
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" stroke="url(#bv-rim)" />
+  <path
+    d="M7 21 L11 17 L15 19 L19 11 L25 9"
+    stroke="url(#bv-line)"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="25" cy="9" r="1.75" fill="url(#bv-line)" />
+</svg>

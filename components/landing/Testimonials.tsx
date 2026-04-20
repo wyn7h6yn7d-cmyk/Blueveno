@@ -24,17 +24,18 @@ const quotes = [
 
 export function Testimonials() {
   return (
-    <Section className="border-y border-white/[0.05] bg-[oklch(0.09_0.025_265/0.4)] py-28 backdrop-blur-sm lg:py-36">
+    <Section className="border-y border-white/[0.06] bg-[oklch(0.088_0.026_265/0.45)] py-28 backdrop-blur-sm lg:py-36">
       <div className="mx-auto max-w-2xl text-center">
         <Reveal>
-          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.65_0.12_250)]">
+          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[oklch(0.68_0.12_250)]">
             Operators
           </p>
-          <h2 className="font-display mt-5 text-3xl font-medium tracking-tight text-zinc-50 sm:text-4xl">
+          <h2 className="font-display mt-5 text-3xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-4xl">
             Trusted where performance is measured in R—not followers.
           </h2>
           <p className="mt-4 text-sm text-zinc-500">
-            Illustrative quotes from early design partners and pilot feedback—not paid endorsements.
+            Representative quotes from early design partners and pilot desks—illustrative, not paid
+            endorsements.
           </p>
         </Reveal>
       </div>
@@ -42,11 +43,11 @@ export function Testimonials() {
       <div className="mt-20 grid gap-6 lg:grid-cols-3">
         {quotes.map((q, i) => (
           <Reveal key={q.role} delay={0.06 * i}>
-            <figure className="flex h-full flex-col rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8">
+            <figure className="flex h-full flex-col rounded-2xl border border-white/[0.07] bg-[oklch(0.095_0.028_265/0.6)] p-8 shadow-bv-card">
               <blockquote className="flex-1 text-[15px] leading-relaxed text-zinc-300">
                 “{q.quote}”
               </blockquote>
-              <figcaption className="mt-10 border-t border-white/[0.06] pt-8">
+              <figcaption className="mt-10 border-t border-white/[0.07] pt-8">
                 <p className="font-display text-sm text-zinc-200">{q.role}</p>
                 <p className="mt-1.5 font-mono text-[11px] text-zinc-500">{q.meta}</p>
               </figcaption>

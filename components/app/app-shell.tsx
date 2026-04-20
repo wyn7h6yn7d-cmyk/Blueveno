@@ -1,38 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { signOut } from "next-auth/react";
-import {
-  Activity,
-  BookOpen,
-  ClipboardList,
-  CreditCard,
-  LayoutDashboard,
-  LineChart,
-  LogOut,
-  Settings,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-const nav = [
-  { href: "/app", label: "Overview", icon: LayoutDashboard },
-  { href: "/app/journal", label: "Journal", icon: BookOpen },
-  { href: "/app/analytics", label: "Analytics", icon: LineChart },
-  { href: "/app/playbooks", label: "Playbooks", icon: Activity },
-  { href: "/app/reviews", label: "Reviews", icon: ClipboardList },
-  { href: "/app/settings", label: "Settings", icon: Settings },
-];
+import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
+import { AppTopbar } from "@/components/app/app-topbar";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -40,123 +10,45 @@ type AppShellProps = {
 };
 
 export function AppShell({ children, user }: AppShellProps) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const initials =
-    user.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() ||
-    user.email?.slice(0, 2).toUpperCase() ||
-    "BV";
-
   return (
-    <div className="flex min-h-full flex-col md:flex-row">
-      <aside className="sticky top-0 z-30 flex w-full shrink-0 flex-col border-b border-border/80 bg-sidebar/95 backdrop-blur-xl md:h-screen md:w-56 md:border-r md:border-b-0">
-        <div className="flex h-14 items-center border-b border-border/80 px-4 md:h-16">
-          <Link href="/app" className="font-display text-lg font-medium tracking-tight">
-            Blueveno
-          </Link>
-        </div>
-        <nav className="flex flex-row gap-1 overflow-x-auto p-2 md:flex-col md:gap-0.5 md:p-3">
-          {nav.map((item) => {
-            const active =
-              item.href === "/app"
-                ? pathname === "/app"
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground",
-                )}
-              >
-                <item.icon className="size-4 opacity-80" />
-                <span className="whitespace-nowrap">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="hidden border-t border-border/80 p-3 md:block">
+    <div className="flex min-h-full bg-bv-void text-zinc-100">
+      <aside className="sticky top-0 z-30 hidden h-screen w-[15.5rem] shrink-0 flex-col border-r border-white/[0.06] bg-[oklch(0.09_0.03_265/0.96)] shadow-[inset_-1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-xl md:flex">
+        <div className="flex h-[3.75rem] items-center border-b border-white/[0.06] px-4">
           <Link
-            href="/app/settings/billing"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-foreground"
+            href="/app"
+            className="group flex items-center gap-2 outline-none ring-offset-2 ring-offset-bv-void focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.12_250)]"
           >
-            <CreditCard className="size-4" />
-            Billing
+            <span className="font-display text-lg font-medium tracking-tight text-zinc-50 transition group-hover:text-white">
+              Blueveno
+            </span>
+            <span className="rounded border border-white/[0.08] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500">
+              ws
+            </span>
           </Link>
         </div>
+        <div className="flex flex-1 flex-col overflow-y-auto p-3">
+          <AppSidebarNav />
+        </div>
+        <AppSidebarFooter />
       </aside>
+
       <div className="flex min-h-full min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-4 border-b border-border/80 bg-background/80 px-4 backdrop-blur-xl md:h-16 md:px-6">
-          <div className="ml-auto flex items-center gap-2">
-            <Link
-              href="/"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                "hidden md:inline-flex",
-              )}
-            >
-              Marketing
-            </Link>
-            <Link
-              href="/pricing"
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "sm" }),
-                "hidden md:inline-flex",
-              )}
-            >
-              Pricing
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "icon-sm" }),
-                  "size-9 rounded-full p-0",
-                )}
-              >
-                <Avatar className="size-8">
-                  <AvatarFallback className="bg-primary/15 text-xs font-medium text-primary">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-medium">{user.name ?? "Trader"}</span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {user.email}
-                    </span>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push("/app/settings")}>
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/app/settings/billing")}>
-                  Billing
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="gap-2"
-                >
-                  <LogOut className="size-4" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <AppTopbar user={user} />
+        <div className="relative flex-1">
+          <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.11]" aria-hidden />
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_55%_at_50%_-12%,oklch(0.42_0.14_250/0.14),transparent_58%)]"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-[radial-gradient(ellipse_80%_70%_at_50%_100%,oklch(0.32_0.08_270/0.14),transparent_72%)]"
+            aria-hidden
+          />
+          <div className="pointer-events-none absolute inset-0 bg-scanlines opacity-[0.22]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.12]" aria-hidden />
+          <div className="relative mx-auto min-h-full max-w-[1600px] px-4 py-6 md:px-6 md:py-8 lg:px-8">
+            {children}
           </div>
-        </header>
-        <div className="flex-1 bg-[radial-gradient(ellipse_80%_40%_at_50%_-10%,oklch(0.35_0.12_250_/_0.12),transparent)]">
-          <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">{children}</div>
         </div>
       </div>
     </div>

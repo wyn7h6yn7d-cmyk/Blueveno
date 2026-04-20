@@ -1,48 +1,53 @@
 import type { Session } from "next-auth";
 import type { FeatureKey } from "@/lib/features";
-
-export type PlanTier = "free" | "pro" | "enterprise";
+import type { PlanTier } from "@/lib/billing/types";
+import { MIN_TIER_FOR_FEATURE, tierMeetsRequirement } from "@/lib/billing/matrix";
+import { getEffectivePlanTier } from "@/lib/billing/resolve";
 
 /**
- * Placeholder until Stripe + DB — replace with Subscription row lookup.
+ * @deprecated Use getEffectivePlanTier — kept for existing imports.
  */
 export function getPlanTier(session: Session | null): PlanTier {
-  if (!session?.user) {
-    return "free";
-  }
-  return "free";
+  return getEffectivePlanTier(session);
 }
 
-/** Journal: creating new entries (Stripe gate target). */
-export function canCreateJournalEntry(session: Session | null): boolean {
-  const tier = getPlanTier(session);
-  return tier !== "free" || process.env.NODE_ENV === "development";
-}
-
-/** Analytics: advanced dashboards / slices (Stripe gate target). */
-export function canUseAdvancedAnalytics(session: Session | null): boolean {
-  const tier = getPlanTier(session);
-  return tier !== "free" || process.env.NODE_ENV === "development";
-}
-
-/** Reviews: premium review / annotation tooling (Stripe gate target). */
-export function canUsePremiumReviews(session: Session | null): boolean {
-  const tier = getPlanTier(session);
-  return tier !== "free" || process.env.NODE_ENV === "development";
+function devBypass(): boolean {
+  return process.env.NODE_ENV === "development" && process.env.BILLING_STRICT !== "true";
 }
 
 /**
- * Single entry point for server components / actions — extend when plans exist.
+ * Core entitlement check — server components, actions, API routes.
  */
 export function hasFeature(session: Session | null, feature: FeatureKey): boolean {
-  switch (feature) {
-    case "journal.create":
-      return canCreateJournalEntry(session);
-    case "analytics.advanced":
-      return canUseAdvancedAnalytics(session);
-    case "reviews.premium":
-      return canUsePremiumReviews(session);
-    default:
-      return false;
+  if (devBypass()) {
+    return true;
   }
+  const userTier = getEffectivePlanTier(session);
+  const required = MIN_TIER_FOR_FEATURE[feature];
+  return tierMeetsRequirement(userTier, required);
+}
+
+/** Convenience — journal without limits */
+export function canUseUnlimitedJournal(session: Session | null): boolean {
+  return hasFeature(session, "journal.unlimited");
+}
+
+export function canUseAdvancedAnalytics(session: Session | null): boolean {
+  return hasFeature(session, "analytics.advanced");
+}
+
+export function canUseScreenshotReview(session: Session | null): boolean {
+  return hasFeature(session, "reviews.screenshot");
+}
+
+export function canUsePlaybooks(session: Session | null): boolean {
+  return hasFeature(session, "playbooks.full");
+}
+
+export function canUsePremiumReports(session: Session | null): boolean {
+  return hasFeature(session, "reports.premium");
+}
+
+export function canUseAiInsights(session: Session | null): boolean {
+  return hasFeature(session, "ai.insights");
 }

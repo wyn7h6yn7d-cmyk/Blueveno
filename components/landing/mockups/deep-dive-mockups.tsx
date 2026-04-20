@@ -17,7 +17,7 @@ export function MockAutoJournal() {
         ))}
       </div>
       <div className="border-t border-white/[0.06] bg-white/[0.02] px-3 py-2 font-mono text-[9px] text-zinc-500">
-        Fills normalized · tags applied · no manual spreadsheet
+        Fills normalized · tags applied · no reconstructed day
       </div>
     </TerminalFrame>
   );
@@ -43,7 +43,9 @@ export function MockAnalytics() {
             <div key={i} className="flex-1 rounded-t-sm bg-gradient-to-t from-[oklch(0.3_0.08_260)] to-[oklch(0.6_0.14_250)]" style={{ height: `${h}%` }} />
           ))}
         </div>
-        <p className="mt-3 font-mono text-[9px] text-zinc-600">Slice any dimension — same truth underneath</p>
+        <p className="mt-3 font-mono text-[9px] text-zinc-600">
+          Same slice logic across dimensions—one underlying record
+        </p>
       </div>
     </TerminalFrame>
   );

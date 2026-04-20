@@ -3,7 +3,8 @@ import { hasFeature } from "@/lib/billing/entitlements";
 import type { FeatureKey } from "@/lib/features";
 
 /**
- * Server-side guard helpers — use in Server Actions / Route Handlers before mutations.
+ * Server Actions / Route Handlers — throw before mutating data when the user lacks entitlement.
+ * For page-level redirects, prefer `requireFeature` from `lib/billing/gate.server`.
  */
 export function assertFeature(session: Session | null, feature: FeatureKey): void {
   if (!hasFeature(session, feature)) {

@@ -89,6 +89,21 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-bv-void: var(--bv-void);
+  --color-bv-base: var(--bv-base);
+  --color-bv-raised: var(--bv-raised);
+  --color-bv-surface: var(--bv-surface);
+  --color-bv-surface-high: var(--bv-surface-high);
+  --color-bv-surface-inset: var(--bv-surface-inset);
+  --color-bv-blue-deep: var(--bv-blue-deep);
+  --color-bv-blue-accent: var(--bv-blue-accent);
+  --color-bv-ice: var(--bv-ice);
+  --color-bv-cyan-electric: var(--bv-cyan-electric);
+  --color-bv-warm: var(--bv-warm);
+  --shadow-bv-card: var(--bv-shadow-card);
+  --shadow-bv-float: var(--bv-shadow-float);
+  --shadow-bv-glow: var(--bv-shadow-glow);
+  --shadow-bv-lift: var(--bv-shadow-lift);
 }
 
 html {
@@ -136,6 +151,35 @@ body {
     radial-gradient(ellipse 60% 50% at 85% 20%, oklch(0.35 0.12 270 / 0.12), transparent 45%);
 }
 
+/** Bottom rim light — cinematic separation from true black */
+.bg-marketing-rim {
+  background: radial-gradient(
+    ellipse 110% 45% at 50% 100%,
+    oklch(0.38 0.1 250 / 0.09),
+    transparent 62%
+  );
+}
+
+/** Subtle floor wash — depth without blob clichés */
+.bg-marketing-floor {
+  background: radial-gradient(
+    ellipse 80% 35% at 50% 105%,
+    oklch(0.32 0.08 270 / 0.12),
+    transparent 70%
+  );
+}
+
+/** Fine scan-line texture (terminal) — very low contrast */
+.bg-scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    oklch(1 0 0 / 0.015) 2px,
+    oklch(1 0 0 / 0.015) 3px
+  );
+}
+
 .bg-radial-fade {
   background: radial-gradient(
     ellipse 80% 50% at 50% -20%,
@@ -159,9 +203,10 @@ body {
 
 .border-glow-subtle {
   box-shadow:
-    0 0 0 1px oklch(1 0 0 / 0.06),
-    0 0 80px -20px oklch(0.55 0.2 250 / 0.35),
-    inset 0 1px 0 0 oklch(1 0 0 / 0.04);
+    0 0 0 1px oklch(1 0 0 / 0.07),
+    0 28px 90px -36px oklch(0 0 0 / 0.75),
+    0 0 100px -40px oklch(0.52 0.18 250 / 0.22),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.055);
 }
 
 .bg-noise {
@@ -232,6 +277,36 @@ body {
   --sidebar-accent-foreground: oklch(0.97 0.01 260);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.62 0.12 250);
+
+  /* Blueveno semantic palette (dark-first) — see docs/DESIGN_SYSTEM.md */
+  --bv-void: oklch(0.07 0.03 265);
+  --bv-base: oklch(0.1 0.025 265);
+  --bv-raised: oklch(0.12 0.02 260);
+  --bv-surface: oklch(0.14 0.022 262);
+  --bv-surface-high: oklch(0.16 0.025 260);
+  --bv-surface-inset: oklch(0.09 0.03 265);
+  --bv-blue-deep: oklch(0.38 0.1 250);
+  --bv-blue-accent: oklch(0.62 0.14 250);
+  --bv-ice: oklch(0.9 0.03 250);
+  --bv-cyan-electric: oklch(0.72 0.18 245);
+  --bv-warm: oklch(0.78 0.08 55);
+  --bv-shadow-card:
+    0 0 0 1px oklch(1 0 0 / 0.065),
+    0 20px 56px -22px oklch(0 0 0 / 0.58),
+    0 0 0 1px oklch(0.52 0.13 250 / 0.05),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.035);
+  --bv-shadow-float:
+    0 0 0 1px oklch(1 0 0 / 0.08),
+    0 24px 64px -24px oklch(0 0 0 / 0.65),
+    0 0 80px -32px oklch(0.55 0.18 250 / 0.12);
+  --bv-shadow-glow:
+    0 0 0 1px oklch(1 0 0 / 0.07),
+    0 0 72px -14px oklch(0.52 0.2 250 / 0.32),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.05);
+  --bv-shadow-lift:
+    0 0 0 1px oklch(1 0 0 / 0.06),
+    0 22px 64px -26px oklch(0 0 0 / 0.62),
+    0 0 0 1px oklch(0.5 0.12 250 / 0.05);
 }
 
 @layer base {

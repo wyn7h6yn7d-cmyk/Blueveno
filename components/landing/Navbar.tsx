@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { LogoLink } from "@/components/landing/LogoLink";
 
 const anchorLinks = [
   { href: "#outcomes", label: "Outcomes" },
@@ -19,23 +20,23 @@ export function Navbar() {
   const { data: session, status } = useSession();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[oklch(0.08_0.03_265/0.85)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[oklch(0.08_0.03_265/0.72)]">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-[oklch(0.075_0.03_265/0.82)] shadow-[inset_0_-1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[oklch(0.075_0.03_265/0.68)]">
       <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex items-center gap-2.5">
-          <span className="font-display text-lg font-medium tracking-tight text-zinc-50">
+        <LogoLink className="group flex items-center gap-2.5 outline-none ring-offset-2 ring-offset-bv-void focus-visible:rounded-lg focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.12_250)]">
+          <span className="font-display text-lg font-medium tracking-tight text-zinc-50 transition group-hover:text-zinc-100">
             Blueveno
           </span>
           <span className="hidden rounded border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500 sm:inline">
             beta
           </span>
-        </Link>
+        </LogoLink>
 
         <nav className="hidden items-center gap-7 lg:flex xl:gap-9">
           {anchorLinks.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="text-[13px] text-zinc-400 transition-colors hover:text-zinc-100"
+              className="text-[13px] text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
             >
               {l.label}
             </a>
@@ -44,7 +45,7 @@ export function Navbar() {
             <Link
               key={l.href}
               href={l.href}
-              className="text-[13px] text-zinc-400 transition-colors hover:text-zinc-100"
+              className="text-[13px] text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
             >
               {l.label}
             </Link>
@@ -55,7 +56,7 @@ export function Navbar() {
           {status === "authenticated" ? (
             <Link
               href="/app"
-              className="hidden rounded-full border border-[oklch(0.55_0.14_250/0.35)] bg-[oklch(0.45_0.1_250/0.12)] px-4 py-2 text-[13px] text-[oklch(0.82_0.08_250)] transition hover:bg-[oklch(0.45_0.1_250/0.18)] sm:inline-flex"
+              className="hidden rounded-full border border-[oklch(0.55_0.14_250/0.38)] bg-[oklch(0.42_0.1_250/0.14)] px-4 py-2 text-[13px] text-[oklch(0.84_0.08_250)] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] transition hover:bg-[oklch(0.45_0.1_250/0.2)] sm:inline-flex"
             >
               Workspace
             </Link>
@@ -69,7 +70,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/login"
-                className="hidden rounded-full border border-white/[0.1] bg-white/[0.04] px-4 py-2 text-[13px] text-zinc-200 transition hover:border-white/[0.18] hover:bg-white/[0.08] sm:inline-flex"
+                className="hidden rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-[13px] text-zinc-200 transition hover:border-white/[0.16] hover:bg-white/[0.07] sm:inline-flex"
               >
                 Sign in
               </Link>
@@ -77,13 +78,13 @@ export function Navbar() {
           )}
           <a
             href="#cta"
-            className="hidden rounded-full border border-white/[0.08] px-4 py-2 text-[13px] text-zinc-300 transition hover:border-white/[0.14] hover:bg-white/[0.04] xl:inline-flex"
+            className="hidden rounded-full border border-[oklch(0.55_0.14_250/0.28)] bg-[oklch(0.38_0.1_250/0.12)] px-4 py-2 text-[13px] text-[oklch(0.88_0.06_250)] transition hover:border-[oklch(0.55_0.14_250/0.45)] hover:bg-[oklch(0.42_0.12_250/0.16)] xl:inline-flex"
           >
             Request access
           </a>
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] text-zinc-300 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] text-zinc-300 transition hover:border-white/[0.14] lg:hidden"
             aria-expanded={open}
             aria-label="Toggle menu"
             onClick={() => setOpen((v) => !v)}
@@ -126,7 +127,7 @@ export function Navbar() {
             ))}
             <Link
               href={session ? "/app" : "/login"}
-              className="mt-2 rounded-full bg-[oklch(0.72_0.14_250)] px-4 py-2.5 text-center text-sm font-medium text-[oklch(0.12_0.04_265)]"
+              className="mt-2 rounded-full bg-[oklch(0.72_0.14_250)] px-4 py-2.5 text-center text-sm font-semibold text-[oklch(0.12_0.04_265)]"
               onClick={() => setOpen(false)}
             >
               {session ? "Workspace" : "Sign in"}
