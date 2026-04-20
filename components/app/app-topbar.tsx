@@ -111,10 +111,9 @@ export function AppTopbar({ user }: AppTopbarProps) {
             <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
               Actions
             </DropdownMenuLabel>
-            <DropdownMenuItem disabled className="gap-2">
+            <DropdownMenuItem className="gap-2" onClick={() => router.push("/app/journal#add")}>
               <BookOpen className="size-4 opacity-70" />
               New journal entry
-              <span className="ml-auto font-mono text-[10px] text-zinc-600">Soon</span>
             </DropdownMenuItem>
             <DropdownMenuItem disabled className="gap-2">
               <FileText className="size-4 opacity-70" />

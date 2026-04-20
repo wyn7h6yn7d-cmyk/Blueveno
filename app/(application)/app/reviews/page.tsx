@@ -1,11 +1,9 @@
 import { auth } from "@/auth";
 import Link from "next/link";
 import { ImageIcon, Inbox } from "lucide-react";
-import { hasFeature } from "@/lib/billing/entitlements";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { PanelGrid, Panel } from "@/components/app/panel-grid";
-import { UpgradePrompt } from "@/components/app/upgrade-prompt";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/app/empty-state";
@@ -17,8 +15,7 @@ const shots = [
 ];
 
 export default async function ReviewsPage() {
-  const session = await auth();
-  const allowed = hasFeature(session, "reviews.screenshot");
+  await auth();
 
   return (
     <div className="space-y-8">
@@ -38,8 +35,6 @@ export default async function ReviewsPage() {
           </Link>
         }
       />
-
-      {!allowed ? <UpgradePrompt feature="reviews.screenshot" /> : null}
 
       <PanelGrid>
         <Panel span={7}>
@@ -107,7 +102,7 @@ export default async function ReviewsPage() {
         title="Review packs"
         description="PDF and shareable links—included when the export pipeline is ready."
         footer={
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Pro · desk seats</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Test period — exports preview</p>
         }
       >
         <EmptyState

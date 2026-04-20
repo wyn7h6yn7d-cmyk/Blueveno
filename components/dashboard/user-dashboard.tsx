@@ -1,0 +1,413 @@
+"use client";
+
+import { useId, useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import { PageHeader } from "@/components/app/page-header";
+import { DashboardCard } from "@/components/app/dashboard-card";
+import { PanelGrid, Panel } from "@/components/app/panel-grid";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { AccountTrackingPanel } from "@/components/dashboard/account-tracking-panel";
+import { RuleViolationTracker } from "@/components/dashboard/rule-violation-tracker";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
+import { computeKpis, cumulativeSeries } from "@/lib/user-data/kpi";
+
+type Props = {
+  userId: string;
+  email: string;
+};
+
+function equityPath(series: number[], w: number, h: number): { line: string; area: string } | null {
+  if (series.length < 2) return null;
+  const vals = series;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const padX = 12;
+  const padY = 14;
+  const innerW = w - 2 * padX;
+  const innerH = h - 2 * padY;
+  const range = max - min || 1;
+  const pts = vals.map((v, i) => {
+    const x = padX + (i / (vals.length - 1)) * innerW;
+    const y = padY + innerH - ((v - min) / range) * innerH;
+    return [x, y] as const;
+  });
+  const line = pts.map((p, i) => (i === 0 ? `M ${p[0]},${p[1]}` : `L ${p[0]},${p[1]}`)).join(" ");
+  const last = pts[pts.length - 1];
+  const first = pts[0];
+  const area = `${line} L ${last[0]},${h - padY} L ${first[0]},${h - padY} Z`;
+  return { line, area };
+}
+
+export function UserDashboard({ userId, email }: Props) {
+  const gid = useId().replace(/:/g, "");
+  const { data, ready, addRow } = useUserWorkspace(userId);
+  const [time, setTime] = useState("");
+  const [sym, setSym] = useState("");
+  const [setup, setSetup] = useState("");
+  const [r, setR] = useState("");
+  const [tag, setTag] = useState("");
+  const [recapCopied, setRecapCopied] = useState(false);
+
+  const kpis = useMemo(() => computeKpis(data.journal), [data.journal]);
+  const series = useMemo(() => cumulativeSeries(data.journal), [data.journal]);
+  const paths = useMemo(() => equityPath(series, 480, 160), [series]);
+
+  const lastTwo = data.journal.slice(0, 2);
+
+  const onAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sym.trim() || !r.trim()) return;
+    const t = time.trim() || new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+    addRow({
+      time: t,
+      sym: sym.trim().toUpperCase(),
+      setup: setup.trim() || "—",
+      r: r.trim(),
+      tag: tag.trim() || "Manual",
+    });
+    setSym("");
+    setSetup("");
+    setR("");
+    setTag("");
+    setTime("");
+  };
+
+  const copyRecap = async () => {
+    const lines = [
+      `Session recap · ${new Date().toLocaleDateString()}`,
+      "",
+      ...lastTwo.map((j) => `${j.time} · ${j.sym} · ${j.setup} · ${j.r} R · ${j.tag}`),
+      data.journal.length === 0 ? "No fills logged yet — add trades from the dashboard." : "",
+    ].filter(Boolean);
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      setRecapCopied(true);
+      setTimeout(() => setRecapCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const kpiTone = (tone: "positive" | "negative" | "neutral") =>
+    cn(
+      "mt-2 font-mono text-[11px] tabular-nums",
+      tone === "positive" && "text-[oklch(0.78_0.12_250)]",
+      tone === "negative" && "text-amber-200/90",
+      tone === "neutral" && "text-zinc-500",
+    );
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="Workspace"
+        title="Overview"
+        description="Your trades and metrics stay on this device until broker ingest is connected. Add fills below — each account has its own workspace."
+        actions={
+          <Link
+            href="/app/journal"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-9 rounded-xl border-white/[0.1] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
+            )}
+          >
+            Open journal
+          </Link>
+        }
+      />
+
+      <DashboardCard
+        eyebrow="Add data"
+        title="Log a fill"
+        description="Quick entry — appears in Recent and Journal. Use R like +0.5 or −0.25."
+        variant="inset"
+      >
+        {!ready ? (
+          <p className="text-sm text-zinc-500">Loading workspace…</p>
+        ) : (
+          <form onSubmit={onAdd} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+            <div className="space-y-2">
+              <Label htmlFor="dash-time" className="text-[13px] text-zinc-400">
+                Time
+              </Label>
+              <Input
+                id="dash-time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                placeholder={new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dash-sym" className="text-[13px] text-zinc-400">
+                Symbol
+              </Label>
+              <Input
+                id="dash-sym"
+                value={sym}
+                onChange={(e) => setSym(e.target.value)}
+                placeholder="ES"
+                required
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="dash-setup" className="text-[13px] text-zinc-400">
+                Setup
+              </Label>
+              <Input
+                id="dash-setup"
+                value={setup}
+                onChange={(e) => setSetup(e.target.value)}
+                placeholder="ORB · long"
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dash-r" className="text-[13px] text-zinc-400">
+                R
+              </Label>
+              <Input
+                id="dash-r"
+                value={r}
+                onChange={(e) => setR(e.target.value)}
+                placeholder="+0.5"
+                required
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 font-mono text-[15px] text-zinc-100 placeholder:text-zinc-600"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dash-tag" className="text-[13px] text-zinc-400">
+                Tag
+              </Label>
+              <Input
+                id="dash-tag"
+                value={tag}
+                onChange={(e) => setTag(e.target.value)}
+                placeholder="Clean"
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
+              />
+            </div>
+            <div className="flex items-end sm:col-span-2 lg:col-span-6">
+              <Button
+                type="submit"
+                className="h-10 w-full rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)] sm:w-auto sm:px-8"
+              >
+                Add to journal
+              </Button>
+            </div>
+          </form>
+        )}
+      </DashboardCard>
+
+      <section aria-label="Key metrics">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: "Net R", value: kpis.netR, delta: kpis.netRDelta, tone: kpis.netRTone },
+            { label: "Expectancy", value: kpis.expectancy, delta: kpis.expectancyDelta, tone: kpis.expectancyTone },
+            { label: "Win rate", value: kpis.winRate, delta: kpis.winRateDelta, tone: kpis.winRateTone },
+            { label: "Max DD", value: kpis.maxDd, delta: kpis.maxDdDelta, tone: kpis.maxDdTone },
+          ].map((k) => (
+            <div
+              key={k.label}
+              className="rounded-2xl border border-white/[0.07] bg-[oklch(0.11_0.025_265/0.9)] p-4 shadow-bv-card ring-1 ring-white/[0.03]"
+            >
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{k.label}</p>
+              <p className="font-display mt-2 text-3xl tabular-nums tracking-tight text-zinc-50">{k.value}</p>
+              <p className={kpiTone(k.tone)}>{k.delta}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <PanelGrid>
+        <Panel span={8}>
+          <DashboardCard
+            eyebrow="Equity curve"
+            title="Cumulative R (your entries)"
+            description="Built from fills you add — oldest to newest on the horizontal axis."
+            variant="inset"
+            footer={
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
+                  {data.journal.length ? `${data.journal.length} fills · local workspace` : "No fills yet"}
+                </p>
+                <Link
+                  href="/app/analytics"
+                  className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.12_250)] hover:underline"
+                >
+                  Analytics
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
+              </div>
+            }
+          >
+            <div className="relative h-44 overflow-hidden rounded-xl border border-white/[0.06] bg-[oklch(0.08_0.03_265)] md:h-52">
+              <div className="absolute inset-0 bg-grid-fine opacity-25" aria-hidden />
+              <svg className="relative h-full w-full" viewBox="0 0 480 160" preserveAspectRatio="none" aria-hidden>
+                <defs>
+                  <linearGradient id={`${gid}-eq`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="oklch(0.55 0.2 250 / 0.35)" />
+                    <stop offset="100%" stopColor="oklch(0.55 0.2 250 / 0)" />
+                  </linearGradient>
+                  <linearGradient id={`${gid}-ln`} x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="oklch(0.55 0.18 250)" />
+                    <stop offset="100%" stopColor="oklch(0.72 0.12 255)" />
+                  </linearGradient>
+                </defs>
+                {paths ? (
+                  <>
+                    <path d={paths.area} fill={`url(#${gid}-eq)`} />
+                    <path
+                      d={paths.line}
+                      fill="none"
+                      stroke={`url(#${gid}-ln)`}
+                      strokeWidth="1.75"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </>
+                ) : (
+                  <path
+                    d="M12,120 L468,118"
+                    fill="none"
+                    stroke="oklch(0.35 0.06 260)"
+                    strokeWidth="1.25"
+                    strokeDasharray="4 6"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                )}
+              </svg>
+              <div className="absolute bottom-3 left-4 max-w-[80%] font-mono text-[9px] leading-relaxed text-zinc-600">
+                {data.journal.length ? "Cumulative R from your journal" : "Add trades above to plot your curve"}
+              </div>
+            </div>
+          </DashboardCard>
+        </Panel>
+
+        <Panel span={4}>
+          <DashboardCard
+            eyebrow="Session recap"
+            title="Today"
+            description="Summary from your latest logged fills."
+          >
+            <ul className="space-y-3 text-[15px] leading-relaxed text-zinc-300">
+              {lastTwo.length ? (
+                lastTwo.map((j) => (
+                  <li key={j.id} className="flex gap-2">
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[oklch(0.65_0.14_250)]" />
+                    <span>
+                      <span className="font-mono text-zinc-500">{j.time}</span> · {j.sym} · {j.setup} ·{" "}
+                      <span className="font-mono tabular-nums text-zinc-100">{j.r} R</span>
+                    </span>
+                  </li>
+                ))
+              ) : (
+                <li className="text-zinc-500">No fills yet — use the form above to log your first trade.</li>
+              )}
+            </ul>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-5 h-10 w-full rounded-xl border-white/[0.1] bg-transparent text-[15px] text-zinc-200 hover:bg-white/[0.05]"
+              onClick={copyRecap}
+              disabled={!lastTwo.length}
+            >
+              {recapCopied ? "Copied" : "Copy recap"}
+            </Button>
+            <p className="mt-2 text-center font-mono text-[10px] text-zinc-600">Test period — all features open</p>
+          </DashboardCard>
+        </Panel>
+      </PanelGrid>
+
+      <section aria-label="Risk and accounts">
+        <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-600">Operational view</p>
+        <PanelGrid>
+          <Panel span={6}>
+            <RuleViolationTracker />
+          </Panel>
+          <Panel span={6}>
+            <AccountTrackingPanel />
+          </Panel>
+        </PanelGrid>
+      </section>
+
+      <DashboardCard
+        eyebrow="Recent executions"
+        title="Latest journal entries"
+        description="Newest first — same data as the Journal page."
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[15px] text-zinc-500">
+              Signed in as <span className="text-zinc-300">{email}</span>
+            </p>
+            <Link
+              href="/app/journal"
+              className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.12_250)] hover:underline"
+            >
+              View all
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
+          <table className="w-full min-w-[520px] text-left text-[15px]">
+            <thead>
+              <tr className="border-b border-white/[0.06] bg-bv-surface-inset/80 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                <th scope="col" className="px-4 py-3">
+                  Time
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  Symbol
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  Setup
+                </th>
+                <th scope="col" className="px-4 py-3 text-right tabular-nums">
+                  R
+                </th>
+                <th scope="col" className="px-4 py-3 text-right">
+                  Tag
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.journal.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                    No entries yet — add a fill with the form above.
+                  </td>
+                </tr>
+              ) : (
+                data.journal.map((row) => (
+                  <tr key={row.id} className="border-b border-white/[0.04] transition hover:bg-white/[0.03]">
+                    <td className="px-4 py-3 font-mono text-sm text-zinc-400">{row.time}</td>
+                    <td className="px-4 py-3 font-medium text-zinc-200">{row.sym}</td>
+                    <td className="px-4 py-3 text-zinc-400">{row.setup}</td>
+                    <td className="px-4 py-3 text-right font-mono tabular-nums text-zinc-200">{row.r}</td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-zinc-400">
+                        {row.tag}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DashboardCard>
+
+      <div className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 ring-1 ring-white/[0.03]">
+        <p className="text-[15px] leading-relaxed text-zinc-500">
+          Workspace data is stored in this browser for your account until server sync ships. Clearing site data resets the
+          journal.
+        </p>
+      </div>
+    </div>
+  );
+}

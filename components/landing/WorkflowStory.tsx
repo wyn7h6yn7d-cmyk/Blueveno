@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LineChart, PenLine, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -77,6 +77,7 @@ function StepRail({ active }: { active: number }) {
 
 function EvolvingTradeCard({ step }: { step: number }) {
   const reduce = useReducedMotion();
+  const uid = useId().replace(/:/g, "");
 
   return (
     <div className="relative overflow-hidden rounded-[1.15rem] border border-white/[0.1] bg-gradient-to-b from-bv-surface-high/90 to-bv-void/95 shadow-bv-float ring-1 ring-primary/[0.08]">
@@ -115,19 +116,37 @@ function EvolvingTradeCard({ step }: { step: number }) {
               transition={{ duration: reduce ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,7rem)_1fr]"
             >
-              <div className="relative aspect-[4/3] overflow-hidden rounded-md border border-white/[0.08] bg-gradient-to-br from-zinc-800 to-bv-void">
-                <div className="absolute inset-0 bg-grid-fine opacity-40" />
-                <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-end gap-0.5">
-                  {[40, 55, 48, 62, 52, 58].map((h, j) => (
-                    <div
-                      key={j}
-                      className="flex-1 rounded-sm bg-gradient-to-t from-bv-blue-deep/70 to-primary/60"
-                      style={{ height: `${h}%` }}
-                    />
-                  ))}
-                </div>
-                <p className="absolute left-1.5 top-1.5 rounded bg-black/55 px-1 py-0.5 font-mono text-[7px] text-zinc-400">
-                  Chart
+              <div className="relative aspect-[4/3] overflow-hidden rounded-md border border-white/[0.12] bg-gradient-to-br from-zinc-800/95 to-bv-void shadow-inner">
+                <div className="absolute inset-0 bg-grid-fine opacity-50" />
+                <svg className="absolute inset-1.5 h-[calc(100%-12px)] w-[calc(100%-12px)]" viewBox="0 0 120 80" aria-hidden>
+                  <defs>
+                    <linearGradient id={`${uid}-ch`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="oklch(0.62 0.14 250)" />
+                      <stop offset="100%" stopColor="oklch(0.42 0.12 252 / 0.4)" />
+                    </linearGradient>
+                  </defs>
+                  <line x1="8" y1="12" x2="112" y2="12" stroke="oklch(0.35 0.04 260 / 0.6)" strokeWidth="0.5" />
+                  <line x1="8" y1="40" x2="112" y2="40" stroke="oklch(0.35 0.04 260 / 0.35)" strokeWidth="0.5" />
+                  <line x1="8" y1="68" x2="112" y2="68" stroke="oklch(0.35 0.04 260 / 0.6)" strokeWidth="0.5" />
+                  {[18, 32, 46, 60, 74, 88].map((x, i) => {
+                    const h = [28, 22, 35, 18, 30, 24][i];
+                    const up = i % 2 === 0;
+                    return (
+                      <rect
+                        key={x}
+                        x={x - 4}
+                        y={up ? 40 - h : 40}
+                        width="8"
+                        height={h}
+                        rx="1"
+                        fill={`url(#${uid}-ch)`}
+                        opacity={0.85}
+                      />
+                    );
+                  })}
+                </svg>
+                <p className="absolute left-1.5 top-1.5 rounded bg-black/65 px-1.5 py-0.5 font-mono text-[8px] text-zinc-300 ring-1 ring-white/10">
+                  Chart snapshot
                 </p>
               </div>
               <div className="flex flex-col justify-center space-y-1.5 text-[11px]">

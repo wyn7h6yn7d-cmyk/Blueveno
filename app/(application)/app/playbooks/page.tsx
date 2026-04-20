@@ -1,9 +1,7 @@
 import { auth } from "@/auth";
-import { hasFeature } from "@/lib/billing/entitlements";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { PanelGrid, Panel } from "@/components/app/panel-grid";
-import { UpgradePrompt } from "@/components/app/upgrade-prompt";
 import { Button } from "@/components/ui/button";
 
 const tags = ["ORB", "Fade", "VWAP", "News-off", "Opening drive", "Gap fill"];
@@ -32,8 +30,7 @@ const playbooks = [
 ];
 
 export default async function PlaybooksPage() {
-  const session = await auth();
-  const allowed = hasFeature(session, "playbooks.full");
+  await auth();
 
   return (
     <div className="space-y-8">
@@ -45,14 +42,12 @@ export default async function PlaybooksPage() {
           <Button
             type="button"
             className="h-9 rounded-xl bg-[oklch(0.72_0.14_250)] px-4 text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)]"
-            disabled={!allowed}
+            title="Playbook builder ships next — no paywall during the test period"
           >
             New playbook
           </Button>
         }
       />
-
-      {!allowed ? <UpgradePrompt feature="playbooks.full" /> : null}
 
       <DashboardCard eyebrow="Strategy tags" title="Taxonomy" description="Used across journal, analytics, and review.">
         <div className="flex flex-wrap gap-2">
@@ -83,7 +78,7 @@ export default async function PlaybooksPage() {
                     variant="outline"
                     size="sm"
                     className="h-8 rounded-lg border-white/[0.1] bg-transparent text-xs text-zinc-300"
-                    disabled={!allowed}
+                    disabled
                   >
                     Edit
                   </Button>

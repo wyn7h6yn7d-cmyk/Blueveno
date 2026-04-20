@@ -10,6 +10,11 @@ function planFromEnv(): PlanTier | undefined {
   return undefined;
 }
 
+/** Mirrors `BILLING_TEST_FULL_ACCESS` in entitlements — session shows Elite during open test. */
+function testPeriodTier(): PlanTier | undefined {
+  return process.env.BILLING_TEST_FULL_ACCESS !== "false" ? "elite" : undefined;
+}
+
 /**
  * Server-only session compatible with existing billing / `Session` types.
  * Backed by Supabase Auth (cookie session).
@@ -26,7 +31,7 @@ export async function auth(): Promise<AuthSession | null> {
 
   const meta = user.user_metadata as { full_name?: string; name?: string } | undefined;
   const name = meta?.name ?? meta?.full_name ?? user.email?.split("@")[0] ?? null;
-  const pt = planFromEnv();
+  const pt = planFromEnv() ?? testPeriodTier();
 
   return {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),

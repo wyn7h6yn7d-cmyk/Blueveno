@@ -15,11 +15,16 @@ function devBypass(): boolean {
   return process.env.NODE_ENV === "development" && process.env.BILLING_STRICT !== "true";
 }
 
+/** Test / preview: full product access without tier checks. Set `BILLING_TEST_FULL_ACCESS=false` to enforce plans. */
+function testPeriodFullAccess(): boolean {
+  return process.env.BILLING_TEST_FULL_ACCESS !== "false";
+}
+
 /**
  * Core entitlement check — server components, actions, API routes.
  */
 export function hasFeature(session: AuthSession | null, feature: FeatureKey): boolean {
-  if (devBypass()) {
+  if (testPeriodFullAccess() || devBypass()) {
     return true;
   }
   const userTier = getEffectivePlanTier(session);

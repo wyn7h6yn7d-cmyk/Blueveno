@@ -1,18 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { PRODUCT_DESCRIPTION, PRODUCT_TAGLINE } from "@/lib/product";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 
-const inter = Inter({
-  variable: "--font-inter",
+const sourceSans = Source_Sans_3({
+  variable: "--font-source",
   subsets: ["latin"],
   display: "swap",
 });
 
-const space = Space_Grotesk({
-  variable: "--font-space",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
   display: "swap",
 });
@@ -51,8 +51,8 @@ export default function RootLayout({
       lang="en"
       className={cn(
         "dark h-full",
-        inter.variable,
-        space.variable,
+        sourceSans.variable,
+        jakarta.variable,
         jetbrains.variable,
         "font-sans antialiased",
       )}

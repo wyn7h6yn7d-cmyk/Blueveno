@@ -1,19 +1,16 @@
 import { auth } from "@/auth";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { hasFeature } from "@/lib/billing/entitlements";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { PanelGrid, Panel } from "@/components/app/panel-grid";
-import { UpgradePrompt } from "@/components/app/upgrade-prompt";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const bars = [38, 52, 44, 61, 48, 70, 55, 63, 42, 58, 49, 66];
 
 export default async function AnalyticsPage() {
-  const session = await auth();
-  const allowed = hasFeature(session, "analytics.advanced");
+  await auth();
 
   return (
     <div className="space-y-8">
@@ -33,8 +30,6 @@ export default async function AnalyticsPage() {
           </Link>
         }
       />
-
-      {!allowed ? <UpgradePrompt feature="analytics.advanced" /> : null}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -109,7 +104,7 @@ export default async function AnalyticsPage() {
         description="Consecutive plan-adherent sessions — placeholder metrics."
         footer={
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">
-            Advanced slices · Pro
+            Test period — full analytics preview
           </p>
         }
       >
