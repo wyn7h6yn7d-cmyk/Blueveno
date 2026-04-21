@@ -294,7 +294,7 @@ export function HeroCommandSurface() {
         </div>
 
         <div className="mt-12 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          <PremiumPrimaryLink href="/signup">Begin</PremiumPrimaryLink>
+          <PremiumPrimaryLink href="/signup">Register</PremiumPrimaryLink>
           <PremiumGhostLink href="/app">Workspace</PremiumGhostLink>
         </div>
       </div>
