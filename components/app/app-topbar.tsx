@@ -55,6 +55,8 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   const displayName = user.name?.trim() || user.email?.trim() || "Account";
   const fallbackInitial = displayName.charAt(0).toUpperCase() || "A";
   const label = sectionLabel(pathname);
+  /** Greeting: profile display name when set, otherwise email (same source as Settings). */
+  const helloName = user.name?.trim() || user.email?.trim() || "";
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -100,14 +102,27 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         </SheetContent>
       </Sheet>
 
-      <div className="min-w-0 flex-1">
-        <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
-        <p className="font-display truncate text-[1.125rem] font-semibold tracking-[-0.02em] text-zinc-50 sm:mt-0.5 sm:text-lg">
-          {label}
-        </p>
+      <div className="flex min-w-0 flex-1 items-stretch gap-2 sm:gap-4">
+        <div className="min-w-0 shrink-0">
+          <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
+          <p className="font-display truncate text-base font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:mt-0.5 sm:text-[1.0625rem]">
+            {label}
+          </p>
+        </div>
+        {helloName ? (
+          <div className="hidden min-w-0 flex-1 flex-col justify-center sm:flex">
+            <p
+              className="truncate text-center text-[12px] leading-snug text-zinc-500 md:text-[13px]"
+              title={helloName}
+            >
+              Hello,{" "}
+              <span className="font-medium text-zinc-200">{helloName}</span>
+            </p>
+          </div>
+        ) : null}
       </div>
 
-      <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
         <Link
           href="/"
           className={cn(
