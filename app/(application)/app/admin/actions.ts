@@ -3,10 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { loadAccessForUser } from "@/lib/access/load-access";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, isSupabaseServiceRoleConfigured } from "@/lib/supabase/admin";
 import { ADMIN_FULL_ACCESS_EMAIL } from "@/lib/billing/workspace-access";
 
 async function requireAdmin() {
+  if (!isSupabaseServiceRoleConfigured()) {
+    throw new Error("Admin service not configured: set SUPABASE_SERVICE_ROLE_KEY on the server.");
+  }
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");

@@ -2,7 +2,7 @@ import "server-only";
 
 import { auth } from "@/auth";
 import { loadAccessForUser } from "@/lib/access/load-access";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, isSupabaseServiceRoleConfigured } from "@/lib/supabase/admin";
 import { resolveAccess } from "@/lib/access/resolve-access";
 import type { UserProfileRow } from "@/lib/access/types";
 import type { AdminUserListItem } from "@/lib/access/admin-types";
@@ -32,6 +32,11 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
   const access = await loadAccessForUser(session.user.id, session.user.email ?? null);
   if (!access?.isAdmin) {
     throw new Error("Forbidden");
+  }
+
+  if (!isSupabaseServiceRoleConfigured()) {
+    console.error("[listUsersForAdmin] SUPABASE_SERVICE_ROLE_KEY missing");
+    return [];
   }
 
   const admin = createAdminClient();

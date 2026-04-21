@@ -7,6 +7,11 @@ export function getServiceRoleKey(): string {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 }
 
+/** True when server can use the service role (required for /app/admin and admin server actions). */
+export function isSupabaseServiceRoleConfigured(): boolean {
+  return Boolean(getSupabaseUrl() && getServiceRoleKey());
+}
+
 /** Service-role client for admin routes only. Never import from client components. */
 export function createAdminClient() {
   const url = getSupabaseUrl();
