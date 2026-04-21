@@ -1,5 +1,7 @@
 import "server-only";
 
+import { auth } from "@/auth";
+import { loadAccessForUser } from "@/lib/access/load-access";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveAccess } from "@/lib/access/resolve-access";
 import type { UserProfileRow } from "@/lib/access/types";
@@ -23,6 +25,15 @@ function mapProfile(raw: Record<string, unknown>): UserProfileRow {
 }
 
 export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+  const access = await loadAccessForUser(session.user.id, session.user.email ?? null);
+  if (!access?.isAdmin) {
+    throw new Error("Forbidden");
+  }
+
   const admin = createAdminClient();
   const { data: profiles, error } = await admin
     .from("user_profiles")
