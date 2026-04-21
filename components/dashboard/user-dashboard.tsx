@@ -15,7 +15,22 @@ import { EmptyState } from "@/components/app/empty-state";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 import { isValidTradingViewUrl } from "@/lib/tradingview";
-import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
+import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
+
+const ROW_24H_MS = 24 * 60 * 60 * 1000;
+
+/** When the row was created/saved — for rolling 24h filter */
+function rowEventTimeMs(row: JournalRow): number {
+  if (row.createdAt) {
+    const t = Date.parse(row.createdAt);
+    if (!Number.isNaN(t)) return t;
+  }
+  if (row.entryDate) {
+    const t = Date.parse(`${row.entryDate}T12:00:00`);
+    if (!Number.isNaN(t)) return t;
+  }
+  return 0;
+}
 
 type Props = {
   userId: string;
@@ -93,6 +108,29 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
     });
   }, [data.journal]);
 
+  const latestEntriesLast24h = useMemo(() => {
+    const cutoff = Date.now() - ROW_24H_MS;
+    return sortedRows.filter((row) => rowEventTimeMs(row) >= cutoff);
+  }, [sortedRows]);
+
+  /** Last 24h by default; if ?date= is set, also include rows for that calendar day so scroll/highlight works */
+  const rowsForLatestEntries = useMemo(() => {
+    const byId = new Map<string, JournalRow>();
+    for (const r of latestEntriesLast24h) byId.set(r.id, r);
+    if (highlightDate) {
+      for (const r of sortedRows) {
+        if (dayKeyFromRow(r.entryDate, r.createdAt) === highlightDate) {
+          byId.set(r.id, r);
+        }
+      }
+    }
+    return [...byId.values()].sort((a, b) => {
+      const ak = dayKeyFromRow(a.entryDate, a.createdAt);
+      const bk = dayKeyFromRow(b.entryDate, b.createdAt);
+      return bk.localeCompare(ak);
+    });
+  }, [sortedRows, latestEntriesLast24h, highlightDate]);
+
   const dayAgg = useMemo(() => {
     const map = new Map<string, number>();
     for (const row of data.journal) {
@@ -127,13 +165,13 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
   }, [dayAgg]);
 
   useEffect(() => {
-    if (!highlightDate || !ready || sortedRows.length === 0) return;
+    if (!highlightDate || !ready || rowsForLatestEntries.length === 0) return;
     const t = window.setTimeout(() => {
       const el = document.querySelector(`[data-journal-date="${highlightDate}"]`);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 50);
     return () => window.clearTimeout(t);
-  }, [highlightDate, ready, sortedRows.length]);
+  }, [highlightDate, ready, rowsForLatestEntries.length]);
 
   const onQuickAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,7 +360,11 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
         </DashboardCard>
       </section>
 
-      <DashboardCard eyebrow="Journal" title="Latest entries" description="Newest days first—open detail or your chart.">
+      <DashboardCard
+        eyebrow="Journal"
+        title="Latest entries"
+        description="Shows entries saved in the last 24 hours (newest first). Open detail or your chart."
+      >
         {sortedRows.length === 0 ? (
           <EmptyState
             icon={NotebookPen}
@@ -330,8 +372,15 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
             description="Use Quick add above to create your first day."
             className="border-none bg-transparent py-6 ring-0"
           />
+        ) : rowsForLatestEntries.length === 0 ? (
+          <EmptyState
+            icon={NotebookPen}
+            title="Nothing in the last 24 hours"
+            description="Older days stay in the calendar above. Add a new day or open a date from the calendar."
+            className="border-none bg-transparent py-6 ring-0"
+          />
         ) : (
-          <JournalDayList rows={sortedRows} highlightDate={highlightDate} />
+          <JournalDayList rows={rowsForLatestEntries} highlightDate={highlightDate} />
         )}
       </DashboardCard>
 
