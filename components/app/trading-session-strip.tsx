@@ -38,6 +38,7 @@ export function TradingSessionStrip({ serverTimeZone }: Props) {
       className={cn(
         "flex min-h-[1.75rem] shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-white/[0.06] bg-black/25 px-3 py-1.5 text-[11px] backdrop-blur-md md:px-5",
       )}
+      title="Approximate major FX session windows (UTC). Clock uses your timezone from Settings."
     >
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
         <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600">Session</span>
