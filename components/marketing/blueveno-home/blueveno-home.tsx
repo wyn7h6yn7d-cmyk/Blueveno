@@ -21,8 +21,8 @@ export function BluevenoHomePage() {
       <main id="main-content">
         <HeroSection />
         <ValueStrip />
-        <JournalDaySection />
         <CalendarSection />
+        <JournalDaySection />
         <FinalCta />
       </main>
       <HomeFooter />

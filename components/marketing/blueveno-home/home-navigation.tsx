@@ -3,8 +3,8 @@ import { PremiumPrimaryLink } from "./premium-button";
 
 const links = [
   { href: "#core", label: "Core" },
-  { href: "#day", label: "Day" },
   { href: "#calendar", label: "Month" },
+  { href: "#day", label: "Day" },
   { href: "/pricing", label: "Pricing" },
 ] as const;
 

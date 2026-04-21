@@ -1,50 +1,46 @@
 "use client";
 
 /**
- * Cinematic depth: slow parallax mesh, meridian, rake line, drift grids — crisp, not hazy.
+ * Cold void + slow parallax + meridian — elegant, not flashy.
  */
 export function AmbientField() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
-      <div className="absolute inset-0 bg-[oklch(0.038_0.042_270)]" />
+      <div className="absolute inset-0 bg-[oklch(0.032_0.044_272)]" />
 
-      {/* Cold key — tighter, higher contrast than standard wash */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_48%_at_50%_-8%,oklch(0.42_0.11_252/0.16),transparent_56%)]" />
-      <div className="bv-home-field-animated absolute inset-0 bg-[radial-gradient(ellipse_52%_38%_at_92%_18%,oklch(0.34_0.09_258/0.12),transparent_58%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_52%_at_50%_-12%,oklch(0.38_0.12_252/0.2),transparent_58%)]" />
+      <div className="bv-home-field-animated absolute inset-0 bg-[radial-gradient(ellipse_54%_40%_at_90%_16%,oklch(0.32_0.1_258/0.14),transparent_58%)]" />
       <div
-        className="bv-home-field-animated absolute inset-0 bg-[radial-gradient(ellipse_48%_42%_at_4%_42%,oklch(0.22_0.06_262/0.09),transparent_54%)] opacity-80"
-        style={{ animationDelay: "-26s" }}
+        className="bv-home-field-animated absolute inset-0 bg-[radial-gradient(ellipse_50%_42%_at_8%_40%,oklch(0.2_0.07_262/0.1),transparent_55%)] opacity-90"
+        style={{ animationDelay: "-28s" }}
       />
 
-      {/* Vertical meridian — editorial spine */}
       <div
-        className="bv-home-meridian-pulse absolute inset-y-[8%] left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[oklch(0.55_0.12_252/0.2)] to-transparent"
-        style={{ animationDelay: "-6s" }}
+        className="bv-home-meridian-pulse absolute inset-y-[10%] left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[oklch(0.52_0.14_252/0.2)] to-transparent"
+        style={{ animationDelay: "-8s" }}
       />
 
-      {/* Scan rake — slow, barely-there */}
       <div
-        className="bv-home-rake absolute inset-0 opacity-[0.045] motion-reduce:opacity-0"
+        className="bv-home-rake absolute inset-0 opacity-[0.038] motion-reduce:opacity-0"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(105deg, transparent 0, transparent 100px, oklch(0.7 0.08 250 / 0.15) 100.5px, transparent 101px, transparent 220px)",
-          maskImage: "linear-gradient(90deg, transparent, black 16%, black 84%, transparent)",
+            "repeating-linear-gradient(102deg, transparent 0, transparent 108px, oklch(0.68 0.09 252 / 0.12) 108.5px, transparent 109px, transparent 240px)",
+          maskImage: "linear-gradient(90deg, transparent, black 14%, black 86%, transparent)",
         }}
       />
 
-      <div className="bg-market-grid-drift absolute inset-0 opacity-[0.14]" />
-      <div className="bg-market-wave absolute inset-0 opacity-[0.06]" />
-      <div className="bg-market-wave-reverse absolute inset-0 opacity-[0.045]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_46%_at_50%_105%,oklch(0.26_0.1_258/0.22),transparent_65%)]" />
+      <div className="bg-market-grid-drift absolute inset-0 opacity-[0.11]" />
+      <div className="bg-market-wave absolute inset-0 opacity-[0.055]" />
+      <div className="bg-market-wave-reverse absolute inset-0 opacity-[0.04]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_48%_at_50%_108%,oklch(0.22_0.1_258/0.28),transparent_68%)]" />
 
-      <div className="bg-scanlines absolute inset-0 opacity-[0.11]" />
-      <div className="bg-noise absolute inset-0 opacity-[0.22]" />
+      <div className="bg-scanlines absolute inset-0 opacity-[0.09]" />
+      <div className="bg-noise absolute inset-0 opacity-[0.2]" />
 
-      {/* Cinematic letterbox vignette — edge falloff, not blur fog */}
       <div
         className="absolute inset-0"
         style={{
-          boxShadow: "inset 0 0 120px 40px oklch(0.02 0.04 270 / 0.65)",
+          boxShadow: "inset 0 0 140px 48px oklch(0.02 0.045 270 / 0.72)",
         }}
       />
     </div>

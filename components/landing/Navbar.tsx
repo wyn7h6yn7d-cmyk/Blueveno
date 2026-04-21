@@ -9,8 +9,8 @@ import { marketingCtas } from "@/lib/marketing-ctas";
 /** Hash targets live on the marketing home page (`/`). */
 const navLinks = [
   { href: "/#core", label: "Core" },
+  { href: "/#calendar", label: "Month" },
   { href: "/#day", label: "Day" },
-  { href: "/#calendar", label: "Calendar" },
   { href: "/pricing", label: "Pricing" },
 ];
 
