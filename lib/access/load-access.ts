@@ -4,6 +4,29 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveAccess } from "@/lib/access/resolve-access";
 import type { AccessContext, UserProfileRow } from "@/lib/access/types";
 
+/** PostgREST may return composite RPC rows as object, array, or JSON string. */
+function normalizeRpcProfile(data: unknown): Record<string, unknown> | null {
+  if (data == null) return null;
+  if (typeof data === "string") {
+    try {
+      return normalizeRpcProfile(JSON.parse(data) as unknown);
+    } catch {
+      return null;
+    }
+  }
+  if (Array.isArray(data)) {
+    const row = data[0];
+    if (row && typeof row === "object" && !Array.isArray(row)) {
+      return row as Record<string, unknown>;
+    }
+    return null;
+  }
+  if (typeof data === "object" && !Array.isArray(data)) {
+    return data as Record<string, unknown>;
+  }
+  return null;
+}
+
 function mapProfile(raw: Record<string, unknown>): UserProfileRow {
   return {
     user_id: String(raw.user_id),
@@ -27,20 +50,45 @@ function mapProfile(raw: Record<string, unknown>): UserProfileRow {
 export async function loadAccessForUser(userId: string, sessionEmail: string | null): Promise<AccessContext | null> {
   const supabase = await createClient();
 
-  const { data: rpcData, error: rpcError } = await supabase.rpc("ensure_user_profile");
-  if (!rpcError && rpcData != null && typeof rpcData === "object") {
-    const raw = Array.isArray(rpcData) ? rpcData[0] : rpcData;
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-      return resolveAccess(mapProfile(raw as Record<string, unknown>), sessionEmail);
+  const { data: rpcData, error: rpcError } = await supabase.rpc("ensure_user_profile", {});
+  if (!rpcError) {
+    const normalized = normalizeRpcProfile(rpcData);
+    if (normalized && String(normalized.user_id) === userId) {
+      return resolveAccess(mapProfile(normalized), sessionEmail);
     }
+  } else {
+    console.warn("[loadAccessForUser] ensure_user_profile:", rpcError.message);
   }
 
-  const { data: row, error } = await supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle();
+  const { data: row, error: selectError } = await supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle();
 
-  if (error || !row) {
-    console.error("[loadAccessForUser]", rpcError?.message ?? error?.message ?? "no profile");
-    return null;
+  if (!selectError && row) {
+    return resolveAccess(mapProfile(row as unknown as Record<string, unknown>), sessionEmail);
   }
 
-  return resolveAccess(mapProfile(row as unknown as Record<string, unknown>), sessionEmail);
+  const trialEnds = new Date(Date.now() + 7 * 86400000).toISOString();
+  const { data: inserted, error: insertError } = await supabase
+    .from("user_profiles")
+    .insert({
+      user_id: userId,
+      email: (sessionEmail ?? "").toLowerCase(),
+      trial_ends_at: trialEnds,
+    })
+    .select("*")
+    .maybeSingle();
+
+  if (!insertError && inserted) {
+    return resolveAccess(mapProfile(inserted as unknown as Record<string, unknown>), sessionEmail);
+  }
+
+  const { data: afterRace } = await supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle();
+  if (afterRace) {
+    return resolveAccess(mapProfile(afterRace as unknown as Record<string, unknown>), sessionEmail);
+  }
+
+  console.error(
+    "[loadAccessForUser]",
+    rpcError?.message ?? insertError?.message ?? selectError?.message ?? "no profile",
+  );
+  return null;
 }

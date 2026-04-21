@@ -17,7 +17,7 @@ export function PremiumPrimaryLink({ className = "", compact, children, ...p }: 
     >
       <span
         className={`relative flex items-center justify-center rounded-full bg-[oklch(0.56_0.13_252)] font-semibold tracking-[-0.02em] text-[oklch(0.045_0.045_268)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),inset_0_-12px_24px_-20px_oklch(0.25_0.12_252/0.35)] transition duration-500 group-hover:bg-[oklch(0.62_0.108_252)] ${
-          compact ? "min-h-[2.4rem] px-4 text-[12px]" : "min-h-[2.75rem] px-[2rem] text-[13px]"
+          compact ? "min-h-[2.5rem] px-4 text-[14px]" : "min-h-[2.75rem] px-[2rem] text-[15px]"
         }`}
       >
         {children}
