@@ -8,16 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
+import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { EmptyState } from "@/components/app/empty-state";
 import { isValidTradingViewUrl } from "@/lib/tradingview";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 
 type Props = {
   userId: string;
+  initialWorkspace: UserWorkspaceSnapshot;
 };
 
-export function JournalPageClient({ userId }: Props) {
-  const { data, ready, addRow, lastError } = useUserWorkspace(userId);
+export function JournalPageClient({ userId, initialWorkspace }: Props) {
+  const { data, ready, addRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
 
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");

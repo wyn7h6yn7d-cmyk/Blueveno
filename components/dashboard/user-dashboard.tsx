@@ -15,10 +15,12 @@ import { EmptyState } from "@/components/app/empty-state";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 import { isValidTradingViewUrl } from "@/lib/tradingview";
+import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 
 type Props = {
   userId: string;
   email: string;
+  initialWorkspace: UserWorkspaceSnapshot;
 };
 
 function toKey(d: Date): string {
@@ -70,8 +72,8 @@ function streakFromDaily(daily: Array<{ key: string; pnl: number }>) {
   return `${count} ${positive ? "green" : "red"} day${count === 1 ? "" : "s"}`;
 }
 
-export function UserDashboard({ userId, email }: Props) {
-  const { data, ready, addRow, lastError } = useUserWorkspace(userId);
+export function UserDashboard({ userId, email, initialWorkspace }: Props) {
+  const { data, ready, addRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
   const [entryDate, setEntryDate] = useState(() => toKey(new Date()));
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PremiumPrimaryLink } from "./premium-button";
 
 const links = [
-  { href: "#core", label: "Essentials" },
+  { href: "#strip", label: "Essence" },
   { href: "#calendar", label: "Calendar" },
   { href: "#day", label: "Journal" },
   { href: "/pricing", label: "Pricing" },

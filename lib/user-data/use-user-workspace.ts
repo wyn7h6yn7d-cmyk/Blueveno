@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
 import { createClient } from "@/lib/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 
 function toUserDbError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
@@ -12,37 +13,6 @@ function toUserDbError(message: string | undefined) {
     return "Database is not initialized yet (journal_entries table missing). Run Supabase migrations and reload.";
   }
   return message ?? "Could not save entry.";
-}
-
-type JournalRowDb = {
-  id: string;
-  created_at: string | null;
-  entry_date: string | null;
-  entry_time: string;
-  symbol: string;
-  setup: string;
-  r_value: string;
-  tag: string;
-  note: string | null;
-  tradingview_url: string | null;
-};
-
-function mapRows(rows: JournalRowDb[]): UserWorkspaceSnapshot {
-  return {
-    version: 1,
-    journal: rows.map((r) => ({
-      id: r.id,
-      createdAt: r.created_at ?? undefined,
-      entryDate: r.entry_date ?? undefined,
-      time: r.entry_time ?? "",
-      sym: r.symbol ?? "",
-      setup: r.setup ?? "—",
-      r: r.r_value ?? "",
-      tag: r.tag ?? "Manual",
-      note: r.note ?? undefined,
-      tradingViewUrl: r.tradingview_url ?? undefined,
-    })),
-  };
 }
 
 function hasBearerSession(supabase: SupabaseClient) {
@@ -71,19 +41,46 @@ async function waitForSessionUser(supabase: SupabaseClient, userId: string, isCa
   return false;
 }
 
-export function useUserWorkspace(userId: string | undefined) {
-  const [data, setData] = useState<UserWorkspaceSnapshot>(EMPTY_WORKSPACE);
-  const [ready, setReady] = useState(false);
+type UseUserWorkspaceOptions = {
+  /** From RSC: always use cookie-backed session so first paint is correct */
+  initialWorkspace?: UserWorkspaceSnapshot;
+};
+
+export function useUserWorkspace(userId: string | undefined, options?: UseUserWorkspaceOptions) {
+  const initialWorkspace = options?.initialWorkspace;
+
+  /** Object identity from RSC is unstable; stringify lets us detect real server payload changes */
+  const workspaceBootstrapKey = useMemo(
+    () =>
+      initialWorkspace === undefined
+        ? ""
+        : JSON.stringify({ uid: userId ?? "", workspace: initialWorkspace }),
+    [userId, initialWorkspace],
+  );
+
+  const [data, setData] = useState<UserWorkspaceSnapshot>(() => initialWorkspace ?? EMPTY_WORKSPACE);
+  const [ready, setReady] = useState(() => initialWorkspace !== undefined);
   const [lastError, setLastError] = useState<string | null>(null);
   const userIdRef = useRef(userId);
   const didTokenRefreshRefetch = useRef(false);
-  userIdRef.current = userId;
+
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   useEffect(() => {
     didTokenRefreshRefetch.current = false;
     let cancelled = false;
     const isCancelled = () => cancelled;
     const supabase = createClient();
+
+    // RSC refresh / navigation: replace local snapshot when server sends new props (not derivable — local mutations exist)
+    if (initialWorkspace !== undefined) {
+      /* eslint-disable react-hooks/set-state-in-effect -- server props after router.refresh / navigation */
+      setData(initialWorkspace);
+      setReady(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
 
     async function fetchJournalRows(): Promise<void> {
       const uid = userIdRef.current;
@@ -110,7 +107,6 @@ export function useUserWorkspace(userId: string | undefined) {
         return true;
       };
 
-      // RLS often returns [] (no error) before JWT reaches PostgREST — retry only when needed.
       if (!(await pull())) {
         /* handled below */
       } else if (resolved.length === 0) {
@@ -133,11 +129,18 @@ export function useUserWorkspace(userId: string | undefined) {
       if (cancelled) return;
       if (queryError !== undefined) {
         setLastError(toUserDbError(queryError));
-        setData(EMPTY_WORKSPACE);
         setReady(true);
         return;
       }
-      setData(mapRows(resolved));
+
+      setData((prev) => {
+        const next = mapJournalRowsFromDb(resolved);
+        // Transient RLS / JWT race: never replace real rows with an empty client read
+        if (prev.journal.length > 0 && next.journal.length === 0) {
+          return prev;
+        }
+        return next;
+      });
       setLastError(null);
       setReady(true);
     }
@@ -150,7 +153,9 @@ export function useUserWorkspace(userId: string | undefined) {
         return;
       }
 
-      setReady(false);
+      if (initialWorkspace === undefined) {
+        setReady(false);
+      }
       setLastError(null);
 
       const sessionOk = await waitForSessionUser(supabase, userId, isCancelled);
@@ -179,7 +184,6 @@ export function useUserWorkspace(userId: string | undefined) {
       const sameUser = session?.user?.id === userIdRef.current;
       if (!sameUser) return;
 
-      // After reload, the first usable JWT sometimes arrives only on TOKEN_REFRESHED.
       if (event === "TOKEN_REFRESHED") {
         if (didTokenRefreshRefetch.current) return;
         didTokenRefreshRefetch.current = true;
@@ -196,7 +200,8 @@ export function useUserWorkspace(userId: string | undefined) {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [userId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- workspaceBootstrapKey encodes initialWorkspace + userId
+  }, [userId, workspaceBootstrapKey]);
 
   const addRow = useCallback(
     async (row: Omit<JournalRow, "id">) => {

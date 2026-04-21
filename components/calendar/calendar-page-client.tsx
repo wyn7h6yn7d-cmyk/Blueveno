@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/app/empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
+import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 
 const outlineAction = cn(
@@ -17,10 +18,11 @@ const outlineAction = cn(
 
 type Props = {
   userId: string;
+  initialWorkspace: UserWorkspaceSnapshot;
 };
 
-export function CalendarPageClient({ userId }: Props) {
-  const { data, ready } = useUserWorkspace(userId);
+export function CalendarPageClient({ userId, initialWorkspace }: Props) {
+  const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
 
   return (
     <div className="space-y-10">
