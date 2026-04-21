@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   CalendarDays,
+  Home,
   LogOut,
   Menu,
   NotebookPen,
@@ -104,7 +105,18 @@ export function AppTopbar({ user }: AppTopbarProps) {
         </p>
       </div>
 
-      <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+        <Link
+          href="/"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-2.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] sm:px-3.5",
+          )}
+          aria-label="Back to marketing home"
+        >
+          <Home className="size-4 opacity-90 sm:mr-1.5" strokeWidth={1.75} />
+          <span className="hidden sm:inline">Home</span>
+        </Link>
         <Link
           href="/app/calendar"
           className={cn(
@@ -119,12 +131,25 @@ export function AppTopbar({ user }: AppTopbarProps) {
           href="/app#add"
           className={cn(
             buttonVariants({ variant: "outline", size: "sm" }),
-            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-3.5 text-[13px] text-zinc-200 hover:bg-white/[0.07]",
+            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-2.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] sm:px-3.5",
           )}
         >
-          <NotebookPen className="mr-1.5 size-4 opacity-90" />
-          New entry
+          <NotebookPen className="size-4 opacity-90 sm:mr-1.5" />
+          <span className="hidden sm:inline">New entry</span>
         </Link>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-2.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] disabled:opacity-60 sm:px-3.5",
+          )}
+          aria-label="Sign out"
+        >
+          <LogOut className="size-4 opacity-90 sm:mr-1.5" strokeWidth={1.75} />
+          <span className="hidden sm:inline">{signingOut ? "Signing out…" : "Log out"}</span>
+        </button>
         <DropdownMenu>
           <DropdownMenuTrigger
             type="button"
@@ -158,13 +183,6 @@ export function AppTopbar({ user }: AppTopbarProps) {
               >
                 <Settings className="size-4 text-zinc-400" />
                 Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-rose-200/95 outline-none focus-visible:bg-rose-500/12 focus-visible:text-rose-50"
-                onClick={handleSignOut}
-              >
-                <LogOut className="size-4 text-rose-300" />
-                {signingOut ? "Signing out…" : "Sign out"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
