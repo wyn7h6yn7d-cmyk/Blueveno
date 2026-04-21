@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import { EmptyState } from "@/components/app/empty-state";
-import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 import { isValidTradingViewUrl } from "@/lib/tradingview";
 import { useAccess } from "@/components/access/access-provider";
@@ -134,7 +133,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         variant="signature"
         eyebrow="Journal"
         title="Daily review"
-        description="Log the day beside your calendar — stats stay in sync."
+        description="Quick log below — your calendar shows the same P&amp;L when you open it."
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/app/calendar" className={appSecondaryCta}>
@@ -149,35 +148,14 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         }
       />
 
-      <section className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.75fr)_minmax(17.5rem,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,1.85fr)_minmax(19rem,1fr)] xl:gap-10">
-        <DashboardCard
-          eyebrow="Calendar"
-          title="Your month"
-          description="Tap a day with P&amp;L to open it — one entry jumps straight to detail."
-          className="min-h-0 min-w-0 lg:sticky lg:top-6"
-          contentClassName="p-4 sm:p-5 lg:p-6"
-        >
-          {!ready ? (
-            <div className="h-40 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
-          ) : data.journal.length === 0 ? (
-            <EmptyState
-              icon={CalendarDays}
-              title="No days yet"
-              description="Save your first entry on the right — this view fills in as you go."
-              className="border-none bg-transparent py-8 ring-0"
-            />
-          ) : (
-            <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} />
-          )}
-        </DashboardCard>
-
+      <section className="mx-auto grid min-w-0 max-w-3xl gap-8">
         <DashboardCard
           eyebrow="Log day"
           title="Quick entry"
-          className="min-w-0 lg:max-w-none"
+          className="min-w-0"
           description={
             canWriteJournal
-              ? "P&amp;L uses your display currency from Settings. TradingView is optional — paste when you want the chart next to the number."
+              ? "P&amp;L uses your display currency from Settings. TradingView is optional — paste when you want the chart next to the number. The calendar page picks up the same entries."
               : "Read-only: your history stays here. Upgrade to log new days."
           }
         >
@@ -290,7 +268,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       <DashboardCard
         eyebrow="Recent"
         title="Latest activity"
-        description="Newest from the last day — plus any day you opened from the calendar."
+        description="Newest from the last day — plus any day you opened via a calendar link (?date=)."
       >
         {sortedRows.length === 0 ? (
           <EmptyState
@@ -307,7 +285,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           <EmptyState
             icon={NotebookPen}
             title="Nothing new in the last 24 hours"
-            description="Older days live on the calendar. Open a date or check Stats for the full picture."
+            description="Open Calendar for the month grid, or Stats for the full picture."
             className="border-none bg-transparent py-8 ring-0"
           />
         ) : (

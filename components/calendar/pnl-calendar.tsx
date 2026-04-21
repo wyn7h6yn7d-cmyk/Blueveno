@@ -277,16 +277,19 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                             </span>
                           ) : null}
                         </div>
-                        <div className="min-w-0 max-w-full self-stretch text-right">
+                        <div className="min-w-0 max-w-full self-stretch overflow-hidden text-right">
                           {hasData ? (
                             <>
                               <div
                                 className={cn(
                                   "font-display font-semibold leading-[1.15] tabular-nums tracking-[-0.03em]",
-                                  "text-[10px] sm:text-[1.0625rem] lg:text-[1.125rem] lg:tracking-[-0.035em]",
+                                  "text-[10px] sm:text-[clamp(0.625rem,2.1vw,1.0625rem)] lg:text-[clamp(0.75rem,1.9vw,1.125rem)] lg:tracking-[-0.035em]",
                                 )}
                               >
-                                <span className="inline-block max-w-full break-words [word-break:break-word] sm:whitespace-nowrap">
+                                <span
+                                  className="block min-w-0 w-full truncate"
+                                  title={formatSignedPnlAmount(agg!.total, displayCurrency)}
+                                >
                                   {formatSignedPnlAmount(agg!.total, displayCurrency)}
                                 </span>
                               </div>
@@ -337,12 +340,15 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                         {weekDateRangeLabel(week)}
                       </p>
                     </div>
-                    <div className="min-w-0 pl-2 sm:pl-3">
+                    <div className="min-w-0 overflow-hidden pl-2 sm:pl-3">
                       <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
                         Σ
                       </p>
-                      <p className="font-display text-[0.7rem] font-semibold leading-[1.1] tabular-nums tracking-[-0.03em] sm:text-[1.35rem] sm:leading-none md:text-2xl lg:text-[1.85rem] lg:tracking-[-0.045em]">
-                        <span className="inline-block max-w-full break-words [word-break:break-word] sm:whitespace-nowrap">
+                      <p className="font-display text-[0.7rem] font-semibold leading-[1.1] tabular-nums tracking-[-0.03em] sm:text-[clamp(0.85rem,3.5vw,1.35rem)] sm:leading-none md:text-2xl lg:text-[clamp(1rem,2.8vw,1.85rem)] lg:tracking-[-0.045em]">
+                        <span
+                          className="block min-w-0 w-full truncate"
+                          title={formatSignedPnlAmount(weekly, displayCurrency)}
+                        >
                           {formatSignedPnlAmount(weekly, displayCurrency)}
                         </span>
                       </p>

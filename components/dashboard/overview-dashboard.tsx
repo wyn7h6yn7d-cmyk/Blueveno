@@ -79,7 +79,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         )}
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2" aria-label="Workspace shortcuts">
         <Link href="/app/calendar" className={surfaceTile}>
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -117,17 +117,19 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
             <ArrowUpRight className="size-3.5" />
           </span>
         </Link>
+      </section>
 
+      <section aria-label="Journal">
         <Link href="/app/journal" className={surfaceTile}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Log</p>
               <p className="font-display mt-2 text-lg text-zinc-50">Journal</p>
               <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
-                Day result, note, and optional TradingView link.
+                Quick day entry — same data appears on the calendar automatically.
               </p>
             </div>
-            <span className="flex size-11 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-200 transition group-hover:border-white/[0.14]">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-200 transition group-hover:border-white/[0.14] sm:mt-0">
               <BookOpen className="size-5" strokeWidth={1.75} />
             </span>
           </div>
