@@ -1,91 +1,86 @@
 import Link from "next/link";
 import { formatEur, PRICING_EUR, effectiveMonthlyFromYearlyEur, yearlySavingsPercentApprox } from "@/lib/marketing/pricing-copy";
-import { PremiumPrimaryLink } from "./premium-button";
-
-const bullets = [
-  "Daily journal & P&L",
-  "Calendar with weekly totals",
-  "Notes & TradingView link per day",
-];
+import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
 
 export function HomePricingSection() {
   return (
     <section
       id="pricing"
-      className="scroll-mt-28 border-t border-[oklch(0.52_0.12_252/0.18)] py-24 sm:scroll-mt-32 sm:py-32 lg:py-36"
+      className="scroll-mt-28 relative border-t border-white/[0.06] py-28 sm:scroll-mt-32 sm:py-32 lg:py-40"
       aria-labelledby="home-pricing-heading"
     >
-      <div className="mx-auto max-w-[720px] px-4 sm:px-8">
-        <p className="text-center font-mono text-[10px] uppercase tracking-[0.38em] text-[oklch(0.58_0.11_252)]">Pricing</p>
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[oklch(0.55_0.13_252/0.35)] to-transparent"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto max-w-[640px] px-5 sm:px-8">
+        <p className="text-center font-mono text-[10px] uppercase tracking-[0.4em] text-[oklch(0.62_0.12_252)]">Pricing</p>
         <h2
           id="home-pricing-heading"
-          className="font-display mt-6 text-center text-[clamp(1.85rem,5vw,2.65rem)] font-bold leading-[1.05] tracking-[-0.045em] text-zinc-50"
+          className="font-display mt-5 text-center text-[clamp(2rem,4.5vw,2.85rem)] font-semibold leading-[1.05] tracking-[-0.05em] text-zinc-50"
         >
-          One plan. Full surface.
+          One plan.
         </h2>
-        <p className="mx-auto mt-4 max-w-md text-center text-[15px] leading-relaxed tracking-[-0.018em] text-zinc-500">
-          {PRICING_EUR.trialDays}-day full trial, then monthly or yearly. After trial, stay Premium to keep logging — or stay read-only on past data.
+        <p className="mx-auto mt-5 max-w-[26rem] text-center text-[14px] leading-[1.6] tracking-[-0.018em] text-zinc-500">
+          {PRICING_EUR.trialDays}-day trial, then Premium. Cancel anytime.
         </p>
 
-        <div className="relative mt-14 overflow-hidden rounded-2xl border border-[oklch(0.48_0.13_252/0.35)] bg-[linear-gradient(168deg,oklch(0.11_0.045_262/0.92)_0%,oklch(0.055_0.042_272/0.96)_100%)] px-8 py-12 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05),0_40px_100px_-48px_rgba(0,0,0,0.85)] sm:px-12 sm:py-14">
+        <div className="relative mt-12 overflow-hidden rounded-[1.75rem] border border-[oklch(0.5_0.13_252/0.42)] bg-[linear-gradient(168deg,oklch(0.11_0.045_262/0.96)_0%,oklch(0.048_0.04_272/0.99)_100%)] px-7 py-12 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_48px_120px_-56px_rgba(0,0,0,0.88)] sm:px-11 sm:py-14">
           <div
-            className="pointer-events-none absolute inset-0 opacity-[0.2]"
-            style={{
-              backgroundImage:
-                "linear-gradient(oklch(0.52_0.12_252/0.12) 1px, transparent 1px), linear-gradient(90deg, oklch(0.52_0.12_252/0.12) 1px, transparent 1px)",
-              backgroundSize: "20px 20px",
-            }}
+            className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,oklch(0.42_0.12_252/0.14),transparent_68%)]"
             aria-hidden
           />
+
           <div className="relative text-center">
-            <p className="font-display text-lg tracking-[-0.02em] text-zinc-100">Blueveno</p>
-            <div className="mt-8 flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:gap-10">
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-[clamp(2.25rem,7vw,3rem)] tabular-nums tracking-[-0.04em] text-zinc-50">
-                  {formatEur(PRICING_EUR.monthly)}
-                </span>
-                <span className="text-[15px] text-zinc-500">/ month</span>
+            <div className="flex flex-col items-center gap-10 sm:flex-row sm:justify-center sm:gap-14">
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-600">Monthly</p>
+                <div className="mt-2 flex items-baseline justify-center gap-1.5">
+                  <span className="font-display text-[clamp(2.35rem,6vw,3rem)] tabular-nums tracking-[-0.045em] text-zinc-50">
+                    {formatEur(PRICING_EUR.monthly)}
+                  </span>
+                  <span className="text-[14px] text-zinc-500">/ mo</span>
+                </div>
               </div>
-              <div className="hidden h-10 w-px bg-white/[0.08] sm:block" aria-hidden />
-              <div className="text-center sm:text-left">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Yearly</p>
-                <div className="mt-1 flex flex-wrap items-baseline justify-center gap-2 sm:justify-start">
-                  <span className="font-display text-[clamp(1.85rem,5vw,2.35rem)] tabular-nums tracking-[-0.04em] text-zinc-50">
+              <div className="hidden h-16 w-px bg-gradient-to-b from-transparent via-white/[0.1] to-transparent sm:block" aria-hidden />
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-600">Yearly</p>
+                <div className="mt-2 flex flex-wrap items-baseline justify-center gap-2">
+                  <span className="font-display text-[clamp(1.95rem,4.5vw,2.5rem)] tabular-nums tracking-[-0.04em] text-zinc-50">
                     {formatEur(PRICING_EUR.yearly)}
                   </span>
-                  <span className="text-[15px] text-zinc-500">/ year</span>
-                  <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-200/90">
-                    ~{yearlySavingsPercentApprox()}% vs 12× monthly
+                  <span className="text-[14px] text-zinc-500">/ yr</span>
+                  <span className="rounded-full border border-emerald-400/15 bg-emerald-500/[0.08] px-2 py-0.5 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-emerald-200/90">
+                    ~{yearlySavingsPercentApprox()}% off
                   </span>
                 </div>
-                <p className="mt-1 text-[13px] text-zinc-500">
-                  ≈ {formatEur(effectiveMonthlyFromYearlyEur())} / mo paid annually
+                <p className="mt-2 font-mono text-[11px] text-zinc-600">
+                  ≈ {formatEur(effectiveMonthlyFromYearlyEur())} / mo billed yearly
                 </p>
               </div>
             </div>
-            <ul className="mx-auto mt-10 max-w-sm space-y-3.5 border-t border-white/[0.07] pt-10 text-left">
-              {bullets.map((item) => (
-                <li key={item} className="flex gap-3 text-[15px] leading-snug text-zinc-300">
-                  <span
-                    className="mt-2 size-1 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)] ring-4 ring-[oklch(0.58_0.12_252/0.12)]"
-                    aria-hidden
-                  />
-                  {item}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <PremiumPrimaryLink href="/signup">Create account</PremiumPrimaryLink>
-              <Link
-                href="/pricing"
-                className="inline-flex min-h-[44px] items-center justify-center text-[13px] font-medium tracking-[-0.01em] text-zinc-500 underline-offset-4 transition hover:text-zinc-300 hover:underline"
-              >
-                Full plan details
-              </Link>
+
+            <p className="mx-auto mt-10 max-w-sm border-t border-white/[0.06] pt-10 font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">
+              Journal · P&amp;L · Calendar · Chart
+            </p>
+
+            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
+              <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
+              <PremiumGhostLink href="/pricing">Details</PremiumGhostLink>
             </div>
-            <p className="mt-6 font-mono text-[11px] text-zinc-600">Cancel anytime · Billed in EUR</p>
+            <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">EUR · Cancel anytime</p>
           </div>
         </div>
+
+        <p className="mt-8 text-center">
+          <Link
+            href="/pricing"
+            className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600 transition hover:text-zinc-400"
+          >
+            Full terms →
+          </Link>
+        </p>
       </div>
     </section>
   );

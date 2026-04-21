@@ -7,6 +7,8 @@ type DashboardCardProps = {
   description?: string;
   children: ReactNode;
   className?: string;
+  /** Main content area (below header) — e.g. flush calendar grids */
+  contentClassName?: string;
   variant?: "default" | "inset";
   footer?: ReactNode;
 };
@@ -17,6 +19,7 @@ export function DashboardCard({
   description,
   children,
   className,
+  contentClassName,
   variant = "default",
   footer,
 }: DashboardCardProps) {
@@ -46,7 +49,7 @@ export function DashboardCard({
           </div>
         </header>
       )}
-      <div className="min-h-0 min-w-0 flex-1 p-5 sm:p-6">{children}</div>
+      <div className={cn("min-h-0 min-w-0 flex-1 p-5 sm:p-6", contentClassName)}>{children}</div>
       {footer ? (
         <footer className="border-t border-white/[0.06] bg-black/15 px-5 py-3.5 sm:px-6">{footer}</footer>
       ) : null}

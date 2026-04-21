@@ -146,12 +146,16 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
     return out;
   }, [cursor]);
 
+  /** 7 flexible day columns + dedicated week rail (never equal 1/8 width) */
+  const calendarGridCols =
+    "[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(9.25rem,13rem)] sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(10.5rem,14.5rem)] lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(11.75rem,16rem)]";
+
   return (
     <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[oklch(0.62_0.11_252)]">Month</p>
-          <p className="font-display text-[1.6rem] font-semibold tracking-[-0.035em] text-zinc-50 sm:text-[1.85rem]">
+          <p className="font-display text-[1.65rem] font-semibold tracking-[-0.035em] text-zinc-50 sm:text-[1.9rem] lg:text-[2rem]">
             {monthLabel(cursor)}
           </p>
         </div>
@@ -181,24 +185,26 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
         </div>
       </div>
 
-      <div className="w-full min-w-0 overflow-x-hidden pb-1">
-        <div
-          className={cn(
-            "w-full min-w-0 rounded-2xl border border-[oklch(0.52_0.12_252/0.22)]",
-            "bg-[linear-gradient(168deg,oklch(0.125_0.034_262/0.96),oklch(0.088_0.028_264/0.94))]",
-            "p-2 shadow-[inset_0_1px_0_oklch(1_0_0_/0.05),0_28px_90px_-40px_rgba(0,0,0,0.65)] ring-1 ring-[oklch(0.52_0.12_252/0.1)] sm:p-3",
-          )}
-        >
-          <div className="grid w-full min-w-0 grid-cols-8 gap-1.5 sm:gap-2.5">
+      <div className="w-full min-w-0 overflow-x-auto overflow-y-visible pb-1 [-webkit-overflow-scrolling:touch]">
+        <div className="flex min-w-0 justify-center xl:justify-start">
+          <div
+            className={cn(
+              "w-full min-w-[40rem] xl:min-w-0",
+              "rounded-2xl border border-[oklch(0.52_0.12_252/0.22)]",
+              "bg-[linear-gradient(168deg,oklch(0.125_0.034_262/0.96),oklch(0.088_0.028_264/0.94))]",
+              "p-3 shadow-[inset_0_1px_0_oklch(1_0_0_/0.05),0_28px_90px_-40px_rgba(0,0,0,0.65)] ring-1 ring-[oklch(0.52_0.12_252/0.1)] sm:p-4 lg:p-5",
+            )}
+          >
+            <div className={cn("grid w-full min-w-0 gap-2 sm:gap-3 lg:gap-4", calendarGridCols)}>
             {WEEKDAYS.map((d) => (
               <div
                 key={d}
-                className="min-w-0 px-0.5 py-2 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-500 sm:px-1 sm:text-[10px] sm:tracking-[0.18em]"
+                className="min-w-0 px-0.5 py-2.5 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-500 sm:px-1 sm:py-3 sm:text-[10px] sm:tracking-[0.18em]"
               >
                 {d}
               </div>
             ))}
-            <div className="min-w-0 px-0.5 py-2 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-[oklch(0.72_0.11_252)] sm:px-1 sm:text-[10px] sm:tracking-[0.2em]">
+            <div className="min-w-0 px-1 py-2.5 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-[oklch(0.72_0.11_252)] sm:py-3 sm:text-[10px] sm:tracking-[0.18em] lg:text-[11px]">
               Week
             </div>
 
@@ -219,22 +225,22 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                     const content = (
                       <div
                         className={cn(
-                          "group relative flex min-h-[100px] min-w-0 flex-col justify-between rounded-xl border p-2 transition duration-200 sm:min-h-[118px] sm:p-3",
+                          "group relative flex min-h-[118px] min-w-0 flex-col justify-between rounded-xl border p-2.5 transition duration-200 sm:min-h-[136px] sm:p-3.5 lg:min-h-[148px] lg:p-4",
                           cellClasses,
                           hasData && "hover:ring-1 hover:ring-[oklch(0.55_0.12_252/0.35)]",
                         )}
                       >
-                        <div className="flex items-start justify-between gap-1">
+                        <div className="flex items-start justify-between gap-1.5">
                           <span
                             className={cn(
-                              "font-mono text-[11px] tabular-nums",
+                              "font-mono text-[11px] tabular-nums sm:text-[12px]",
                               hasData ? "text-white/75" : "text-zinc-500",
                             )}
                           >
                             {day.date.getDate()}
                           </span>
                           {hasData && agg!.count > 1 ? (
-                            <span className="rounded-md bg-black/20 px-1.5 py-0.5 font-mono text-[9px] text-white/70">
+                            <span className="shrink-0 rounded-md bg-black/20 px-1.5 py-0.5 font-mono text-[9px] text-white/70">
                               {agg!.count}×
                             </span>
                           ) : null}
@@ -242,10 +248,12 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                         <div className="min-w-0 text-right">
                           {hasData ? (
                             <>
-                              <div className="break-words font-display text-[0.75rem] font-semibold leading-tight tabular-nums tracking-[-0.03em] sm:text-[1.05rem] md:text-[1.15rem]">
-                                {formatSignedPnlAmount(agg!.total, displayCurrency)}
+                              <div className="font-display text-[0.8125rem] font-semibold leading-none tabular-nums tracking-[-0.03em] sm:text-[1.0625rem] lg:text-[1.125rem] lg:tracking-[-0.035em]">
+                                <span className="inline-block whitespace-nowrap">
+                                  {formatSignedPnlAmount(agg!.total, displayCurrency)}
+                                </span>
                               </div>
-                              <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white/45">
+                              <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-white/45">
                                 Day
                               </div>
                             </>
@@ -279,29 +287,32 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
 
                   <div
                     className={cn(
-                      "relative flex min-h-[100px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border p-2 text-left sm:min-h-[118px] sm:p-3",
+                      "relative flex min-h-[118px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border p-3 text-left sm:min-h-[136px] sm:p-3.5 lg:min-h-[148px] lg:p-4",
                       weekRailClasses(weekly),
                     )}
                   >
-                    <div className={cn("absolute left-0 top-2 bottom-2 w-[3px] rounded-full", weekAccent(weekly))} />
-                    <div className="min-w-0 pl-1.5 sm:pl-2">
+                    <div className={cn("absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full sm:top-3 sm:bottom-3 lg:w-1", weekAccent(weekly))} />
+                    <div className="min-w-0 pl-2.5 sm:pl-3">
                       <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-white/45 sm:text-[9px] sm:tracking-[0.2em]">
                         Wk {i + 1}
                       </p>
-                      <p className="mt-0.5 font-mono text-[9px] text-white/70 sm:mt-1 sm:text-[10px]">{weekDateRangeLabel(week)}</p>
+                      <p className="mt-1 font-mono text-[9px] tabular-nums text-white/70 sm:text-[10px]">{weekDateRangeLabel(week)}</p>
                     </div>
-                    <div className="min-w-0 pl-1.5 sm:pl-2">
+                    <div className="min-w-0 pl-2.5 sm:pl-3">
                       <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
                         Σ
                       </p>
-                      <p className="break-words font-display text-[0.75rem] font-semibold leading-tight tabular-nums tracking-[-0.04em] sm:text-lg md:text-xl lg:text-2xl">
-                        {formatSignedPnlAmount(weekly, displayCurrency)}
+                      <p className="font-display text-[0.9375rem] font-semibold leading-none tabular-nums tracking-[-0.04em] sm:text-xl md:text-2xl lg:text-[1.75rem] lg:tracking-[-0.045em]">
+                        <span className="inline-block whitespace-nowrap">
+                          {formatSignedPnlAmount(weekly, displayCurrency)}
+                        </span>
                       </p>
                     </div>
                   </div>
                 </Fragment>
               );
             })}
+            </div>
           </div>
         </div>
       </div>

@@ -1,17 +1,25 @@
+/** Single breath between hero and calendar — not a second headline. */
 export function ValueStrip() {
   return (
     <section
       id="strip"
-      className="scroll-mt-28 border-t border-[oklch(0.52_0.12_252/0.15)] py-12 sm:scroll-mt-32 sm:py-14"
+      className="scroll-mt-28 relative border-b border-white/[0.06] sm:scroll-mt-32"
       aria-labelledby="strip-heading"
     >
-      <div className="mx-auto max-w-3xl px-5 text-center sm:px-8">
-        <h2 id="strip-heading" className="sr-only">
-          Product essence
-        </h2>
-        <p className="font-display text-[clamp(1.2rem,3vw,1.5rem)] font-medium tracking-[-0.04em] leading-snug text-zinc-200">
-          Day · chart · numbers — <span className="text-zinc-500">one ledger. One review.</span>
-        </p>
+      <h2 id="strip-heading" className="sr-only">
+        Product essence
+      </h2>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,oklch(0.14_0.06_262/0.35)_0%,transparent_58%)]" aria-hidden />
+      <div className="relative mx-auto max-w-[1100px] px-5 py-14 sm:px-10 sm:py-16">
+        <div className="flex items-start gap-6 sm:items-center sm:gap-10">
+          <div
+            className="mt-1 hidden h-12 w-px shrink-0 bg-gradient-to-b from-[oklch(0.55_0.14_252/0.85)] via-[oklch(0.5_0.12_252/0.35)] to-transparent sm:block sm:h-14"
+            aria-hidden
+          />
+          <p className="font-display text-[clamp(1.2rem,2.6vw,1.45rem)] font-medium leading-[1.25] tracking-[-0.045em] text-zinc-300">
+            Day · chart · week — <span className="text-zinc-500">one ledger.</span>
+          </p>
+        </div>
       </div>
     </section>
   );

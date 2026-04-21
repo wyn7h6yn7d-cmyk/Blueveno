@@ -16,7 +16,7 @@ export function AmbientField() {
 
       {/* Slow-moving cobalt light plate — CSS-only, readable motion */}
       <div
-        className="bv-home-atmo-orb pointer-events-none absolute -left-[8%] top-[6%] h-[52%] w-[72%] max-w-[1100px] rounded-[50%] opacity-[0.42]"
+        className="bv-home-atmo-orb pointer-events-none absolute -left-[8%] top-[6%] h-[52%] w-[72%] max-w-[1100px] rounded-[50%] opacity-[0.48]"
         style={{
           background:
             "radial-gradient(ellipse 70% 55% at 42% 38%, oklch(0.38 0.12 252 / 0.42), oklch(0.22 0.08 258 / 0.12) 52%, transparent 72%)",
@@ -43,7 +43,7 @@ export function AmbientField() {
       <div className="bv-home-atmo-grid absolute inset-0 opacity-[0.52]" />
 
       {/* Structural meridian — static anchor */}
-      <div className="absolute inset-y-0 left-[42%] w-px max-lg:hidden bg-gradient-to-b from-transparent via-[oklch(0.5_0.13_252/0.22)] to-transparent opacity-90" />
+      <div className="absolute inset-y-0 left-[40%] w-px max-lg:hidden bg-gradient-to-b from-transparent via-[oklch(0.55_0.14_252/0.28)] to-transparent opacity-[0.85]" />
 
       {/* Soft scan — single cold band, very slow */}
       <div className="absolute inset-0 overflow-hidden mask-[linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
