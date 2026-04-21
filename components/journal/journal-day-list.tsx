@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { LayoutDashboard, Pencil } from "lucide-react";
+import { LayoutDashboard, Pencil, Trash2 } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 type Props = {
   rows: JournalRow[];
@@ -14,6 +15,8 @@ type Props = {
   displayCurrency: string;
   /** When false, edit form is read-only — link still opens the edit page with upgrade copy. */
   canWriteJournal?: boolean;
+  /** Deletes the row in Supabase and updates local workspace state. */
+  onDeleteRow?: (id: string) => Promise<{ ok: boolean; error?: string }>;
 };
 
 function formatRowPnl(raw: string, currency: string): string {
@@ -40,12 +43,52 @@ export function JournalDayList({
   highlightDate,
   displayCurrency,
   canWriteJournal = true,
+  onDeleteRow,
 }: Props) {
   return (
     <div className="space-y-4">
       {rows.map((row) => (
-        <article
+        <JournalDayCard
           key={row.id}
+          row={row}
+          highlightDate={highlightDate}
+          displayCurrency={displayCurrency}
+          canWriteJournal={canWriteJournal}
+          onDeleteRow={onDeleteRow}
+        />
+      ))}
+    </div>
+  );
+}
+
+function JournalDayCard({
+  row,
+  highlightDate,
+  displayCurrency,
+  canWriteJournal,
+  onDeleteRow,
+}: {
+  row: JournalRow;
+  highlightDate?: string;
+  displayCurrency: string;
+  canWriteJournal: boolean;
+  onDeleteRow?: (id: string) => Promise<{ ok: boolean; error?: string }>;
+}) {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!onDeleteRow) return;
+    if (!window.confirm("Delete this journal entry? This cannot be undone.")) return;
+    setDeleting(true);
+    const result = await onDeleteRow(row.id);
+    setDeleting(false);
+    if (!result.ok && result.error) {
+      window.alert(result.error);
+    }
+  };
+
+  return (
+        <article
           data-journal-date={rowDateKey(row)}
           className={cn(
             "rounded-xl border bg-white/[0.02] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition-colors hover:border-white/[0.1] hover:bg-white/[0.025]",
@@ -86,16 +129,31 @@ export function JournalDayList({
             </div>
 
             <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
-              <Link
-                href="/app"
-                className={cn(
-                  buttonVariants({ variant: "outline", size: "sm" }),
-                  "h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-3.5 text-[12px] font-medium text-zinc-300 hover:bg-white/[0.06]",
-                )}
-              >
-                <LayoutDashboard className="mr-1.5 size-3.5 opacity-90" strokeWidth={1.75} />
-                Overview
-              </Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href="/app"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "sm" }),
+                    "h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-3.5 text-[12px] font-medium text-zinc-300 hover:bg-white/[0.06]",
+                  )}
+                >
+                  <LayoutDashboard className="mr-1.5 size-3.5 opacity-90" strokeWidth={1.75} />
+                  Overview
+                </Link>
+                {canWriteJournal && onDeleteRow ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="lg"
+                    disabled={deleting}
+                    className="rounded-xl border border-rose-500/40 bg-rose-600/20 px-3.5 text-[12px] font-medium text-rose-100 shadow-none hover:bg-rose-600/30 hover:text-rose-50"
+                    onClick={() => void handleDelete()}
+                  >
+                    <Trash2 className="mr-1.5 size-3.5 opacity-95" strokeWidth={2} aria-hidden />
+                    {deleting ? "Deleting…" : "Delete"}
+                  </Button>
+                ) : null}
+              </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <Link
@@ -122,7 +180,5 @@ export function JournalDayList({
             </div>
           </div>
         </article>
-      ))}
-    </div>
   );
 }

@@ -45,7 +45,7 @@ const inputCls =
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
   const { canWriteJournal, displayCurrency } = useAccess();
-  const { data, ready, addRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
+  const { data, ready, addRow, lastError, removeRow } = useUserWorkspace(userId, { initialWorkspace });
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");
@@ -296,6 +296,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               highlightDate={highlightDate}
               displayCurrency={displayCurrency}
               canWriteJournal={canWriteJournal}
+              onDeleteRow={canWriteJournal ? removeRow : undefined}
             />
           )}
         </DashboardCard>
