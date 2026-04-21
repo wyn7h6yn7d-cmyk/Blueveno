@@ -18,6 +18,22 @@ function inUtcRangeCrossMidnight(m: number, startMin: number, endMin: number): b
 /**
  * Which major sessions are in their typical high-liquidity window (UTC).
  */
+/** When several sessions overlap, prefer this order for bucketing P&L. */
+const PRIMARY_ORDER: ForexSessionLabel[] = ["New York", "London", "Tokyo", "Sydney"];
+
+/**
+ * Single session label for attribution when multiple FX windows overlap (UTC).
+ * Returns `"Between"` when none of the standard windows apply.
+ */
+export function primaryForexSessionUTC(now: Date): ForexSessionLabel | "Between" {
+  const active = activeForexSessionsUTC(now);
+  if (active.length === 0) return "Between";
+  for (const p of PRIMARY_ORDER) {
+    if (active.includes(p)) return p;
+  }
+  return active[0];
+}
+
 export function activeForexSessionsUTC(now: Date): ForexSessionLabel[] {
   const m = utcMinutes(now);
   const out: ForexSessionLabel[] = [];

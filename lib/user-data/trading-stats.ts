@@ -1,4 +1,7 @@
+import type { ForexSessionLabel } from "@/lib/trading-session";
+import { primaryForexSessionUTC } from "@/lib/trading-session";
 import type { JournalRow } from "@/lib/user-data/types";
+import { journalEntryMoment } from "@/lib/user-data/journal-entry-time";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 
@@ -9,6 +12,13 @@ export type DailyBar = { date: string; pnl: number };
 export type WeeklyPoint = { weekStart: string; label: string; total: number };
 
 export type MonthlyBlock = { key: string; label: string; total: number };
+
+export type SessionPnlRow = {
+  session: ForexSessionLabel | "Between";
+  totalPnl: number;
+  entries: number;
+  winEntries: number;
+};
 
 export type TradingStatsSnapshot = {
   cumulative: CumulativePoint[];
@@ -23,11 +33,48 @@ export type TradingStatsSnapshot = {
   avgRedDay: number | null;
   streakLabel: string;
   monthly: MonthlyBlock[];
+  /** P&L by FX session (UTC windows), one bucket per entry */
+  sessionPnl: SessionPnlRow[];
 };
 
 function weekLabel(weekStart: string) {
   const d = new Date(`${weekStart}T12:00:00`);
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+const SESSION_PNL_ORDER: (ForexSessionLabel | "Between")[] = [
+  "Sydney",
+  "Tokyo",
+  "London",
+  "New York",
+  "Between",
+];
+
+function computeSessionPnlBreakdown(journal: JournalRow[]): SessionPnlRow[] {
+  const map = new Map<ForexSessionLabel | "Between", { sum: number; n: number; wins: number }>();
+  for (const s of SESSION_PNL_ORDER) {
+    map.set(s, { sum: 0, n: 0, wins: 0 });
+  }
+  for (const row of journal) {
+    const p = parsePnlAmount(row.r);
+    if (p === null) continue;
+    const moment = journalEntryMoment(row);
+    const session = primaryForexSessionUTC(moment);
+    const bucket = map.get(session);
+    if (!bucket) continue;
+    bucket.sum += p;
+    bucket.n += 1;
+    if (p > 0) bucket.wins += 1;
+  }
+  return SESSION_PNL_ORDER.map((session) => {
+    const b = map.get(session)!;
+    return {
+      session,
+      totalPnl: b.sum,
+      entries: b.n,
+      winEntries: b.wins,
+    };
+  });
 }
 
 /** Aggregate P&L by calendar day (multiple rows same day sum). */
@@ -133,6 +180,8 @@ export function computeTradingStats(journal: JournalRow[]): TradingStatsSnapshot
     return { key, label, total: monthMap.get(key) ?? 0 };
   });
 
+  const sessionPnl = computeSessionPnlBreakdown(journal);
+
   return {
     cumulative,
     dailyBars,
@@ -146,5 +195,6 @@ export function computeTradingStats(journal: JournalRow[]): TradingStatsSnapshot
     avgRedDay,
     streakLabel,
     monthly,
+    sessionPnl,
   };
 }

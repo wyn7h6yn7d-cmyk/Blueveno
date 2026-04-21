@@ -8,7 +8,7 @@ import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
 import { useAccess } from "@/components/access/access-provider";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { computeTradingStats } from "@/lib/user-data/trading-stats";
+import { computeTradingStats, type SessionPnlRow } from "@/lib/user-data/trading-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,10 @@ type Props = {
 function fmtPnl(n: number | null, currency: string) {
   if (n === null) return "—";
   return formatSignedPnlAmount(n, currency);
+}
+
+function sessionPnlLabel(s: SessionPnlRow["session"]) {
+  return s === "Between" ? "Between sessions" : s;
 }
 
 function CumulativeChart({ points }: { points: { i: number; y: number }[] }) {
@@ -310,6 +314,55 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               ) : null}
             </DashboardCard>
           </div>
+
+          <DashboardCard
+            eyebrow="Sessions"
+            title="P&L by trading session"
+            description="Each entry is counted once. Time comes from when the row was saved, or your session time if you use HH:MM, otherwise noon UTC on the entry date. Overlapping FX windows use one bucket: New York, then London, then Tokyo, then Sydney."
+            variant="inset"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[min(100%,520px)] text-left text-[13px]">
+                <thead>
+                  <tr className="border-b border-white/[0.06] font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                    <th scope="col" className="py-2 pr-3 font-medium">
+                      Session
+                    </th>
+                    <th scope="col" className="px-3 py-2 text-right font-medium tabular-nums">
+                      {"Net P&L"}
+                    </th>
+                    <th scope="col" className="px-3 py-2 text-right font-medium">
+                      Entries
+                    </th>
+                    <th scope="col" className="py-2 pl-3 text-right font-medium">
+                      Win rate
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.sessionPnl.map((row) => (
+                    <tr key={row.session} className="border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.03]">
+                      <td className="py-2.5 pr-3 font-medium text-zinc-200">{sessionPnlLabel(row.session)}</td>
+                      <td
+                        className={cn(
+                          "px-3 py-2.5 text-right font-display tabular-nums",
+                          row.totalPnl > 0 && "text-emerald-200",
+                          row.totalPnl < 0 && "text-rose-200",
+                          row.totalPnl === 0 && "text-zinc-300",
+                        )}
+                      >
+                        {fmtPnl(row.totalPnl, displayCurrency)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-zinc-400">{row.entries}</td>
+                      <td className="py-2.5 pl-3 text-right font-mono tabular-nums text-zinc-400">
+                        {row.entries ? `${Math.round((row.winEntries / row.entries) * 100)}%` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DashboardCard>
 
           <DashboardCard
             eyebrow="Trend"
