@@ -1,8 +1,6 @@
 import { ExternalLink } from "lucide-react";
 
-/**
- * Journal + chart link — wide strip emphasizing the TradingView URL (distinct from hero day state).
- */
+/** Journal + linked chart CTA — day strip beside P&L (marketing). */
 export function JournalDaySection() {
   return (
     <section
@@ -63,14 +61,11 @@ export function JournalDaySection() {
                       Linked
                     </span>
                   </div>
-                  <p className="mt-4 break-all font-mono text-[11px] leading-relaxed text-[oklch(0.82_0.07_250)] sm:text-[12px]">
-                    tradingview.com/chart/?symbol=CME_MINI%3ANQ1%21
-                  </p>
                   <a
                     href="https://www.tradingview.com/chart/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-5 inline-flex w-fit items-center gap-2 rounded-xl border border-[oklch(0.55_0.12_252/0.45)] bg-[linear-gradient(180deg,oklch(0.2_0.07_262/0.9),oklch(0.1_0.045_268/0.95))] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] transition hover:border-[oklch(0.62_0.12_252/0.55)]"
+                    className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl border border-[oklch(0.55_0.12_252/0.45)] bg-[linear-gradient(180deg,oklch(0.2_0.07_262/0.9),oklch(0.1_0.045_268/0.95))] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] transition hover:border-[oklch(0.62_0.12_252/0.55)]"
                   >
                     Open chart
                     <ExternalLink className="size-3.5 opacity-85" strokeWidth={2} />

@@ -38,7 +38,7 @@ function weekCellClass(n: number) {
 function ChartPreviewSvg() {
   const gid = useId().replace(/:/g, "");
   return (
-    <svg viewBox="0 0 420 280" className="h-full w-full min-h-[12rem]" preserveAspectRatio="xMidYMid slice" aria-hidden>
+    <svg viewBox="0 0 420 280" className="h-full w-full" preserveAspectRatio="xMidYMid slice" aria-hidden>
       <defs>
         <linearGradient id={`${gid}-fill`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="oklch(0.52 0.16 252)" stopOpacity="0.28" />
@@ -96,7 +96,7 @@ function chipClass() {
 
 function DayPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.06] pb-5">
         <div>
           <p className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-400">
@@ -140,8 +140,8 @@ function DayPanel() {
 
 function ChartPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="shrink-0 flex items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
         <div className="flex items-center gap-2.5">
           <span className="relative flex size-2.5 items-center justify-center">
             <span className="absolute inset-0 rounded-full bg-emerald-400/40 blur-[3px]" aria-hidden />
@@ -152,14 +152,14 @@ function ChartPanel() {
         <span className="rounded-lg border border-white/[0.1] bg-black/40 px-2.5 py-1 font-mono text-[10px] text-zinc-400">NQ · 15m</span>
       </div>
 
-      <div className="relative mt-4 min-h-[min(14rem,32vh)] flex-1 overflow-hidden rounded-2xl border border-[oklch(0.48_0.12_252/0.4)] bg-[linear-gradient(165deg,oklch(0.08_0.04_268/0.98),oklch(0.045_0.03_272/0.99))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_48px_-28px_oklch(0_0_0/0.9)]">
+      <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-[oklch(0.48_0.12_252/0.4)] bg-[linear-gradient(165deg,oklch(0.08_0.04_268/0.98),oklch(0.045_0.03_272/0.99))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_48px_-28px_oklch(0_0_0/0.9)]">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,oklch(0.42_0.12_252/0.08),transparent_42%)]" />
-        <div className="relative h-full min-h-[12rem] p-3 sm:min-h-[14rem] sm:p-4">
+        <div className="relative h-full min-h-0 p-3 sm:p-4">
           <ChartPreviewSvg />
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-t border-white/[0.05] pt-4">
+      <div className="mt-4 shrink-0 flex flex-wrap items-end justify-between gap-4 border-t border-white/[0.05] pt-4">
         <div>
           <p className="font-mono text-[12px] font-semibold tracking-wide text-zinc-200">NQ1!</p>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">Saved · 15:42 local</p>
@@ -184,8 +184,8 @@ function ChartPanel() {
 
 function WeekPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.06] pb-5">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="shrink-0 flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.06] pb-5">
         <p className="font-display text-[clamp(1.2rem,3vw,1.65rem)] font-semibold tracking-[-0.035em] text-zinc-50">
           This week
         </p>
@@ -198,11 +198,11 @@ function WeekPanel() {
       </div>
 
       <div className="min-h-0 flex-1 py-5">
-        <div className="grid min-w-0 grid-cols-7 gap-1.5 sm:gap-2">
+        <div className="grid h-full min-h-0 min-w-0 grid-cols-7 grid-rows-[auto_minmax(0,1fr)] gap-x-1.5 gap-y-2 sm:gap-x-2">
           {DAY_LABELS.map((d) => (
             <div
               key={d}
-              className="pb-1.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px]"
+              className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px]"
             >
               {d}
             </div>
@@ -211,7 +211,7 @@ function WeekPanel() {
             <div
               key={i}
               className={cn(
-                "flex min-h-[3.75rem] min-w-0 flex-col items-center justify-center rounded-xl border px-0.5 py-2 sm:min-h-[4.75rem] sm:rounded-2xl sm:py-3 lg:min-h-[5.25rem]",
+                "flex min-h-0 min-w-0 flex-col items-center justify-center rounded-xl border px-0.5 py-2 sm:rounded-2xl sm:py-3",
                 weekCellClass(v),
               )}
             >
@@ -223,7 +223,7 @@ function WeekPanel() {
         </div>
       </div>
 
-      <p className="border-t border-white/[0.05] pt-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-400 sm:text-[12px]">
+      <p className="shrink-0 border-t border-white/[0.05] pt-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-400 sm:text-[12px]">
         4 green days · 1 red day · 2 flat
       </p>
     </div>
@@ -387,14 +387,15 @@ export function HeroPremium() {
                   </div>
 
                   <div className="border-b border-white/[0.05] px-4 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
-                    <div className="relative min-h-[26rem] sm:min-h-[29rem] lg:min-h-[30rem]">
+                    {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
+                    <div className="relative h-[27.5rem] sm:h-[30.5rem] lg:h-[31.5rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}
                           key={mode}
                           role="tabpanel"
                           aria-labelledby={`${tabId}-${mode}`}
-                          className="h-full"
+                          className="absolute inset-0 flex min-h-0 flex-col"
                           initial={reduced ? false : { opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={reduced ? undefined : { opacity: 0, y: -4 }}

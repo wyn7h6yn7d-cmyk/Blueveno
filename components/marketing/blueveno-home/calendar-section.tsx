@@ -75,7 +75,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
               One glance.
               <br />
               <span className="bg-gradient-to-r from-zinc-100 via-[oklch(0.88_0.05_250)] to-[oklch(0.62_0.14_252)] bg-clip-text text-transparent">
-                One week understood.
+                Total clarity.
               </span>
             </h2>
             <p className="mt-4 max-w-md text-[14px] leading-[1.55] tracking-[-0.02em] text-zinc-500 sm:mt-5 sm:text-[15px]">
