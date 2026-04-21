@@ -44,9 +44,6 @@ export function AuthSplitLayout({
                 <span className="font-display text-xl font-medium tracking-tight text-zinc-50 transition group-hover:text-zinc-100">
                   Blueveno
                 </span>
-                <span className="rounded border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">
-                  beta
-                </span>
               </LogoLink>
 
               <p className="mt-16 font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">

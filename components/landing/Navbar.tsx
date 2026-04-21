@@ -25,9 +25,6 @@ export function Navbar() {
           <span className="font-display text-lg font-medium tracking-tight text-zinc-50 transition group-hover:text-zinc-100">
             Blueveno
           </span>
-          <span className="hidden rounded border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500 sm:inline">
-            beta
-          </span>
         </LogoLink>
 
         <nav className="hidden items-center gap-7 lg:flex xl:gap-9">
