@@ -30,6 +30,9 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  /* Refresh session cookies so Server Components / PostgREST get a current JWT (RLS). */
+  await supabase.auth.getSession();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
