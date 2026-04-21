@@ -12,5 +12,7 @@ export type AuthSession = {
     name?: string | null;
     image?: string | null;
     planTier?: PlanTier;
+    /** ISO 4217 code from Supabase `user_metadata.display_currency` */
+    displayCurrency?: string | null;
   };
 };

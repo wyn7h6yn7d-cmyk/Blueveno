@@ -30,8 +30,13 @@ export async function auth(): Promise<AuthSession | null> {
     return null;
   }
 
-  const meta = user.user_metadata as { full_name?: string; name?: string } | undefined;
+  const meta = user.user_metadata as {
+    full_name?: string;
+    name?: string;
+    display_currency?: string;
+  } | undefined;
   const name = meta?.name ?? meta?.full_name ?? user.email?.split("@")[0] ?? null;
+  const displayCurrency = meta?.display_currency ?? null;
 
   let pt: PlanTier | undefined =
     planFromEnv() ?? openTestTier() ?? (isAdminFullAccessEmail(user.email) ? ("pro" as const) : undefined);
@@ -64,6 +69,7 @@ export async function auth(): Promise<AuthSession | null> {
       email: user.email ?? "",
       name,
       planTier: pt,
+      displayCurrency,
     },
   };
 }

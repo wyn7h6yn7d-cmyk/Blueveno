@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import type { JournalRow } from "@/lib/user-data/types";
+import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { cn } from "@/lib/utils";
 
 type Props = {
   rows: JournalRow[];
   highlightDate?: string;
+  displayCurrency: string;
 };
+
+function formatRowPnl(raw: string, currency: string): string {
+  const n = parsePnlAmount(raw);
+  if (n !== null) return formatSignedPnlAmount(n, currency);
+  return raw.trim() || "—";
+}
 
 function dayLabel(row: JournalRow): string {
   if (row.entryDate) return row.entryDate;
@@ -22,7 +31,7 @@ function rowDateKey(row: JournalRow): string {
   return "";
 }
 
-export function JournalDayList({ rows, highlightDate }: Props) {
+export function JournalDayList({ rows, highlightDate, displayCurrency }: Props) {
   return (
     <div className="space-y-4">
       {rows.map((row) => (
@@ -41,7 +50,9 @@ export function JournalDayList({ rows, highlightDate }: Props) {
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">{dayLabel(row)}</p>
               <p className="mt-1.5 font-display text-[1.05rem] font-medium tracking-tight text-zinc-100">{row.sym}</p>
             </div>
-            <p className="font-mono text-[15px] tabular-nums tracking-tight text-zinc-100">{row.r}</p>
+            <p className="font-mono text-[15px] tabular-nums tracking-tight text-zinc-100">
+              {formatRowPnl(row.r, displayCurrency)}
+            </p>
           </div>
 
           {row.note ? <p className="mt-3 text-[13px] leading-relaxed text-zinc-400">{row.note}</p> : null}

@@ -27,6 +27,8 @@ export type AccessContext = {
   profile: UserProfileRow;
 };
 
+import type { DisplayCurrencyCode } from "@/lib/format-pnl";
+
 /** Serializable subset for client components */
 export type AccessContextClient = {
   state: AccessState;
@@ -34,4 +36,5 @@ export type AccessContextClient = {
   isReadOnlyTrial: boolean;
   isAdmin: boolean;
   trialEndsAt: string | null;
+  displayCurrency: DisplayCurrencyCode;
 };

@@ -1,15 +1,25 @@
 import type { JournalRow } from "@/lib/user-data/types";
 
-/** Parse R cell: "+0.5", "-0.1", Unicode minus, optional "R" suffix */
-export function parseR(raw: string): number | null {
+/**
+ * Parse journal P&L cell: plain number, optional R suffix (legacy), optional currency symbols.
+ * Values are treated as monetary amounts in the user's chosen display currency.
+ */
+export function parsePnlAmount(raw: string): number | null {
   const s = raw
     .trim()
     .replace(/[Rr]\s*$/u, "")
+    .replace(/[$€£¥₹]/g, "")
     .replace(/−/g, "-")
-    .replace(/\s+/g, "");
+    .replace(/\s+/g, "")
+    .replace(/,/g, "");
   if (!s) return null;
   const n = Number.parseFloat(s);
   return Number.isFinite(n) ? n : null;
+}
+
+/** @deprecated Use parsePnlAmount — kept for existing imports */
+export function parseR(raw: string): number | null {
+  return parsePnlAmount(raw);
 }
 
 export type KpiSnapshot = {
@@ -32,13 +42,13 @@ const empty: KpiSnapshot = {
   netRDelta: "Add trades from the form below",
   netRTone: "neutral",
   expectancy: "—",
-  expectancyDelta: "R per trade",
+  expectancyDelta: "Per trade",
   expectancyTone: "neutral",
   winRate: "—",
   winRateDelta: "Winning vs total fills",
   winRateTone: "neutral",
   maxDd: "—",
-  maxDdDelta: "From your R series",
+  maxDdDelta: "From your P&L series",
   maxDdTone: "neutral",
 };
 
@@ -50,7 +60,7 @@ function fmtSigned(n: number, digits = 1): string {
 
 export function computeKpis(journal: JournalRow[]): KpiSnapshot {
   const chronological = [...journal].reverse();
-  const rs = chronological.map((j) => parseR(j.r)).filter((n): n is number => n !== null);
+  const rs = chronological.map((j) => parsePnlAmount(j.r)).filter((n): n is number => n !== null);
   if (rs.length === 0) return empty;
 
   const net = rs.reduce((a, b) => a + b, 0);
@@ -73,7 +83,7 @@ export function computeKpis(journal: JournalRow[]): KpiSnapshot {
     netRDelta: `${rs.length} tagged fills`,
     netRTone: net > 0 ? "positive" : net < 0 ? "negative" : "neutral",
     expectancy: fmtSigned(exp, 2),
-    expectancyDelta: "R per trade",
+    expectancyDelta: "Per trade",
     expectancyTone: exp > 0 ? "positive" : exp < 0 ? "negative" : "neutral",
     winRate: `${winPct}%`,
     winRateDelta: `${wins} / ${rs.length} winners`,
@@ -90,7 +100,7 @@ export function cumulativeSeries(journal: JournalRow[]): number[] {
   let cum = 0;
   const out: number[] = [0];
   for (const j of chronological) {
-    const p = parseR(j.r);
+    const p = parsePnlAmount(j.r);
     if (p === null) continue;
     cum += p;
     out.push(cum);

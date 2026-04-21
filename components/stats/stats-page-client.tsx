@@ -6,9 +6,11 @@ import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
+import { useAccess } from "@/components/access/access-provider";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { computeTradingStats } from "@/lib/user-data/trading-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
+import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { cn } from "@/lib/utils";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 
@@ -17,10 +19,9 @@ type Props = {
   initialWorkspace: UserWorkspaceSnapshot;
 };
 
-function fmtR(n: number | null, digits = 2) {
+function fmtPnl(n: number | null, currency: string) {
   if (n === null) return "—";
-  const sign = n > 0 ? "+" : n < 0 ? "−" : "";
-  return `${sign}${Math.abs(n).toFixed(digits)} R`;
+  return formatSignedPnlAmount(n, currency);
 }
 
 function CumulativeChart({ points }: { points: { i: number; y: number }[] }) {
@@ -122,7 +123,13 @@ function DailyBars({ bars }: { bars: { date: string; pnl: number }[] }) {
   );
 }
 
-function WeeklyTrend({ weekly }: { weekly: { label: string; total: number }[] }) {
+function WeeklyTrend({
+  weekly,
+  currency,
+}: {
+  weekly: { label: string; total: number }[];
+  currency: string;
+}) {
   if (weekly.length === 0) return null;
   const last = weekly.slice(-6);
   const maxAbs = Math.max(...last.map((w) => Math.abs(w.total)), 1e-6);
@@ -147,7 +154,7 @@ function WeeklyTrend({ weekly }: { weekly: { label: string; total: number }[] })
               w.total >= 0 ? "text-emerald-200" : "text-rose-200",
             )}
           >
-            {fmtR(w.total, 2)}
+            {fmtPnl(w.total, currency)}
           </p>
         </div>
       ))}
@@ -156,6 +163,7 @@ function WeeklyTrend({ weekly }: { weekly: { label: string; total: number }[] })
 }
 
 export function StatsPageClient({ userId, initialWorkspace }: Props) {
+  const { displayCurrency } = useAccess();
   const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
   const stats = useMemo(() => computeTradingStats(data.journal), [data.journal]);
 
@@ -182,7 +190,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         <EmptyState
           icon={CalendarDays}
           title="No performance data yet"
-          description="Log trading days in your journal. Stats appear automatically from your R values."
+          description="Log trading days in your journal. Stats appear automatically from your P&L values."
           action={
             <Link href="/app/journal" className={cn(appPrimaryCta, "inline-flex items-center gap-1.5")}>
               Open journal
@@ -197,14 +205,14 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             aria-label="Summary at a glance"
           >
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Net R</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Net P&L</p>
               <p
                 className={cn(
                   "font-display mt-2 text-3xl tabular-nums tracking-[-0.03em]",
                   netR > 0 ? "text-emerald-200" : netR < 0 ? "text-rose-200" : "text-zinc-100",
                 )}
               >
-                {fmtR(netR, 2)}
+                {fmtPnl(netR, displayCurrency)}
               </p>
             </div>
             <div>
@@ -226,37 +234,41 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           </section>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <DashboardCard eyebrow="Range" title="Best & worst day" description="Total R for that calendar day.">
+            <DashboardCard eyebrow="Range" title="Best & worst day" description="Total P&L for that calendar day.">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="rounded-xl border border-emerald-400/15 bg-emerald-500/[0.06] px-4 py-3">
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-200/70">Best</p>
                   <p className="mt-2 font-display text-2xl text-emerald-100">
-                    {stats.bestDay ? fmtR(stats.bestDay.pnl, 2) : "—"}
+                    {stats.bestDay ? fmtPnl(stats.bestDay.pnl, displayCurrency) : "—"}
                   </p>
                   <p className="mt-1 text-[12px] text-zinc-500">{stats.bestDay?.date ?? ""}</p>
                 </div>
                 <div className="rounded-xl border border-rose-400/15 bg-rose-500/[0.06] px-4 py-3">
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-rose-200/70">Worst</p>
                   <p className="mt-2 font-display text-2xl text-rose-100">
-                    {stats.worstDay ? fmtR(stats.worstDay.pnl, 2) : "—"}
+                    {stats.worstDay ? fmtPnl(stats.worstDay.pnl, displayCurrency) : "—"}
                   </p>
                   <p className="mt-1 text-[12px] text-zinc-500">{stats.worstDay?.date ?? ""}</p>
                 </div>
               </div>
             </DashboardCard>
 
-            <DashboardCard eyebrow="Average" title="Green vs red days" description="Mean R when the day closed your way — or against you.">
+            <DashboardCard
+              eyebrow="Average"
+              title="Green vs red days"
+              description="Mean P&L when the day closed your way — or against you."
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Avg green day</p>
                   <p className="mt-2 font-display text-2xl tabular-nums text-emerald-200">
-                    {stats.avgGreenDay != null ? fmtR(stats.avgGreenDay, 2) : "—"}
+                    {stats.avgGreenDay != null ? fmtPnl(stats.avgGreenDay, displayCurrency) : "—"}
                   </p>
                 </div>
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Avg red day</p>
                   <p className="mt-2 font-display text-2xl tabular-nums text-rose-200">
-                    {stats.avgRedDay != null ? fmtR(stats.avgRedDay, 2) : "—"}
+                    {stats.avgRedDay != null ? fmtPnl(stats.avgRedDay, displayCurrency) : "—"}
                   </p>
                 </div>
               </div>
@@ -268,8 +280,8 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
 
           <DashboardCard
             eyebrow="Trend"
-            title="Cumulative P&amp;L"
-            description="Running sum of daily R, oldest to newest."
+            title="Cumulative P&L"
+            description="Running sum of daily P&L, oldest to newest."
             variant="inset"
             className="overflow-hidden"
           >
@@ -281,7 +293,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           </DashboardCard>
 
           <DashboardCard eyebrow="Weeks" title="Weekly totals" description="Recent weeks, same rhythm as the calendar rail.">
-            <WeeklyTrend weekly={stats.weekly} />
+            <WeeklyTrend weekly={stats.weekly} currency={displayCurrency} />
           </DashboardCard>
 
           {stats.monthly.length >= 2 ? (
@@ -299,7 +311,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                         m.total >= 0 ? "text-emerald-200" : "text-rose-200",
                       )}
                     >
-                      {fmtR(m.total, 2)}
+                      {fmtPnl(m.total, displayCurrency)}
                     </p>
                   </div>
                 ))}

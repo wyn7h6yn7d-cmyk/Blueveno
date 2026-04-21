@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         name: session.user.name,
         email: session.user.email,
       }}
-      access={toClientAccess(access)}
+      access={toClientAccess(access, session.user.displayCurrency)}
     >
       {children}
     </AppShell>

@@ -45,7 +45,7 @@ const inputCls =
   "h-11 rounded-xl border-white/[0.1] bg-black/25 text-[15px] shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] placeholder:text-zinc-600 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
-  const { canWriteJournal } = useAccess();
+  const { canWriteJournal, displayCurrency } = useAccess();
   const { data, ready, addRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");
@@ -166,7 +166,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               className="border-none bg-transparent py-8 ring-0"
             />
           ) : (
-            <PnlCalendar entries={data.journal} />
+            <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} />
           )}
         </DashboardCard>
 
@@ -175,7 +175,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           title="Today’s trade"
           description={
             canWriteJournal
-              ? "R is your day result. Add a TradingView link when you want the chart one tap away."
+              ? "Enter the day’s P&L in your display currency (change it in Settings). Add a TradingView link when you want the chart one tap away."
               : "Your trial has ended in write mode. Upgrade to add new days — everything you saved stays readable."
           }
         >
@@ -214,13 +214,13 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </div>
               <div className="space-y-2">
                 <Label htmlFor="jw-pnl" className={labelCls}>
-                  Day P&amp;L (R)
+                  Day P&L ({displayCurrency})
                 </Label>
                 <Input
                   id="jw-pnl"
                   value={pnl}
                   onChange={(e) => setPnl(e.target.value)}
-                  placeholder="+1.2 or −0.4"
+                  placeholder="+120 or −40"
                   required
                   disabled={!canWriteJournal}
                   className={cn(inputCls, "font-mono disabled:opacity-45")}
@@ -309,7 +309,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             className="border-none bg-transparent py-8 ring-0"
           />
         ) : (
-          <JournalDayList rows={rowsForLatestEntries} highlightDate={highlightDate} />
+          <JournalDayList rows={rowsForLatestEntries} highlightDate={highlightDate} displayCurrency={displayCurrency} />
         )}
       </DashboardCard>
 

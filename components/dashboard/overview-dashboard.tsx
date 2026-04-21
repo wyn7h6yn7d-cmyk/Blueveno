@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { ArrowUpRight, BarChart3, BookOpen, CalendarDays } from "lucide-react";
+import { useAccess } from "@/components/access/access-provider";
 import { PageHeader } from "@/components/app/page-header";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
@@ -20,6 +21,7 @@ const surfaceTile =
   "group relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[linear-gradient(148deg,oklch(0.125_0.038_262/0.94),oklch(0.088_0.032_266/0.96))] p-6 shadow-[0_20px_50px_-36px_rgba(0,0,0,0.75),inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14]";
 
 export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
+  const { displayCurrency } = useAccess();
   const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
 
   const dayAgg = useMemo(() => buildDayAgg(data.journal), [data.journal]);
@@ -52,8 +54,8 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           </>
         ) : (
           [
-            { label: "Week", value: signedMoney(summary.weekPnl), tone: summary.weekPnl },
-            { label: "Month", value: signedMoney(summary.monthPnl), tone: summary.monthPnl },
+            { label: "Week", value: signedMoney(summary.weekPnl, displayCurrency), tone: summary.weekPnl },
+            { label: "Month", value: signedMoney(summary.monthPnl, displayCurrency), tone: summary.monthPnl },
             { label: "Win · loss days", value: summary.winLoss, tone: 0 },
             { label: "Streak", value: summary.streak, tone: 0 },
           ].map((card) => (

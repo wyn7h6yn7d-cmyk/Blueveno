@@ -36,10 +36,10 @@ export function StrategyPerformanceTable({ rows = defaultRows, className }: Stra
                 Win%
               </th>
               <th scope="col" className="px-4 py-3 text-right tabular-nums">
-                E(R)
+                E(trade)
               </th>
               <th scope="col" className="px-4 py-3 text-right tabular-nums">
-                Net R
+                {"Net P&L"}
               </th>
               <th scope="col" className="px-4 py-3 text-right tabular-nums">
                 PF

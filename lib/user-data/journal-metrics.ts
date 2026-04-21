@@ -1,5 +1,6 @@
 import type { JournalRow } from "@/lib/user-data/types";
-import { parseR } from "@/lib/user-data/kpi";
+import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import { parsePnlAmount } from "@/lib/user-data/kpi";
 
 export function toDayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -30,7 +31,7 @@ export function buildDayAgg(journal: JournalRow[]): DayAgg[] {
   const map = new Map<string, number>();
   for (const row of journal) {
     const key = dayKeyFromRow(row.entryDate, row.createdAt);
-    const value = parseR(row.r) ?? 0;
+    const value = parsePnlAmount(row.r) ?? 0;
     map.set(key, (map.get(key) ?? 0) + value);
   }
   return [...map.entries()].map(([key, pnl]) => ({ key, pnl }));
@@ -87,7 +88,6 @@ export function computeJournalSummary(dayAgg: DayAgg[]): JournalSummary {
   };
 }
 
-export function signedMoney(value: number) {
-  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  return `${sign}$${Math.abs(value).toFixed(0)}`;
+export function signedMoney(value: number, currency: string) {
+  return formatSignedPnlAmount(value, currency);
 }

@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { auth } from "@/auth";
+import { formatSignedPnlAmount, normalizeDisplayCurrency } from "@/lib/format-pnl";
+import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
@@ -20,6 +22,12 @@ export default async function JournalDetailPage({ params }: Props) {
 
   const { id } = await params;
   const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  const displayCurrency = normalizeDisplayCurrency(
+    (authUser?.user_metadata as { display_currency?: string } | undefined)?.display_currency,
+  );
   const { data: row, error } = await supabase
     .from("journal_entries")
     .select("id, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url, created_at")
@@ -32,6 +40,9 @@ export default async function JournalDetailPage({ params }: Props) {
   }
 
   const chartUrl = row.tradingview_url as string | null;
+  const rawPnl = String(row.r_value ?? "");
+  const pnlNum = parsePnlAmount(rawPnl);
+  const pnlTitle = pnlNum !== null ? formatSignedPnlAmount(pnlNum, displayCurrency) : rawPnl;
 
   return (
     <div className="space-y-8">
@@ -54,7 +65,7 @@ export default async function JournalDetailPage({ params }: Props) {
 
       <DashboardCard
         eyebrow="Day detail"
-        title={`${row.r_value} R`}
+        title={pnlTitle}
         description={`Setup: ${row.setup} · Tag: ${row.tag}`}
       >
         <dl className="grid gap-4 text-sm sm:grid-cols-2">

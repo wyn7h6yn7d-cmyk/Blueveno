@@ -11,6 +11,11 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Bell, KeyRound, LogOut, Shield, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DISPLAY_CURRENCY_CODES,
+  displayCurrencyLabel,
+  normalizeDisplayCurrency,
+} from "@/lib/format-pnl";
 
 const field =
   "h-10 rounded-xl border-white/[0.1] bg-black/25 text-[15px] text-zinc-100 shadow-[inset_0_1px_2px_oklch(0_0_0/0.15)] placeholder:text-zinc-600";
@@ -21,6 +26,7 @@ export function SettingsProfileForm() {
   const [pendingEmail, setPendingEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [timezone, setTimezone] = useState("");
+  const [displayCurrency, setDisplayCurrency] = useState("EUR");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(true);
@@ -45,9 +51,15 @@ export function SettingsProfileForm() {
       }
       setEmail(user.email ?? "");
       setPendingEmail(user.email ?? "");
-      const meta = user.user_metadata as { full_name?: string; name?: string; timezone?: string } | undefined;
+      const meta = user.user_metadata as {
+        full_name?: string;
+        name?: string;
+        timezone?: string;
+        display_currency?: string;
+      } | undefined;
       setDisplayName(meta?.full_name ?? meta?.name ?? "");
       setTimezone(meta?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "");
+      setDisplayCurrency(normalizeDisplayCurrency(meta?.display_currency));
       setLoading(false);
     })();
     return () => {
@@ -65,6 +77,7 @@ export function SettingsProfileForm() {
         full_name: displayName.trim(),
         name: displayName.trim(),
         timezone: timezone.trim(),
+        display_currency: normalizeDisplayCurrency(displayCurrency),
       },
     });
     setSaving(false);
@@ -208,6 +221,26 @@ export function SettingsProfileForm() {
                   placeholder="America/New_York"
                   className={field}
                 />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="display-currency" className="text-[13px] text-zinc-300">
+                  Display currency
+                </Label>
+                <p className="text-[13px] text-zinc-600">
+                  {"Journal P&L, stats, and calendar use this for formatting."}
+                </p>
+                <select
+                  id="display-currency"
+                  value={displayCurrency}
+                  onChange={(e) => setDisplayCurrency(e.target.value)}
+                  className={cn(field, "cursor-pointer")}
+                >
+                  {DISPLAY_CURRENCY_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {code} — {displayCurrencyLabel(code)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           )}

@@ -1,5 +1,6 @@
 import { ADMIN_FULL_ACCESS_EMAIL } from "@/lib/billing/workspace-access";
 import type { AccessContext, AccessState, UserProfileRow } from "@/lib/access/types";
+import { normalizeDisplayCurrency } from "@/lib/format-pnl";
 
 function parseTrialEnd(iso: string): Date {
   const d = new Date(iso);
@@ -43,12 +44,13 @@ export function resolveAccess(profile: UserProfileRow, sessionEmail: string | nu
   };
 }
 
-export function toClientAccess(ctx: AccessContext) {
+export function toClientAccess(ctx: AccessContext, displayCurrency?: string | null) {
   return {
     state: ctx.state,
     canWriteJournal: ctx.canWriteJournal,
     isReadOnlyTrial: ctx.isReadOnlyTrial,
     isAdmin: ctx.isAdmin,
     trialEndsAt: ctx.trialEndsAt,
+    displayCurrency: normalizeDisplayCurrency(displayCurrency),
   };
 }

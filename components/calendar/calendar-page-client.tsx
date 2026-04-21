@@ -7,6 +7,7 @@ import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
+import { useAccess } from "@/components/access/access-provider";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function CalendarPageClient({ userId, initialWorkspace }: Props) {
+  const { displayCurrency } = useAccess();
   const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
 
   return (
@@ -67,7 +69,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             aria-hidden
           />
           <div className="relative">
-            <PnlCalendar entries={data.journal} />
+            <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} />
           </div>
         </div>
       )}

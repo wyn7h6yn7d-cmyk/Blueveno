@@ -5,12 +5,14 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
-import { parseR } from "@/lib/user-data/kpi";
+import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
 type Props = {
   entries: JournalRow[];
+  displayCurrency: string;
 };
 
 type DayCell = {
@@ -49,11 +51,6 @@ function startOfGridMonth(month: Date): Date {
 
 function monthLabel(d: Date): string {
   return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
-}
-
-function money(v: number): string {
-  const sign = v > 0 ? "+" : v < 0 ? "−" : "";
-  return `${sign}$${Math.abs(v).toFixed(0)}`;
 }
 
 /** Day cell: green / red / neutral with depth */
@@ -109,14 +106,14 @@ function weekDateRangeLabel(week: DayCell[]): string {
   return `${String(start).padStart(2, "0")}–${String(end).padStart(2, "0")}`;
 }
 
-export function PnlCalendar({ entries }: Props) {
+export function PnlCalendar({ entries, displayCurrency }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
 
   const aggregates = useMemo(() => {
     const map = new Map<string, DayAggregate>();
     for (const row of entries) {
       const key = row.entryDate ?? keyFromDate(row.createdAt ? new Date(row.createdAt) : new Date());
-      const val = parseR(row.r) ?? 0;
+      const val = parsePnlAmount(row.r) ?? 0;
       const prev = map.get(key);
       if (!prev) {
         map.set(key, { total: val, latestEntryId: row.id, count: 1 });
@@ -246,7 +243,7 @@ export function PnlCalendar({ entries }: Props) {
                           {hasData ? (
                             <>
                               <div className="font-display text-[1.05rem] font-semibold tabular-nums tracking-[-0.03em] sm:text-[1.15rem]">
-                                {money(agg!.total)}
+                                {formatSignedPnlAmount(agg!.total, displayCurrency)}
                               </div>
                               <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white/45">
                                 Day
@@ -289,7 +286,9 @@ export function PnlCalendar({ entries }: Props) {
                     </div>
                     <div className="pl-2 text-left">
                       <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/40">Σ</p>
-                      <p className="font-display text-xl font-semibold tabular-nums tracking-[-0.04em] sm:text-2xl">{money(weekly)}</p>
+                      <p className="font-display text-xl font-semibold tabular-nums tracking-[-0.04em] sm:text-2xl">
+                        {formatSignedPnlAmount(weekly, displayCurrency)}
+                      </p>
                     </div>
                   </div>
                 </Fragment>

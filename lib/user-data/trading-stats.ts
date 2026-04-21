@@ -1,5 +1,5 @@
 import type { JournalRow } from "@/lib/user-data/types";
-import { parseR } from "@/lib/user-data/kpi";
+import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 
 export type CumulativePoint = { i: number; t: string; y: number };
@@ -35,7 +35,7 @@ export function computeTradingStats(journal: JournalRow[]): TradingStatsSnapshot
   const dayMap = new Map<string, number>();
   for (const row of journal) {
     const key = dayKeyFromRow(row.entryDate, row.createdAt);
-    const p = parseR(row.r);
+    const p = parsePnlAmount(row.r);
     if (p === null) continue;
     dayMap.set(key, (dayMap.get(key) ?? 0) + p);
   }
