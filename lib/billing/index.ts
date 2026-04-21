@@ -6,6 +6,12 @@ export type { PlanDefinition } from "./plans";
 export { TIER_RANK, MIN_TIER_FOR_FEATURE, tierMeetsRequirement, minTierForFeature } from "./matrix";
 export { getEffectivePlanTier, getSubscriptionSnapshot, normalizeStripeStatus } from "./resolve";
 export {
+  hasFullWorkspaceAccess,
+  hasPaidWorkspacePlan,
+  isAdminFullAccessEmail,
+  ADMIN_FULL_ACCESS_EMAIL,
+} from "./workspace-access";
+export {
   getPlanTier,
   hasFeature,
   canUseUnlimitedJournal,

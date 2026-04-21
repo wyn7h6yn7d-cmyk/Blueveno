@@ -3,6 +3,7 @@ import type { FeatureKey } from "@/lib/features";
 import type { PlanTier } from "@/lib/billing/types";
 import { MIN_TIER_FOR_FEATURE, tierMeetsRequirement } from "@/lib/billing/matrix";
 import { getEffectivePlanTier } from "@/lib/billing/resolve";
+import { hasFullWorkspaceAccess } from "@/lib/billing/workspace-access";
 
 /**
  * @deprecated Use getEffectivePlanTier — kept for existing imports.
@@ -11,21 +12,19 @@ export function getPlanTier(session: AuthSession | null): PlanTier {
   return getEffectivePlanTier(session);
 }
 
-function devBypass(): boolean {
+function devUnrestricted(): boolean {
   return process.env.NODE_ENV === "development" && process.env.BILLING_STRICT !== "true";
-}
-
-/** Test / preview: full product access without tier checks. Set `BILLING_TEST_FULL_ACCESS=false` to enforce plans. */
-function testPeriodFullAccess(): boolean {
-  return process.env.BILLING_TEST_FULL_ACCESS !== "false";
 }
 
 /**
  * Core entitlement check — server components, actions, API routes.
  */
 export function hasFeature(session: AuthSession | null, feature: FeatureKey): boolean {
-  if (testPeriodFullAccess() || devBypass()) {
+  if (devUnrestricted()) {
     return true;
+  }
+  if (!hasFullWorkspaceAccess(session)) {
+    return false;
   }
   const userTier = getEffectivePlanTier(session);
   const required = MIN_TIER_FOR_FEATURE[feature];

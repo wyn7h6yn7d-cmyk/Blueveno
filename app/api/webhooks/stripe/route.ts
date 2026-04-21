@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     case "checkout.session.completed":
     case "customer.subscription.updated":
     case "customer.subscription.deleted":
-      // TODO: upsert Subscription + entitlements for user
+      // TODO: map Stripe customer/subscription → public.user_profiles (premium_active, stripe_* ids)
       break;
     default:
       break;

@@ -147,8 +147,8 @@ export function SettingsProfileForm() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Settings"
-        title="Workspace"
-        description="Profile and security for this Supabase-backed account."
+        title="Account"
+        description="Profile, password, and sessions."
         actions={
           <Button
             type="submit"
@@ -214,11 +214,11 @@ export function SettingsProfileForm() {
         </DashboardCard>
       </form>
 
-      <DashboardCard
-        eyebrow="Security"
-        title="Account security"
-        description="Standard account actions for this MVP."
-      >
+        <DashboardCard
+          eyebrow="Security"
+          title="Password & sign-in"
+          description="Update credentials and control where you stay signed in."
+        >
         <form onSubmit={onUpdatePassword} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -327,16 +327,11 @@ export function SettingsProfileForm() {
         {accountMessage ? <p className="mt-5 text-sm text-zinc-400">{accountMessage}</p> : null}
       </DashboardCard>
 
-      <DashboardCard
-        eyebrow="Notifications"
-        title="Alerts"
-        description="Delivery channels are not configured in this build—no silent toggles."
-      >
+      <DashboardCard eyebrow="Notifications" title="Alerts" description="Optional updates about your workspace.">
         <div className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">
           <Bell className="mt-0.5 size-4 shrink-0 text-zinc-500" strokeWidth={1.75} />
           <p className="text-[14px] leading-relaxed text-zinc-400">
-            Email and in-app alerts will appear here once notification preferences and delivery are connected. Nothing is
-            subscribed automatically in the MVP.
+            Notification preferences are not enabled yet. Nothing is sent until you opt in.
           </p>
         </div>
       </DashboardCard>
@@ -346,7 +341,7 @@ export function SettingsProfileForm() {
           <User className="size-5 text-zinc-500" strokeWidth={1.75} />
           <div>
             <p className="text-[15px] text-zinc-200">Billing & plan</p>
-            <p className="text-sm text-zinc-500">Test period — full access. Stripe portal when billing goes live.</p>
+            <p className="text-sm text-zinc-500">Plan and invoices</p>
           </div>
         </div>
         <Link

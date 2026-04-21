@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
+import { useAccess } from "@/components/access/access-provider";
 
 function toUserDbError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
@@ -48,6 +49,7 @@ type UseUserWorkspaceOptions = {
 };
 
 export function useUserWorkspace(userId: string | undefined, options?: UseUserWorkspaceOptions) {
+  const { canWriteJournal } = useAccess();
   const initialWorkspace = options?.initialWorkspace;
 
   /** Object identity from RSC is unstable; stringify lets us detect real server payload changes */
@@ -65,7 +67,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   const userIdRef = useRef(userId);
   const didTokenRefreshRefetch = useRef(false);
   /** Used to avoid accepting a transient empty client read right after load */
-  const mountTimeRef = useRef(Date.now());
+  const mountTimeRef = useRef(0);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -84,8 +86,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     }
     const cached = readJournalCache(userId);
     if (cached && cached.journal.length > 0) {
+      /* eslint-disable react-hooks/set-state-in-effect -- hydrate from local cache when no RSC snapshot */
       setData((prev) => (prev.journal.length === 0 ? cached : prev));
       setReady(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [userId, initialWorkspace]);
 
@@ -240,6 +244,12 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   const addRow = useCallback(
     async (row: Omit<JournalRow, "id">) => {
       if (!userId) return { ok: false as const, error: "Not signed in." };
+      if (!canWriteJournal) {
+        return {
+          ok: false as const,
+          error: "Your trial has ended. Upgrade to Blueveno Premium to log new days.",
+        };
+      }
       const supabase = createClient();
       setLastError(null);
 
@@ -303,12 +313,16 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       });
       return { ok: true as const };
     },
-    [userId],
+    [userId, canWriteJournal],
   );
 
   const removeRow = useCallback(
     async (id: string) => {
       if (!userId) return;
+      if (!canWriteJournal) {
+        setLastError("Upgrade required to modify journal entries.");
+        return;
+      }
       const supabase = createClient();
       const { error } = await supabase.from("journal_entries").delete().eq("user_id", userId).eq("id", id);
       if (error) {
@@ -321,7 +335,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         return next;
       });
     },
-    [userId],
+    [userId, canWriteJournal],
   );
 
   const replaceAll = useCallback((next: UserWorkspaceSnapshot) => {

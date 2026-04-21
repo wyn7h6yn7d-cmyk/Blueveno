@@ -828,7 +828,7 @@ body {
   }
 }
 
-/* Marketing hero — rotating rim + light sweep (paired with hero-interactive.tsx) */
+/* Marketing hero — legacy rim + shimmer (hero-interactive.tsx); homepage uses hero-command-surface */
 @keyframes bv-hero-border-spin {
   to {
     transform: rotate(360deg);

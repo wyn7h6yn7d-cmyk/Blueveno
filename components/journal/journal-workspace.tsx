@@ -10,16 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { parseR } from "@/lib/user-data/kpi";
+import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import { EmptyState } from "@/components/app/empty-state";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 import { isValidTradingViewUrl } from "@/lib/tradingview";
+import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 
 const ROW_24H_MS = 24 * 60 * 60 * 1000;
 
-/** When the row was created/saved — for rolling 24h filter */
 function rowEventTimeMs(row: JournalRow): number {
   if (row.createdAt) {
     const t = Date.parse(row.createdAt);
@@ -36,62 +36,13 @@ type Props = {
   userId: string;
   email: string;
   initialWorkspace: UserWorkspaceSnapshot;
-  /** From /app?date=YYYY-MM-DD (e.g. calendar day tap) */
   highlightDate?: string;
 };
 
-function toKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function dayKeyFromRow(entryDate?: string, createdAt?: string): string {
-  if (entryDate) return entryDate;
-  if (createdAt) return new Date(createdAt).toISOString().slice(0, 10);
-  return toKey(new Date());
-}
-
-function startOfWeekMonday(base: Date) {
-  const copy = new Date(base);
-  const day = (copy.getDay() + 6) % 7;
-  copy.setHours(0, 0, 0, 0);
-  copy.setDate(copy.getDate() - day);
-  return copy;
-}
-
-function monthKey(base: Date) {
-  const m = base.getMonth() + 1;
-  return `${base.getFullYear()}-${String(m).padStart(2, "0")}`;
-}
-
-function signedMoney(value: number) {
-  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  return `${sign}$${Math.abs(value).toFixed(0)}`;
-}
-
-function streakFromDaily(daily: Array<{ key: string; pnl: number }>) {
-  if (daily.length === 0) return "No streak";
-  const ordered = [...daily].sort((a, b) => b.key.localeCompare(a.key));
-  const first = ordered[0];
-  if (first.pnl === 0) return "Flat day";
-  const positive = first.pnl > 0;
-  let count = 0;
-  for (const d of ordered) {
-    if (positive && d.pnl > 0) {
-      count += 1;
-      continue;
-    }
-    if (!positive && d.pnl < 0) {
-      count += 1;
-      continue;
-    }
-    break;
-  }
-  return `${count} ${positive ? "green" : "red"} day${count === 1 ? "" : "s"}`;
-}
-
-export function UserDashboard({ userId, email, initialWorkspace, highlightDate }: Props) {
+export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
+  const { canWriteJournal } = useAccess();
   const { data, ready, addRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
-  const [entryDate, setEntryDate] = useState(() => toKey(new Date()));
+  const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");
   const [note, setNote] = useState("");
@@ -109,11 +60,11 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
   }, [data.journal]);
 
   const latestEntriesLast24h = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity -- rolling 24h window for latest entries
     const cutoff = Date.now() - ROW_24H_MS;
     return sortedRows.filter((row) => rowEventTimeMs(row) >= cutoff);
   }, [sortedRows]);
 
-  /** Last 24h by default; if ?date= is set, also include rows for that calendar day so scroll/highlight works */
   const rowsForLatestEntries = useMemo(() => {
     const byId = new Map<string, JournalRow>();
     for (const r of latestEntriesLast24h) byId.set(r.id, r);
@@ -131,39 +82,6 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
     });
   }, [sortedRows, latestEntriesLast24h, highlightDate]);
 
-  const dayAgg = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const row of data.journal) {
-      const key = dayKeyFromRow(row.entryDate, row.createdAt);
-      const value = parseR(row.r) ?? 0;
-      map.set(key, (map.get(key) ?? 0) + value);
-    }
-    return [...map.entries()].map(([key, pnlValue]) => ({ key, pnl: pnlValue }));
-  }, [data.journal]);
-
-  const summary = useMemo(() => {
-    const now = new Date();
-    const weekStart = startOfWeekMonday(now);
-    const weekStartKey = toKey(weekStart);
-    const month = monthKey(now);
-    let weekPnl = 0;
-    let monthPnl = 0;
-    let wins = 0;
-    let losses = 0;
-    for (const d of dayAgg) {
-      if (d.key >= weekStartKey) weekPnl += d.pnl;
-      if (d.key.startsWith(month)) monthPnl += d.pnl;
-      if (d.pnl > 0) wins += 1;
-      if (d.pnl < 0) losses += 1;
-    }
-    return {
-      weekPnl,
-      monthPnl,
-      winLoss: `${wins}/${losses}`,
-      streak: streakFromDaily(dayAgg),
-    };
-  }, [dayAgg]);
-
   useEffect(() => {
     if (!highlightDate || !ready || rowsForLatestEntries.length === 0) return;
     const t = window.setTimeout(() => {
@@ -175,6 +93,7 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
 
   const onQuickAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canWriteJournal) return;
     if (!entryDate.trim() || !symbol.trim() || !pnl.trim()) return;
     if (!isValidTradingViewUrl(tradingViewUrl)) {
       setUrlError("Enter a valid TradingView URL.");
@@ -211,10 +130,10 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
       <PageHeader
         eyebrow="Workspace"
         title="Journal"
-        description="P&amp;L snapshot, calendar, and a fast path to log a day without leaving this screen."
+        description="Calendar, quick add, and your latest entries — tied to Stats and Calendar."
         actions={
           <Link
-            href="/app#add"
+            href="/app/journal#add"
             className={cn(
               buttonVariants({ variant: "outline" }),
               "h-10 min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-4 text-[13px] text-zinc-100 hover:bg-white/[0.07]",
@@ -225,37 +144,11 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
         }
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Top summary row">
-        {[
-          { label: "This week P&L", value: signedMoney(summary.weekPnl), tone: summary.weekPnl },
-          { label: "This month P&L", value: signedMoney(summary.monthPnl), tone: summary.monthPnl },
-          { label: "Win / Loss days", value: summary.winLoss, tone: 0 },
-          { label: "Current streak", value: summary.streak, tone: 0 },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.028_262/0.96),oklch(0.112_0.026_264/0.95))] p-6 shadow-bv-card ring-1 ring-white/[0.03]"
-          >
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
-            <p
-              className={cn(
-                "font-display mt-3 text-[1.65rem] tabular-nums leading-none tracking-[-0.02em]",
-                card.tone > 0 && "text-emerald-200",
-                card.tone < 0 && "text-rose-200",
-                card.tone === 0 && "text-zinc-50",
-              )}
-            >
-              {card.value}
-            </p>
-          </div>
-        ))}
-      </section>
-
       <section className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
         <DashboardCard
           eyebrow="Calendar"
           title="Monthly P&amp;L"
-          description="Day colors, weekly totals, links to saved days."
+          description="Tap a day to focus entries below."
           className="xl:col-span-1"
         >
           {!ready ? (
@@ -264,7 +157,7 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
             <EmptyState
               icon={CalendarDays}
               title="No trading days yet"
-              description="Log a day in the journal—the calendar fills in automatically."
+              description="Log a day below—the calendar fills in automatically."
               className="border-none bg-transparent py-6 ring-0"
             />
           ) : (
@@ -275,81 +168,89 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
         <DashboardCard
           eyebrow="Quick add"
           title="Log a day"
-          description="Same fields as the journal. Optional chart link must be a valid TradingView URL if provided."
+          description={
+            canWriteJournal
+              ? "Optional chart link must be a valid TradingView URL if provided."
+              : "Upgrade to Blueveno Premium to add new trading days."
+          }
         >
           <form id="add" onSubmit={onQuickAdd} className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="ov-date" className={labelCls}>
+                <Label htmlFor="jw-date" className={labelCls}>
                   Date
                 </Label>
                 <Input
-                  id="ov-date"
+                  id="jw-date"
                   type="date"
                   value={entryDate}
                   onChange={(e) => setEntryDate(e.target.value)}
                   required
-                  className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px]"
+                  disabled={!canWriteJournal}
+                  className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] disabled:opacity-50"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ov-symbol" className={labelCls}>
+                <Label htmlFor="jw-symbol" className={labelCls}>
                   Symbol
                 </Label>
                 <Input
-                  id="ov-symbol"
+                  id="jw-symbol"
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value)}
                   placeholder="NQ"
                   required
-                  className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px]"
+                  disabled={!canWriteJournal}
+                  className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] disabled:opacity-50"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ov-pnl" className={labelCls}>
+              <Label htmlFor="jw-pnl" className={labelCls}>
                 Day P&amp;L
               </Label>
               <Input
-                id="ov-pnl"
+                id="jw-pnl"
                 value={pnl}
                 onChange={(e) => setPnl(e.target.value)}
                 placeholder="+240"
                 required
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 font-mono text-[15px]"
+                disabled={!canWriteJournal}
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 font-mono text-[15px] disabled:opacity-50"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ov-note" className={labelCls}>
+              <Label htmlFor="jw-note" className={labelCls}>
                 Note
               </Label>
               <textarea
-                id="ov-note"
+                id="jw-note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
                 placeholder="Short review of the day"
-                className="w-full rounded-xl border border-white/10 bg-bv-surface-inset/80 px-3 py-2 text-[15px] text-zinc-100 placeholder:text-zinc-600"
+                disabled={!canWriteJournal}
+                className="w-full rounded-xl border border-white/10 bg-bv-surface-inset/80 px-3 py-2 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-50"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ov-tv" className={labelCls}>
-                Chart link{" "}
-                <span className="font-normal text-zinc-600">(optional)</span>
+              <Label htmlFor="jw-tv" className={labelCls}>
+                Chart link <span className="font-normal text-zinc-600">(optional)</span>
               </Label>
               <Input
-                id="ov-tv"
+                id="jw-tv"
                 type="url"
                 value={tradingViewUrl}
                 onChange={(e) => setTradingViewUrl(e.target.value)}
                 placeholder="https://www.tradingview.com/chart/..."
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px]"
+                disabled={!canWriteJournal}
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] disabled:opacity-50"
               />
             </div>
             <Button
               type="submit"
-              disabled={saving}
-              className="h-10 rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)]"
+              disabled={saving || !canWriteJournal}
+              className="h-10 rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)] disabled:opacity-40"
             >
               <Plus className="mr-1.5 size-4" />
               {saving ? "Saving…" : "Save day"}
@@ -363,20 +264,20 @@ export function UserDashboard({ userId, email, initialWorkspace, highlightDate }
       <DashboardCard
         eyebrow="Journal"
         title="Latest entries"
-        description="Shows entries saved in the last 24 hours (newest first). Open detail or your chart."
+        description="Entries from the last 24 hours (newest first), plus any day opened from the calendar."
       >
         {sortedRows.length === 0 ? (
           <EmptyState
             icon={NotebookPen}
             title="No journal days yet"
-            description="Use Quick add above to create your first day."
+            description={canWriteJournal ? "Use Quick add above to create your first day." : "Upgrade to add new days — your history stays readable."}
             className="border-none bg-transparent py-6 ring-0"
           />
         ) : rowsForLatestEntries.length === 0 ? (
           <EmptyState
             icon={NotebookPen}
             title="Nothing in the last 24 hours"
-            description="Older days stay in the calendar above. Add a new day or open a date from the calendar."
+            description="Older days are still in the calendar. Pick a date or scroll the list from Stats."
             className="border-none bg-transparent py-6 ring-0"
           />
         ) : (

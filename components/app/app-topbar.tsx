@@ -29,30 +29,32 @@ import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
 
 type AppTopbarProps = {
   user: { name?: string | null; email?: string | null };
+  canWriteJournal?: boolean;
+  isAdmin?: boolean;
 };
 
-export function AppTopbar({ user }: AppTopbarProps) {
+function sectionLabel(pathname: string): string {
+  if (pathname.startsWith("/app/admin")) return "Admin";
+  if (pathname.startsWith("/app/stats")) return "Stats";
+  if (pathname.startsWith("/app/calendar")) return "Calendar";
+  if (pathname.startsWith("/app/journal")) return "Journal";
+  if (pathname.startsWith("/app/settings/billing")) return "Billing";
+  if (pathname.startsWith("/app/settings")) return "Settings";
+  if (pathname.startsWith("/app/analytics")) return "Analytics";
+  if (pathname.startsWith("/app/reviews")) return "Reviews";
+  if (pathname.startsWith("/app/playbooks")) return "Playbooks";
+  if (pathname === "/app" || pathname === "/app/") return "Overview";
+  return "Workspace";
+}
+
+export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: AppTopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const displayName = user.name?.trim() || user.email?.trim() || "Account";
   const fallbackInitial = displayName.charAt(0).toUpperCase() || "A";
-  const sectionLabel = pathname.startsWith("/app/calendar")
-    ? "Calendar"
-    : pathname.startsWith("/app/journal/")
-      ? "Journal"
-      : pathname.startsWith("/app/settings/billing")
-        ? "Billing"
-        : pathname.startsWith("/app/settings")
-          ? "Settings"
-          : pathname.startsWith("/app/analytics")
-            ? "Analytics"
-            : pathname.startsWith("/app/reviews")
-              ? "Reviews"
-              : pathname.startsWith("/app/playbooks")
-                ? "Playbooks"
-                : "Journal";
+  const label = sectionLabel(pathname);
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -92,7 +94,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Workspace</p>
           </SheetHeader>
           <div className="flex flex-col gap-1 p-3">
-            <AppSidebarNav onNavigate={() => setMobileNavOpen(false)} />
+            <AppSidebarNav isAdmin={isAdmin} onNavigate={() => setMobileNavOpen(false)} />
             <AppSidebarFooter onNavigate={() => setMobileNavOpen(false)} />
           </div>
         </SheetContent>
@@ -101,7 +103,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
       <div className="min-w-0 flex-1">
         <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
         <p className="font-display truncate text-[1.125rem] font-medium tracking-tight text-zinc-50 sm:mt-0.5 sm:text-lg">
-          {sectionLabel}
+          {label}
         </p>
       </div>
 
@@ -128,11 +130,13 @@ export function AppTopbar({ user }: AppTopbarProps) {
           Calendar
         </Link>
         <Link
-          href="/app#add"
+          href="/app/journal#add"
           className={cn(
             buttonVariants({ variant: "outline", size: "sm" }),
             "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-2.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] sm:px-3.5",
+            !canWriteJournal && "pointer-events-none opacity-40",
           )}
+          aria-disabled={!canWriteJournal}
         >
           <NotebookPen className="size-4 opacity-90 sm:mr-1.5" />
           <span className="hidden sm:inline">New entry</span>

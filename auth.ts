@@ -1,6 +1,7 @@
 import type { AuthSession } from "@/types/auth-session";
 import type { PlanTier } from "@/lib/billing/types";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminFullAccessEmail } from "@/lib/billing/workspace-access";
 
 function planFromEnv(): PlanTier | undefined {
   const o = process.env.BILLING_PLAN_TIER_OVERRIDE;
@@ -10,9 +11,9 @@ function planFromEnv(): PlanTier | undefined {
   return undefined;
 }
 
-/** Mirrors `BILLING_TEST_FULL_ACCESS` in entitlements — session shows Elite during open test. */
-function testPeriodTier(): PlanTier | undefined {
-  return process.env.BILLING_TEST_FULL_ACCESS !== "false" ? "elite" : undefined;
+/** Staging only: set `BILLING_TEST_FULL_ACCESS=true` to grant Elite to all signed-in users. */
+function openTestTier(): PlanTier | undefined {
+  return process.env.BILLING_TEST_FULL_ACCESS === "true" ? "elite" : undefined;
 }
 
 /**
@@ -31,7 +32,30 @@ export async function auth(): Promise<AuthSession | null> {
 
   const meta = user.user_metadata as { full_name?: string; name?: string } | undefined;
   const name = meta?.name ?? meta?.full_name ?? user.email?.split("@")[0] ?? null;
-  const pt = planFromEnv() ?? testPeriodTier();
+
+  let pt: PlanTier | undefined =
+    planFromEnv() ?? openTestTier() ?? (isAdminFullAccessEmail(user.email) ? ("pro" as const) : undefined);
+
+  if (!pt) {
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("trial_ends_at, manual_premium, premium_active, is_admin")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (profile) {
+      const row = profile as {
+        trial_ends_at: string;
+        manual_premium: boolean;
+        premium_active: boolean;
+        is_admin: boolean;
+      };
+      const premium = row.manual_premium || row.premium_active;
+      const trialOk = new Date(row.trial_ends_at).getTime() > Date.now();
+      if (row.is_admin || premium || trialOk) {
+        pt = "pro";
+      }
+    }
+  }
 
   return {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),

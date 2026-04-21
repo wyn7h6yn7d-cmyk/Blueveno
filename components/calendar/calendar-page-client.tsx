@@ -25,37 +25,45 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Calendar"
-        title="Daily & weekly P&amp;L"
-        description="Month grid with day tones and per-week totals. Tap a day to open its journal record."
+        title="Month at a glance"
+        description="Your signature view—daily P&amp;L, week totals on the rail, tap a day to jump to that journal."
         actions={
-          <Link href="/app#add" className={outlineAction}>
-            New entry
+          <Link href="/app/journal#add" className={outlineAction}>
+            Log a day
           </Link>
         }
       />
 
       {!ready ? (
-        <DashboardCard eyebrow="Calendar" title="Loading" description="Fetching your journal…">
-          <div className="h-32 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
+        <DashboardCard eyebrow="Calendar" title="Loading" description="Syncing your journal…">
+          <div className="h-40 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
         </DashboardCard>
       ) : data.journal.length === 0 ? (
-        <DashboardCard eyebrow="Calendar" title="No days yet" description="Once you log days, this view comes alive.">
+        <DashboardCard eyebrow="Calendar" title="No days yet" description="Once you log days, this grid fills with color.">
           <EmptyState
             icon={CalendarDays}
-            title="Your month view is empty"
-            description="Add a trading day in the journal—colors and weekly totals derive from your entries only."
+            title="Start with one day"
+            description="Add a trading day from the journal—weekly totals build from your entries."
             action={
-              <Link href="/app#add" className={outlineAction}>
-                New entry
+              <Link href="/app/journal#add" className={outlineAction}>
+                Log a day
               </Link>
             }
           />
         </DashboardCard>
       ) : (
-        <PnlCalendar entries={data.journal} />
+        <div className="relative">
+          <div
+            className="pointer-events-none absolute -inset-x-4 -top-6 bottom-0 hidden bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,oklch(0.42_0.12_252/0.14),transparent_65%)] md:block"
+            aria-hidden
+          />
+          <div className="relative">
+            <PnlCalendar entries={data.journal} />
+          </div>
+        </div>
       )}
     </div>
   );

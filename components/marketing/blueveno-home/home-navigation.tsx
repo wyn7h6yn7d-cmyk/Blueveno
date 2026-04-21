@@ -2,10 +2,11 @@ import Link from "next/link";
 import { PremiumPrimaryLink } from "./premium-button";
 
 const links = [
+  { href: "#hero", label: "Surface" },
   { href: "#strip", label: "Essence" },
   { href: "#calendar", label: "Calendar" },
-  { href: "#day", label: "Journal" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "#day", label: "Record" },
+  { href: "#pricing", label: "Pricing" },
 ] as const;
 
 export function HomeNavigation() {
@@ -18,7 +19,7 @@ export function HomeNavigation() {
         >
           Blueveno
         </Link>
-        <nav className="hidden items-center gap-9 md:flex" aria-label="Page">
+        <nav className="hidden items-center gap-7 lg:flex" aria-label="Page">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -42,14 +43,14 @@ export function HomeNavigation() {
         </div>
       </div>
       <nav
-        className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-white/[0.04] px-4 py-2.5 md:hidden"
+        className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-white/[0.04] px-3 py-2.5 lg:hidden"
         aria-label="Page sections"
       >
         {links.map((l) => (
           <Link
             key={l.href}
             href={l.href}
-            className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500 transition hover:text-zinc-300"
+            className="font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-500 transition hover:text-zinc-300"
           >
             {l.label}
           </Link>
