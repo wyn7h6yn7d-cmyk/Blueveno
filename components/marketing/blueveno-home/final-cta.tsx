@@ -2,7 +2,7 @@ import { PremiumPrimaryLink } from "./premium-button";
 
 export function FinalCta() {
   return (
-    <section className="border-t border-white/[0.08] py-32 sm:py-40" aria-labelledby="cta-heading">
+    <section id="cta" className="scroll-mt-28 border-t border-white/[0.08] py-32 sm:py-40 sm:scroll-mt-32" aria-labelledby="cta-heading">
       <div className="mx-auto max-w-7xl px-5 text-center sm:px-8">
         <h2
           id="cta-heading"

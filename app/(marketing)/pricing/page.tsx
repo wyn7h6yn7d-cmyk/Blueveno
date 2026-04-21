@@ -65,15 +65,15 @@ export default function PricingPage() {
             <div className="relative mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="/signup"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[oklch(0.64_0.125_252)] px-6 text-sm font-semibold text-[oklch(0.09_0.04_268)] shadow-bv-primary transition hover:bg-[oklch(0.7_0.11_252)]"
+                className="inline-flex h-11 min-h-[44px] items-center justify-center rounded-full bg-[oklch(0.64_0.125_252)] px-6 text-sm font-semibold text-[oklch(0.09_0.04_268)] shadow-bv-primary transition hover:bg-[oklch(0.7_0.11_252)]"
               >
-                Start for €5.99/month
+                Create account
               </Link>
               <Link
-                href="/signup"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] px-6 text-sm font-medium text-zinc-200 transition hover:border-white/[0.18] hover:bg-white/[0.06]"
+                href="/login"
+                className="inline-flex h-11 min-h-[44px] items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] px-6 text-sm font-medium text-zinc-200 transition hover:border-white/[0.18] hover:bg-white/[0.06]"
               >
-                Get Blueveno
+                Sign in
               </Link>
             </div>
             <p className="relative mt-6 text-center font-mono text-[11px] text-zinc-500">

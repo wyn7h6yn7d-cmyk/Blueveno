@@ -36,12 +36,12 @@ export function AppShell({ children, user }: AppShellProps) {
         <AppTopbar user={user} />
         <div className="relative flex-1">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_-8%,oklch(0.38_0.1_252/0.1),transparent_58%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.08]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.06]" aria-hidden />
           <div className="pointer-events-none absolute inset-0 bg-app-shell-key" aria-hidden />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[48%] bg-app-shell-floor" aria-hidden />
-          <div className="pointer-events-none absolute inset-0 bg-scanlines opacity-[0.06]" aria-hidden />
-          <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.04]" aria-hidden />
-          <div className="relative mx-auto min-h-full max-w-[1600px] px-4 py-6 md:px-6 md:py-8 lg:px-8">
+          <div className="pointer-events-none absolute inset-0 bg-scanlines opacity-[0.045]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.035]" aria-hidden />
+          <div className="relative mx-auto min-h-full max-w-[1600px] px-4 py-7 md:px-7 md:py-9 lg:px-10">
             {children}
           </div>
         </div>

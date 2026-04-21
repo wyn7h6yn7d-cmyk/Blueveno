@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 
 export function SignupForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -51,6 +53,12 @@ export function SignupForm() {
     if (data.user && !data.session) {
       setIsError(false);
       setMessage("Check your email to confirm your account, then sign in.");
+      return;
+    }
+
+    if (data.session) {
+      router.replace("/app");
+      router.refresh();
       return;
     }
 

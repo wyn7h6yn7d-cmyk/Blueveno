@@ -1,46 +1,54 @@
 "use client";
 
 /**
- * Cold void + slow parallax + meridian — elegant, not flashy.
+ * Blueveno marketing atmosphere: coordinate-grid drift, parallax plates,
+ * hairline motion, soft scan — structural motion, not glow blobs.
  */
 export function AmbientField() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
-      <div className="absolute inset-0 bg-[oklch(0.032_0.044_272)]" />
+    <div
+      className="pointer-events-none fixed inset-0 isolate -z-10 overflow-hidden [contain:strict]"
+      aria-hidden
+    >
+      {/* Midnight foundation */}
+      <div className="absolute inset-0 bg-[linear-gradient(168deg,oklch(0.048_0.04_268)_0%,oklch(0.032_0.044_272)_42%,oklch(0.026_0.048_276)_100%)]" />
 
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_52%_at_50%_-12%,oklch(0.38_0.12_252/0.2),transparent_58%)]" />
-      <div className="bv-home-field-animated absolute inset-0 bg-[radial-gradient(ellipse_54%_40%_at_90%_16%,oklch(0.32_0.1_258/0.14),transparent_58%)]" />
-      <div
-        className="bv-home-field-animated absolute inset-0 bg-[radial-gradient(ellipse_50%_42%_at_8%_40%,oklch(0.2_0.07_262/0.1),transparent_55%)] opacity-90"
-        style={{ animationDelay: "-28s" }}
-      />
+      {/* Parallax depth — slow transform only, fixed luminance (no “breathing” fog) */}
+      <div className="bv-home-atmo-parallax-a absolute inset-[-12%] bg-[radial-gradient(ellipse_72%_56%_at_18%_14%,oklch(0.14_0.065_258/0.22),transparent_58%)]" />
+      <div className="bv-home-atmo-parallax-b absolute inset-[-8%] bg-[radial-gradient(ellipse_68%_48%_at_88%_72%,oklch(0.11_0.055_262/0.16),transparent_62%)]" />
 
-      <div
-        className="bv-home-meridian-pulse absolute inset-y-[10%] left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[oklch(0.52_0.14_252/0.2)] to-transparent"
-        style={{ animationDelay: "-8s" }}
-      />
+      {/* Primary coordinate field */}
+      <div className="bv-home-atmo-grid absolute inset-0 opacity-[0.55]" />
+      {/* Finer phase-offset grid — subtle moiré / depth */}
+      <div className="bv-home-atmo-grid-fine absolute inset-0 opacity-[0.38]" />
 
-      <div
-        className="bv-home-rake absolute inset-0 opacity-[0.038] motion-reduce:opacity-0"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(102deg, transparent 0, transparent 108px, oklch(0.68 0.09 252 / 0.12) 108.5px, transparent 109px, transparent 240px)",
-          maskImage: "linear-gradient(90deg, transparent, black 14%, black 86%, transparent)",
-        }}
-      />
+      {/* Hairline drift: horizontal emphasis */}
+      <div className="bv-home-atmo-h-lines absolute inset-0 opacity-[0.065]" />
+      {/* Hairline drift: vertical emphasis */}
+      <div className="bv-home-atmo-v-lines absolute inset-0 opacity-[0.058]" />
 
-      <div className="bg-market-grid-drift absolute inset-0 opacity-[0.11]" />
-      <div className="bg-market-wave absolute inset-0 opacity-[0.055]" />
-      <div className="bg-market-wave-reverse absolute inset-0 opacity-[0.04]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_48%_at_50%_108%,oklch(0.22_0.1_258/0.28),transparent_68%)]" />
+      {/* Slow market-pulse texture (diagonal micro-bands) */}
+      <div className="bv-home-atmo-pulse absolute inset-0 opacity-[0.045]" />
 
-      <div className="bg-scanlines absolute inset-0 opacity-[0.09]" />
-      <div className="bg-noise absolute inset-0 opacity-[0.2]" />
+      {/* Soft scanning luminance — single cold band */}
+      <div className="absolute inset-0 overflow-hidden mask-[linear-gradient(90deg,transparent,black_12%,black_88%,transparent)]">
+        <div className="bv-home-atmo-scan absolute -left-[35%] top-[-5%] h-[110%] w-[38%]" />
+      </div>
 
+      {/* Static meridian hairline — structure, not pulse */}
+      <div className="absolute inset-y-[8%] left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[oklch(0.52_0.12_252/0.07)] to-transparent" />
+
+      {/* Floor anchor — static */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_96%_52%_at_50%_108%,oklch(0.2_0.09_258/0.2),transparent_68%)]" />
+
+      {/* Film grain — very light */}
+      <div className="bg-noise absolute inset-0 opacity-[0.11] motion-reduce:opacity-0" />
+
+      {/* Edge falloff */}
       <div
         className="absolute inset-0"
         style={{
-          boxShadow: "inset 0 0 140px 48px oklch(0.02 0.045 270 / 0.72)",
+          boxShadow: "inset 0 0 120px 56px oklch(0.02 0.045 270 / 0.78)",
         }}
       />
     </div>

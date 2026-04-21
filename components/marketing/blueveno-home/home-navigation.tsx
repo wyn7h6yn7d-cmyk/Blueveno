@@ -2,9 +2,9 @@ import Link from "next/link";
 import { PremiumPrimaryLink } from "./premium-button";
 
 const links = [
-  { href: "#core", label: "Core" },
-  { href: "#calendar", label: "Month" },
-  { href: "#day", label: "Day" },
+  { href: "#core", label: "Essentials" },
+  { href: "#calendar", label: "Calendar" },
+  { href: "#day", label: "Journal" },
   { href: "/pricing", label: "Pricing" },
 ] as const;
 
@@ -30,7 +30,10 @@ export function HomeNavigation() {
           ))}
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link href="/login" className="hidden text-[12.5px] font-medium tracking-[-0.01em] text-zinc-500 transition hover:text-zinc-200 sm:inline">
+          <Link
+            href="/login"
+            className="inline-flex min-h-[44px] items-center px-1 text-[12.5px] font-medium tracking-[-0.01em] text-zinc-500 transition hover:text-zinc-200"
+          >
             Sign in
           </Link>
           <PremiumPrimaryLink href="/signup" compact>

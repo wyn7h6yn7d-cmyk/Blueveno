@@ -4,7 +4,7 @@ import { getSubscriptionSnapshot } from "@/lib/billing/resolve";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default async function BillingSettingsPage() {
@@ -48,25 +48,21 @@ export default async function BillingSettingsPage() {
               <p className="mt-2 text-xs text-amber-200/90">Cancels at period end</p>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              disabled={!stripeReady}
-              className="h-10 rounded-xl bg-[oklch(0.72_0.14_250)] px-5 text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)] disabled:opacity-50"
-            >
-              Manage billing
-            </Button>
-            <Link
-              href="/pricing"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-10 rounded-xl border-white/[0.1] bg-transparent px-5",
-              )}
-            >
-              Compare plans
-            </Link>
-          </div>
+          <Link
+            href="/pricing"
+            className={cn(
+              buttonVariants({ variant: "default" }),
+              "h-10 rounded-xl bg-[oklch(0.72_0.14_250)] px-5 text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)]",
+            )}
+          >
+            View pricing
+          </Link>
         </div>
+        <p className="mt-4 max-w-prose text-xs leading-relaxed text-zinc-500">
+          Stripe Customer Portal (manage card, invoices) is not wired in this build yet
+          {stripeReady ? "" : " — set Stripe keys first"}; see <span className="font-mono text-zinc-400">docs/BILLING.md</span>{" "}
+          to connect Checkout and portal routes.
+        </p>
       </DashboardCard>
 
       <DashboardCard

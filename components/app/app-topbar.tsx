@@ -37,27 +37,42 @@ export function AppTopbar({ user }: AppTopbarProps) {
   const [signingOut, setSigningOut] = useState(false);
   const displayName = user.name?.trim() || user.email?.trim() || "Account";
   const fallbackInitial = displayName.charAt(0).toUpperCase() || "A";
-  const sectionLabel =
-    pathname.startsWith("/app/calendar")
-      ? "Calendar"
-      : pathname.startsWith("/app/journal")
-        ? "Journal"
+  const sectionLabel = pathname.startsWith("/app/calendar")
+    ? "Calendar"
+    : pathname.startsWith("/app/journal")
+      ? "Journal"
+      : pathname.startsWith("/app/settings/billing")
+        ? "Billing"
         : pathname.startsWith("/app/settings")
           ? "Settings"
-          : "Overview";
+          : pathname.startsWith("/app/analytics")
+            ? "Analytics"
+            : pathname.startsWith("/app/reviews")
+              ? "Reviews"
+              : pathname.startsWith("/app/playbooks")
+                ? "Playbooks"
+                : "Overview";
 
   const handleSignOut = async () => {
     if (signingOut) return;
     setSigningOut(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error(error);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSigningOut(false);
+    }
     router.replace("/login");
     router.refresh();
-    setSigningOut(false);
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.12_0.03_262/0.95),oklch(0.1_0.03_264/0.9))] px-3 backdrop-blur-xl md:h-[3.75rem] md:gap-4 md:px-5">
+    <header className="sticky top-0 z-40 flex h-[3.25rem] shrink-0 items-center gap-3 border-b border-white/[0.07] bg-[linear-gradient(180deg,oklch(0.125_0.028_262/0.97),oklch(0.102_0.028_264/0.94))] px-3 shadow-[0_1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-xl md:h-16 md:gap-4 md:px-5">
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger
           className={cn(
@@ -68,14 +83,14 @@ export function AppTopbar({ user }: AppTopbarProps) {
         >
           <Menu className="size-5" strokeWidth={1.5} />
         </SheetTrigger>
-        <SheetContent side="left" className="w-[min(100%,18rem)] border-border/85 bg-bv-base p-0">
-          <SheetHeader className="border-b border-border/80 px-4 py-4 text-left">
+        <SheetContent side="left" className="w-[min(100%,18rem)] border-white/[0.08] bg-bv-base p-0">
+          <SheetHeader className="border-b border-white/[0.06] px-5 py-5 text-left">
             <SheetTitle className="font-display text-lg font-medium tracking-tight text-zinc-50">
               Blueveno
             </SheetTitle>
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Workspace</p>
           </SheetHeader>
-          <div className="flex flex-col p-3">
+          <div className="flex flex-col gap-1 p-3">
             <AppSidebarNav onNavigate={() => setMobileNavOpen(false)} />
             <AppSidebarFooter onNavigate={() => setMobileNavOpen(false)} />
           </div>
@@ -83,36 +98,38 @@ export function AppTopbar({ user }: AppTopbarProps) {
       </Sheet>
 
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Blueveno app</p>
-        <p className="font-display mt-1 truncate text-lg tracking-tight text-zinc-50">{sectionLabel}</p>
+        <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
+        <p className="font-display truncate text-[1.125rem] font-medium tracking-tight text-zinc-50 sm:mt-0.5 sm:text-lg">
+          {sectionLabel}
+        </p>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
         <Link
           href="/app/calendar"
           className={cn(
             buttonVariants({ variant: "outline", size: "sm" }),
-            "hidden h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-3 text-zinc-200 hover:bg-white/[0.07] md:inline-flex",
+            "hidden min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-3.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] md:inline-flex",
           )}
         >
-          <CalendarDays className="mr-1.5 size-4" />
+          <CalendarDays className="mr-1.5 size-4 opacity-90" />
           Calendar
         </Link>
         <Link
           href="/app/journal#add"
           className={cn(
             buttonVariants({ variant: "outline", size: "sm" }),
-            "h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-3 text-zinc-200 hover:bg-white/[0.07]",
+            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-3.5 text-[13px] text-zinc-200 hover:bg-white/[0.07]",
           )}
         >
-          <NotebookPen className="mr-1.5 size-4" />
-          Add day
+          <NotebookPen className="mr-1.5 size-4 opacity-90" />
+          New entry
         </Link>
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "h-10 w-10 rounded-full border border-white/[0.1] bg-white/[0.03] p-0 hover:bg-white/[0.08]",
+              "h-10 w-10 rounded-full border border-white/[0.1] bg-white/[0.04] p-0 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] hover:bg-white/[0.09] focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
             )}
             aria-label="Open account menu"
           >
@@ -125,19 +142,22 @@ export function AppTopbar({ user }: AppTopbarProps) {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="min-w-[220px] rounded-xl border border-white/[0.1] bg-[oklch(0.12_0.03_262)] p-1.5 text-zinc-100 shadow-bv-float"
+            className="min-w-[13.75rem] rounded-xl border border-white/[0.09] bg-[oklch(0.125_0.028_262)] p-1.5 text-zinc-100 shadow-bv-float ring-1 ring-white/[0.04]"
           >
-            <DropdownMenuLabel className="px-2 py-1.5">
-              <p className="truncate text-sm text-zinc-100">{displayName}</p>
+            <DropdownMenuLabel className="px-2.5 py-2">
+              <p className="truncate text-[13px] font-medium text-zinc-100">{displayName}</p>
               {user.email ? <p className="truncate text-xs text-zinc-500">{user.email}</p> : null}
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-white/[0.08]" />
-            <DropdownMenuItem className="rounded-lg px-2 py-2 text-sm text-zinc-200" onClick={() => router.push("/app/settings")}>
+            <DropdownMenuSeparator className="bg-white/[0.06]" />
+            <DropdownMenuItem
+              className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
+              onClick={() => router.push("/app/settings")}
+            >
               <Settings className="size-4 text-zinc-400" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="rounded-lg px-2 py-2 text-sm text-rose-200 focus:bg-rose-500/15 focus:text-rose-100"
+              className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-rose-200/95 outline-none focus-visible:bg-rose-500/12 focus-visible:text-rose-50"
               onClick={handleSignOut}
             >
               <LogOut className="size-4 text-rose-300" />

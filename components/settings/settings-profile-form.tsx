@@ -148,7 +148,7 @@ export function SettingsProfileForm() {
       <PageHeader
         eyebrow="Settings"
         title="Workspace"
-        description="Profile and preferences — display name is stored with your Supabase account."
+        description="Profile and security for this Supabase-backed account."
         actions={
           <Button
             type="submit"
@@ -327,25 +327,18 @@ export function SettingsProfileForm() {
         {accountMessage ? <p className="mt-5 text-sm text-zinc-400">{accountMessage}</p> : null}
       </DashboardCard>
 
-      <DashboardCard eyebrow="Notifications" title="Alerts" description="In-app first — email digests when messaging is wired.">
-        <ul className="space-y-3">
-          {[
-            { label: "Rule breach near limit", state: "On" },
-            { label: "Daily recap ready", state: "Off" },
-            { label: "Desk mention", state: "Off" },
-          ].map((row) => (
-            <li
-              key={row.label}
-              className="flex items-center justify-between gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3"
-            >
-              <div className="flex items-center gap-3">
-                <Bell className="size-4 text-zinc-500" strokeWidth={1.75} />
-                <span className="text-[15px] text-zinc-300">{row.label}</span>
-              </div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">{row.state}</span>
-            </li>
-          ))}
-        </ul>
+      <DashboardCard
+        eyebrow="Notifications"
+        title="Alerts"
+        description="Delivery channels are not configured in this build—no silent toggles."
+      >
+        <div className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">
+          <Bell className="mt-0.5 size-4 shrink-0 text-zinc-500" strokeWidth={1.75} />
+          <p className="text-[14px] leading-relaxed text-zinc-400">
+            Email and in-app alerts will appear here once notification preferences and delivery are connected. Nothing is
+            subscribed automatically in the MVP.
+          </p>
+        </div>
       </DashboardCard>
 
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">

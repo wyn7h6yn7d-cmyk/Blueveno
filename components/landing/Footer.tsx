@@ -5,27 +5,25 @@ const cols = [
   {
     title: "Product",
     links: [
-      { label: "Outcomes", href: "#outcomes" },
-      { label: "Platform", href: "#platform" },
-      { label: "Journaling", href: "#showcase-journal" },
-      { label: "Workflow", href: "#workflow" },
-      { label: "Early access", href: "#cta" },
+      { label: "Essentials", href: "/#core" },
+      { label: "Calendar", href: "/#calendar" },
+      { label: "Journal", href: "/#day" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Early access", href: "/#cta" },
     ],
   },
   {
     title: "Company",
     links: [
       { label: "Pricing", href: "/pricing" },
-      { label: "Traders", href: "#traders" },
-      { label: "FAQ", href: "#faq" },
       { label: "Contact", href: "mailto:hello@blueveno.com" },
     ],
   },
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
     ],
   },
 ];
@@ -46,16 +44,11 @@ export function Footer() {
           <div className="grid flex-1 grid-cols-2 gap-12 sm:grid-cols-3 lg:max-w-2xl lg:gap-16">
             {cols.map((c) => (
               <div key={c.title}>
-                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-600">
-                  {c.title}
-                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-600">{c.title}</p>
                 <ul className="mt-5 space-y-3">
                   {c.links.map((l) => (
                     <li key={l.label}>
-                      <a
-                        href={l.href}
-                        className="text-sm text-zinc-400 transition hover:text-zinc-100"
-                      >
+                      <a href={l.href} className="text-sm text-zinc-400 transition hover:text-zinc-100">
                         {l.label}
                       </a>
                     </li>
@@ -66,9 +59,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-16 flex flex-col gap-4 border-t border-white/[0.06] pt-10 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-mono text-[10px] text-zinc-600">
-            © {new Date().getFullYear()} Blueveno. All rights reserved.
-          </p>
+          <p className="font-mono text-[10px] text-zinc-600">© {new Date().getFullYear()} Blueveno. All rights reserved.</p>
           <p className="font-mono text-[10px] text-zinc-600">
             Markets involve risk. Blueveno is a performance tool—not investment advice.
           </p>

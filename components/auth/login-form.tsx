@@ -13,13 +13,22 @@ import { cn } from "@/lib/utils";
 
 type LoginFormProps = {
   callbackUrl: string;
+  /** From `/login?error=` (auth callback or config failures) */
+  initialError?: string | null;
 };
 
-export function LoginForm({ callbackUrl }: LoginFormProps) {
+function messageForAuthError(code: string | null | undefined): string | null {
+  if (!code) return null;
+  if (code === "config") return "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.";
+  if (code === "auth") return "That sign-in link is invalid or expired. Try signing in again.";
+  return null;
+}
+
+export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => messageForAuthError(initialError));
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {

@@ -72,26 +72,34 @@ export function JournalPageClient({ userId }: Props) {
     setTags("");
   };
 
+  const lb = "text-[13px] font-medium text-zinc-400";
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         eyebrow="Journal"
         title="Daily journal"
-        description="Log date, market, day P&L, notes, and chart link. Nothing extra."
+        description="One row per day: market, P&amp;L, notes, and an optional TradingView link."
       />
 
       <DashboardCard
-        eyebrow="New trading day"
-        title="Add day entry"
-        description="Simple MVP workflow."
+        eyebrow="New entry"
+        title="Add a trading day"
+        description="Chart link is optional; if set, it must be a tradingview.com URL."
         variant="inset"
       >
         {!ready ? (
-          <p className="text-sm text-zinc-500">Loading…</p>
+          <div className="space-y-3">
+            <div className="h-10 animate-pulse rounded-xl bg-white/[0.04]" />
+            <div className="h-10 max-w-md animate-pulse rounded-xl bg-white/[0.04]" />
+            <div className="h-24 animate-pulse rounded-xl bg-white/[0.03]" />
+          </div>
         ) : (
-          <form id="add" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <form id="add" onSubmit={onSubmit} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="jr-date">Date</Label>
+              <Label htmlFor="jr-date" className={lb}>
+                Date
+              </Label>
               <Input
                 id="jr-date"
                 type="date"
@@ -103,7 +111,9 @@ export function JournalPageClient({ userId }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="jr-symbol">Symbol / Market</Label>
+              <Label htmlFor="jr-symbol" className={lb}>
+                Symbol
+              </Label>
               <Input
                 id="jr-symbol"
                 value={symbol}
@@ -115,7 +125,9 @@ export function JournalPageClient({ userId }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="jr-pnl">Day P&L</Label>
+              <Label htmlFor="jr-pnl" className={lb}>
+                Day P&amp;L
+              </Label>
               <Input
                 id="jr-pnl"
                 value={pnl}
@@ -127,7 +139,9 @@ export function JournalPageClient({ userId }: Props) {
             </div>
 
             <div className="space-y-2 sm:col-span-2 lg:col-span-3">
-              <Label htmlFor="jr-notes">Short notes</Label>
+              <Label htmlFor="jr-notes" className={lb}>
+                Notes
+              </Label>
               <textarea
                 id="jr-notes"
                 value={notes}
@@ -139,7 +153,9 @@ export function JournalPageClient({ userId }: Props) {
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="jr-tv">TradingView chart link</Label>
+              <Label htmlFor="jr-tv" className={lb}>
+                Chart link <span className="font-normal text-zinc-600">(optional)</span>
+              </Label>
               <Input
                 id="jr-tv"
                 type="url"
@@ -151,7 +167,9 @@ export function JournalPageClient({ userId }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="jr-tags">Tags (optional)</Label>
+              <Label htmlFor="jr-tags" className={lb}>
+                Tags <span className="font-normal text-zinc-600">(optional)</span>
+              </Label>
               <Input
                 id="jr-tags"
                 value={tags}
@@ -165,14 +183,14 @@ export function JournalPageClient({ userId }: Props) {
               <Button
                 type="submit"
                 disabled={saving}
-                className="h-10 rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)]"
+                className="h-10 min-h-10 rounded-xl bg-[oklch(0.72_0.14_250)] px-6 text-[15px] text-[oklch(0.12_0.04_265)]"
               >
-                {saving ? "Saving…" : "Save day entry"}
+                {saving ? "Saving…" : "Save day"}
               </Button>
             </div>
 
-            {urlError ? <p className="sm:col-span-2 lg:col-span-3 text-sm text-rose-300">{urlError}</p> : null}
-            {saveError ? <p className="sm:col-span-2 lg:col-span-3 text-sm text-rose-300">{saveError}</p> : null}
+            {urlError ? <p className="sm:col-span-2 lg:col-span-3 text-[13px] text-rose-300/95">{urlError}</p> : null}
+            {saveError ? <p className="sm:col-span-2 lg:col-span-3 text-[13px] text-rose-300/95">{saveError}</p> : null}
             {saveError?.toLowerCase().includes("database is not initialized") ? (
               <p className="sm:col-span-2 lg:col-span-3 text-xs text-zinc-400">
                 Apply migration `supabase/migrations/20260421_create_journal_entries.sql` (and then reload the app).
@@ -183,25 +201,24 @@ export function JournalPageClient({ userId }: Props) {
       </DashboardCard>
 
       {sorted.length === 0 ? (
-        <DashboardCard eyebrow="Journal" title="No entries yet" description="Clean start for every new user.">
+        <DashboardCard eyebrow="Journal" title="No entries yet" description="Your list appears here after the first save.">
           <EmptyState
             icon={CalendarDays}
             title="No trading days yet"
-            description="Add your first journal day, paste a TradingView link, and start tracking your week."
+            description="Add a day above—your chart link and P&amp;L stay on the record."
             action={
-              <a href="#add" className="inline-flex h-9 items-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-sm text-zinc-200 hover:bg-white/[0.06]">
-                <NotebookPen className="mr-2 size-4" />
+              <a
+                href="#add"
+                className="inline-flex h-10 min-h-10 items-center rounded-xl border border-white/[0.11] bg-white/[0.035] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.06]"
+              >
+                <NotebookPen className="mr-2 size-4 opacity-90" />
                 Add first day
               </a>
             }
           />
         </DashboardCard>
       ) : (
-        <DashboardCard
-          eyebrow="Entries"
-          title="Recent trading days"
-          description="Minimal list for quick scanning and day detail access."
-        >
+        <DashboardCard eyebrow="Journal" title="Recent trading days" description="Newest first.">
           <JournalDayList rows={sorted} />
         </DashboardCard>
       )}

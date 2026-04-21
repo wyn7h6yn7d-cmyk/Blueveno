@@ -119,14 +119,14 @@ export function AuthSplitLayout({
                 <p className="mt-8 text-center text-[11px] leading-relaxed text-zinc-600">
                   By continuing you agree to our{" "}
                   <Link
-                    href="#"
+                    href="/terms"
                     className="text-zinc-500 underline-offset-2 transition hover:text-zinc-400 hover:underline"
                   >
                     Terms of Service
                   </Link>{" "}
                   and{" "}
                   <Link
-                    href="#"
+                    href="/privacy"
                     className="text-zinc-500 underline-offset-2 transition hover:text-zinc-400 hover:underline"
                   >
                     Privacy Policy

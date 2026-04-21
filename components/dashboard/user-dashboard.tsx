@@ -155,18 +155,20 @@ export function UserDashboard({ userId, email }: Props) {
     setTradingViewUrl("");
   };
 
+  const labelCls = "text-[13px] font-medium text-zinc-400";
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
       <PageHeader
-        eyebrow="Blueveno workspace"
+        eyebrow="Workspace"
         title="Overview"
-        description="Simple trading journal overview: daily P&L, calendar, notes, and quick add."
+        description="P&amp;L snapshot, calendar, and a fast path to log a day without leaving this screen."
         actions={
           <Link
             href="/app/journal"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "h-10 rounded-xl border-white/[0.14] bg-white/[0.04] px-4 text-zinc-100 hover:bg-white/[0.08]",
+              "h-10 min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-4 text-[13px] text-zinc-100 hover:bg-white/[0.07]",
             )}
           >
             Open journal
@@ -174,7 +176,7 @@ export function UserDashboard({ userId, email }: Props) {
         }
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Top summary row">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Top summary row">
         {[
           { label: "This week P&L", value: signedMoney(summary.weekPnl), tone: summary.weekPnl },
           { label: "This month P&L", value: signedMoney(summary.monthPnl), tone: summary.monthPnl },
@@ -183,12 +185,12 @@ export function UserDashboard({ userId, email }: Props) {
         ].map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-white/[0.1] bg-[linear-gradient(155deg,oklch(0.14_0.03_262/0.95),oklch(0.11_0.03_264/0.94))] p-5 shadow-bv-card"
+            className="rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.028_262/0.96),oklch(0.112_0.026_264/0.95))] p-6 shadow-bv-card ring-1 ring-white/[0.03]"
           >
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
             <p
               className={cn(
-                "font-display mt-2 text-3xl tabular-nums tracking-tight",
+                "font-display mt-3 text-[1.65rem] tabular-nums leading-none tracking-[-0.02em]",
                 card.tone > 0 && "text-emerald-200",
                 card.tone < 0 && "text-rose-200",
                 card.tone === 0 && "text-zinc-50",
@@ -202,30 +204,36 @@ export function UserDashboard({ userId, email }: Props) {
 
       <section className="grid gap-4 xl:grid-cols-[1.45fr_1fr]">
         <DashboardCard
-          eyebrow="Calendar snapshot"
-          title="Monthly P&L"
-          description="Daily result colors and weekly totals."
+          eyebrow="Calendar"
+          title="Monthly P&amp;L"
+          description="Day colors, weekly totals, links to saved days."
           className="xl:col-span-1"
         >
           {!ready ? (
-            <div className="h-32 animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02]" />
+            <div className="h-36 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
           ) : data.journal.length === 0 ? (
             <EmptyState
               icon={CalendarDays}
               title="No trading days yet"
-              description="Calendar view activates after your first Journal entry."
-              className="border-none bg-transparent py-8"
+              description="Log a day in the journal—the calendar fills in automatically."
+              className="border-none bg-transparent py-6 ring-0"
             />
           ) : (
             <PnlCalendar entries={data.journal} />
           )}
         </DashboardCard>
 
-        <DashboardCard eyebrow="Quick add" title="Add trading day" description="Save a day entry directly from Overview.">
-          <form onSubmit={onQuickAdd} className="grid gap-3">
-            <div className="grid gap-3 sm:grid-cols-2">
+        <DashboardCard
+          eyebrow="Quick add"
+          title="Log a day"
+          description="Same fields as the journal. Optional chart link must be a valid TradingView URL if provided."
+        >
+          <form onSubmit={onQuickAdd} className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="ov-date">Date</Label>
+                <Label htmlFor="ov-date" className={labelCls}>
+                  Date
+                </Label>
                 <Input
                   id="ov-date"
                   type="date"
@@ -236,7 +244,9 @@ export function UserDashboard({ userId, email }: Props) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ov-symbol">Symbol / Market</Label>
+                <Label htmlFor="ov-symbol" className={labelCls}>
+                  Symbol
+                </Label>
                 <Input
                   id="ov-symbol"
                   value={symbol}
@@ -248,7 +258,9 @@ export function UserDashboard({ userId, email }: Props) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ov-pnl">Day P&L</Label>
+              <Label htmlFor="ov-pnl" className={labelCls}>
+                Day P&amp;L
+              </Label>
               <Input
                 id="ov-pnl"
                 value={pnl}
@@ -259,7 +271,9 @@ export function UserDashboard({ userId, email }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ov-note">Note</Label>
+              <Label htmlFor="ov-note" className={labelCls}>
+                Note
+              </Label>
               <textarea
                 id="ov-note"
                 value={note}
@@ -270,7 +284,10 @@ export function UserDashboard({ userId, email }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ov-tv">TradingView link</Label>
+              <Label htmlFor="ov-tv" className={labelCls}>
+                Chart link{" "}
+                <span className="font-normal text-zinc-600">(optional)</span>
+              </Label>
               <Input
                 id="ov-tv"
                 type="url"
@@ -288,31 +305,27 @@ export function UserDashboard({ userId, email }: Props) {
               <Plus className="mr-1.5 size-4" />
               {saving ? "Saving…" : "Save day"}
             </Button>
-            {urlError ? <p className="text-sm text-rose-300">{urlError}</p> : null}
-            {saveError ? <p className="text-sm text-rose-300">{saveError}</p> : null}
+            {urlError ? <p className="text-[13px] text-rose-300/95">{urlError}</p> : null}
+            {saveError ? <p className="text-[13px] text-rose-300/95">{saveError}</p> : null}
           </form>
         </DashboardCard>
       </section>
 
-      <DashboardCard
-        eyebrow="Recent journal days"
-        title="Latest entries"
-        description="Date, market, P&L, note preview and quick open."
-      >
+      <DashboardCard eyebrow="Journal" title="Latest entries" description="Newest days first—open detail or your chart.">
         {recentRows.length === 0 ? (
           <EmptyState
             icon={NotebookPen}
             title="No journal days yet"
-            description="Add your first trading day from the quick add card."
-            className="border-none bg-transparent py-8"
+            description="Use Quick add above or the Journal page to create your first day."
+            className="border-none bg-transparent py-6 ring-0"
           />
         ) : (
           <JournalDayList rows={recentRows} />
         )}
       </DashboardCard>
 
-      <section className="rounded-2xl border border-white/[0.08] bg-[oklch(0.12_0.03_262/0.7)] px-4 py-3">
-        <p className="text-[15px] leading-relaxed text-zinc-400">
+      <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-5 py-4">
+        <p className="text-[14px] leading-relaxed text-zinc-500">
           Signed in as <span className="text-zinc-200">{email}</span>
         </p>
       </section>

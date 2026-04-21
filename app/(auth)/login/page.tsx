@@ -11,12 +11,12 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: Props) {
   const session = await auth();
-  const { callbackUrl } = await searchParams;
+  const { callbackUrl, error: errorParam } = await searchParams;
   if (session?.user) {
     redirect(callbackUrl ?? "/app");
   }
@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }: Props) {
       alternateLabel="Create an account"
       showDevHint={process.env.NODE_ENV === "development"}
     >
-      <LoginForm callbackUrl={callbackUrl ?? "/app"} />
+      <LoginForm callbackUrl={callbackUrl ?? "/app"} initialError={errorParam} />
     </AuthSplitLayout>
   );
 }

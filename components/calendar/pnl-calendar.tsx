@@ -109,17 +109,22 @@ export function PnlCalendar({ entries }: Props) {
   }, [cursor]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Calendar</p>
-          <p className="font-display mt-1 text-2xl tracking-tight text-zinc-50">{monthLabel(cursor)}</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Month</p>
+          <p className="font-display mt-1 text-[1.35rem] font-medium tracking-[-0.02em] text-zinc-50 sm:text-2xl">
+            {monthLabel(cursor)}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
-            className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "border-white/[0.12] bg-white/[0.03]")}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "icon-sm" }),
+              "h-10 w-10 rounded-xl border-white/[0.11] bg-white/[0.035] hover:bg-white/[0.07]",
+            )}
             aria-label="Previous month"
           >
             <ChevronLeft className="size-4" />
@@ -127,7 +132,10 @@ export function PnlCalendar({ entries }: Props) {
           <button
             type="button"
             onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
-            className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), "border-white/[0.12] bg-white/[0.03]")}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "icon-sm" }),
+              "h-10 w-10 rounded-xl border-white/[0.11] bg-white/[0.035] hover:bg-white/[0.07]",
+            )}
             aria-label="Next month"
           >
             <ChevronRight className="size-4" />
@@ -135,14 +143,17 @@ export function PnlCalendar({ entries }: Props) {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.028_262/0.86),oklch(0.1_0.03_264/0.84))] p-3 shadow-[inset_0_1px_0_oklch(1_0_0_/0.04)]">
-        <div className="grid min-w-[840px] grid-cols-8 gap-2">
-          {WEEKDAYS.map((d) => (
-            <div key={d} className="px-2 py-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
-              {d}
+      <div className="-mx-1 overflow-x-auto overflow-y-visible pb-1 [scrollbar-gutter:stable]">
+        <div className="min-w-[min(100%,840px)] rounded-2xl border border-white/[0.09] bg-[linear-gradient(165deg,oklch(0.13_0.028_262/0.88),oklch(0.102_0.028_264/0.85))] p-3 shadow-[inset_0_1px_0_oklch(1_0_0_/0.04)] ring-1 ring-white/[0.03] sm:min-w-[840px]">
+          <div className="grid min-w-[min(100%,840px)] grid-cols-8 gap-1.5 sm:gap-2">
+            {WEEKDAYS.map((d) => (
+              <div key={d} className="px-1 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500 sm:px-2">
+                {d}
+              </div>
+            ))}
+            <div className="px-1 py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500 sm:px-2">
+              Week
             </div>
-          ))}
-          <div className="px-2 py-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Week</div>
 
           {weeks.map((week, i) => {
             const weekly = week.reduce((acc, day) => {
@@ -201,6 +212,7 @@ export function PnlCalendar({ entries }: Props) {
               </Fragment>
             );
           })}
+          </div>
         </div>
       </div>
     </div>

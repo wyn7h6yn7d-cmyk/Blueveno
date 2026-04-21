@@ -616,55 +616,188 @@ body {
   --accent-glow: oklch(0.52 0.12 252 / 0.28);
 }
 
-/* Blueveno homepage — layered atmosphere (honors prefers-reduced-motion) */
-@keyframes bv-home-field-shift {
+/* Blueveno homepage — refined atmosphere: grids, parallax plates, line drift, scan */
+@keyframes bv-home-atmo-parallax-a {
   0%,
   100% {
     transform: translate3d(0, 0, 0) scale(1);
-    opacity: 0.38;
   }
   50% {
-    transform: translate3d(-18px, 14px, 0) scale(1.025);
-    opacity: 0.52;
+    transform: translate3d(-1.8%, 1.1%, 0) scale(1.02);
   }
 }
 
-@keyframes bv-home-meridian {
+@keyframes bv-home-atmo-parallax-b {
   0%,
   100% {
-    opacity: 0.055;
+    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    opacity: 0.125;
+    transform: translate3d(1.5%, -0.9%, 0) scale(1.014);
   }
 }
 
-@keyframes bv-home-rake {
+@keyframes bv-home-atmo-grid-travel {
   0% {
-    transform: translate3d(-12%, 0, 0);
+    background-position: 0 0;
   }
   100% {
-    transform: translate3d(12%, 0, 0);
+    background-position: 64px 64px;
   }
 }
 
-.bv-home-field-animated {
-  animation: bv-home-field-shift 52s ease-in-out infinite;
+@keyframes bv-home-atmo-grid-travel-rev {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -52px -52px;
+  }
 }
 
-.bv-home-meridian-pulse {
-  animation: bv-home-meridian 18s ease-in-out infinite;
+@keyframes bv-home-atmo-h-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 128px;
+  }
 }
 
-.bv-home-rake {
-  animation: bv-home-rake 92s linear infinite;
+@keyframes bv-home-atmo-v-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 144px 0;
+  }
+}
+
+@keyframes bv-home-atmo-pulse-shift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 360px 48px;
+  }
+}
+
+@keyframes bv-home-atmo-scan-sweep {
+  0% {
+    transform: translate3d(-20%, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.05;
+  }
+  50% {
+    opacity: 0.035;
+  }
+  88% {
+    opacity: 0.045;
+  }
+  100% {
+    transform: translate3d(220%, 0, 0);
+    opacity: 0;
+  }
+}
+
+.bv-home-atmo-parallax-a {
+  animation: bv-home-atmo-parallax-a 165s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.bv-home-atmo-parallax-b {
+  animation: bv-home-atmo-parallax-b 200s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.bv-home-atmo-grid {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.034) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.026) 1px, transparent 1px);
+  background-size: 56px 56px;
+  animation: bv-home-atmo-grid-travel 96s linear infinite;
+}
+
+.bv-home-atmo-grid-fine {
+  background-image:
+    linear-gradient(to right, oklch(0.58 0.09 252 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.55 0.08 252 / 0.038) 1px, transparent 1px);
+  background-size: 56px 56px;
+  animation: bv-home-atmo-grid-travel-rev 118s linear infinite;
+}
+
+.bv-home-atmo-h-lines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 46px,
+    oklch(0.62 0.07 252 / 0.05) 47px,
+    transparent 48px,
+    transparent 96px
+  );
+  animation: bv-home-atmo-h-drift 108s linear infinite;
+}
+
+.bv-home-atmo-v-lines {
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent 62px,
+    oklch(0.58 0.06 252 / 0.042) 63px,
+    transparent 64px,
+    transparent 124px
+  );
+  animation: bv-home-atmo-v-drift 142s linear infinite;
+}
+
+.bv-home-atmo-pulse {
+  background-image: repeating-linear-gradient(
+    -11deg,
+    transparent 0,
+    transparent 20px,
+    oklch(0.52 0.09 252 / 0.05) 21px,
+    transparent 22px,
+    transparent 48px
+  );
+  animation: bv-home-atmo-pulse-shift 76s linear infinite;
+}
+
+.bv-home-atmo-scan {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.58 0.11 252 / 0.035) 42%,
+    oklch(0.62 0.12 250 / 0.05) 50%,
+    oklch(0.58 0.11 252 / 0.035) 58%,
+    transparent 100%
+  );
+  animation: bv-home-atmo-scan-sweep 92s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bv-home-field-animated,
-  .bv-home-meridian-pulse,
-  .bv-home-rake {
+  .bv-home-atmo-parallax-a,
+  .bv-home-atmo-parallax-b {
     animation: none;
+    transform: none;
+    will-change: auto;
+  }
+
+  .bv-home-atmo-grid,
+  .bv-home-atmo-grid-fine,
+  .bv-home-atmo-h-lines,
+  .bv-home-atmo-v-lines,
+  .bv-home-atmo-pulse {
+    animation: none;
+  }
+
+  .bv-home-atmo-scan {
+    animation: none;
+    opacity: 0;
+    transform: none;
+    will-change: auto;
   }
 }
 

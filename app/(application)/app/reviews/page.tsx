@@ -7,42 +7,35 @@ import { EmptyState } from "@/components/app/empty-state";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+const outlineAction = cn(
+  buttonVariants({ variant: "outline" }),
+  "h-10 min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-4 text-[13px] text-zinc-200 hover:bg-white/[0.07]",
+);
+
 export default async function ReviewsPage() {
   await auth();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         eyebrow="Reviews"
         title="Day review"
-        description="Review page stays empty until you add real journal entries and chart links."
+        description="A place for chart-backed reviews once journal days include links and notes."
         actions={
-          <Link
-            href="/app/journal#add"
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "h-9 rounded-xl border-white/[0.1] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
-            )}
-          >
-            Add first day
+          <Link href="/app/journal#add" className={outlineAction}>
+            New entry
           </Link>
         }
       />
 
-      <DashboardCard eyebrow="Premium empty state" title="No review items yet" description="Nothing synthetic is shown here.">
+      <DashboardCard eyebrow="Reviews" title="Nothing to review yet" description="Journal entries with charts drive this view.">
         <EmptyState
           icon={Camera}
-          title="Paste your TradingView link"
-          description="When you save a journal day with notes and a chart link, your day review timeline appears here automatically."
+          title="Save days with chart links"
+          description="Journal days that include a TradingView URL and notes will surface here in a future iteration."
           action={
-            <Link
-              href="/app/journal#add"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
-              )}
-            >
-              Go to journal
+            <Link href="/app/journal#add" className={outlineAction}>
+              Open journal
             </Link>
           }
         />
