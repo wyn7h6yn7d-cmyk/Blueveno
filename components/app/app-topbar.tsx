@@ -26,6 +26,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
+import { WorkspaceSessionClock } from "@/components/app/workspace-session-clock";
 
 type AppTopbarProps = {
   user: { name?: string | null; email?: string | null; timezone?: string | null };
@@ -105,9 +106,12 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
       <div className="flex min-w-0 flex-1 items-stretch gap-2 sm:gap-4">
         <div className="min-w-0 shrink-0">
           <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
-          <p className="font-display truncate text-base font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:mt-0.5 sm:text-[1.0625rem]">
-            {label}
-          </p>
+          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 sm:gap-x-3">
+            <p className="font-display truncate text-base font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:text-[1.0625rem]">
+              {label}
+            </p>
+            <WorkspaceSessionClock serverTimeZone={user.timezone} />
+          </div>
         </div>
         {helloName ? (
           <div className="hidden min-w-0 flex-1 flex-col justify-center sm:flex">

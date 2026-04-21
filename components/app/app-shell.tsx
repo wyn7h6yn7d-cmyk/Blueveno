@@ -5,7 +5,6 @@ import { BluevenoWordmark } from "@/components/brand/blueveno-wordmark";
 import { AccessProvider } from "@/components/access/access-provider";
 import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
 import { AppTopbar } from "@/components/app/app-topbar";
-import { TradingSessionStrip } from "@/components/app/trading-session-strip";
 import { WorkspaceGate } from "@/components/app/workspace-gate";
 import type { AccessContextClient } from "@/lib/access/types";
 
@@ -38,8 +37,7 @@ export function AppShell({ children, user, access }: AppShellProps) {
         </aside>
 
         <div className="flex min-h-full min-w-0 flex-1 flex-col">
-          <div className="sticky top-0 z-40 flex flex-col">
-            <TradingSessionStrip serverTimeZone={user.timezone} />
+          <div className="sticky top-0 z-40">
             <AppTopbar user={user} canWriteJournal={access.canWriteJournal} isAdmin={access.isAdmin} />
           </div>
           <div className="relative flex-1">
