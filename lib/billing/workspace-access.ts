@@ -1,5 +1,6 @@
 import type { AuthSession } from "@/types/auth-session";
 import { getEffectivePlanTier } from "@/lib/billing/resolve";
+import { PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 /**
  * Permanent full access — not gated by billing. Keep in sync with product policy only.
@@ -7,8 +8,8 @@ import { getEffectivePlanTier } from "@/lib/billing/resolve";
  */
 export const ADMIN_FULL_ACCESS_EMAIL = "kennethalto95@gmail.com";
 
-/** Public catalog price — Stripe Prices should match for production checkout. */
-export const BLUEVENO_PREMIUM_PRICE_EUR = 5.99;
+/** Public catalog price (monthly) — Stripe Prices should match for production checkout. */
+export const BLUEVENO_PREMIUM_PRICE_EUR = PRICING_EUR.monthly;
 
 export function isAdminFullAccessEmail(email: string | null | undefined): boolean {
   return (email ?? "").toLowerCase().trim() === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
