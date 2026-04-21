@@ -45,20 +45,28 @@ function mapRows(rows: JournalRowDb[]): UserWorkspaceSnapshot {
   };
 }
 
+function hasBearerSession(supabase: SupabaseClient) {
+  return supabase.auth.getSession().then(({ data: { session } }) => Boolean(session?.access_token));
+}
+
 /**
  * After a full page reload, `createBrowserClient` may run before the session is
- * hydrated from cookies. `getUser()` refreshes the session; we retry briefly so
- * PostgREST requests carry a JWT and RLS returns rows instead of [].
+ * hydrated from cookies. We wait until both `getUser` matches and a session with
+ * an access token exists so PostgREST carries a JWT (RLS otherwise returns [] with no error).
  */
 async function waitForSessionUser(supabase: SupabaseClient, userId: string, isCancelled: () => boolean) {
-  for (let attempt = 0; attempt < 20; attempt++) {
+  for (let attempt = 0; attempt < 45; attempt++) {
     if (isCancelled()) return false;
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
-    if (!error && user?.id === userId) return true;
-    await new Promise((r) => setTimeout(r, 50 + attempt * 25));
+    const tokenOk = await hasBearerSession(supabase);
+    if (!error && user?.id === userId && tokenOk) return true;
+    if (attempt === 8) {
+      await supabase.auth.refreshSession().catch(() => undefined);
+    }
+    await new Promise((r) => setTimeout(r, 50 + Math.min(attempt, 20) * 20));
   }
   return false;
 }
@@ -68,9 +76,11 @@ export function useUserWorkspace(userId: string | undefined) {
   const [ready, setReady] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
   const userIdRef = useRef(userId);
+  const didTokenRefreshRefetch = useRef(false);
   userIdRef.current = userId;
 
   useEffect(() => {
+    didTokenRefreshRefetch.current = false;
     let cancelled = false;
     const isCancelled = () => cancelled;
     const supabase = createClient();
@@ -79,20 +89,55 @@ export function useUserWorkspace(userId: string | undefined) {
       const uid = userIdRef.current;
       if (!uid) return;
 
-      const { data: rows, error } = await supabase
-        .from("journal_entries")
-        .select("id, created_at, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
-        .eq("user_id", uid)
-        .order("created_at", { ascending: false });
+      const selectRows = () =>
+        supabase
+          .from("journal_entries")
+          .select("id, created_at, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false });
+
+      let resolved: JournalRowDb[] = [];
+      let queryError: string | undefined;
+
+      const pull = async () => {
+        const { data: batch, error } = await selectRows();
+        if (cancelled) return false;
+        if (error) {
+          queryError = error.message;
+          return false;
+        }
+        resolved = (batch ?? []) as JournalRowDb[];
+        return true;
+      };
+
+      // RLS often returns [] (no error) before JWT reaches PostgREST — retry only when needed.
+      if (!(await pull())) {
+        /* handled below */
+      } else if (resolved.length === 0) {
+        for (let attempt = 0; attempt < 5 && resolved.length === 0; attempt++) {
+          if (cancelled) return;
+          const tokenOk = await hasBearerSession(supabase);
+          if (tokenOk) {
+            await new Promise((r) => setTimeout(r, 140));
+            if (!(await pull())) break;
+            if (resolved.length > 0) break;
+            break;
+          }
+          await waitForSessionUser(supabase, uid, isCancelled);
+          if (cancelled) return;
+          await new Promise((r) => setTimeout(r, 80 + attempt * 50));
+          if (!(await pull())) break;
+        }
+      }
 
       if (cancelled) return;
-      if (error || !rows) {
-        setLastError(toUserDbError(error?.message));
+      if (queryError !== undefined) {
+        setLastError(toUserDbError(queryError));
         setData(EMPTY_WORKSPACE);
         setReady(true);
         return;
       }
-      setData(mapRows(rows as JournalRowDb[]));
+      setData(mapRows(resolved));
       setLastError(null);
       setReady(true);
     }
@@ -130,8 +175,19 @@ export function useUserWorkspace(userId: string | undefined) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (cancelled) return;
-      if (event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") return;
-      if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && session?.user?.id === userIdRef.current) {
+      if (event === "SIGNED_OUT") return;
+      const sameUser = session?.user?.id === userIdRef.current;
+      if (!sameUser) return;
+
+      // After reload, the first usable JWT sometimes arrives only on TOKEN_REFRESHED.
+      if (event === "TOKEN_REFRESHED") {
+        if (didTokenRefreshRefetch.current) return;
+        didTokenRefreshRefetch.current = true;
+        void fetchJournalRows();
+        return;
+      }
+
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
         void fetchJournalRows();
       }
     });

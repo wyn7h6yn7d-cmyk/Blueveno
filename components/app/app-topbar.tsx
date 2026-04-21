@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -145,25 +146,27 @@ export function AppTopbar({ user }: AppTopbarProps) {
             sideOffset={8}
             className="min-w-[13.75rem] rounded-xl border border-white/[0.09] bg-[oklch(0.125_0.028_262)] p-1.5 text-zinc-100 shadow-bv-float ring-1 ring-white/[0.04]"
           >
-            <DropdownMenuLabel className="px-2.5 py-2">
-              <p className="truncate text-[13px] font-medium text-zinc-100">{displayName}</p>
-              {user.email ? <p className="truncate text-xs text-zinc-500">{user.email}</p> : null}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-white/[0.06]" />
-            <DropdownMenuItem
-              className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
-              onClick={() => router.push("/app/settings")}
-            >
-              <Settings className="size-4 text-zinc-400" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-rose-200/95 outline-none focus-visible:bg-rose-500/12 focus-visible:text-rose-50"
-              onClick={handleSignOut}
-            >
-              <LogOut className="size-4 text-rose-300" />
-              {signingOut ? "Signing out…" : "Sign out"}
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="px-2.5 py-2">
+                <p className="truncate text-[13px] font-medium text-zinc-100">{displayName}</p>
+                {user.email ? <p className="truncate text-xs text-zinc-500">{user.email}</p> : null}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-white/[0.06]" />
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
+                onClick={() => router.push("/app/settings")}
+              >
+                <Settings className="size-4 text-zinc-400" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-rose-200/95 outline-none focus-visible:bg-rose-500/12 focus-visible:text-rose-50"
+                onClick={handleSignOut}
+              >
+                <LogOut className="size-4 text-rose-300" />
+                {signingOut ? "Signing out…" : "Sign out"}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
