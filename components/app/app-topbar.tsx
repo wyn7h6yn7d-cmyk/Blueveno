@@ -12,7 +12,6 @@ import {
   Settings,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -127,17 +126,19 @@ export function AppTopbar({ user }: AppTopbarProps) {
         </Link>
         <DropdownMenu>
           <DropdownMenuTrigger
+            type="button"
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "h-10 w-10 rounded-full border border-white/[0.1] bg-white/[0.04] p-0 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] hover:bg-white/[0.09] focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
+              "inline-flex shrink-0 items-center justify-center h-10 w-10 rounded-full border border-white/[0.1] bg-white/[0.04] p-0 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] hover:bg-white/[0.09] focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
             )}
             aria-label="Open account menu"
           >
-            <Avatar size="sm" className="size-8">
-              <AvatarFallback className="bg-[oklch(0.22_0.06_255)] text-xs font-semibold text-zinc-100">
-                {fallbackInitial}
-              </AvatarFallback>
-            </Avatar>
+            <span
+              className="flex size-8 shrink-0 select-none items-center justify-center rounded-full bg-[oklch(0.22_0.06_255)] text-xs font-semibold text-zinc-100"
+              aria-hidden
+            >
+              {fallbackInitial}
+            </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
