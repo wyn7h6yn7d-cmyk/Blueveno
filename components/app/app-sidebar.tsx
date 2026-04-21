@@ -108,8 +108,25 @@ export function AppSidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
           "p-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08)]",
         )}
       >
-        <BluevenoWordmark />
-        <p className="mt-2.5 text-[12px] leading-relaxed text-zinc-500">Calendar · journal · stats</p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <BluevenoWordmark />
+            <p className="mt-2.5 text-[12px] leading-relaxed text-zinc-500">Calendar · journal · stats</p>
+          </div>
+          <div
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.09] px-2 py-1 shadow-[inset_0_1px_0_0_oklch(0.88_0.08_155/0.08)]"
+            title="Workspace session active"
+            aria-label="Live — workspace session active"
+          >
+            <span
+              className="bv-live-dot size-2 shrink-0 rounded-full bg-emerald-400"
+              aria-hidden
+            />
+            <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.2em] text-emerald-300/95">
+              Live
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -79,7 +79,7 @@ export function AuthWorkspacePreview({ variant }: AuthWorkspacePreviewProps) {
         </div>
 
         <p className="border-t border-white/[0.05] px-4 py-3 text-[11px] leading-relaxed text-zinc-600">
-          Same ledger model as production—structured prints, not screenshots.
+          Same solution model as production—structured prints, not screenshots.
         </p>
       </div>
     </div>

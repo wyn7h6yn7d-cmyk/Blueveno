@@ -22,7 +22,7 @@ const rows = [
   {
     id: "showcase-journal",
     eyebrow: "Automatic journaling",
-    promise: "Every fill lands in one ledger.",
+    promise: "Every fill lands in one solution.",
     copy: "Time, size, setup, tags—no rebuilding the day from memory.",
     mock: <MockAutoJournal />,
   },

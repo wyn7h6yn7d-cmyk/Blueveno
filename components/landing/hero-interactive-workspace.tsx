@@ -11,7 +11,7 @@ const TABS = [
     id: "journal",
     label: "Journal",
     frameTitle: "workspace · journal",
-    frameSubtitle: "Tagged fills · single ledger",
+    frameSubtitle: "Tagged fills · single solution",
   },
   {
     id: "analytics",

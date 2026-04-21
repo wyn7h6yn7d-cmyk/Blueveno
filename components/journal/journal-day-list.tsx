@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil } from "lucide-react";
+import { LayoutDashboard, Pencil } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
 
 type Props = {
   rows: JournalRow[];
   highlightDate?: string;
   displayCurrency: string;
+  /** When false, edit form is read-only — link still opens the edit page with upgrade copy. */
+  canWriteJournal?: boolean;
 };
 
 function formatRowPnl(raw: string, currency: string): string {
@@ -32,7 +35,12 @@ function rowDateKey(row: JournalRow): string {
   return "";
 }
 
-export function JournalDayList({ rows, highlightDate, displayCurrency }: Props) {
+export function JournalDayList({
+  rows,
+  highlightDate,
+  displayCurrency,
+  canWriteJournal = true,
+}: Props) {
   return (
     <div className="space-y-4">
       {rows.map((row) => (
@@ -58,7 +66,7 @@ export function JournalDayList({ rows, highlightDate, displayCurrency }: Props) 
 
           {row.note ? <p className="mt-3 text-[13px] leading-relaxed text-zinc-400">{row.note}</p> : null}
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.05] pt-4">
+          <div className="mt-4 space-y-3 border-t border-white/[0.05] pt-4">
             <div className="flex flex-wrap items-center gap-2">
               {row.tag ? (
                 <span className="rounded border border-white/[0.07] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-zinc-400">
@@ -77,20 +85,40 @@ export function JournalDayList({ rows, highlightDate, displayCurrency }: Props) 
               ) : null}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
               <Link
-                href={`/app/journal/${row.id}/edit`}
-                className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.1_250)] underline-offset-4 transition hover:text-[oklch(0.85_0.08_250)] hover:underline"
+                href="/app"
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-3.5 text-[12px] font-medium text-zinc-300 hover:bg-white/[0.06]",
+                )}
               >
-                <Pencil className="size-3" strokeWidth={2} aria-hidden />
-                Edit
+                <LayoutDashboard className="mr-1.5 size-3.5 opacity-90" strokeWidth={1.75} />
+                Overview
               </Link>
-              <Link
-                href={`/app/journal/${row.id}`}
-                className="font-mono text-[11px] text-zinc-400 underline-offset-4 transition hover:text-zinc-200 hover:underline"
-              >
-                Details
-              </Link>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href={`/app/journal/${row.id}/edit`}
+                  prefetch
+                  title={
+                    canWriteJournal
+                      ? "Edit entry — add notes or a TradingView link"
+                      : "Read-only — upgrade to edit entries"
+                  }
+                  className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.1_250)] underline-offset-4 transition hover:text-[oklch(0.85_0.08_250)] hover:underline"
+                >
+                  <Pencil className="size-3" strokeWidth={2} aria-hidden />
+                  Edit
+                </Link>
+                <Link
+                  href={`/app/journal/${row.id}`}
+                  prefetch
+                  className="font-mono text-[11px] text-zinc-400 underline-offset-4 transition hover:text-zinc-200 hover:underline"
+                >
+                  Details
+                </Link>
+              </div>
             </div>
           </div>
         </article>

@@ -1,5 +1,5 @@
 /**
- * Dense workspace preview — matches product analytics + ledger tone (not decorative).
+ * Dense workspace preview — matches product analytics + solution tone (not decorative).
  */
 export function PlatformPreviewStrip() {
   return (

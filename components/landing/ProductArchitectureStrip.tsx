@@ -9,7 +9,7 @@ const phases = [
   {
     step: "01",
     title: "Journal",
-    line: "Fills, tags, context—one ledger.",
+    line: "Fills, tags, context—one solution.",
   },
   {
     step: "02",

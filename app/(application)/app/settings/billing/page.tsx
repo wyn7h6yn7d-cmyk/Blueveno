@@ -12,6 +12,12 @@ import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 const PREMIUM_LABEL = "Blueveno Premium";
 
+const PREMIUM_INCLUDES = [
+  "Journal — day P&L, notes, optional TradingView link",
+  "Calendar with colour-coded days and week totals",
+  "Stats & overview for your trading history",
+] as const;
+
 export default async function BillingSettingsPage() {
   const session = await auth();
   if (!session?.user?.id) {
@@ -86,9 +92,22 @@ export default async function BillingSettingsPage() {
               {formatEur(PRICING_EUR.monthly)}
               <span className="ml-2 text-lg font-normal text-zinc-500">/ month</span>
             </h2>
-            <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-zinc-400">
+            <div className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-400">
               {isAdminUser ? (
-                "Administrator access — full product, no subscription."
+                <>
+                  <p>Administrator access — full product, no subscription.</p>
+                  <p className="mt-4 text-[13px] leading-relaxed text-zinc-500">
+                    A paid Premium membership includes:
+                  </p>
+                  <ul className="mt-3 space-y-2.5 text-[14px] text-zinc-400">
+                    {PREMIUM_INCLUDES.map((line) => (
+                      <li key={line} className="flex gap-2.5">
+                        <Check className="mt-0.5 size-4 shrink-0 text-emerald-400/90" strokeWidth={2} />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
               ) : isReadOnly ? (
                 <>
                   Your data stays with you. Upgrade to log new trading days anytime.
@@ -116,7 +135,7 @@ export default async function BillingSettingsPage() {
               ) : (
                 "Journal, calendar, and stats — one membership."
               )}
-            </p>
+            </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
               {(isReadOnly || isTrial) && !isAdminUser ? (
@@ -146,14 +165,12 @@ export default async function BillingSettingsPage() {
         <aside className="space-y-4 rounded-2xl border border-white/[0.08] bg-black/20 p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Included</p>
           <ul className="space-y-3 text-[13px] text-zinc-400">
-            {["Journal — day P&L, notes, chart link", "Calendar with week totals", "Clear performance stats"].map(
-              (line) => (
-                <li key={line} className="flex gap-2">
-                  <Check className="mt-0.5 size-4 shrink-0 text-emerald-400/90" strokeWidth={2} />
-                  <span>{line}</span>
-                </li>
-              ),
-            )}
+            {PREMIUM_INCLUDES.map((line) => (
+              <li key={line} className="flex gap-2">
+                <Check className="mt-0.5 size-4 shrink-0 text-emerald-400/90" strokeWidth={2} />
+                <span>{line}</span>
+              </li>
+            ))}
           </ul>
         </aside>
       </div>

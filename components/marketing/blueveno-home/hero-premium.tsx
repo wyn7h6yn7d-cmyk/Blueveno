@@ -83,7 +83,7 @@ function ChartPreviewSvg() {
 
 function DayPanel() {
   return (
-    <div className="flex min-h-0 flex-col justify-between gap-6 sm:gap-8">
+    <div className="flex h-full min-h-0 flex-col justify-between gap-6 sm:gap-8">
       <div>
         <p className="font-mono text-[10px] uppercase tracking-[0.32em] text-[oklch(0.62_0.11_252)]">Session</p>
         <p className="font-display mt-3 text-[clamp(1.35rem,3.2vw,2rem)] font-semibold leading-[1.08] tracking-[-0.04em] text-zinc-50 sm:mt-4">
@@ -111,7 +111,7 @@ function DayPanel() {
 
 function ChartPanel() {
   return (
-    <div className="flex min-h-0 flex-col gap-5 sm:gap-6">
+    <div className="flex h-full min-h-0 flex-col gap-5 sm:gap-6">
       <div className="relative overflow-hidden rounded-xl border border-[oklch(0.52_0.12_252/0.28)] bg-[linear-gradient(168deg,oklch(0.09_0.04_264/0.95),oklch(0.045_0.03_268/0.98))] p-1 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:rounded-2xl">
         <div className="flex items-center justify-between border-b border-white/[0.06] px-3 py-2 sm:px-5 sm:py-2.5">
           <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500 sm:text-[10px]">Linked chart</span>
@@ -145,7 +145,7 @@ function ChartPanel() {
 
 function WeekPanel() {
   return (
-    <div className="flex min-h-0 flex-col gap-5 sm:gap-6">
+    <div className="flex h-full min-h-0 flex-col gap-5 sm:gap-6">
       <div className="flex flex-wrap items-end justify-between gap-2 sm:gap-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.11_252)]">Week</p>
@@ -202,7 +202,7 @@ export function HeroPremium() {
 
   const panelTransition = reduced
     ? { duration: 0 }
-    : { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const };
+    : { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const };
 
   function onTabKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     const idx = MODES.findIndex((m) => m.id === mode);
@@ -237,7 +237,7 @@ export function HeroPremium() {
             >
               Cold precision.{" "}
               <span className="bg-gradient-to-r from-zinc-100 via-[oklch(0.9_0.04_250)] to-[oklch(0.65_0.12_252)] bg-clip-text text-transparent">
-                One ledger.
+                One solution.
               </span>
             </h1>
             <p className="mx-auto mt-5 max-w-[26rem] text-[15px] leading-[1.55] tracking-[-0.018em] text-zinc-400 sm:text-[16px] lg:mx-0">
@@ -269,7 +269,15 @@ export function HeroPremium() {
                       </span>
                       <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500 sm:text-[10px]">Workspace</span>
                     </div>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-emerald-400/90 sm:text-[10px]">Live</span>
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        className="bv-live-dot size-2 shrink-0 rounded-full bg-emerald-400"
+                        aria-hidden
+                      />
+                      <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-emerald-400/90 sm:text-[10px]">
+                        Live
+                      </span>
+                    </span>
                   </div>
 
                   <div className="border-b border-white/[0.06] px-3 py-3 sm:px-5">
@@ -306,22 +314,26 @@ export function HeroPremium() {
                   </div>
 
                   <div className="border-b border-white/[0.05] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
-                    <AnimatePresence mode="wait" initial={false}>
-                      <motion.div
-                        id={panelId}
-                        key={mode}
-                        role="tabpanel"
-                        aria-labelledby={`${tabId}-${mode}`}
-                        initial={reduced ? false : { opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={reduced ? undefined : { opacity: 0, y: -6 }}
-                        transition={panelTransition}
-                      >
-                        {mode === "day" ? <DayPanel /> : null}
-                        {mode === "chart" ? <ChartPanel /> : null}
-                        {mode === "week" ? <WeekPanel /> : null}
-                      </motion.div>
-                    </AnimatePresence>
+                    {/* Fixed min height matches tallest tab so switching Day / Chart / Week does not resize the frame */}
+                    <div className="relative min-h-[23rem] sm:min-h-[27rem] lg:min-h-[28rem]">
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          id={panelId}
+                          key={mode}
+                          role="tabpanel"
+                          aria-labelledby={`${tabId}-${mode}`}
+                          className="h-full"
+                          initial={reduced ? false : { opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={reduced ? undefined : { opacity: 0 }}
+                          transition={panelTransition}
+                        >
+                          {mode === "day" ? <DayPanel /> : null}
+                          {mode === "chart" ? <ChartPanel /> : null}
+                          {mode === "week" ? <WeekPanel /> : null}
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
                   </div>
 
                   <div className="border-t border-white/[0.05]" />

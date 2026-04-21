@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Lock } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { isValidTradingViewUrl } from "@/lib/tradingview";
+import { isValidTradingViewUrl, normalizeTradingViewUrlInput, tradingViewUrlForSave } from "@/lib/tradingview";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
@@ -50,7 +50,9 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
     if (!canWriteJournal) return;
     if (!entryDate.trim() || !symbol.trim() || !pnl.trim()) return;
     if (!isValidTradingViewUrl(tradingViewUrl)) {
-      setUrlError("Use a valid TradingView chart URL, or leave the field empty.");
+      setUrlError(
+        "Use a valid TradingView chart URL (e.g. https://www.tradingview.com/chart/…), or leave the field empty.",
+      );
       return;
     }
     setUrlError(null);
@@ -64,7 +66,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       r: pnl.trim(),
       tag: preserved.current.tag,
       note: note.trim() || undefined,
-      tradingViewUrl: tradingViewUrl.trim() || undefined,
+      tradingViewUrl: tradingViewUrlForSave(tradingViewUrl),
     });
     setSaving(false);
     if (!result.ok) {
@@ -90,13 +92,38 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
         }
       />
 
+      {!canWriteJournal ? (
+        <div
+          className="flex flex-col gap-3 rounded-2xl border border-amber-400/25 bg-amber-500/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between"
+          role="status"
+        >
+          <div className="flex gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-500/10 text-amber-200">
+              <Lock className="size-[18px]" strokeWidth={1.75} />
+            </span>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-200/80">Read-only</p>
+              <p className="mt-1 text-[14px] leading-relaxed text-zinc-200">
+                Upgrade to Premium to edit entries, add a TradingView link, or change P&amp;L.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/app/settings/billing"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 text-[13px] font-medium text-amber-100 transition hover:bg-amber-500/25"
+          >
+            View billing
+          </Link>
+        </div>
+      ) : null}
+
       <DashboardCard
         eyebrow="Edit"
         title={initialRow.sym}
         description={
           canWriteJournal
             ? `Adjust P&L in ${displayCurrency} (set in Settings). TradingView link is optional.`
-            : "Your trial has ended in write mode. Upgrade to edit entries — saved data stays readable."
+            : "Fields are locked until you upgrade — your saved values stay visible below."
         }
       >
         <form onSubmit={onSubmit} className="space-y-6">
@@ -175,7 +202,13 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                 type="url"
                 value={tradingViewUrl}
                 onChange={(e) => setTradingViewUrl(e.target.value)}
-                placeholder="Paste a chart URL"
+                onBlur={(e) => {
+                  const v = e.target.value.trim();
+                  if (!v) return;
+                  const n = normalizeTradingViewUrlInput(v);
+                  if (n !== v) setTradingViewUrl(n);
+                }}
+                placeholder="https://www.tradingview.com/chart/…"
                 disabled={!canWriteJournal}
                 className={cn(inputCls, "disabled:opacity-45")}
               />

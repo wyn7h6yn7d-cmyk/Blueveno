@@ -38,7 +38,7 @@ export function Hero() {
 
           <Reveal delay={0.08} className="mt-6 max-w-[20rem]">
             <p className="text-[0.9375rem] leading-relaxed text-zinc-300 sm:text-[1rem]">
-              One ledger for fills, analytics, review, and rules—no reconstruction after the close.
+              One solution for fills, analytics, review, and rules—no reconstruction after the close.
             </p>
           </Reveal>
 

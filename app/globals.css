@@ -415,6 +415,37 @@ body {
   }
 }
 
+/* App sidebar — soft “breathing” green glow on LIVE indicator */
+@keyframes bv-live-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    box-shadow:
+      0 0 0 0 oklch(0.72 0.14 160 / 0.25),
+      0 0 8px 0 oklch(0.65 0.12 165 / 0.2);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 0 3px oklch(0.72 0.14 160 / 0.12),
+      0 0 14px 2px oklch(0.78 0.15 155 / 0.45);
+    transform: scale(1.12);
+  }
+}
+
+.bv-live-dot {
+  animation: bv-live-breathe 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-live-dot {
+    animation: none;
+    opacity: 0.95;
+    box-shadow: 0 0 8px oklch(0.7 0.13 160 / 0.35);
+  }
+}
+
 /* Blue-led premium dark — deep navy foundation, cobalt + ice accents */
 .dark {
   --grid: oklch(0.55 0.06 252 / 0.055);

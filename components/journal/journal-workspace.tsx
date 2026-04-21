@@ -13,7 +13,7 @@ import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import { EmptyState } from "@/components/app/empty-state";
 import { JournalDayList } from "@/components/journal/journal-day-list";
-import { isValidTradingViewUrl } from "@/lib/tradingview";
+import { isValidTradingViewUrl, tradingViewUrlForSave } from "@/lib/tradingview";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
@@ -100,7 +100,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     if (!canWriteJournal) return;
     if (!entryDate.trim() || !symbol.trim() || !pnl.trim()) return;
     if (!isValidTradingViewUrl(tradingViewUrl)) {
-      setUrlError("Use a valid TradingView chart URL, or leave the field empty.");
+      setUrlError(
+        "Use a valid TradingView chart URL (e.g. https://www.tradingview.com/chart/…), or leave the field empty.",
+      );
       return;
     }
     setUrlError(null);
@@ -114,7 +116,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       r: pnl.trim(),
       tag: "Journal",
       note: note.trim() || undefined,
-      tradingViewUrl: tradingViewUrl.trim() || undefined,
+      tradingViewUrl: tradingViewUrlForSave(tradingViewUrl),
     });
     setSaving(false);
     if (!result.ok) {
@@ -148,11 +150,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         }
       />
 
-      <section className="mx-auto grid min-w-0 max-w-3xl gap-8">
+      <section className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10">
         <DashboardCard
           eyebrow="Log day"
           title="Quick entry"
-          className="min-w-0"
+          className="min-h-0 min-w-0"
           description={
             canWriteJournal
               ? "P&amp;L uses your display currency from Settings. TradingView is optional — paste when you want the chart next to the number. The calendar page picks up the same entries."
@@ -263,35 +265,41 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             {saveError ? <p className="text-[13px] text-rose-300/95">{saveError}</p> : null}
           </form>
         </DashboardCard>
-      </section>
 
-      <DashboardCard
-        eyebrow="Recent"
-        title="Latest activity"
-        description="Newest from the last day — plus any day you opened via a calendar link (?date=)."
-      >
-        {sortedRows.length === 0 ? (
-          <EmptyState
-            icon={NotebookPen}
-            title="No entries yet"
-            description={
-              canWriteJournal
-                ? "Use the form above to save your first day."
-                : "Your history remains below once you have entries — upgrade to add more."
-            }
-            className="border-none bg-transparent py-8 ring-0"
-          />
-        ) : rowsForLatestEntries.length === 0 ? (
-          <EmptyState
-            icon={NotebookPen}
-            title="Nothing new in the last 24 hours"
-            description="Open Calendar for the month grid, or Stats for the full picture."
-            className="border-none bg-transparent py-8 ring-0"
-          />
-        ) : (
-          <JournalDayList rows={rowsForLatestEntries} highlightDate={highlightDate} displayCurrency={displayCurrency} />
-        )}
-      </DashboardCard>
+        <DashboardCard
+          eyebrow="Recent"
+          title="Latest activity"
+          className="min-h-0 min-w-0 lg:sticky lg:top-6"
+          description="Newest from the last day — plus any day you opened via a calendar link (?date=)."
+        >
+          {sortedRows.length === 0 ? (
+            <EmptyState
+              icon={NotebookPen}
+              title="No entries yet"
+              description={
+                canWriteJournal
+                  ? "Use Quick entry beside this panel to save your first day."
+                  : "Your history remains below once you have entries — upgrade to add more."
+              }
+              className="border-none bg-transparent py-8 ring-0"
+            />
+          ) : rowsForLatestEntries.length === 0 ? (
+            <EmptyState
+              icon={NotebookPen}
+              title="Nothing new in the last 24 hours"
+              description="Open Calendar for the month grid, or Stats for the full picture."
+              className="border-none bg-transparent py-8 ring-0"
+            />
+          ) : (
+            <JournalDayList
+              rows={rowsForLatestEntries}
+              highlightDate={highlightDate}
+              displayCurrency={displayCurrency}
+              canWriteJournal={canWriteJournal}
+            />
+          )}
+        </DashboardCard>
+      </section>
 
       <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-5 py-4">
         <p className="text-[14px] text-zinc-500">

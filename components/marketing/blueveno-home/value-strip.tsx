@@ -17,7 +17,7 @@ export function ValueStrip() {
             aria-hidden
           />
           <p className="font-display text-[clamp(1.15rem,2.5vw,1.4rem)] font-medium leading-[1.25] tracking-[-0.045em] text-zinc-300">
-            P&amp;L · notes · charts — <span className="text-zinc-500">one ledger.</span>
+            P&amp;L · notes · charts — <span className="text-zinc-500">one solution.</span>
           </p>
         </div>
       </div>
