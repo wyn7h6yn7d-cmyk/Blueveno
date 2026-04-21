@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 export function useUserWorkspace(userId: string | undefined) {
   const [data, setData] = useState<UserWorkspaceSnapshot>(EMPTY_WORKSPACE);
   const [ready, setReady] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,24 +60,45 @@ export function useUserWorkspace(userId: string | undefined) {
 
   const addRow = useCallback(
     async (row: Omit<JournalRow, "id">) => {
-      if (!userId) return;
+      if (!userId) return { ok: false as const, error: "Not signed in." };
       const supabase = createClient();
-      const { data: inserted, error } = await supabase
+      setLastError(null);
+
+      const basePayload = {
+        user_id: userId,
+        entry_time: row.time,
+        symbol: row.sym,
+        setup: row.setup,
+        r_value: row.r,
+        tag: row.tag,
+        note: row.note ?? null,
+        tradingview_url: row.tradingViewUrl ?? null,
+      };
+
+      // Try with `entry_date` first; if DB migration is not yet applied, retry without it.
+      let insertResult = await supabase
         .from("journal_entries")
         .insert({
-          user_id: userId,
+          ...basePayload,
           entry_date: row.entryDate ?? null,
-          entry_time: row.time,
-          symbol: row.sym,
-          setup: row.setup,
-          r_value: row.r,
-          tag: row.tag,
-          note: row.note ?? null,
-          tradingview_url: row.tradingViewUrl ?? null,
         })
         .select("id, created_at, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
         .single();
-      if (error || !inserted) return;
+
+      if (insertResult.error?.message?.toLowerCase().includes("entry_date")) {
+        insertResult = await supabase
+          .from("journal_entries")
+          .insert(basePayload)
+          .select("id, created_at, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+          .single();
+      }
+
+      const { data: inserted, error } = insertResult;
+      if (error || !inserted) {
+        const msg = error?.message ?? "Could not save entry.";
+        setLastError(msg);
+        return { ok: false as const, error: msg };
+      }
       const mapped: JournalRow = {
         id: inserted.id as string,
         createdAt: (inserted.created_at as string | null) ?? undefined,
@@ -90,6 +112,7 @@ export function useUserWorkspace(userId: string | undefined) {
         tradingViewUrl: (inserted.tradingview_url as string | null) ?? undefined,
       };
       setData((prev) => ({ ...prev, journal: [mapped, ...prev.journal].slice(0, 200) }));
+      return { ok: true as const };
     },
     [userId],
   );
@@ -113,5 +136,5 @@ export function useUserWorkspace(userId: string | undefined) {
     [userId],
   );
 
-  return { data, ready, addRow, removeRow, replaceAll };
+  return { data, ready, lastError, addRow, removeRow, replaceAll };
 }

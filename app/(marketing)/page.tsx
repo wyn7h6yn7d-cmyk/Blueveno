@@ -6,6 +6,13 @@ const benefits = [
   { title: "Scan your week", text: "Daily colors + weekly totals." },
 ];
 
+const journalBullets = ["Calendar view", "Notes & comments", "TradingView links", "Daily results"];
+const navLinks = [
+  { href: "#how", label: "How it works" },
+  { href: "#benefits", label: "Benefits" },
+  { href: "#calendar", label: "Calendar" },
+];
+
 const calendarRows = [
   ["", "", "", "", "", "1", "2"],
   ["3", "4", "5", "6", "7", "8", "9"],
@@ -44,27 +51,45 @@ export default function MarketingHomePage() {
       {/* Subtle motion background: elegant, low contrast, blue-toned */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,oklch(0.09_0.03_260),oklch(0.065_0.03_262)_42%,oklch(0.06_0.02_262)_100%)]" />
-        <div className="bg-market-grid-drift absolute inset-0 opacity-[0.24]" />
-        <div className="bg-market-wave absolute inset-0 opacity-[0.14]" />
-        <div className="bg-market-wave-reverse absolute inset-0 opacity-[0.08]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_70%_at_50%_-10%,oklch(0.45_0.08_250/0.12),transparent_58%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_130%_70%_at_50%_110%,oklch(0.32_0.07_254/0.1),transparent_60%)]" />
+        <div className="bg-market-grid-drift absolute inset-0 opacity-[0.4]" />
+        <div className="bg-market-wave absolute inset-0 opacity-[0.28]" />
+        <div className="bg-market-wave-reverse absolute inset-0 opacity-[0.22]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_70%_at_50%_-10%,oklch(0.45_0.08_250/0.16),transparent_58%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_130%_70%_at_50%_110%,oklch(0.32_0.07_254/0.14),transparent_60%)]" />
       </div>
 
-      <header className="relative z-10 mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="font-display text-xl tracking-tight text-zinc-50">
-          Blueveno
-        </Link>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-zinc-400 transition hover:text-zinc-100">
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-full border border-white/[0.14] bg-white/[0.04] px-4 py-2 text-sm text-zinc-100 transition hover:bg-white/[0.08]"
-          >
-            Start free
-          </Link>
+      <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[oklch(0.06_0.03_260/0.72)] backdrop-blur">
+        <div className="mx-auto w-full max-w-6xl px-6">
+          <div className="flex h-20 items-center justify-between">
+            <Link href="/" className="font-display text-xl tracking-tight text-zinc-50">
+              Blueveno
+            </Link>
+            <nav className="hidden items-center gap-6 md:flex">
+              {navLinks.map((l) => (
+                <a key={l.href} href={l.href} className="text-sm text-zinc-400 transition hover:text-zinc-100">
+                  {l.label}
+                </a>
+              ))}
+            </nav>
+            <div className="flex items-center gap-3">
+              <Link href="/login" className="text-sm text-zinc-400 transition hover:text-zinc-100">
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-full border border-white/[0.14] bg-white/[0.04] px-4 py-2 text-sm text-zinc-100 transition hover:bg-white/[0.08]"
+              >
+                Start free
+              </Link>
+            </div>
+          </div>
+          <nav className="flex items-center gap-4 py-3 md:hidden">
+            {navLinks.map((l) => (
+              <a key={l.href} href={l.href} className="text-xs uppercase tracking-[0.08em] text-zinc-400">
+                {l.label}
+              </a>
+            ))}
+          </nav>
         </div>
       </header>
 
@@ -97,52 +122,55 @@ export default function MarketingHomePage() {
           </div>
 
           <div className="lg:col-span-6 xl:col-span-7">
-            <div className="relative overflow-hidden rounded-3xl border border-white/[0.1] bg-[oklch(0.09_0.02_260/0.95)] p-5 shadow-[0_20px_80px_-32px_oklch(0.34_0.08_252/0.5)] ring-1 ring-white/[0.04] sm:p-6">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_85%_70%_at_50%_-15%,oklch(0.4_0.08_250/0.14),transparent_60%)]" />
-              <div className="relative">
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-500">Tue, Apr 21</p>
-                  <p className="font-mono text-sm tabular-nums text-emerald-300">+$180</p>
+            <div className="relative overflow-hidden rounded-3xl border border-white/[0.12] bg-[linear-gradient(160deg,oklch(0.18_0.08_280),oklch(0.11_0.04_262)_42%,oklch(0.09_0.03_260))] p-5 shadow-[0_26px_90px_-34px_oklch(0.4_0.12_278/0.65)] ring-1 ring-white/[0.06] sm:p-6">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_16%_0%,oklch(0.66_0.18_285/0.18),transparent_60%)]" />
+              <div className="relative grid gap-4 sm:grid-cols-[1.45fr_1fr]">
+                <div className="rounded-2xl border border-white/[0.16] bg-white/[0.95] p-4 text-zinc-900 shadow-[0_20px_50px_-28px_rgba(0,0,0,0.55)]">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium text-zinc-600">Dashboard</p>
+                    <p className="text-xs text-zinc-500">Last import · 2h ago</p>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {[
+                      { k: "Net P&L", v: "$2,129" },
+                      { k: "Expectancy", v: "$248" },
+                      { k: "Win %", v: "55%" },
+                    ].map((c) => (
+                      <div key={c.k} className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-2">
+                        <p className="text-[10px] text-zinc-500">{c.k}</p>
+                        <p className="mt-1 text-sm font-semibold">{c.v}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 rounded-md border border-zinc-200 p-2">
+                    <p className="text-[10px] text-zinc-500">Week heatmap</p>
+                    <div className="mt-2 grid grid-cols-7 gap-1.5">
+                      {[0.2, 0.35, 0.7, 0.12, 0.52, 0.78, 0.15].map((o, i) => (
+                        <div key={i} className="h-6 rounded-sm bg-blue-600" style={{ opacity: o }} />
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Journal note</p>
-                    <p className="mt-3 text-sm leading-relaxed text-zinc-300">
-                      Followed plan at open. No chase entries after first move.
-                    </p>
-                    <a
-                      href="https://www.tradingview.com/"
-                      className="mt-4 inline-block rounded-md border border-white/[0.1] bg-white/[0.03] px-3 py-2 font-mono text-[11px] text-[oklch(0.82_0.08_248)] hover:underline"
-                    >
-                      TradingView chart link
-                    </a>
-                  </div>
-
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">This week</p>
-                    <p className="mt-3 font-display text-2xl tracking-tight text-zinc-100">+$935</p>
-                    <div className="mt-4 grid grid-cols-5 gap-2">
-                      {[
-                        { d: "Mon", v: 120 },
-                        { d: "Tue", v: 180 },
-                        { d: "Wed", v: -40 },
-                        { d: "Thu", v: 220 },
-                        { d: "Fri", v: 455 },
-                      ].map((x) => (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-white/[0.16] bg-white/[0.95] p-4 text-zinc-900 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.55)]">
+                    <p className="text-xs font-medium text-zinc-600">April 2026</p>
+                    <div className="mt-2 grid grid-cols-4 gap-1.5">
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((d) => (
                         <div
-                          key={x.d}
-                          className={`rounded-md border px-2 py-2 text-center font-mono text-[10px] ${
-                            x.v >= 0
-                              ? "border-emerald-400/30 bg-emerald-500/12 text-emerald-200"
-                              : "border-rose-400/30 bg-rose-500/12 text-rose-200"
-                          }`}
+                          key={d}
+                          className={`h-9 rounded-sm border border-zinc-200 p-1 text-[10px] ${d % 3 === 0 ? "bg-emerald-50 text-emerald-700" : d % 4 === 0 ? "bg-rose-50 text-rose-700" : "bg-zinc-50 text-zinc-500"}`}
                         >
-                          <p>{x.d}</p>
-                          <p className="mt-1 tabular-nums">{x.v > 0 ? "+" : ""}{x.v}</p>
+                          {String(d).padStart(2, "0")}
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/[0.16] bg-white/[0.95] p-4 text-zinc-900 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.55)]">
+                    <p className="text-xs font-medium text-zinc-600">Journal note</p>
+                    <p className="mt-2 text-sm text-zinc-700">Reason: VWAP bounce. Risk 0.5R. Felt calm.</p>
+                    <p className="mt-2 text-[11px] text-blue-700">TradingView chart attached</p>
                   </div>
                 </div>
               </div>
@@ -150,8 +178,22 @@ export default function MarketingHomePage() {
           </div>
         </section>
 
+        <section id="how" className="grid gap-4 rounded-3xl border border-white/[0.08] bg-[oklch(0.1_0.02_260/0.7)] p-6 md:grid-cols-3">
+          {[
+            { n: "01", t: "Log your day", d: "Add date, market, and day P&L." },
+            { n: "02", t: "Add context", d: "Write short notes and paste chart link." },
+            { n: "03", t: "Review week", d: "Use green/red calendar and weekly totals." },
+          ].map((x) => (
+            <article key={x.n} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">{x.n}</p>
+              <h3 className="font-display mt-3 text-xl text-zinc-50">{x.t}</h3>
+              <p className="mt-2 text-sm text-zinc-400">{x.d}</p>
+            </article>
+          ))}
+        </section>
+
         {/* 2. 3 core benefits */}
-        <section className="grid gap-4 md:grid-cols-3">
+        <section id="benefits" className="grid gap-4 md:grid-cols-3">
           {benefits.map((b) => (
             <article
               key={b.title}
@@ -163,8 +205,28 @@ export default function MarketingHomePage() {
           ))}
         </section>
 
+        <section className="grid gap-6 rounded-3xl border border-white/[0.08] bg-[oklch(0.1_0.02_260/0.8)] p-6 md:grid-cols-[1fr_1.2fr] md:p-8">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Journaling clarity</p>
+            <h3 className="font-display mt-2 text-3xl tracking-tight text-zinc-50">Focus on what matters</h3>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-zinc-400">
+              Blueveno keeps journaling simple and useful: log your day, add context, review outcomes.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {journalBullets.map((x) => (
+              <span
+                key={x}
+                className="rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-sm text-zinc-300"
+              >
+                {x}
+              </span>
+            ))}
+          </div>
+        </section>
+
         {/* 3. Calendar preview */}
-        <section className="rounded-3xl border border-white/[0.08] bg-[oklch(0.1_0.02_260/0.8)] p-6 md:p-8">
+        <section id="calendar" className="rounded-3xl border border-white/[0.08] bg-[oklch(0.1_0.02_260/0.8)] p-6 md:p-8">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Calendar view</p>
@@ -193,7 +255,7 @@ export default function MarketingHomePage() {
         </section>
 
         {/* 4. Simple CTA */}
-        <section className="text-center">
+        <section className="rounded-3xl border border-white/[0.08] bg-[oklch(0.1_0.02_260/0.7)] px-6 py-12 text-center">
           <h3 className="font-display text-3xl tracking-tight text-zinc-50 sm:text-4xl">Start journaling today</h3>
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-zinc-400">
             No clutter. No fake data. Just your real trading days.

@@ -17,7 +17,7 @@ type Props = {
 };
 
 export function JournalPageClient({ userId }: Props) {
-  const { data, ready, addRow } = useUserWorkspace(userId);
+  const { data, ready, addRow, lastError } = useUserWorkspace(userId);
 
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");
@@ -26,6 +26,8 @@ export function JournalPageClient({ userId }: Props) {
   const [tradingViewUrl, setTradingViewUrl] = useState("");
   const [tags, setTags] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const sorted = useMemo(() => {
     return [...data.journal].sort((a, b) => {
@@ -35,7 +37,7 @@ export function JournalPageClient({ userId }: Props) {
     });
   }, [data.journal]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!symbol.trim() || !pnl.trim() || !entryDate.trim()) return;
     if (!isValidTradingViewUrl(tradingViewUrl)) {
@@ -43,8 +45,10 @@ export function JournalPageClient({ userId }: Props) {
       return;
     }
     setUrlError(null);
+    setSaveError(null);
+    setSaving(true);
 
-    addRow({
+    const result = await addRow({
       entryDate,
       time: "Day close",
       sym: symbol.trim().toUpperCase(),
@@ -54,6 +58,12 @@ export function JournalPageClient({ userId }: Props) {
       note: notes.trim() || undefined,
       tradingViewUrl: tradingViewUrl.trim() || undefined,
     });
+    setSaving(false);
+
+    if (!result.ok) {
+      setSaveError(result.error ?? lastError ?? "Could not save entry. Check your settings and database migration.");
+      return;
+    }
 
     setSymbol("");
     setPnl("");
@@ -152,12 +162,17 @@ export function JournalPageClient({ userId }: Props) {
             </div>
 
             <div className="sm:col-span-2 lg:col-span-3">
-              <Button type="submit" className="h-10 rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)]">
-                Save day entry
+              <Button
+                type="submit"
+                disabled={saving}
+                className="h-10 rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)]"
+              >
+                {saving ? "Saving…" : "Save day entry"}
               </Button>
             </div>
 
             {urlError ? <p className="sm:col-span-2 lg:col-span-3 text-sm text-rose-300">{urlError}</p> : null}
+            {saveError ? <p className="sm:col-span-2 lg:col-span-3 text-sm text-rose-300">{saveError}</p> : null}
           </form>
         )}
       </DashboardCard>

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Bell, KeyRound, Shield, User } from "lucide-react";
+import { Bell, KeyRound, LogOut, Shield, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const field =
@@ -18,11 +18,16 @@ const field =
 export function SettingsProfileForm() {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [timezone, setTimezone] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [accountMessage, setAccountMessage] = useState<string | null>(null);
+  const [accountBusy, setAccountBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,6 +44,7 @@ export function SettingsProfileForm() {
         return;
       }
       setEmail(user.email ?? "");
+      setPendingEmail(user.email ?? "");
       const meta = user.user_metadata as { full_name?: string; name?: string; timezone?: string } | undefined;
       setDisplayName(meta?.full_name ?? meta?.name ?? "");
       setTimezone(meta?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "");
@@ -68,6 +74,73 @@ export function SettingsProfileForm() {
     }
     setMessage("Saved.");
     router.refresh();
+  }
+
+  async function onUpdatePassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newPassword.trim()) {
+      setAccountMessage("Enter a new password.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setAccountMessage("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setAccountMessage("Passwords do not match.");
+      return;
+    }
+    setAccountBusy(true);
+    setAccountMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setAccountBusy(false);
+    if (error) {
+      setAccountMessage(error.message);
+      return;
+    }
+    setNewPassword("");
+    setConfirmPassword("");
+    setAccountMessage("Password updated.");
+  }
+
+  async function onUpdateEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!pendingEmail.trim()) {
+      setAccountMessage("Enter an email.");
+      return;
+    }
+    setAccountBusy(true);
+    setAccountMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ email: pendingEmail.trim() });
+    setAccountBusy(false);
+    if (error) {
+      setAccountMessage(error.message);
+      return;
+    }
+    setAccountMessage("Check your inbox to confirm the new email.");
+  }
+
+  async function signOut(scope: "local" | "others") {
+    setAccountBusy(true);
+    setAccountMessage(null);
+    const supabase = createClient();
+    const { error } =
+      scope === "others"
+        ? await supabase.auth.signOut({ scope: "others" })
+        : await supabase.auth.signOut({ scope: "local" });
+    setAccountBusy(false);
+    if (error) {
+      setAccountMessage(error.message);
+      return;
+    }
+    if (scope === "local") {
+      router.push("/");
+      router.refresh();
+      return;
+    }
+    setAccountMessage("Signed out from other devices.");
   }
 
   return (
@@ -143,33 +216,115 @@ export function SettingsProfileForm() {
 
       <DashboardCard
         eyebrow="Security"
-        title="Access"
-        description="API keys and sessions — production hardening lands with auth upgrades."
+        title="Account security"
+        description="Standard account actions for this MVP."
       >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <form onSubmit={onUpdatePassword} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-password" className="text-[13px] text-zinc-300">
+                New password
+              </Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className={field}
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password" className="text-[13px] text-zinc-300">
+                Confirm password
+              </Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat password"
+                className={field}
+                autoComplete="new-password"
+              />
+            </div>
+          </div>
+          <Button
+            type="submit"
+            variant="outline"
+            className="h-9 rounded-xl border-white/[0.1] bg-transparent"
+            disabled={accountBusy}
+          >
+            Update password
+          </Button>
+        </form>
+
+        <form onSubmit={onUpdateEmail} className="mt-6 border-t border-white/[0.06] pt-6">
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+            <div className="space-y-2">
+              <Label htmlFor="pending-email" className="text-[13px] text-zinc-300">
+                Change email
+              </Label>
+              <Input
+                id="pending-email"
+                type="email"
+                value={pendingEmail}
+                onChange={(e) => setPendingEmail(e.target.value)}
+                placeholder="you@example.com"
+                className={field}
+                autoComplete="email"
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="outline"
+              className="h-9 rounded-xl border-white/[0.1] bg-transparent"
+              disabled={accountBusy}
+            >
+              Update email
+            </Button>
+          </div>
+        </form>
+
+        <div className="mt-6 flex flex-col gap-4 border-t border-white/[0.06] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <Shield className="mt-0.5 size-5 text-[oklch(0.65_0.12_250)]" strokeWidth={1.75} />
             <div>
-              <p className="text-[15px] font-medium text-zinc-200">Two-factor authentication</p>
-              <p className="text-sm text-zinc-500">TOTP · backup codes</p>
+              <p className="text-[15px] font-medium text-zinc-200">Current device session</p>
+              <p className="text-sm text-zinc-500">Sign out from this browser.</p>
             </div>
           </div>
-          <Button type="button" variant="outline" className="h-9 shrink-0 rounded-xl border-white/[0.1] bg-transparent" disabled>
-            Enable
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 shrink-0 rounded-xl border-white/[0.1] bg-transparent"
+            disabled={accountBusy}
+            onClick={() => signOut("local")}
+          >
+            <LogOut className="mr-2 size-4" />
+            Sign out
           </Button>
         </div>
         <div className="mt-6 flex flex-col gap-4 border-t border-white/[0.06] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <KeyRound className="mt-0.5 size-5 text-zinc-500" strokeWidth={1.75} />
             <div>
-              <p className="text-[15px] font-medium text-zinc-200">API keys</p>
-              <p className="text-sm text-zinc-500">Broker & data connectors</p>
+              <p className="text-[15px] font-medium text-zinc-200">Other device sessions</p>
+              <p className="text-sm text-zinc-500">Revoke active sessions on other devices.</p>
             </div>
           </div>
-          <Button type="button" variant="outline" className="h-9 shrink-0 rounded-xl border-white/[0.1] bg-transparent" disabled>
-            Manage
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 shrink-0 rounded-xl border-white/[0.1] bg-transparent"
+            disabled={accountBusy}
+            onClick={() => signOut("others")}
+          >
+            Sign out others
           </Button>
         </div>
+        {accountMessage ? <p className="mt-5 text-sm text-zinc-400">{accountMessage}</p> : null}
       </DashboardCard>
 
       <DashboardCard eyebrow="Notifications" title="Alerts" description="In-app first — email digests when messaging is wired.">

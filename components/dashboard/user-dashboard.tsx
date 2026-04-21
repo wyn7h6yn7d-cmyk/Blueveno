@@ -8,12 +8,10 @@ import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { computeKpis, cumulativeSeries } from "@/lib/user-data/kpi";
 import { EmptyState } from "@/components/app/empty-state";
-import { isValidTradingViewUrl } from "@/lib/tradingview";
+import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 
 type Props = {
   userId: string;
@@ -44,14 +42,7 @@ function equityPath(series: number[], w: number, h: number): { line: string; are
 
 export function UserDashboard({ userId, email }: Props) {
   const gid = useId().replace(/:/g, "");
-  const { data, ready, addRow } = useUserWorkspace(userId);
-  const [time, setTime] = useState("");
-  const [sym, setSym] = useState("");
-  const [setup, setSetup] = useState("");
-  const [r, setR] = useState("");
-  const [tag, setTag] = useState("");
-  const [tradingViewUrl, setTradingViewUrl] = useState("");
-  const [urlError, setUrlError] = useState<string | null>(null);
+  const { data, ready } = useUserWorkspace(userId);
   const [recapCopied, setRecapCopied] = useState(false);
 
   const kpis = useMemo(() => computeKpis(data.journal), [data.journal]);
@@ -59,31 +50,6 @@ export function UserDashboard({ userId, email }: Props) {
   const paths = useMemo(() => equityPath(series, 480, 160), [series]);
 
   const lastTwo = data.journal.slice(0, 2);
-
-  const onAdd = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!sym.trim() || !r.trim()) return;
-    if (!isValidTradingViewUrl(tradingViewUrl)) {
-      setUrlError("Enter a valid TradingView URL.");
-      return;
-    }
-    setUrlError(null);
-    const t = time.trim() || new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-    addRow({
-      time: t,
-      sym: sym.trim().toUpperCase(),
-      setup: setup.trim() || "—",
-      r: r.trim(),
-      tag: tag.trim() || "Manual",
-      tradingViewUrl: tradingViewUrl.trim() || undefined,
-    });
-    setSym("");
-    setSetup("");
-    setR("");
-    setTag("");
-    setTradingViewUrl("");
-    setTime("");
-  };
 
   const copyRecap = async () => {
     const lines = [
@@ -114,7 +80,7 @@ export function UserDashboard({ userId, email }: Props) {
       <PageHeader
         eyebrow="Workspace"
         title="Overview"
-        description="Clean by default: every new account starts empty. Add your first trading day and begin tracking this week."
+        description="Your result center: performance summary, calendar P&L, and progression graph."
         actions={
           <Link
             href="/app/journal"
@@ -123,108 +89,10 @@ export function UserDashboard({ userId, email }: Props) {
               "h-9 rounded-xl border-white/[0.1] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
             )}
           >
-            Open journal
+            Add day in journal
           </Link>
         }
       />
-
-      <DashboardCard
-        eyebrow="Add data"
-        title="Log a fill"
-        description="Quick entry — appears in Recent and Journal. Use R like +0.5 or −0.25."
-        variant="inset"
-      >
-        {!ready ? (
-          <p className="text-sm text-zinc-500">Loading workspace…</p>
-        ) : (
-          <form onSubmit={onAdd} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-            <div className="space-y-2">
-              <Label htmlFor="dash-time" className="text-[13px] text-zinc-400">
-                Time
-              </Label>
-              <Input
-                id="dash-time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                placeholder={new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dash-sym" className="text-[13px] text-zinc-400">
-                Symbol
-              </Label>
-              <Input
-                id="dash-sym"
-                value={sym}
-                onChange={(e) => setSym(e.target.value)}
-                placeholder="ES"
-                required
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="dash-setup" className="text-[13px] text-zinc-400">
-                Setup
-              </Label>
-              <Input
-                id="dash-setup"
-                value={setup}
-                onChange={(e) => setSetup(e.target.value)}
-                placeholder="ORB · long"
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dash-r" className="text-[13px] text-zinc-400">
-                R
-              </Label>
-              <Input
-                id="dash-r"
-                value={r}
-                onChange={(e) => setR(e.target.value)}
-                placeholder="+0.5"
-                required
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 font-mono text-[15px] text-zinc-100 placeholder:text-zinc-600"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dash-tag" className="text-[13px] text-zinc-400">
-                Tag
-              </Label>
-              <Input
-                id="dash-tag"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                placeholder="Clean"
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-2 lg:col-span-4">
-              <Label htmlFor="dash-tv" className="text-[13px] text-zinc-400">
-                TradingView link
-              </Label>
-              <Input
-                id="dash-tv"
-                type="url"
-                value={tradingViewUrl}
-                onChange={(e) => setTradingViewUrl(e.target.value)}
-                placeholder="https://www.tradingview.com/chart/..."
-                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
-              />
-            </div>
-            <div className="flex items-end sm:col-span-2 lg:col-span-2">
-              <Button
-                type="submit"
-                className="h-10 w-full rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)] sm:w-auto sm:px-8"
-              >
-                Add to journal
-              </Button>
-            </div>
-            {urlError ? <p className="sm:col-span-2 lg:col-span-6 text-sm text-rose-300">{urlError}</p> : null}
-          </form>
-        )}
-      </DashboardCard>
 
       <section aria-label="Key metrics">
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -245,6 +113,25 @@ export function UserDashboard({ userId, email }: Props) {
           ))}
         </div>
       </section>
+
+      <DashboardCard
+        eyebrow="Calendar view"
+        title="Daily and weekly P&L"
+        description="Fast scan of green/red days and weekly totals."
+      >
+        {!ready ? (
+          <div className="h-32 animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02]" />
+        ) : data.journal.length === 0 ? (
+          <EmptyState
+            icon={CalendarDays}
+            title="No trading days yet"
+            description="Calendar view activates after your first Journal entry."
+            className="border-none bg-transparent py-8"
+          />
+        ) : (
+          <PnlCalendar entries={data.journal} />
+        )}
+      </DashboardCard>
 
       <DashboardCard
         eyebrow="Week tracker"
@@ -335,87 +222,18 @@ export function UserDashboard({ userId, email }: Props) {
         )}
       </DashboardCard>
 
-      <DashboardCard
-        eyebrow="Recent executions"
-        title="Latest journal entries"
-        description="Newest first — same data as the Journal page."
-        footer={
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[15px] text-zinc-500">
-              Signed in as <span className="text-zinc-300">{email}</span>
-            </p>
-            <Link
-              href="/app/journal"
-              className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.12_250)] hover:underline"
-            >
-              View all
-              <ArrowUpRight className="size-3.5" />
-            </Link>
-          </div>
-        }
-      >
-        <div className="overflow-x-auto rounded-xl border border-white/[0.06]">
-          <table className="w-full min-w-[520px] text-left text-[15px]">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-bv-surface-inset/80 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                <th scope="col" className="px-4 py-3">
-                  Time
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  Symbol
-                </th>
-                <th scope="col" className="px-4 py-3">
-                  Setup
-                </th>
-                <th scope="col" className="px-4 py-3 text-right tabular-nums">
-                  R
-                </th>
-                <th scope="col" className="px-4 py-3 text-right">
-                  Tag
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.journal.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8">
-                    <div className="py-2">
-                      <EmptyState
-                        icon={Link2}
-                        title="Paste your TradingView link"
-                        description="Create your first entry in Journal, add your notes, and attach a TradingView chart URL for clear day review."
-                        className="border-none bg-transparent py-5"
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                data.journal.map((row) => (
-                  <tr key={row.id} className="border-b border-white/[0.04] transition hover:bg-white/[0.03]">
-                    <td className="px-4 py-3 font-mono text-sm text-zinc-400">{row.time}</td>
-                    <td className="px-4 py-3 font-medium text-zinc-200">{row.sym}</td>
-                    <td className="px-4 py-3 text-zinc-400">{row.setup}</td>
-                    <td className="px-4 py-3 text-right font-mono tabular-nums text-zinc-200">{row.r}</td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <span className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-zinc-400">
-                          {row.tag}
-                        </span>
-                        <Link
-                          href={`/app/journal/${row.id}`}
-                          className="font-mono text-[10px] text-[oklch(0.8_0.1_248)] hover:underline"
-                        >
-                          Detail
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </DashboardCard>
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 ring-1 ring-white/[0.03]">
+        <p className="text-[15px] leading-relaxed text-zinc-500">
+          Signed in as <span className="text-zinc-300">{email}</span>
+        </p>
+        <Link
+          href="/app/journal"
+          className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.12_250)] hover:underline"
+        >
+          Open journal
+          <ArrowUpRight className="size-3.5" />
+        </Link>
+      </div>
 
       <div className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 ring-1 ring-white/[0.03]">
         <p className="text-[15px] leading-relaxed text-zinc-500">
