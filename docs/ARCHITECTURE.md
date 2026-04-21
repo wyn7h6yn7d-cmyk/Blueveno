@@ -108,7 +108,7 @@ app/
 ### Authentication (current stack)
 
 - **Auth.js (NextAuth v5)** with **JWT sessions** for speed of iteration.  
-- **Credentials provider** gated by env (`AUTH_DEMO_*`) for local/demo—replace with **database-backed credentials** (bcrypt/argon2) or **OAuth** (Google) in production.  
+- **Supabase Auth:** email + password; production uses the same flow with hardened policies.  
 - **Middleware** protects `/app/*`; unauthenticated users redirect to `/login` with `callbackUrl`.  
 - **Future:** Add **Prisma + PostgreSQL** (or Drizzle) with `User`, `Account`, `Session` tables; keep the same `auth()` API surface.
 

@@ -6,7 +6,7 @@ export function HomePricingSection() {
   return (
     <section
       id="pricing"
-      className="scroll-mt-28 relative border-t border-white/[0.06] py-28 sm:scroll-mt-32 sm:py-32 lg:py-40"
+      className="scroll-mt-28 relative border-t border-white/[0.06] py-16 sm:scroll-mt-32 sm:py-20 lg:py-28"
       aria-labelledby="home-pricing-heading"
     >
       <div

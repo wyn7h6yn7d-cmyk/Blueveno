@@ -10,7 +10,7 @@ export function ValueStrip() {
         Product essence
       </h2>
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,oklch(0.14_0.06_262/0.35)_0%,transparent_58%)]" aria-hidden />
-      <div className="relative mx-auto max-w-[1100px] px-5 py-14 sm:px-10 sm:py-16">
+      <div className="relative mx-auto max-w-[1100px] px-5 py-10 sm:px-10 sm:py-12">
         <div className="flex items-start gap-6 sm:items-center sm:gap-10">
           <div
             className="mt-1 hidden h-12 w-px shrink-0 bg-gradient-to-b from-[oklch(0.55_0.14_252/0.85)] via-[oklch(0.5_0.12_252/0.35)] to-transparent sm:block sm:h-14"

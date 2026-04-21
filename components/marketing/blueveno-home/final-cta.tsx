@@ -4,7 +4,7 @@ export function FinalCta() {
   return (
     <section
       id="cta"
-      className="scroll-mt-28 relative border-t border-white/[0.07] py-24 sm:scroll-mt-32 sm:py-28 lg:py-32"
+      className="scroll-mt-28 relative border-t border-white/[0.07] py-16 sm:scroll-mt-32 sm:py-20 lg:py-24"
       aria-labelledby="cta-heading"
     >
       <div
@@ -15,11 +15,11 @@ export function FinalCta() {
       <div className="relative mx-auto max-w-[720px] px-5 text-center sm:px-8">
         <h2
           id="cta-heading"
-          className="font-display text-[clamp(2rem,4.5vw,2.75rem)] font-semibold leading-[1.08] tracking-[-0.05em] text-zinc-50"
+          className="font-display text-[clamp(1.5rem,3.5vw,2.35rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-zinc-50"
         >
-          Own the close.
+          Data makes you green.
         </h2>
-        <div className="mt-12 flex justify-center">
+        <div className="mt-8 flex justify-center sm:mt-10">
           <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
         </div>
       </div>

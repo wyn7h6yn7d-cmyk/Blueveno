@@ -68,7 +68,7 @@ npm run build
 ## Environment
 
 - Copy `.env.example` to `.env` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
-- **Google & GitHub login:** enable providers in the Supabase Dashboard; redirect/callback setup is documented in `docs/OAUTH.md` (secrets stay in Supabase, not in `.env`).
+- **Auth:** email + password via Supabase Auth. If email confirmation is enabled, add redirect URLs in Supabase (including `{origin}/auth/callback` for the signup confirmation flow).
 - Stripe and billing: `docs/BILLING.md`.
 
 ## Design

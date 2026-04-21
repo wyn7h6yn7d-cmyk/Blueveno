@@ -54,7 +54,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
     <section
       id="calendar"
       className={cn(
-        "scroll-mt-28 relative border-t border-white/[0.07] py-28 sm:scroll-mt-32 sm:py-32 lg:py-44",
+        "scroll-mt-28 relative border-t border-white/[0.07] py-16 sm:scroll-mt-32 sm:py-20 lg:py-28",
         className,
       )}
       aria-labelledby="cal-heading"
@@ -65,12 +65,12 @@ export function CalendarSection({ className }: CalendarSectionProps) {
       />
 
       <div className="relative mx-auto max-w-[1480px] px-4 sm:px-8 lg:px-10">
-        <div className="mb-16 flex flex-col gap-10 lg:mb-24 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+        <div className="mb-10 flex flex-col gap-8 lg:mb-14 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
           <div className="max-w-2xl">
             <p className="font-mono text-[10px] uppercase tracking-[0.38em] text-[oklch(0.62_0.12_252)]">Signature</p>
             <h2
               id="cal-heading"
-              className="font-display mt-5 text-[clamp(2.5rem,6.5vw,4.25rem)] font-semibold leading-[1.02] tracking-[-0.055em] text-zinc-50"
+              className="font-display mt-4 text-[clamp(1.65rem,4vw,2.75rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-zinc-50 sm:mt-5"
             >
               One glance.
               <br />
@@ -78,7 +78,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                 One week understood.
               </span>
             </h2>
-            <p className="mt-6 max-w-md text-[15px] leading-[1.55] tracking-[-0.02em] text-zinc-500 sm:text-[16px]">
+            <p className="mt-4 max-w-md text-[14px] leading-[1.55] tracking-[-0.02em] text-zinc-500 sm:mt-5 sm:text-[15px]">
               Green, red, flat — week totals on the rail.
             </p>
           </div>
@@ -96,7 +96,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
           </div>
         </div>
 
-        <div className="flex flex-col gap-8 lg:gap-10">
+        <div className="flex flex-col gap-6 lg:gap-8">
           {calendarRows.map((row, ri) => {
             const sum = weekRowSum(row);
             const weekLabel = `Week ${ri + 1}`;
@@ -107,26 +107,26 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                 key={`week-${ri}`}
                 role="group"
                 aria-label={`${weekLabel} of April`}
-                initial={reducedMotion ? false : { opacity: 0, y: 22 }}
+                initial={reducedMotion ? false : { opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-48px" }}
+                viewport={{ once: true, margin: "-32px" }}
                 transition={
                   reducedMotion
                     ? { duration: 0 }
-                    : { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: ri * 0.04 }
+                    : { duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: ri * 0.02 }
                 }
                 className={cn(
-                  "relative overflow-hidden rounded-[2rem] border p-4 sm:p-6 lg:p-8",
+                  "relative overflow-hidden rounded-2xl border p-3 sm:p-4 sm:rounded-[1.35rem] lg:p-6",
                   "border-[oklch(0.52_0.13_252/0.42)]",
                   "bg-[linear-gradient(168deg,oklch(0.1_0.045_264/0.92)_0%,oklch(0.048_0.038_272/0.96)_100%)]",
-                  "shadow-[0_32px_90px_-52px_rgba(0,0,0,0.88),inset_0_1px_0_0_oklch(1_0_0/0.06)]",
+                  "shadow-[0_24px_64px_-44px_rgba(0,0,0,0.85),inset_0_1px_0_0_oklch(1_0_0/0.06)]",
                   featured &&
-                    "ring-1 ring-[oklch(0.55_0.14_252/0.35)] shadow-[0_40px_100px_-48px_oklch(0.35_0.12_252/0.35),inset_0_1px_0_0_oklch(1_0_0/0.07)]",
+                    "ring-1 ring-[oklch(0.55_0.14_252/0.35)] shadow-[0_28px_72px_-40px_oklch(0.35_0.12_252/0.3),inset_0_1px_0_0_oklch(1_0_0/0.07)]",
                 )}
               >
-                <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.06] pb-4 sm:mb-5 sm:pb-5">
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-display text-[clamp(1.5rem,3vw,2rem)] font-semibold tracking-[-0.04em] text-zinc-50">
+                <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-white/[0.06] pb-3 sm:mb-4 sm:gap-3 sm:pb-4">
+                  <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
+                    <span className="font-display text-[clamp(1.2rem,2.5vw,1.65rem)] font-semibold tracking-[-0.04em] text-zinc-50">
                       April
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">2025</span>
@@ -183,8 +183,8 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                     ))}
                   </div>
 
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch lg:gap-5">
-                    <div className="grid min-w-0 flex-1 grid-cols-7 gap-2 lg:gap-3">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-4">
+                    <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 sm:gap-2 lg:gap-3">
                       {row.map((day, di) => {
                         const tone = dayCellTone(day);
                         const pnl = day ? pnlMap[day] : undefined;
@@ -198,7 +198,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                               <>
                                 <span
                                   className={cn(
-                                    "font-mono text-[11px] tabular-nums sm:text-[12px]",
+                                    "shrink-0 font-mono text-[10px] tabular-nums sm:text-[12px]",
                                     tone === "empty" ? "text-zinc-600" : "text-zinc-400/90",
                                   )}
                                 >
@@ -206,7 +206,8 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                                 </span>
                                 <span
                                   className={cn(
-                                    "font-display text-[15px] tabular-nums tracking-[-0.03em] sm:text-[17px] lg:text-[18px]",
+                                    "block w-full min-w-0 break-words text-center font-display leading-[1.15] tabular-nums tracking-[-0.02em] [overflow-wrap:anywhere] [word-break:break-word] sm:text-left",
+                                    "text-[clamp(0.625rem,2.85vw,0.8125rem)] sm:text-[17px] lg:text-[18px]",
                                     typeof pnl === "number"
                                       ? pnl > 0
                                         ? "text-emerald-100"
@@ -224,7 +225,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                         );
 
                         const baseTile = cn(
-                          "relative flex min-h-[4.85rem] flex-col justify-between rounded-2xl border p-3 transition-[transform,box-shadow,border-color] duration-200 sm:min-h-[5.85rem] sm:p-3.5 lg:min-h-[6.85rem] lg:p-4",
+                          "relative flex min-h-[3.65rem] min-w-0 flex-col justify-between overflow-hidden rounded-xl border p-1.5 transition-[transform,box-shadow,border-color] duration-200 sm:min-h-[4.75rem] sm:rounded-2xl sm:p-2.5 lg:min-h-[5.5rem] lg:p-3",
                           toneStyles(tone, weekend),
                           isSelectable &&
                             "cursor-pointer hover:z-[1] hover:brightness-[1.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.14_252/0.85)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.07_0.04_268)]",
@@ -244,7 +245,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                               whileTap={reducedMotion ? undefined : { scale: 0.988 }}
                               transition={{ type: "spring", stiffness: 520, damping: 28 }}
                             >
-                              <span className="relative z-[1] flex h-full flex-col justify-between text-left">
+                              <span className="relative z-[1] flex h-full min-w-0 flex-col justify-between gap-0.5 text-left">
                                 {content}
                               </span>
                             </motion.button>
@@ -261,7 +262,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
 
                     <div
                       className={cn(
-                        "flex w-full min-h-[4.25rem] flex-col justify-center rounded-2xl border px-5 py-5 sm:min-h-0 sm:w-[min(10rem,28%)] sm:shrink-0 sm:px-5 lg:w-[11rem] lg:px-7 lg:py-7",
+                        "flex w-full min-h-[3.5rem] flex-col justify-center rounded-xl border px-4 py-3.5 sm:min-h-0 sm:w-[min(9rem,28%)] sm:shrink-0 sm:rounded-2xl sm:px-4 sm:py-4 lg:w-[10rem] lg:px-5 lg:py-5",
                         "border-[oklch(0.55_0.14_252/0.42)]",
                         "bg-[linear-gradient(158deg,oklch(0.18_0.07_262/0.82)_0%,oklch(0.09_0.045_268/0.9)_100%)]",
                         "shadow-[inset_0_1px_0_0_oklch(0.55_0.12_252/0.22),0_18px_52px_-34px_oklch(0.38_0.12_252/0.45)]",
@@ -272,7 +273,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                       </span>
                       <span
                         className={cn(
-                          "font-display mt-2 text-[clamp(1.55rem,3.8vw,2.5rem)] font-semibold tabular-nums tracking-[-0.045em] lg:mt-3",
+                          "block min-w-0 break-words font-display mt-2 text-[clamp(1.2rem,6.5vw,2.5rem)] font-semibold tabular-nums tracking-[-0.045em] [overflow-wrap:anywhere] lg:mt-3",
                           sum > 0 ? "text-emerald-200" : sum < 0 ? "text-rose-200" : "text-zinc-500",
                         )}
                       >

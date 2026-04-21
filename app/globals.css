@@ -909,9 +909,24 @@ body {
 
 /* Homepage: fewer simultaneous animations on small viewports (GPU / battery) */
 @media (max-width: 768px) {
+  .bv-home-atmo-parallax-a,
   .bv-home-atmo-parallax-b {
     animation: none;
     transform: none;
+    will-change: auto;
+  }
+
+  .bv-home-atmo-grid,
+  .bv-home-atmo-grid-fine {
+    animation: none;
+    will-change: auto;
+  }
+
+  .bv-home-atmo-h-lines,
+  .bv-home-atmo-v-lines,
+  .bv-home-atmo-pulse {
+    animation: none;
+    opacity: 0.1;
     will-change: auto;
   }
 
@@ -940,7 +955,7 @@ body {
   }
 
   .bv-home-atmo-3d-wrap {
-    opacity: 0.28;
+    opacity: 0.22;
   }
 }
 

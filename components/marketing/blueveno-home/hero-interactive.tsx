@@ -281,7 +281,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
 
                       <div className="flex min-h-0 flex-1 flex-col gap-1.5 sm:gap-2">
                         {calendarRows.map((row, ri) => (
-                          <div key={ri} className="grid min-h-0 flex-1 grid-cols-7 gap-1 sm:gap-1.5">
+                          <div key={ri} className="grid min-h-0 min-w-0 flex-1 grid-cols-7 gap-1 sm:gap-1.5">
                             {row.map((day, di) => {
                               const tone = dayCellTone(day);
                               const pnl = day ? pnlMap[day] : undefined;
@@ -302,7 +302,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                                 <div
                                   key={`${ri}-${di}-${day || "pad"}`}
                                   className={cn(
-                                    "flex min-h-[2.65rem] flex-col justify-between rounded-md p-1.5 sm:min-h-[3.1rem] sm:rounded-lg sm:p-2",
+                                    "flex min-h-[2.65rem] min-w-0 flex-col justify-between overflow-hidden rounded-md p-1 sm:min-h-[3.1rem] sm:rounded-lg sm:p-2",
                                     toneClass,
                                   )}
                                 >
@@ -311,7 +311,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                                       <span className="font-mono text-[9px] font-medium tabular-nums text-zinc-500 sm:text-[10px]">{day}</span>
                                       <span
                                         className={cn(
-                                          "font-display text-[10px] tabular-nums leading-none sm:text-xs",
+                                          "block w-full min-w-0 text-center font-display text-[clamp(0.55rem,2.6vw,0.625rem)] tabular-nums leading-[1.05] [overflow-wrap:anywhere] sm:text-xs sm:leading-none",
                                           typeof pnl === "number" && pnl > 0
                                             ? "text-emerald-100"
                                             : typeof pnl === "number" && pnl < 0

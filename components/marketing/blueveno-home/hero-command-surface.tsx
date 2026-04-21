@@ -166,7 +166,7 @@ export function HeroCommandSurface() {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-3 grid grid-cols-7 gap-1.5 sm:mt-2 sm:gap-2.5">
+                      <div className="mt-3 grid min-w-0 grid-cols-7 gap-1 sm:mt-2 sm:gap-2.5">
                         {heroWeek.map((day, di) => {
                           const tone = dayCellTone(day);
                           const pnl = day ? pnlMap[day] : undefined;
@@ -182,7 +182,7 @@ export function HeroCommandSurface() {
                             <motion.div
                               key={`${day}-${di}`}
                               className={cn(
-                                "flex min-h-[5.25rem] flex-col justify-between rounded-lg p-2 sm:min-h-[6.25rem] sm:rounded-xl sm:p-3",
+                                "flex min-h-[4.75rem] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-1.5 sm:min-h-[6.25rem] sm:rounded-xl sm:p-3",
                                 toneClass,
                               )}
                               initial={reduceMotion ? false : { opacity: 0.75, scale: 0.98 }}
@@ -191,10 +191,12 @@ export function HeroCommandSurface() {
                             >
                               {day ? (
                                 <>
-                                  <span className="font-mono text-[10px] font-medium tabular-nums text-zinc-500">{day}</span>
+                                  <span className="shrink-0 font-mono text-[9px] font-medium tabular-nums text-zinc-500 sm:text-[10px]">
+                                    {day}
+                                  </span>
                                   <span
                                     className={cn(
-                                      "font-display text-base tabular-nums leading-none sm:text-lg",
+                                      "block w-full min-w-0 text-center font-display text-[clamp(0.625rem,2.9vw,0.875rem)] tabular-nums leading-[1.1] tracking-[-0.02em] [overflow-wrap:anywhere] sm:text-left sm:text-lg sm:leading-none",
                                       typeof pnl === "number" && pnl > 0
                                         ? "text-emerald-100"
                                         : typeof pnl === "number" && pnl < 0
