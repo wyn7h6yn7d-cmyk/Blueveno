@@ -5,6 +5,11 @@ import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
 import { createClient } from "@/lib/supabase/client";
 import { hasBearerSession, waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
+import {
+  isMissingEntryDateColumnError,
+  JOURNAL_SELECT_WITH_ENTRY_DATE,
+  JOURNAL_SELECT_WITHOUT_ENTRY_DATE,
+} from "@/lib/user-data/journal-entry-columns";
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
 import { useAccess } from "@/components/access/access-provider";
@@ -96,24 +101,37 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       const uid = userIdRef.current;
       if (!uid) return;
 
-      const selectRows = () =>
-        supabase
-          .from("journal_entries")
-          .select("id, created_at, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
-          .eq("user_id", uid)
-          .order("created_at", { ascending: false });
-
       let resolved: JournalRowDb[] = [];
       let queryError: string | undefined;
 
       const pull = async () => {
-        const { data: batch, error } = await selectRows();
+        const first = await supabase
+          .from("journal_entries")
+          .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
+          .eq("user_id", uid)
+          .order("created_at", { ascending: false });
+
+        let batch: JournalRowDb[] | null = null;
+        let error = first.error;
+
+        if (first.error && isMissingEntryDateColumnError(first.error.message)) {
+          const second = await supabase
+            .from("journal_entries")
+            .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
+            .eq("user_id", uid)
+            .order("created_at", { ascending: false });
+          batch = second.data as JournalRowDb[] | null;
+          error = second.error;
+        } else {
+          batch = first.data as JournalRowDb[] | null;
+        }
+
         if (cancelled) return false;
         if (error) {
           queryError = error.message;
           return false;
         }
-        resolved = (batch ?? []) as JournalRowDb[];
+        resolved = batch ?? [];
         return true;
       };
 
@@ -251,14 +269,14 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
           ...basePayload,
           entry_date: row.entryDate ?? null,
         })
-        .select("id, created_at, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+        .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
         .single();
 
-      if (insertResult.error?.message?.toLowerCase().includes("entry_date")) {
+      if (insertResult.error && isMissingEntryDateColumnError(insertResult.error.message)) {
         insertResult = await supabase
           .from("journal_entries")
           .insert(basePayload)
-          .select("id, created_at, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+          .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
           .single();
       }
 
@@ -325,10 +343,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         .update(basePayload)
         .eq("user_id", userId)
         .eq("id", id)
-        .select("id, created_at, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+        .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
         .single();
 
-      if (updateResult.error?.message?.toLowerCase().includes("entry_date")) {
+      if (updateResult.error && isMissingEntryDateColumnError(updateResult.error.message)) {
         updateResult = await supabase
           .from("journal_entries")
           .update({
@@ -342,7 +360,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
           })
           .eq("user_id", userId)
           .eq("id", id)
-          .select("id, created_at, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+          .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
           .single();
       }
 
@@ -379,22 +397,27 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
 
   const removeRow = useCallback(
     async (id: string) => {
-      if (!userId) return;
+      if (!userId) return { ok: false as const, error: "Not signed in." };
       if (!canWriteJournal) {
-        setLastError("Upgrade required to modify journal entries.");
-        return;
+        const msg =
+          "Your trial has ended. Upgrade to Blueveno Premium to modify journal entries.";
+        setLastError(msg);
+        return { ok: false as const, error: msg };
       }
+      setLastError(null);
       const supabase = createClient();
       const { error } = await supabase.from("journal_entries").delete().eq("user_id", userId).eq("id", id);
       if (error) {
-        setLastError(toUserDbError(error.message));
-        return;
+        const msg = toUserDbError(error.message);
+        setLastError(msg);
+        return { ok: false as const, error: msg };
       }
       setData((prev) => {
         const next = { ...prev, journal: prev.journal.filter((j) => j.id !== id) };
         if (userId) writeJournalCache(userId, next);
         return next;
       });
+      return { ok: true as const };
     },
     [userId, canWriteJournal],
   );

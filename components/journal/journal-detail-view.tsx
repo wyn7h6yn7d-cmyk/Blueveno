@@ -1,32 +1,57 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ExternalLink, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAccess } from "@/components/access/access-provider";
+import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
+import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 
 type Props = {
   row: JournalRowDb;
+  userId: string;
+  initialWorkspace: UserWorkspaceSnapshot;
 };
 
-export function JournalDetailView({ row }: Props) {
-  const { displayCurrency } = useAccess();
+export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
+  const router = useRouter();
+  const { displayCurrency, canWriteJournal } = useAccess();
+  const { removeRow } = useUserWorkspace(userId, { initialWorkspace });
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const chartUrl = row.tradingview_url as string | null;
   const rawPnl = String(row.r_value ?? "");
   const pnlNum = parsePnlAmount(rawPnl);
   const pnlTitle = pnlNum !== null ? formatSignedPnlAmount(pnlNum, displayCurrency) : rawPnl;
 
+  const onDelete = async () => {
+    if (!canWriteJournal) return;
+    if (!window.confirm("Delete this journal entry? This cannot be undone.")) return;
+    setDeleteError(null);
+    setDeleting(true);
+    const result = await removeRow(row.id);
+    setDeleting(false);
+    if (result.ok) {
+      router.push("/app/journal");
+      router.refresh();
+      return;
+    }
+    setDeleteError(result.error);
+  };
+
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Journal day"
-        title={`${row.symbol} · ${(row.entry_date as string | null) ?? row.entry_time}`}
+        title={`${row.symbol} · ${row.entry_date ?? row.entry_time}`}
         description="Simple day detail view with note and chart link."
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -40,6 +65,18 @@ export function JournalDetailView({ row }: Props) {
               <Pencil className="mr-2 size-4" strokeWidth={2} aria-hidden />
               Edit
             </Link>
+            {canWriteJournal ? (
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={deleting}
+                className="h-9 rounded-xl px-4"
+                onClick={() => void onDelete()}
+              >
+                <Trash2 className="mr-2 size-4" strokeWidth={2} aria-hidden />
+                {deleting ? "Deleting…" : "Delete"}
+              </Button>
+            ) : null}
             <Link
               href="/app/journal"
               className={cn(
@@ -53,6 +90,12 @@ export function JournalDetailView({ row }: Props) {
         }
       />
 
+      {deleteError ? (
+        <p className="text-[13px] text-rose-300/95" role="alert">
+          {deleteError}
+        </p>
+      ) : null}
+
       <DashboardCard
         eyebrow="Day detail"
         title={pnlTitle}
@@ -65,7 +108,7 @@ export function JournalDetailView({ row }: Props) {
           </div>
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Date</dt>
-            <dd className="mt-2 text-zinc-100">{(row.entry_date as string | null) ?? row.entry_time}</dd>
+            <dd className="mt-2 text-zinc-100">{row.entry_date ?? row.entry_time}</dd>
           </div>
         </dl>
 

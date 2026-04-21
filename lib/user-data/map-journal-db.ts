@@ -4,7 +4,8 @@ import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 export type JournalRowDb = {
   id: string;
   created_at: string | null;
-  entry_date: string | null;
+  /** Absent when DB has not run the entry_date migration yet. */
+  entry_date?: string | null;
   entry_time: string;
   symbol: string;
   setup: string;

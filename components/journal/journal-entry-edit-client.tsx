@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Lock } from "lucide-react";
+import { ArrowLeft, Check, Lock, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ type Props = {
 export function JournalEntryEditClient({ userId, entryId, initialWorkspace, initialRow }: Props) {
   const router = useRouter();
   const { canWriteJournal, displayCurrency } = useAccess();
-  const { updateRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
+  const { updateRow, removeRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
 
   const preserved = useRef({ setup: initialRow.setup, tag: initialRow.tag, time: initialRow.time });
 
@@ -44,6 +44,8 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
   const [saveError, setSaveError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +77,21 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
     }
     router.push(`/app/journal/${entryId}`);
     router.refresh();
+  };
+
+  const onDelete = async () => {
+    if (!canWriteJournal) return;
+    if (!window.confirm("Delete this journal entry? This cannot be undone.")) return;
+    setDeleteError(null);
+    setDeleting(true);
+    const result = await removeRow(entryId);
+    setDeleting(false);
+    if (result.ok) {
+      router.push("/app/journal");
+      router.refresh();
+      return;
+    }
+    setDeleteError(result.error);
   };
 
   return (
@@ -230,6 +247,30 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
           {urlError ? <p className="text-[13px] text-rose-300/95">{urlError}</p> : null}
           {saveError ? <p className="text-[13px] text-rose-300/95">{saveError}</p> : null}
         </form>
+
+        {canWriteJournal ? (
+          <div className="mt-8 border-t border-white/[0.08] pt-6">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Danger zone</p>
+            <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
+              Remove this day from your journal permanently.
+            </p>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting || saving}
+              className="mt-4 h-10 rounded-xl px-4"
+              onClick={() => void onDelete()}
+            >
+              <Trash2 className="mr-2 size-4" strokeWidth={2} aria-hidden />
+              {deleting ? "Deleting…" : "Delete entry"}
+            </Button>
+            {deleteError ? (
+              <p className="mt-3 text-[13px] text-rose-300/95" role="alert">
+                {deleteError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </DashboardCard>
     </div>
   );

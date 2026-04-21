@@ -5,15 +5,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchJournalEntryForUser } from "@/lib/user-data/fetch-journal-entry-client";
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
+import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { JournalDetailView } from "@/components/journal/journal-detail-view";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   userId: string;
   entryId: string;
+  initialWorkspace: UserWorkspaceSnapshot;
 };
 
-export function JournalDetailLoader({ userId, entryId }: Props) {
+export function JournalDetailLoader({ userId, entryId, initialWorkspace }: Props) {
   const [row, setRow] = useState<JournalRowDb | null>(null);
   const [phase, setPhase] = useState<"loading" | "ready" | "missing" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -81,7 +83,7 @@ export function JournalDetailLoader({ userId, entryId }: Props) {
   }
 
   if (phase === "ready" && row) {
-    return <JournalDetailView row={row} />;
+    return <JournalDetailView row={row} userId={userId} initialWorkspace={initialWorkspace} />;
   }
 
   notFound();
