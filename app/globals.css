@@ -793,6 +793,22 @@ body {
   will-change: transform, opacity;
 }
 
+/* Homepage: fewer simultaneous animations on small viewports (GPU / battery) */
+@media (max-width: 768px) {
+  .bv-home-atmo-parallax-b {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+
+  .bv-home-atmo-scan {
+    animation: none;
+    opacity: 0;
+    transform: none;
+    will-change: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bv-home-atmo-orb {
     animation: none;

@@ -220,37 +220,12 @@ function WeekSurface() {
   );
 }
 
-function HeroBackgroundMotion({ reduced }: { reduced: boolean }) {
+/** Static hero depth only — motion is handled by AmbientField to avoid double compositing + jank. */
+function HeroBackgroundDepth() {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      {/* base depth */}
+    <div className="pointer-events-none absolute inset-0 overflow-hidden [contain:paint]" aria-hidden>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_-15%,oklch(0.38_0.11_252/0.18),transparent_55%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_100%,oklch(0.22_0.07_258/0.2),transparent_65%)]" />
-      {/* slow grid drift — existing global utility */}
-      <div
-        className={cn(
-          "absolute inset-[-40%] opacity-[0.07] motion-reduce:opacity-0",
-          !reduced && "bg-market-grid-drift",
-        )}
-      />
-      {/* coordinate crosshair — static + subtle */}
-      <svg className="absolute left-1/2 top-1/2 h-[140%] w-[140%] -translate-x-1/2 -translate-y-1/2 opacity-[0.06]" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <line x1="50" y1="0" x2="50" y2="100" stroke="oklch(0.65 0.1 252)" strokeWidth="0.03" vectorEffect="non-scaling-stroke" />
-        <line x1="0" y1="50" x2="100" y2="50" stroke="oklch(0.65 0.1 252)" strokeWidth="0.03" vectorEffect="non-scaling-stroke" />
-      </svg>
-      {/* scanning band — CSS animation */}
-      {!reduced ? (
-        <motion.div
-          className="absolute inset-x-0 top-0 h-[45%] bg-[linear-gradient(180deg,transparent,oklch(0.55_0.1_252/0.04),transparent)]"
-          animate={{ y: ["-20%", "120%"] }}
-          transition={{ duration: 14, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        />
-      ) : null}
-      {/* fine waveform lines — very low contrast */}
-      <div
-        className="absolute inset-0 opacity-[0.045] motion-reduce:opacity-0 bg-market-wave"
-        style={{ mixBlendMode: "screen" }}
-      />
     </div>
   );
 }
@@ -259,6 +234,7 @@ export function HeroCinematicReview() {
   const [mode, setMode] = useState<ViewMode>("week");
   const reducedMotion = useReducedMotion();
   const reduced = reducedMotion === true;
+  const tabTransition = reduced ? { duration: 0 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const };
   const tabId = useId();
   const panelId = `${tabId}-panel`;
 
@@ -279,7 +255,7 @@ export function HeroCinematicReview() {
       className="relative overflow-hidden border-b border-white/[0.06] pb-20 pt-28 sm:pb-28 sm:pt-32"
       aria-labelledby="hero-heading"
     >
-      <HeroBackgroundMotion reduced={reduced} />
+      <HeroBackgroundDepth />
 
       <div className="relative z-10 mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8">
         {/* copy block — centered, not left-rail */}
@@ -304,7 +280,7 @@ export function HeroCinematicReview() {
 
         {/* single product object */}
         <div className="mx-auto mt-16 max-w-5xl">
-          <div className="rounded-[28px] border border-white/[0.12] bg-[linear-gradient(145deg,oklch(0.14_0.04_262/0.5),oklch(0.08_0.03_268/0.65))] p-[1px] shadow-[0_40px_120px_-48px_rgba(0,0,0,0.85),inset_0_1px_0_0_oklch(1_0_0_/0.08)]">
+          <div className="rounded-[28px] border border-white/[0.12] bg-[linear-gradient(145deg,oklch(0.14_0.04_262/0.5),oklch(0.08_0.03_268/0.65))] p-[1px] shadow-[0_40px_120px_-48px_rgba(0,0,0,0.85),inset_0_1px_0_0_oklch(1_0_0_/0.08)] [transform:translateZ(0)]">
             <div className="overflow-hidden rounded-[27px] bg-[linear-gradient(168deg,oklch(0.1_0.035_264/0.97),oklch(0.055_0.03_268/0.98))]">
               {/* chrome bar */}
               <div className="flex flex-col gap-4 border-b border-white/[0.06] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
@@ -338,11 +314,7 @@ export function HeroCinematicReview() {
                         )}
                       >
                         {selected ? (
-                          <motion.span
-                            layoutId="hero-tab"
-                            className="absolute inset-0 rounded-lg border border-white/[0.1] bg-white/[0.08] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.1)]"
-                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                          />
+                          <span className="absolute inset-0 rounded-lg border border-white/[0.1] bg-white/[0.08] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.1)] transition-colors duration-200" />
                         ) : null}
                         <span className="relative z-10">{label}</span>
                       </button>
@@ -359,10 +331,10 @@ export function HeroCinematicReview() {
                     key={mode}
                     role="tabpanel"
                     aria-labelledby={`${tabId}-${mode}`}
-                    initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                    initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }}
-                    transition={{ duration: reduced ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
+                    exit={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
+                    transition={tabTransition}
                   >
                     {mode === "day" ? <DaySurface /> : null}
                     {mode === "chart" ? <ChartSurface /> : null}

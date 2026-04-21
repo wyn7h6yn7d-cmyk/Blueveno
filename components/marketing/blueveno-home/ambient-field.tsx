@@ -39,20 +39,8 @@ export function AmbientField() {
         }}
       />
 
-      {/* Primary market grid — slow drift */}
+      {/* Primary market grid — slow drift (single grid; extra layers removed for scroll perf) */}
       <div className="bv-home-atmo-grid absolute inset-0 opacity-[0.52]" />
-
-      {/* Finer grid — counter-drift for depth */}
-      <div className="bv-home-atmo-grid-fine absolute inset-0 opacity-[0.4]" />
-
-      {/* Horizontal coordinate lines — vertical motion */}
-      <div className="bv-home-atmo-h-lines absolute inset-0 opacity-[0.14]" />
-
-      {/* Vertical coordinate lines — horizontal motion */}
-      <div className="bv-home-atmo-v-lines absolute inset-0 opacity-[0.12]" />
-
-      {/* Diagonal pulse texture — market “tape” feel */}
-      <div className="bv-home-atmo-pulse absolute inset-0 opacity-[0.09]" />
 
       {/* Structural meridian — static anchor */}
       <div className="absolute inset-y-0 left-[42%] w-px max-lg:hidden bg-gradient-to-b from-transparent via-[oklch(0.5_0.13_252/0.22)] to-transparent opacity-90" />
