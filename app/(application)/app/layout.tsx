@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       user={{
         name: session.user.name,
         email: session.user.email,
+        timezone: session.user.timezone,
       }}
       access={toClientAccess(access, session.user.displayCurrency)}
     >

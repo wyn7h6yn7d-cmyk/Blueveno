@@ -16,6 +16,7 @@ import {
   displayCurrencyLabel,
   normalizeDisplayCurrency,
 } from "@/lib/format-pnl";
+import { allTimezoneOptionValues, TIMEZONE_GROUPS } from "@/lib/timezone-options";
 
 const field =
   "h-10 rounded-xl border-white/[0.1] bg-black/25 text-[15px] text-zinc-100 shadow-[inset_0_1px_2px_oklch(0_0_0/0.15)] placeholder:text-zinc-600";
@@ -72,11 +73,14 @@ export function SettingsProfileForm() {
     setSaving(true);
     setMessage(null);
     const supabase = createClient();
+    const tz =
+      timezone.trim() ||
+      (typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "UTC");
     const { error } = await supabase.auth.updateUser({
       data: {
         full_name: displayName.trim(),
         name: displayName.trim(),
-        timezone: timezone.trim(),
+        timezone: tz,
         display_currency: normalizeDisplayCurrency(displayCurrency),
       },
     });
@@ -134,6 +138,13 @@ export function SettingsProfileForm() {
     }
     setAccountMessage("Check your inbox to confirm the new email.");
   }
+
+  const knownTimezones = allTimezoneOptionValues();
+  const timezoneSelectValue = knownTimezones.includes(timezone)
+    ? timezone
+    : timezone.trim()
+      ? timezone
+      : "__custom__";
 
   async function signOut(scope: "local" | "others") {
     setAccountBusy(true);
@@ -214,13 +225,43 @@ export function SettingsProfileForm() {
                 <Label htmlFor="timezone" className="text-[13px] text-zinc-300">
                   Timezone
                 </Label>
-                <Input
+                <p className="text-[13px] text-zinc-600">
+                  Used for the live session bar and your local clock in the app header.
+                </p>
+                <select
                   id="timezone"
-                  value={timezone}
-                  onChange={(e) => setTimezone(e.target.value)}
-                  placeholder="America/New_York"
-                  className={field}
-                />
+                  value={timezoneSelectValue}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "__custom__") setTimezone("");
+                    else setTimezone(v);
+                  }}
+                  className={cn(field, "cursor-pointer")}
+                >
+                  {TIMEZONE_GROUPS.map((g) => (
+                    <optgroup key={g.region} label={g.region}>
+                      {g.options.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                  {timezone && !knownTimezones.includes(timezone) ? (
+                    <option value={timezone}>{timezone} (saved)</option>
+                  ) : null}
+                  <option value="__custom__">Custom IANA…</option>
+                </select>
+                {timezoneSelectValue === "__custom__" ? (
+                  <Input
+                    id="timezone-custom"
+                    value={timezone}
+                    onChange={(e) => setTimezone(e.target.value)}
+                    placeholder="e.g. Europe/Lisbon or America/Phoenix"
+                    className={field}
+                    aria-label="Custom IANA timezone"
+                  />
+                ) : null}
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="display-currency" className="text-[13px] text-zinc-300">

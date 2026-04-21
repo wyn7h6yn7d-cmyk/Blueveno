@@ -4,12 +4,13 @@ import Link from "next/link";
 import { AccessProvider } from "@/components/access/access-provider";
 import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
 import { AppTopbar } from "@/components/app/app-topbar";
+import { TradingSessionStrip } from "@/components/app/trading-session-strip";
 import { WorkspaceGate } from "@/components/app/workspace-gate";
 import type { AccessContextClient } from "@/lib/access/types";
 
 type AppShellProps = {
   children: React.ReactNode;
-  user: { name?: string | null; email?: string | null };
+  user: { name?: string | null; email?: string | null; timezone?: string | null };
   access: AccessContextClient;
 };
 
@@ -38,7 +39,10 @@ export function AppShell({ children, user, access }: AppShellProps) {
         </aside>
 
         <div className="flex min-h-full min-w-0 flex-1 flex-col">
-          <AppTopbar user={user} canWriteJournal={access.canWriteJournal} isAdmin={access.isAdmin} />
+          <div className="sticky top-0 z-40 flex flex-col">
+            <TradingSessionStrip serverTimeZone={user.timezone} />
+            <AppTopbar user={user} canWriteJournal={access.canWriteJournal} isAdmin={access.isAdmin} />
+          </div>
           <div className="relative flex-1">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_-8%,oklch(0.38_0.1_252/0.1),transparent_58%)]" />
             <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.06]" aria-hidden />
