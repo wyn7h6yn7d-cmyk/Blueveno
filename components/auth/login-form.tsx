@@ -11,6 +11,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/account/sign-out-button";
 
+/** Keep "Signing in…" visible at least this long so it does not finish before navigation. */
+const MIN_SIGNIN_FEEDBACK_MS = 1800;
+
 type LoginFormProps = {
   callbackUrl: string;
   /** From `/login?error=` (auth callback or config failures) */
@@ -44,15 +47,21 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
     }
 
     const supabase = createClient();
+    const started = Date.now();
     const { error: signError } = await supabase.auth.signInWithPassword({ email, password });
-    setPending(false);
 
     if (signError) {
+      setPending(false);
       setError(signError.message === "Invalid login credentials" ? "Invalid email or password." : signError.message);
       return;
     }
 
-    /* Full navigation so middleware + RSC see Set-Cookie before /app renders */
+    const elapsed = Date.now() - started;
+    if (elapsed < MIN_SIGNIN_FEEDBACK_MS) {
+      await new Promise((r) => setTimeout(r, MIN_SIGNIN_FEEDBACK_MS - elapsed));
+    }
+
+    /* Full navigation so middleware + RSC see Set-Cookie before /app renders — keep pending until unload */
     window.location.assign(callbackUrl);
   }
 
@@ -133,7 +142,12 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
             <Button
               type="submit"
               disabled={pending}
-              className="h-12 w-full rounded-[0.65rem] text-[15px] font-medium tracking-wide shadow-bv-primary"
+              aria-busy={pending}
+              className={cn(
+                "h-12 w-full rounded-[0.65rem] text-[15px] font-medium tracking-wide shadow-bv-primary",
+                "transition-[opacity,transform,box-shadow] duration-1000 ease-out",
+                pending && "pointer-events-none opacity-90",
+              )}
             >
               {pending ? "Signing in…" : "Sign in"}
             </Button>
