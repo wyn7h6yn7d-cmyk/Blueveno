@@ -15,9 +15,9 @@ import { cn } from "@/lib/utils";
 
 const MAIN_NAV = [
   { href: "/app", label: "Overview", icon: LayoutDashboard, match: (p: string) => p === "/app" || p === "/app/" },
+  { href: "/app/journal", label: "Journal", icon: BookOpen, match: (p: string) => p.startsWith("/app/journal") },
   { href: "/app/calendar", label: "Calendar", icon: CalendarDays, match: (p: string) => p.startsWith("/app/calendar") },
   { href: "/app/stats", label: "Stats", icon: BarChart3, match: (p: string) => p.startsWith("/app/stats") },
-  { href: "/app/journal", label: "Journal", icon: BookOpen, match: (p: string) => p.startsWith("/app/journal") },
   { href: "/app/settings", label: "Settings", icon: Settings, match: (p: string) => p.startsWith("/app/settings") && !p.startsWith("/app/settings/billing") },
   {
     href: "/app/settings/billing",
@@ -103,7 +103,7 @@ export function AppSidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
     <div className="border-t border-white/[0.06] p-3">
       <div className="rounded-lg border border-white/[0.07] bg-white/[0.025] p-3.5">
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Blueveno</p>
-        <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-500">Overview · calendar · stats · journal</p>
+        <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-500">Overview · journal · calendar · stats</p>
       </div>
     </div>
   );
