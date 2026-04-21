@@ -4,19 +4,17 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { fetchJournalEntryForUser } from "@/lib/user-data/fetch-journal-entry-client";
-import { mapJournalRowFromDb } from "@/lib/user-data/map-journal-db";
-import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
-import { JournalEntryEditClient } from "@/components/journal/journal-entry-edit-client";
+import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
+import { JournalDetailView } from "@/components/journal/journal-detail-view";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   userId: string;
   entryId: string;
-  initialWorkspace: UserWorkspaceSnapshot;
 };
 
-export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Props) {
-  const [row, setRow] = useState<JournalRow | null>(null);
+export function JournalDetailLoader({ userId, entryId }: Props) {
+  const [row, setRow] = useState<JournalRowDb | null>(null);
   const [phase, setPhase] = useState<"loading" | "ready" | "missing" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [retryKey, setRetryKey] = useState(0);
@@ -39,7 +37,7 @@ export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Pr
         setPhase("error");
         return;
       }
-      setRow(mapJournalRowFromDb(result.data));
+      setRow(result.data);
       setPhase("ready");
     })();
 
@@ -51,8 +49,8 @@ export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Pr
   if (phase === "loading") {
     return (
       <div className="space-y-8">
-        <div className="h-10 w-48 max-w-full animate-pulse rounded-lg bg-white/[0.06]" />
-        <div className="min-h-[18rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]" />
+        <div className="h-12 w-64 max-w-full animate-pulse rounded-lg bg-white/[0.06]" />
+        <div className="min-h-[14rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]" />
       </div>
     );
   }
@@ -61,7 +59,7 @@ export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Pr
     return (
       <div className="space-y-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8">
         <p className="text-[15px] leading-relaxed text-zinc-300">
-          {errorMsg ?? "Could not load this entry. Try again in a moment."}
+          {errorMsg ?? "Could not load this entry. Your session may still be syncing — try again."}
         </p>
         <div className="flex flex-wrap gap-3">
           <Button type="button" variant="outline" className="rounded-xl" onClick={() => setRetryKey((k) => k + 1)}>
@@ -78,16 +76,13 @@ export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Pr
     );
   }
 
-  if (phase === "missing" || !row) {
+  if (phase === "missing") {
     notFound();
   }
 
-  return (
-    <JournalEntryEditClient
-      userId={userId}
-      entryId={entryId}
-      initialWorkspace={initialWorkspace}
-      initialRow={row}
-    />
-  );
+  if (phase === "ready" && row) {
+    return <JournalDetailView row={row} />;
+  }
+
+  notFound();
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
 import { createClient } from "@/lib/supabase/client";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { hasBearerSession, waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
 import { useAccess } from "@/components/access/access-provider";
@@ -15,32 +15,6 @@ function toUserDbError(message: string | undefined) {
     return "Database is not initialized yet (journal_entries table missing). Run Supabase migrations and reload.";
   }
   return message ?? "Could not save entry.";
-}
-
-function hasBearerSession(supabase: SupabaseClient) {
-  return supabase.auth.getSession().then(({ data: { session } }) => Boolean(session?.access_token));
-}
-
-/**
- * After a full page reload, `createBrowserClient` may run before the session is
- * hydrated from cookies. We wait until both `getUser` matches and a session with
- * an access token exists so PostgREST carries a JWT (RLS otherwise returns [] with no error).
- */
-async function waitForSessionUser(supabase: SupabaseClient, userId: string, isCancelled: () => boolean) {
-  for (let attempt = 0; attempt < 45; attempt++) {
-    if (isCancelled()) return false;
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    const tokenOk = await hasBearerSession(supabase);
-    if (!error && user?.id === userId && tokenOk) return true;
-    if (attempt === 8) {
-      await supabase.auth.refreshSession().catch(() => undefined);
-    }
-    await new Promise((r) => setTimeout(r, 50 + Math.min(attempt, 20) * 20));
-  }
-  return false;
 }
 
 type UseUserWorkspaceOptions = {
