@@ -6,15 +6,13 @@ import { useSupabaseUser } from "@/lib/hooks/use-supabase-user";
 import { LogoLink } from "@/components/landing/LogoLink";
 import { marketingCtas } from "@/lib/marketing-ctas";
 
-const anchorLinks = [
-  { href: "#outcomes", label: "Outcomes" },
-  { href: "#platform", label: "Platform" },
-  { href: "#workflow", label: "Workflow" },
-  { href: "#traders", label: "Traders" },
-  { href: "#faq", label: "FAQ" },
+/** Hash targets live on the marketing home page (`/`). */
+const navLinks = [
+  { href: "/#core", label: "Core" },
+  { href: "/#day", label: "Day" },
+  { href: "/#calendar", label: "Calendar" },
+  { href: "/pricing", label: "Pricing" },
 ];
-
-const topLinks = [{ href: "/pricing", label: "Pricing" }];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -33,16 +31,7 @@ export function Navbar() {
         </LogoLink>
 
         <nav className="hidden items-center gap-7 lg:flex xl:gap-9">
-          {anchorLinks.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="text-[13px] text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
-            >
-              {l.label}
-            </a>
-          ))}
-          {topLinks.map((l) => (
+          {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -106,17 +95,7 @@ export function Navbar() {
       {open ? (
         <div className="border-t border-border/80 bg-bv-void/95 px-5 py-5 backdrop-blur-xl lg:hidden">
           <div className="flex flex-col gap-3">
-            {anchorLinks.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="text-sm text-zinc-300"
-                onClick={() => setOpen(false)}
-              >
-                {l.label}
-              </a>
-            ))}
-            {topLinks.map((l) => (
+            {navLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
