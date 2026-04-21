@@ -8,7 +8,7 @@ import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
 import { useAccess } from "@/components/access/access-provider";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { computeTradingStats, type SessionPnlRow } from "@/lib/user-data/trading-stats";
+import { computeTradingStats } from "@/lib/user-data/trading-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { cn } from "@/lib/utils";
@@ -22,10 +22,6 @@ type Props = {
 function fmtPnl(n: number | null, currency: string) {
   if (n === null) return "—";
   return formatSignedPnlAmount(n, currency);
-}
-
-function sessionPnlLabel(s: SessionPnlRow["session"]) {
-  return s === "Between" ? "Between sessions" : s;
 }
 
 function CumulativeChart({ points }: { points: { i: number; y: number }[] }) {
@@ -147,7 +143,7 @@ function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; 
       {tip ? (
         <div
           role="tooltip"
-          className="pointer-events-none fixed z-[100] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.96)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)] backdrop-blur-sm"
+          className="pointer-events-none fixed z-[100] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]"
           style={{ left: tip.x + 14, top: tip.y + 14 }}
         >
           <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
@@ -212,7 +208,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         variant="signature"
         eyebrow="Performance"
         title="Stats"
-        description="Enough context to see how you are doing — tied to the calendar, never a separate analytics product."
+        description="Simple summaries from your journal — cumulative curve, daily bars, and week rhythm."
         actions={
           <Link href="/app/calendar" className={appSecondaryCta}>
             <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
@@ -226,8 +222,8 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
       ) : data.journal.length === 0 ? (
         <EmptyState
           icon={CalendarDays}
-          title="No performance data yet"
-          description="Log trading days in your journal. Stats appear automatically from your P&L values."
+          title="No stats yet"
+          description="Log days in your journal — charts fill in from your P&amp;L."
           action={
             <Link href="/app/journal" className={cn(appPrimaryCta, "inline-flex items-center gap-1.5")}>
               Open journal
@@ -238,7 +234,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
       ) : (
         <>
           <section
-            className="grid gap-6 rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.13_0.035_262/0.95),oklch(0.085_0.028_266/0.92))] p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] sm:grid-cols-2 lg:grid-cols-4"
+            className="grid gap-5 rounded-2xl border border-[oklch(0.52_0.12_252/0.18)] bg-[linear-gradient(165deg,oklch(0.14_0.038_262/0.94),oklch(0.09_0.03_266/0.92))] p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] sm:grid-cols-2 lg:grid-cols-4"
             aria-label="Summary at a glance"
           >
             <div>
@@ -262,7 +258,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Streak</p>
-              <p className="mt-2 font-display text-xl leading-snug text-zinc-100">{stats.streakLabel}</p>
+              <p className="mt-2 font-display text-lg leading-snug tracking-tight text-zinc-100">{stats.streakLabel}</p>
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Trading days</p>
@@ -286,6 +282,9 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                     {stats.worstDay ? fmtPnl(stats.worstDay.pnl, displayCurrency) : "—"}
                   </p>
                   <p className="mt-1 text-[12px] text-zinc-500">{stats.worstDay?.date ?? ""}</p>
+                  {!stats.worstDay && stats.dailyBars.length === 1 ? (
+                    <p className="mt-2 text-[11px] leading-snug text-zinc-600">Log another day to see a worst-day comparison.</p>
+                  ) : null}
                 </div>
               </div>
             </DashboardCard>
@@ -316,94 +315,22 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           </div>
 
           <DashboardCard
-            eyebrow="Sessions"
-            title="P&L by trading session"
-            description="Each entry is counted once. Time comes from when the row was saved, or your session time if you use HH:MM, otherwise noon UTC on the entry date. Overlapping FX windows use one bucket: New York, then London, then Tokyo, then Sydney."
-            variant="inset"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[min(100%,520px)] text-left text-[13px]">
-                <thead>
-                  <tr className="border-b border-white/[0.06] font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
-                    <th scope="col" className="py-2 pr-3 font-medium">
-                      Session
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium tabular-nums">
-                      {"Net P&L"}
-                    </th>
-                    <th scope="col" className="px-3 py-2 text-right font-medium">
-                      Entries
-                    </th>
-                    <th scope="col" className="py-2 pl-3 text-right font-medium">
-                      Win rate
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.sessionPnl.map((row) => (
-                    <tr key={row.session} className="border-b border-white/[0.04] transition last:border-0 hover:bg-white/[0.03]">
-                      <td className="py-2.5 pr-3 font-medium text-zinc-200">{sessionPnlLabel(row.session)}</td>
-                      <td
-                        className={cn(
-                          "px-3 py-2.5 text-right font-display tabular-nums",
-                          row.totalPnl > 0 && "text-emerald-200",
-                          row.totalPnl < 0 && "text-rose-200",
-                          row.totalPnl === 0 && "text-zinc-300",
-                        )}
-                      >
-                        {fmtPnl(row.totalPnl, displayCurrency)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-zinc-400">{row.entries}</td>
-                      <td className="py-2.5 pl-3 text-right font-mono tabular-nums text-zinc-400">
-                        {row.entries ? `${Math.round((row.winEntries / row.entries) * 100)}%` : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </DashboardCard>
-
-          <DashboardCard
             eyebrow="Trend"
             title="Cumulative P&L"
-            description="Running sum of daily P&L, oldest to newest."
+            description="Running total of daily P&amp;L, oldest to newest."
             variant="inset"
             className="overflow-hidden"
           >
             <CumulativeChart points={stats.cumulative} />
           </DashboardCard>
 
-          <DashboardCard eyebrow="Days" title="Daily outcomes" description="One bar per calendar day — green above the line, red below." variant="inset">
+          <DashboardCard eyebrow="Days" title="Daily P&amp;L" description="One bar per calendar day." variant="inset">
             <DailyBars bars={stats.dailyBars} currency={displayCurrency} />
           </DashboardCard>
 
-          <DashboardCard eyebrow="Weeks" title="Weekly totals" description="Recent weeks, same rhythm as the calendar rail.">
+          <DashboardCard eyebrow="Weeks" title="Weekly totals" description="Recent weeks — same rhythm as the calendar.">
             <WeeklyTrend weekly={stats.weekly} currency={displayCurrency} />
           </DashboardCard>
-
-          {stats.monthly.length >= 2 ? (
-            <DashboardCard eyebrow="Months" title="Monthly rhythm" description="When history builds, months tell a simple story.">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {stats.monthly.map((m) => (
-                  <div
-                    key={m.key}
-                    className="rounded-xl border border-white/[0.07] bg-[linear-gradient(155deg,oklch(0.11_0.035_262/0.9),oklch(0.08_0.03_266/0.92))] px-4 py-3.5"
-                  >
-                    <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">{m.label}</p>
-                    <p
-                      className={cn(
-                        "mt-2 font-display text-xl tabular-nums",
-                        m.total >= 0 ? "text-emerald-200" : "text-rose-200",
-                      )}
-                    >
-                      {fmtPnl(m.total, displayCurrency)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </DashboardCard>
-          ) : null}
         </>
       )}
     </div>

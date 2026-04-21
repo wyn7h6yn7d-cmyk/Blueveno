@@ -33,7 +33,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         variant="signature"
         eyebrow="Blueveno"
         title="Overview"
-        description="A quiet snapshot of how the month is going — then jump to the calendar, stats, or journal."
+        description="Month snapshot — open the calendar or journal when you are ready."
         actions={
           <Link href="/app/calendar" className={appSecondaryCta}>
             <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />

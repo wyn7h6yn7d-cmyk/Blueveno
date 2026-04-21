@@ -24,8 +24,8 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-5 border-b border-white/[0.08] pb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-8",
-        isSig && "pb-9",
+        "flex flex-col gap-4 border-b border-white/[0.08] sm:flex-row sm:items-end sm:justify-between sm:gap-8",
+        isSig ? "pb-7 sm:pb-9" : "pb-6 sm:pb-8",
         className,
       )}
     >

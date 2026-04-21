@@ -8,14 +8,14 @@
 export const marketingCtas = {
   hero: {
     /** Primary — conversion */
-    primary: { label: "Join early access", href: "/#cta" as const },
+    primary: { label: "Start free", href: "/signup" as const },
     /** Secondary — product preview on the main marketing page */
     secondary: { label: "Preview the workspace", href: "/#calendar" as const },
     tertiary: { label: "Sign in", href: "/login" as const },
   },
   nav: {
-    /** Persistent nav CTA — lands on the final signup strip */
-    conversion: { label: "Early access", href: "/#cta" as const },
+    /** Persistent nav CTA — primary signup (landing nav) */
+    conversion: { label: "Sign up", href: "/signup" as const },
   },
   productShowcase: {
     intro: { label: "Preview the workspace", href: "/#day" as const },
@@ -24,8 +24,8 @@ export const marketingCtas = {
       { label: "Explore analytics", href: "/app/analytics" as const },
       { label: "See how review works", href: "/app/reviews" as const },
       { label: "Preview the workspace", href: "/#calendar" as const },
-      { label: "Join early access", href: "/#cta" as const },
-      { label: "Get access", href: "/#cta" as const },
+      { label: "Start free", href: "/signup" as const },
+      { label: "View plans", href: "/pricing" as const },
       { label: "See plans", href: "/pricing" as const },
       { label: "See session recaps", href: "/app" as const },
     ],
@@ -45,12 +45,12 @@ export const marketingCtas = {
     next: { label: "Start free", href: "/signup" as const },
   },
   faq: {
-    close: { label: "Join early access", href: "/#cta" as const },
+    close: { label: "Start free", href: "/signup" as const },
   },
   finalCta: {
-    eyebrow: "Limited onboarding",
-    primary: { label: "Get access", href: "mailto:hello@blueveno.com?subject=Blueveno%20access" as const },
-    secondary: { label: "Start free", href: "/signup" as const },
+    eyebrow: "Get started",
+    primary: { label: "Start free", href: "/signup" as const },
+    secondary: { label: "View plans", href: "/pricing" as const },
     tertiary: { label: "Sign in", href: "/login" as const },
   },
 } as const;

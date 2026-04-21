@@ -8,7 +8,7 @@ export function FinalCta() {
       aria-labelledby="cta-heading"
     >
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[min(50vh,480px)] bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,oklch(0.38_0.12_252/0.14),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,oklch(0.1_0.06_262/0.22)_0%,transparent_100%)]"
         aria-hidden
       />
 

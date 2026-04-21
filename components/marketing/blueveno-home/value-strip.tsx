@@ -16,8 +16,8 @@ export function ValueStrip() {
             className="mt-1 hidden h-12 w-px shrink-0 bg-gradient-to-b from-[oklch(0.55_0.14_252/0.85)] via-[oklch(0.5_0.12_252/0.35)] to-transparent sm:block sm:h-14"
             aria-hidden
           />
-          <p className="font-display text-[clamp(1.2rem,2.6vw,1.45rem)] font-medium leading-[1.25] tracking-[-0.045em] text-zinc-300">
-            Day · chart · week — <span className="text-zinc-500">one ledger.</span>
+          <p className="font-display text-[clamp(1.15rem,2.5vw,1.4rem)] font-medium leading-[1.25] tracking-[-0.045em] text-zinc-300">
+            P&amp;L · notes · charts — <span className="text-zinc-500">one ledger.</span>
           </p>
         </div>
       </div>

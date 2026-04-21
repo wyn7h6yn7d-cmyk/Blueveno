@@ -8,7 +8,7 @@ import { ADMIN_FULL_ACCESS_EMAIL } from "@/lib/billing/workspace-access";
 
 async function requireAdmin() {
   if (!isSupabaseServiceRoleConfigured()) {
-    throw new Error("Admin service not configured: set SUPABASE_SERVICE_ROLE_KEY on the server.");
+    throw new Error("Admin tools are not available on this deployment.");
   }
   const session = await auth();
   if (!session?.user?.id) {

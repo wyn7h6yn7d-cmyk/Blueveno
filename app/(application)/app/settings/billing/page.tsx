@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 const PREMIUM_LABEL = "Blueveno Premium";
 
@@ -45,22 +46,18 @@ export default async function BillingSettingsPage() {
         variant="signature"
         eyebrow="Billing"
         title="Plan"
-        description="One membership — full journal, calendar, and stats. No tiers to compare."
+        description="Blueveno Premium — full journal, calendar, and stats. One straightforward price."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <div
-          className={cn(
-            "relative overflow-hidden rounded-2xl border p-8 shadow-[0_28px_80px_-48px_rgba(0,0,0,0.85)]",
-            isReadOnly
-              ? "border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.12_0.03_266/0.95),oklch(0.09_0.028_268/0.98))]"
-              : "border-[oklch(0.55_0.12_252/0.35)] bg-[linear-gradient(155deg,oklch(0.16_0.045_262/0.96),oklch(0.1_0.035_266/0.97))]",
-          )}
-        >
           <div
-            className="pointer-events-none absolute -right-20 -top-20 size-56 rounded-full bg-[oklch(0.45_0.14_252/0.12)] blur-3xl"
-            aria-hidden
-          />
+            className={cn(
+              "relative overflow-hidden rounded-2xl border p-8 shadow-[0_28px_80px_-48px_rgba(0,0,0,0.85)]",
+              isReadOnly
+                ? "border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.12_0.03_266/0.95),oklch(0.09_0.028_268/0.98))]"
+                : "border-[oklch(0.55_0.12_252/0.35)] bg-[linear-gradient(155deg,oklch(0.16_0.045_262/0.96),oklch(0.1_0.035_266/0.97))]",
+            )}
+          >
           <div className="relative">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-300">
@@ -86,16 +83,15 @@ export default async function BillingSettingsPage() {
             </div>
 
             <h2 className="font-display mt-6 text-3xl tracking-[-0.03em] text-zinc-50 md:text-4xl">
-              €5.99
+              {formatEur(PRICING_EUR.monthly)}
               <span className="ml-2 text-lg font-normal text-zinc-500">/ month</span>
             </h2>
             <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-zinc-400">
               {isAdminUser ? (
-                "Full access is included for your administrator account — no subscription required."
+                "Administrator access — full product, no subscription."
               ) : isReadOnly ? (
                 <>
-                  Your journal and calendar stay with you. Upgrade anytime to log new trading days and keep building
-                  your history.
+                  Your data stays with you. Upgrade to log new trading days anytime.
                   {trialEndLabel ? (
                     <>
                       {" "}
@@ -105,7 +101,7 @@ export default async function BillingSettingsPage() {
                 </>
               ) : isTrial ? (
                 <>
-                  Full access during your trial.
+                  Full access for the rest of your trial.
                   {trialEndLabel ? (
                     <>
                       {" "}
@@ -115,10 +111,10 @@ export default async function BillingSettingsPage() {
                 </>
               ) : isPremium ? (
                 stripeConfigured
-                  ? "Manage payment details in the customer portal when checkout is connected."
-                  : "Your plan is active. Secure checkout will appear here once billing is connected — your access is unchanged."
+                  ? "Manage your card and receipts in the customer portal."
+                  : "Your subscription is active. Online card management will be available in a future update — your access is unchanged."
               ) : (
-                "Stay on top of your month with calendar and stats — one simple price."
+                "Journal, calendar, and stats — one membership."
               )}
             </p>
 
@@ -150,7 +146,7 @@ export default async function BillingSettingsPage() {
         <aside className="space-y-4 rounded-2xl border border-white/[0.08] bg-black/20 p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Included</p>
           <ul className="space-y-3 text-[13px] text-zinc-400">
-            {["Journal with R, notes, TradingView", "Signature calendar & week totals", "Stats — restrained, clear"].map(
+            {["Journal — day P&L, notes, chart link", "Calendar with week totals", "Clear performance stats"].map(
               (line) => (
                 <li key={line} className="flex gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-emerald-400/90" strokeWidth={2} />
@@ -164,14 +160,14 @@ export default async function BillingSettingsPage() {
 
       <DashboardCard
         eyebrow="Receipts"
-        title="Invoices & payment"
-        description="After your first charge, receipts and card updates will show here."
+        title="Payment history"
+        description="Receipts and card updates appear here after your first charge."
       >
         <div className="rounded-xl border border-dashed border-white/[0.1] bg-black/15 px-6 py-12 text-center">
           <p className="text-[14px] text-zinc-500">
             {stripeConfigured
-              ? "No invoices yet — your history will appear after the first payment."
-              : "Payment history connects when Stripe checkout is enabled for your workspace."}
+              ? "No payments yet — invoices will show up here after you subscribe."
+              : "No charges yet. When online checkout goes live, receipts will appear here automatically."}
           </p>
         </div>
       </DashboardCard>

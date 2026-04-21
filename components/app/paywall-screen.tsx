@@ -3,6 +3,7 @@ import { PremiumPrimaryLink } from "@/components/marketing/blueveno-home/premium
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CalendarDays, Sparkles } from "lucide-react";
+import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 export function PaywallScreen() {
   return (
@@ -31,7 +32,9 @@ export function PaywallScreen() {
           <div className="mt-10 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.12_252)]">Blueveno Pro</p>
             <div className="mt-4 flex items-baseline justify-center gap-1.5">
-              <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50">€5.99</span>
+              <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50">
+                {formatEur(PRICING_EUR.monthly)}
+              </span>
               <span className="text-[15px] text-zinc-500">/ month</span>
             </div>
             <ul className="mx-auto mt-6 max-w-xs space-y-2.5 text-left text-[14px] text-zinc-400">

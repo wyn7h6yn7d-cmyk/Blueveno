@@ -5,6 +5,7 @@ import { LockOpen } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAccess } from "@/components/access/access-provider";
+import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 /** Read-only after trial — calm, trustworthy, single path to billing */
 export function TrialUpgradeBanner() {
@@ -32,11 +33,14 @@ export function TrialUpgradeBanner() {
         <div className="min-w-0 space-y-1.5">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Read-only workspace</p>
           <p className="font-display text-[1.05rem] font-medium tracking-tight text-zinc-50">
-            Your trial has ended — view everything, add new days with Premium
+            Trial complete — your workspace is read-only
           </p>
           <p className="max-w-xl text-[13px] leading-relaxed text-zinc-500">
-            Calendar, journal history, and stats stay available.
-            {end ? ` Trial ended ${end}.` : null} <span className="text-zinc-400">Blueveno Premium — €5.99 / month.</span>
+            Calendar, journal, and stats stay visible.
+            {end ? ` Ended ${end}.` : null}{" "}
+            <span className="text-zinc-400">
+              Upgrade to Premium ({formatEur(PRICING_EUR.monthly)} / month) to log new days.
+            </span>
           </p>
         </div>
       </div>
@@ -47,7 +51,7 @@ export function TrialUpgradeBanner() {
           "h-11 shrink-0 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.68_0.15_252))] px-6 text-[13px] font-medium text-[oklch(0.12_0.04_265)] shadow-[0_12px_36px_-12px_oklch(0.45_0.14_252/0.45)] hover:brightness-[1.03]",
         )}
       >
-        View plan
+        Upgrade
       </Link>
     </div>
   );

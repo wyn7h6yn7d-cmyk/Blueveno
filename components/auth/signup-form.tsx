@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SocialAuthPlaceholder } from "@/components/auth/social-auth-placeholder";
+import { SocialOAuthButtons } from "@/components/auth/social-oauth-buttons";
 import { authFieldClass, authLabelClass } from "@/lib/auth-field";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -145,7 +145,7 @@ export function SignupForm() {
           </fieldset>
         </form>
 
-        <SocialAuthPlaceholder />
+        <SocialOAuthButtons redirectPath="/app" />
       </div>
     </div>
   );

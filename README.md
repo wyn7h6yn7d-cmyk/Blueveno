@@ -12,7 +12,7 @@ Premium **blue-toned** trading journal and performance analytics SaaS.
 | Language | TypeScript |
 | Styling | Tailwind CSS 4 + design tokens in `app/globals.css` |
 | UI | shadcn/ui (Base UI primitives) |
-| Auth | NextAuth (see `auth.ts`, `app/api/auth/`) |
+| Auth | Supabase Auth (cookies + `/auth/callback`; see `auth.ts`, `lib/supabase/`) |
 | Billing | Stripe-ready scaffolding (`lib/billing/`, `docs/BILLING.md`) |
 
 ## Project structure
@@ -67,8 +67,9 @@ npm run build
 
 ## Environment
 
-- Copy `.env.example` to `.env` if present; configure `AUTH_SECRET`, OAuth or credentials, and Stripe keys per `docs/BILLING.md`.
-- Demo auth: see `AUTH_DEMO` hint on login when enabled.
+- Copy `.env.example` to `.env` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+- **Google & GitHub login:** enable providers in the Supabase Dashboard; redirect/callback setup is documented in `docs/OAUTH.md` (secrets stay in Supabase, not in `.env`).
+- Stripe and billing: `docs/BILLING.md`.
 
 ## Design
 

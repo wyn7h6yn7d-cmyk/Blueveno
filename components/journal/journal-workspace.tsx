@@ -134,7 +134,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         variant="signature"
         eyebrow="Journal"
         title="Daily review"
-        description="Log the day in a few fields — your calendar and stats stay in sync automatically."
+        description="Log the day beside your calendar — stats stay in sync."
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/app/calendar" className={appSecondaryCta}>
@@ -149,12 +149,12 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         }
       />
 
-      <section className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.85fr)_minmax(18rem,1fr)] xl:items-start xl:gap-8 2xl:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)] 2xl:gap-10">
+      <section className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1.75fr)_minmax(17.5rem,1fr)] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,1.85fr)_minmax(19rem,1fr)] xl:gap-10">
         <DashboardCard
-          eyebrow="Signature view"
-          title="Month &amp; days"
-          description="Same calendar as the Calendar tab — tap a day with P&amp;L to focus it below."
-          className="min-h-0 min-w-0 xl:sticky xl:top-6"
+          eyebrow="Calendar"
+          title="Your month"
+          description="Tap a day with P&amp;L to open it — one entry jumps straight to detail."
+          className="min-h-0 min-w-0 lg:sticky lg:top-6"
           contentClassName="p-4 sm:p-5 lg:p-6"
         >
           {!ready ? (
@@ -172,18 +172,18 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         </DashboardCard>
 
         <DashboardCard
-          eyebrow="Log"
-          title="Today’s trade"
-          className="min-w-0 xl:max-w-none"
+          eyebrow="Log day"
+          title="Quick entry"
+          className="min-w-0 lg:max-w-none"
           description={
             canWriteJournal
-              ? "Enter the day’s P&L in your display currency (change it in Settings). Add a TradingView link when you want the chart one tap away."
-              : "Your trial has ended in write mode. Upgrade to add new days — everything you saved stays readable."
+              ? "P&amp;L uses your display currency from Settings. TradingView is optional — paste when you want the chart next to the number."
+              : "Read-only: your history stays here. Upgrade to log new days."
           }
         >
-          <form id="add" onSubmit={onQuickAdd} className="space-y-6">
-            <div className="space-y-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Trade</p>
+          <form id="add" onSubmit={onQuickAdd} className="space-y-7">
+            <div className="space-y-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Session</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="jw-date" className={labelCls}>
@@ -246,14 +246,14 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               />
             </div>
 
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div className="rounded-xl border border-[oklch(0.52_0.12_252/0.2)] bg-[linear-gradient(168deg,oklch(0.1_0.04_264/0.5),oklch(0.06_0.03_268/0.45))] p-4 sm:p-5">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.035] text-[oklch(0.72_0.1_252)]">
+                <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] text-[oklch(0.74_0.11_252)]">
                   <LineChart className="size-4" strokeWidth={1.75} />
                 </span>
-                <div className="min-w-0 flex-1 space-y-2">
-                  <Label htmlFor="jw-tv" className={cn(labelCls, "text-zinc-300")}>
-                    TradingView chart
+                <div className="min-w-0 flex-1 space-y-2.5">
+                  <Label htmlFor="jw-tv" className={cn(labelCls, "text-zinc-200")}>
+                    TradingView link
                     <span className="ml-2 font-normal text-zinc-600">Optional</span>
                   </Label>
                   <Input
@@ -261,7 +261,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     type="url"
                     value={tradingViewUrl}
                     onChange={(e) => setTradingViewUrl(e.target.value)}
-                    placeholder="Paste a chart URL — opens from the day detail"
+                    placeholder="https://www.tradingview.com/chart/…"
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "disabled:opacity-45")}
                   />
@@ -273,13 +273,13 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               type="submit"
               disabled={saving || !canWriteJournal}
               className={cn(
-                "h-12 w-full rounded-xl text-[15px] font-medium tracking-tight",
-                "bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.68_0.15_252))] text-[oklch(0.12_0.04_265)]",
-                "shadow-[0_1px_0_0_oklch(1_0_0_/0.12)_inset,0_12px_40px_-12px_oklch(0.45_0.14_252/0.5)] hover:brightness-[1.03] disabled:opacity-40",
+                "h-12 w-full rounded-xl text-[15px] font-semibold tracking-tight",
+                "bg-[linear-gradient(180deg,oklch(0.74_0.14_250),oklch(0.66_0.15_252))] text-[oklch(0.1_0.04_265)]",
+                "shadow-[0_1px_0_0_oklch(1_0_0_/0.14)_inset,0_14px_44px_-14px_oklch(0.42_0.14_252/0.55)] hover:brightness-[1.04] disabled:opacity-40",
               )}
             >
               <Plus className="mr-2 size-4" strokeWidth={2} />
-              {saving ? "Saving…" : "Save entry"}
+              {saving ? "Saving…" : "Save day"}
             </Button>
             {urlError ? <p className="text-[13px] text-rose-300/95">{urlError}</p> : null}
             {saveError ? <p className="text-[13px] text-rose-300/95">{saveError}</p> : null}

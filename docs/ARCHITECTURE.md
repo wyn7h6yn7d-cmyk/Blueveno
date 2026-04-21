@@ -89,7 +89,7 @@ app/
 **Marketing (unauthenticated)**
 
 - Hero promise → Trust → Outcomes → Features → Deep dives → Workflow → Personas → Social proof → FAQ → CTA → Footer.  
-- Primary conversion: **Request access / Get early access** → mailto or waitlist (swap for form + CRM later).
+- Primary conversion: **Start free** → `/signup` (Stripe trial / billing as configured).
 
 **App (authenticated)**
 

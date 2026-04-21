@@ -93,7 +93,7 @@ export function AdminUsersTable({ users }: Props) {
               <th className="px-4 py-3.5">Access</th>
               <th className="px-4 py-3.5">Created</th>
               <th className="px-4 py-3.5">Trial ends</th>
-              <th className="px-4 py-3.5">Plan</th>
+              <th className="px-4 py-3.5">Subscription</th>
               <th className="px-4 py-3.5">Entries</th>
               <th className="px-4 py-3.5">Last active</th>
               <th className="px-4 py-3.5">Actions</th>

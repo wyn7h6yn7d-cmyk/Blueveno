@@ -18,8 +18,19 @@ import {
 } from "@/lib/format-pnl";
 import { allTimezoneOptionValues, TIMEZONE_GROUPS } from "@/lib/timezone-options";
 
+/** Visible control surface — reads as a box on dark cards (border + lift + top edge). */
 const field =
-  "h-10 rounded-xl border-white/[0.1] bg-black/25 text-[15px] text-zinc-100 shadow-[inset_0_1px_2px_oklch(0_0_0/0.15)] placeholder:text-zinc-600";
+  [
+    "h-10 w-full min-w-0 rounded-xl border px-3 text-[15px] text-zinc-100",
+    "border-[oklch(0.55_0.12_252/0.38)]",
+    "bg-[linear-gradient(168deg,oklch(0.17_0.06_262/0.72)_0%,oklch(0.1_0.045_268/0.88)_100%)]",
+    "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.1),0_4px_20px_-10px_rgba(0,0,0,0.85)]",
+    "placeholder:text-zinc-600",
+    "transition-[border-color,box-shadow] duration-200",
+    "focus-visible:border-[oklch(0.62_0.14_252/0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.1_0.04_268)]",
+  ].join(" ");
+
+const selectField = cn(field, "cursor-pointer py-0 pr-9");
 
 export function SettingsProfileForm() {
   const router = useRouter();
@@ -173,7 +184,7 @@ export function SettingsProfileForm() {
         variant="signature"
         eyebrow="Settings"
         title="Account"
-        description="Profile, security, and how you sign out."
+        description="Profile, currency, timezone, and security."
         actions={
           <Button
             type="submit"
@@ -190,8 +201,8 @@ export function SettingsProfileForm() {
       <form id="profile-form" onSubmit={onSave}>
         <DashboardCard
           eyebrow="Profile"
-          title="Identity"
-          description="How you appear on exports and shared recaps."
+          title="Your details"
+          description="Name and preferences for the signed-in app."
         >
           {loading ? (
             <p className="text-[15px] text-zinc-500">Loading profile…</p>
@@ -225,9 +236,7 @@ export function SettingsProfileForm() {
                 <Label htmlFor="timezone" className="text-[13px] text-zinc-300">
                   Timezone
                 </Label>
-                <p className="text-[13px] text-zinc-600">
-                  Used for the live session bar and your local clock in the app header.
-                </p>
+                <p className="text-[13px] text-zinc-600">Used for the session strip and local times in the app.</p>
                 <select
                   id="timezone"
                   value={timezoneSelectValue}
@@ -236,7 +245,7 @@ export function SettingsProfileForm() {
                     if (v === "__custom__") setTimezone("");
                     else setTimezone(v);
                   }}
-                  className={cn(field, "cursor-pointer")}
+                  className={selectField}
                 >
                   {TIMEZONE_GROUPS.map((g) => (
                     <optgroup key={g.region} label={g.region}>
@@ -274,7 +283,7 @@ export function SettingsProfileForm() {
                   id="display-currency"
                   value={displayCurrency}
                   onChange={(e) => setDisplayCurrency(e.target.value)}
-                  className={cn(field, "cursor-pointer")}
+                  className={selectField}
                 >
                   {DISPLAY_CURRENCY_CODES.map((code) => (
                     <option key={code} value={code}>
@@ -291,8 +300,8 @@ export function SettingsProfileForm() {
 
         <DashboardCard
           eyebrow="Security"
-          title="Password & sign-in"
-          description="Update credentials and control where you stay signed in."
+          title="Password & sessions"
+          description="Change password, email, and where you are signed in."
         >
         <form onSubmit={onUpdatePassword} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -406,8 +415,8 @@ export function SettingsProfileForm() {
         <div className="flex items-center gap-3">
           <User className="size-5 text-zinc-500" strokeWidth={1.75} />
           <div>
-            <p className="text-[15px] text-zinc-200">Billing & plan</p>
-            <p className="text-sm text-zinc-500">Plan and invoices</p>
+            <p className="text-[15px] text-zinc-200">Plan & billing</p>
+            <p className="text-sm text-zinc-500">Membership and receipts</p>
           </div>
         </div>
         <Link

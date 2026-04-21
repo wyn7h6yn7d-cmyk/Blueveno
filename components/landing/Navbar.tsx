@@ -50,25 +50,19 @@ export function Navbar() {
           ) : (
             <>
               <Link
-                href="/signup"
-                className="hidden rounded-full px-3 py-2 text-[13px] text-zinc-400 transition hover:text-zinc-100 sm:inline-flex"
-              >
-                Sign up
-              </Link>
-              <Link
                 href="/login"
                 className="hidden rounded-full border border-white/[0.1] bg-white/[0.03] px-4 py-2 text-[13px] text-zinc-200 transition hover:border-white/[0.16] hover:bg-white/[0.07] sm:inline-flex"
               >
                 Sign in
               </Link>
+              <Link
+                href={marketingCtas.nav.conversion.href}
+                className="hidden rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground shadow-bv-primary transition hover:bg-primary/90 sm:inline-flex"
+              >
+                {marketingCtas.nav.conversion.label}
+              </Link>
             </>
           )}
-          <a
-            href={marketingCtas.nav.conversion.href}
-            className="hidden rounded-full border border-primary/28 bg-primary/12 px-4 py-2 text-[13px] text-bv-ice transition hover:border-primary/45 hover:bg-primary/18 xl:inline-flex"
-          >
-            {marketingCtas.nav.conversion.label}
-          </a>
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] text-zinc-300 transition hover:border-white/[0.14] lg:hidden"

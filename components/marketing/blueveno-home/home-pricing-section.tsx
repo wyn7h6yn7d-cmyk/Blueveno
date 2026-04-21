@@ -27,10 +27,7 @@ export function HomePricingSection() {
         </p>
 
         <div className="relative mt-12 overflow-hidden rounded-[1.75rem] border border-[oklch(0.5_0.13_252/0.42)] bg-[linear-gradient(168deg,oklch(0.11_0.045_262/0.96)_0%,oklch(0.048_0.04_272/0.99)_100%)] px-7 py-12 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_48px_120px_-56px_rgba(0,0,0,0.88)] sm:px-11 sm:py-14">
-          <div
-            className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,oklch(0.42_0.12_252/0.14),transparent_68%)]"
-            aria-hidden
-          />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[oklch(0.55_0.12_252/0.25)] to-transparent" aria-hidden />
 
           <div className="relative text-center">
             <div className="flex flex-col items-center gap-10 sm:flex-row sm:justify-center sm:gap-14">

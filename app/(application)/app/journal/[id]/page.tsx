@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Pencil } from "lucide-react";
 import { auth } from "@/auth";
 import { formatSignedPnlAmount, normalizeDisplayCurrency } from "@/lib/format-pnl";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
@@ -51,15 +51,27 @@ export default async function JournalDetailPage({ params }: Props) {
         title={`${row.symbol} · ${(row.entry_date as string | null) ?? row.entry_time}`}
         description="Simple day detail view with note and chart link."
         actions={
-          <Link
-            href="/app/journal"
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "h-9 rounded-xl border-white/[0.1] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
-            )}
-          >
-            Back to journal
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/app/journal/${row.id}/edit`}
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-9 rounded-xl border-[oklch(0.58_0.12_252/0.35)] bg-[oklch(0.55_0.12_252/0.12)] px-4 text-zinc-100 hover:bg-[oklch(0.55_0.12_252/0.2)]",
+              )}
+            >
+              <Pencil className="mr-2 size-4" strokeWidth={2} aria-hidden />
+              Edit
+            </Link>
+            <Link
+              href="/app/journal"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "h-9 rounded-xl border-white/[0.1] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
+              )}
+            >
+              Back to journal
+            </Link>
+          </div>
         }
       />
 

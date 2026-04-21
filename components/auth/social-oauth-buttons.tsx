@@ -1,5 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { cn } from "@/lib/utils";
+
 function GithubGlyph({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -35,7 +40,44 @@ function GoogleGlyph({ className }: { className?: string }) {
   );
 }
 
-export function SocialAuthPlaceholder() {
+type Provider = "google" | "github";
+
+const btnClass =
+  "inline-flex h-12 items-center justify-center gap-2 rounded-[0.65rem] border border-white/[0.1] bg-white/[0.05] font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-200 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] backdrop-blur-sm transition hover:border-white/[0.16] hover:bg-white/[0.09] disabled:pointer-events-none disabled:opacity-45";
+
+type SocialOAuthButtonsProps = {
+  /** Where to send the user after `/auth/callback` (same-origin path only). */
+  redirectPath?: string;
+};
+
+export function SocialOAuthButtons({ redirectPath = "/app" }: SocialOAuthButtonsProps) {
+  const [pending, setPending] = useState<Provider | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+
+  async function signInWithProvider(provider: Provider) {
+    setOauthError(null);
+    if (!isSupabaseConfigured()) {
+      setOauthError("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+      return;
+    }
+
+    setPending(provider);
+    const supabase = createClient();
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    });
+
+    if (error) {
+      setPending(null);
+      setOauthError(error.message);
+      return;
+    }
+    /* Browser follows redirect to provider; keep pending state until unload */
+  }
+
   return (
     <div className="mt-9">
       <div className="relative">
@@ -52,30 +94,35 @@ export function SocialAuthPlaceholder() {
       <div className="mt-6 grid grid-cols-2 gap-3">
         <button
           type="button"
-          disabled
-          aria-disabled="true"
-          aria-label="Google sign-in (coming soon)"
-          title="Coming soon"
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-[0.65rem] border border-white/[0.08] bg-white/[0.03] font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400 opacity-60 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-sm"
+          disabled={pending !== null}
+          aria-busy={pending === "google"}
+          onClick={() => void signInWithProvider("google")}
+          className={cn(btnClass)}
         >
-          <GoogleGlyph className="size-4 text-zinc-300" />
+          <GoogleGlyph className="size-4 text-zinc-200" />
           Google
         </button>
         <button
           type="button"
-          disabled
-          aria-disabled="true"
-          aria-label="GitHub sign-in (coming soon)"
-          title="Coming soon"
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-[0.65rem] border border-white/[0.08] bg-white/[0.03] font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-400 opacity-60 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-sm"
+          disabled={pending !== null}
+          aria-busy={pending === "github"}
+          onClick={() => void signInWithProvider("github")}
+          className={cn(btnClass)}
         >
-          <GithubGlyph className="size-4 text-zinc-300" />
+          <GithubGlyph className="size-4 text-zinc-200" />
           GitHub
         </button>
       </div>
 
+      {oauthError ? (
+        <p className="mt-3 rounded-[0.65rem] border border-red-500/25 bg-red-500/[0.08] px-3 py-2 text-center text-[12px] leading-relaxed text-red-100" role="alert">
+          {oauthError}
+        </p>
+      ) : null}
+
       <p className="mt-3 text-center text-[10px] leading-relaxed text-zinc-600">
-        SSO and OAuth are planned for a later release. Email remains the default path.
+        Enable Google &amp; GitHub under Supabase → Authentication → Providers; use Supabase&apos;s callback URL in Google/GitHub apps. See{" "}
+        <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[9px] text-zinc-400">docs/OAUTH.md</code>.
       </p>
     </div>
   );

@@ -11,13 +11,14 @@ import {
   Settings,
   Shield,
 } from "lucide-react";
+import { BluevenoWordmark } from "@/components/brand/blueveno-wordmark";
 import { cn } from "@/lib/utils";
 
 const MAIN_NAV = [
   { href: "/app", label: "Overview", icon: LayoutDashboard, match: (p: string) => p === "/app" || p === "/app/" },
-  { href: "/app/journal", label: "Journal", icon: BookOpen, match: (p: string) => p.startsWith("/app/journal") },
   { href: "/app/calendar", label: "Calendar", icon: CalendarDays, match: (p: string) => p.startsWith("/app/calendar") },
   { href: "/app/stats", label: "Stats", icon: BarChart3, match: (p: string) => p.startsWith("/app/stats") },
+  { href: "/app/journal", label: "Journal", icon: BookOpen, match: (p: string) => p.startsWith("/app/journal") },
   { href: "/app/settings", label: "Settings", icon: Settings, match: (p: string) => p.startsWith("/app/settings") && !p.startsWith("/app/settings/billing") },
   {
     href: "/app/settings/billing",
@@ -101,9 +102,14 @@ export function AppSidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="border-t border-white/[0.06] p-3">
-      <div className="rounded-lg border border-white/[0.07] bg-white/[0.025] p-3.5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Blueveno</p>
-        <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-500">Overview · journal · calendar · stats</p>
+      <div
+        className={cn(
+          "rounded-lg border border-[oklch(0.52_0.12_252/0.28)] bg-[linear-gradient(165deg,oklch(0.14_0.05_262/0.55),oklch(0.08_0.04_268/0.5))]",
+          "p-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08)]",
+        )}
+      >
+        <BluevenoWordmark />
+        <p className="mt-2.5 text-[12px] leading-relaxed text-zinc-500">Calendar · journal · stats</p>
       </div>
     </div>
   );

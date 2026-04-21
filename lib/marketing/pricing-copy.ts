@@ -3,9 +3,9 @@
  */
 export const PRICING_EUR = {
   trialDays: 7,
-  monthly: 5.99,
-  /** Billed once per year — ~17% less than 12× monthly at list price */
-  yearly: 59.99,
+  monthly: 8.99,
+  /** Billed once per year — savings vs 12× monthly at list price (see yearlySavingsPercentApprox) */
+  yearly: 89.99,
   currency: "EUR",
 } as const;
 

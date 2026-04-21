@@ -134,11 +134,28 @@ export function computeTradingStats(journal: JournalRow[]): TradingStatsSnapshot
     }
   }
 
+  /** Best = highest day P&L; on tie, most recent calendar day. Worst = lowest; on tie, earliest day. */
   let bestDay: { date: string; pnl: number } | null = null;
   let worstDay: { date: string; pnl: number } | null = null;
   for (const d of dailyBars) {
-    if (!bestDay || d.pnl > bestDay.pnl) bestDay = { date: d.date, pnl: d.pnl };
-    if (!worstDay || d.pnl < worstDay.pnl) worstDay = { date: d.date, pnl: d.pnl };
+    if (
+      !bestDay ||
+      d.pnl > bestDay.pnl ||
+      (d.pnl === bestDay.pnl && d.date > bestDay.date)
+    ) {
+      bestDay = { date: d.date, pnl: d.pnl };
+    }
+    if (
+      !worstDay ||
+      d.pnl < worstDay.pnl ||
+      (d.pnl === worstDay.pnl && d.date < worstDay.date)
+    ) {
+      worstDay = { date: d.date, pnl: d.pnl };
+    }
+  }
+
+  if (dailyBars.length <= 1) {
+    worstDay = null;
   }
 
   const avgGreenDay = greens.length ? greens.reduce((a, b) => a + b, 0) / greens.length : null;

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
@@ -76,12 +77,21 @@ export function JournalDayList({ rows, highlightDate, displayCurrency }: Props) 
               ) : null}
             </div>
 
-            <Link
-              href={`/app/journal/${row.id}`}
-              className="font-mono text-[11px] text-zinc-400 underline-offset-4 transition hover:text-zinc-200 hover:underline"
-            >
-              Details
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={`/app/journal/${row.id}/edit`}
+                className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.1_250)] underline-offset-4 transition hover:text-[oklch(0.85_0.08_250)] hover:underline"
+              >
+                <Pencil className="size-3" strokeWidth={2} aria-hidden />
+                Edit
+              </Link>
+              <Link
+                href={`/app/journal/${row.id}`}
+                className="font-mono text-[11px] text-zinc-400 underline-offset-4 transition hover:text-zinc-200 hover:underline"
+              >
+                Details
+              </Link>
+            </div>
           </div>
         </article>
       ))}

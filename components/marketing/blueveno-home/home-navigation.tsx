@@ -38,7 +38,7 @@ export function HomeNavigation() {
             Sign in
           </Link>
           <PremiumPrimaryLink href="/signup" compact>
-            Start
+            Sign up
           </PremiumPrimaryLink>
         </div>
       </div>

@@ -793,6 +793,120 @@ body {
   will-change: transform, opacity;
 }
 
+/* Marketing hero product shell — slow grid drift + waveform read */
+@keyframes bv-home-hero-grid-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 48px 48px;
+  }
+}
+
+@keyframes bv-home-hero-wave-shift {
+  0% {
+    transform: translate3d(-6%, 0, 0);
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(6%, 0, 0);
+    opacity: 0.35;
+  }
+}
+
+.bv-home-hero-grid {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: bv-home-hero-grid-move 44s linear infinite;
+  will-change: background-position;
+}
+
+.bv-home-hero-wave {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 10px,
+    oklch(0.62 0.12 252 / 0.18) 11px,
+    transparent 12px,
+    transparent 28px
+  );
+  animation: bv-home-hero-wave-shift 10s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* Marketing home — lightweight faux-3D floor (CSS perspective, no canvas) */
+@keyframes bv-home-3d-drift-far {
+  0%,
+  100% {
+    transform: rotateX(76deg) rotateZ(-11deg) translateZ(-100px) translate3d(-0.8%, 0, 0);
+  }
+  50% {
+    transform: rotateX(74deg) rotateZ(-7deg) translateZ(-100px) translate3d(0.8%, 0, 0);
+  }
+}
+
+@keyframes bv-home-3d-drift-near {
+  0%,
+  100% {
+    transform: rotateX(76deg) rotateZ(-9deg) translateZ(-20px) translate3d(0.6%, 0, 0);
+  }
+  50% {
+    transform: rotateX(78deg) rotateZ(-11deg) translateZ(-20px) translate3d(-0.6%, 0, 0);
+  }
+}
+
+.bv-home-atmo-3d-wrap {
+  perspective: 1500px;
+  perspective-origin: 50% 38%;
+  opacity: 0.42;
+  contain: strict;
+}
+
+.bv-home-atmo-3d-stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.bv-home-atmo-3d-plane {
+  position: absolute;
+  left: 50%;
+  bottom: -12%;
+  width: 240%;
+  height: 72%;
+  margin-left: -120%;
+  transform-origin: 50% 100%;
+  border-radius: 2px;
+  border: 1px solid oklch(0.55 0.12 252 / 0.1);
+  background-color: oklch(0.05 0.04 272 / 0.2);
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.032) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to top, black 0%, black 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, black 55%, transparent 100%);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.bv-home-atmo-3d-plane-far {
+  opacity: 0.55;
+  background-size: 80px 80px;
+  animation: bv-home-3d-drift-far 96s ease-in-out infinite alternate;
+}
+
+.bv-home-atmo-3d-plane-near {
+  opacity: 0.7;
+  background-size: 48px 48px;
+  border-color: oklch(0.58 0.12 252 / 0.14);
+  animation: bv-home-3d-drift-near 128s ease-in-out infinite alternate;
+}
+
 /* Homepage: fewer simultaneous animations on small viewports (GPU / battery) */
 @media (max-width: 768px) {
   .bv-home-atmo-parallax-b {
@@ -806,6 +920,27 @@ body {
     opacity: 0;
     transform: none;
     will-change: auto;
+  }
+
+  .bv-home-hero-grid,
+  .bv-home-hero-wave {
+    animation: none;
+    will-change: auto;
+  }
+
+  .bv-home-hero-wave {
+    opacity: 0.25;
+  }
+
+  .bv-home-atmo-3d-plane-far,
+  .bv-home-atmo-3d-plane-near {
+    animation: none;
+    transform: rotateX(76deg) rotateZ(-10deg) translateZ(-60px);
+    will-change: auto;
+  }
+
+  .bv-home-atmo-3d-wrap {
+    opacity: 0.28;
   }
 }
 
@@ -835,6 +970,23 @@ body {
     animation: none;
     opacity: 0;
     transform: none;
+    will-change: auto;
+  }
+
+  .bv-home-hero-grid,
+  .bv-home-hero-wave {
+    animation: none;
+    will-change: auto;
+  }
+
+  .bv-home-hero-wave {
+    opacity: 0.25;
+  }
+
+  .bv-home-atmo-3d-plane-far,
+  .bv-home-atmo-3d-plane-near {
+    animation: none;
+    transform: rotateX(76deg) rotateZ(-10deg) translateZ(-60px);
     will-change: auto;
   }
 

@@ -35,7 +35,7 @@ export function DashboardCard({
       )}
     >
       {(eyebrow || title || description) && (
-        <header className="border-b border-white/[0.065] px-5 py-4 sm:px-6 sm:py-5">
+        <header className="border-b border-white/[0.065] px-4 py-3.5 sm:px-6 sm:py-5">
           <div className="flex flex-col gap-1">
             {eyebrow ? (
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{eyebrow}</p>
@@ -51,7 +51,7 @@ export function DashboardCard({
       )}
       <div className={cn("min-h-0 min-w-0 flex-1 p-5 sm:p-6", contentClassName)}>{children}</div>
       {footer ? (
-        <footer className="border-t border-white/[0.06] bg-black/15 px-5 py-3.5 sm:px-6">{footer}</footer>
+        <footer className="border-t border-white/[0.06] bg-black/15 px-4 py-3 sm:px-6 sm:py-3.5">{footer}</footer>
       ) : null}
     </section>
   );

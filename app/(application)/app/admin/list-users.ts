@@ -61,12 +61,14 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
     const ctx = resolveAccess(profile, profile.email);
     const sub =
       ctx.state === "admin"
-        ? "Admin (no billing)"
-        : profile.premium_active
-          ? "Stripe / active"
-          : profile.manual_premium
-            ? "Manual premium"
-            : "None";
+        ? "Included · admin"
+        : profile.premium_active && profile.stripe_subscription_id
+          ? "Active · subscription"
+          : profile.premium_active
+            ? "Active"
+            : profile.manual_premium
+              ? "Complimentary"
+              : "None";
     return {
       user_id: profile.user_id,
       email: profile.email,

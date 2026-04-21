@@ -24,7 +24,7 @@ export function FinalCta() {
                 Review as rigorous as execution.
               </h2>
               <p className="mx-auto mt-6 max-w-md text-sm leading-snug text-zinc-500 sm:text-[15px]">
-                Onboarding in waves—we shape the workspace to how you trade.
+                Journal, calendar, and stats in one workspace.
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
                 <a
@@ -47,11 +47,13 @@ export function FinalCta() {
                 </Link>
               </div>
               <p className="mt-8 font-mono text-[10px] leading-snug text-zinc-600">
-                Say “demo” in your note to{" "}
-                <a href={marketingCtas.finalCta.primary.href} className="text-zinc-500 underline-offset-2 hover:text-zinc-400 hover:underline">
+                Questions?{" "}
+                <a
+                  href="mailto:hello@blueveno.com"
+                  className="text-zinc-500 underline-offset-2 hover:text-zinc-400 hover:underline"
+                >
                   hello@blueveno.com
                 </a>
-                .
               </p>
             </div>
           </div>

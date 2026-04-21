@@ -316,6 +316,93 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     [userId, canWriteJournal],
   );
 
+  const updateRow = useCallback(
+    async (id: string, row: Omit<JournalRow, "id" | "createdAt">) => {
+      if (!userId) return { ok: false as const, error: "Not signed in." };
+      if (!canWriteJournal) {
+        return {
+          ok: false as const,
+          error: "Your trial has ended. Upgrade to Blueveno Premium to edit entries.",
+        };
+      }
+      const supabase = createClient();
+      setLastError(null);
+
+      const { data: authUser } = await supabase.auth.getUser();
+      if (authUser.user?.id !== userId) {
+        const msg = "Session not ready. Refresh the page and try again.";
+        setLastError(msg);
+        return { ok: false as const, error: msg };
+      }
+
+      const basePayload = {
+        entry_time: row.time,
+        symbol: row.sym,
+        setup: row.setup,
+        r_value: row.r,
+        tag: row.tag,
+        note: row.note ?? null,
+        tradingview_url: row.tradingViewUrl ?? null,
+        entry_date: row.entryDate ?? null,
+      };
+
+      let updateResult = await supabase
+        .from("journal_entries")
+        .update(basePayload)
+        .eq("user_id", userId)
+        .eq("id", id)
+        .select("id, created_at, entry_date, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+        .single();
+
+      if (updateResult.error?.message?.toLowerCase().includes("entry_date")) {
+        updateResult = await supabase
+          .from("journal_entries")
+          .update({
+            entry_time: row.time,
+            symbol: row.sym,
+            setup: row.setup,
+            r_value: row.r,
+            tag: row.tag,
+            note: row.note ?? null,
+            tradingview_url: row.tradingViewUrl ?? null,
+          })
+          .eq("user_id", userId)
+          .eq("id", id)
+          .select("id, created_at, entry_time, symbol, setup, r_value, tag, note, tradingview_url")
+          .single();
+      }
+
+      const { data: updated, error } = updateResult;
+      if (error || !updated) {
+        const msg = toUserDbError(error?.message);
+        setLastError(msg);
+        return { ok: false as const, error: msg };
+      }
+      const mapped: JournalRow = {
+        id: updated.id as string,
+        createdAt: (updated.created_at as string | null) ?? undefined,
+        entryDate: (updated.entry_date as string | null) ?? undefined,
+        time: (updated.entry_time as string) ?? "",
+        sym: (updated.symbol as string) ?? "",
+        setup: (updated.setup as string) ?? "—",
+        r: (updated.r_value as string) ?? "",
+        tag: (updated.tag as string) ?? "Manual",
+        note: (updated.note as string | null) ?? undefined,
+        tradingViewUrl: (updated.tradingview_url as string | null) ?? undefined,
+      };
+      setData((prev) => {
+        const next = {
+          ...prev,
+          journal: prev.journal.map((j) => (j.id === id ? mapped : j)),
+        };
+        if (userId) writeJournalCache(userId, next);
+        return next;
+      });
+      return { ok: true as const };
+    },
+    [userId, canWriteJournal],
+  );
+
   const removeRow = useCallback(
     async (id: string) => {
       if (!userId) return;
@@ -343,5 +430,5 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     if (userId) writeJournalCache(userId, next);
   }, [userId]);
 
-  return { data, ready, lastError, addRow, removeRow, replaceAll };
+  return { data, ready, lastError, addRow, updateRow, removeRow, replaceAll };
 }
