@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { resolvePostAuthLanding } from "@/lib/auth/post-auth-landing.server";
+import { safeAppRedirectPath } from "@/lib/auth/safe-redirect-path";
 import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -16,9 +18,18 @@ type Props = {
 
 export default async function LoginPage({ searchParams }: Props) {
   const session = await auth();
-  const { callbackUrl, error: errorParam } = await searchParams;
+  const { callbackUrl: rawCallback, error: errorParam } = await searchParams;
+  const callbackUrl = safeAppRedirectPath(rawCallback ?? null);
+
   if (session?.user) {
-    redirect(callbackUrl ?? "/app");
+    const landing = await resolvePostAuthLanding(session);
+    if (landing === "account_disabled") {
+      redirect("/account-disabled");
+    }
+    if (landing === "app") {
+      redirect(callbackUrl);
+    }
+    /* profile_error: stay on login — session exists but profile/access could not be loaded */
   }
 
   return (
@@ -36,7 +47,11 @@ export default async function LoginPage({ searchParams }: Props) {
       alternateLabel="Create an account"
       showDevHint={process.env.NODE_ENV === "development"}
     >
-      <LoginForm callbackUrl={callbackUrl ?? "/app"} initialError={errorParam} />
+      <LoginForm
+        callbackUrl={callbackUrl}
+        initialError={errorParam}
+        sessionWithoutProfile={Boolean(session?.user)}
+      />
     </AuthSplitLayout>
   );
 }

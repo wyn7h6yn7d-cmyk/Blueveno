@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { resolvePostAuthLanding } from "@/lib/auth/post-auth-landing.server";
 import { AuthSplitLayout } from "@/components/auth/auth-split-layout";
 import { SignupForm } from "@/components/auth/signup-form";
 
@@ -14,7 +15,11 @@ export const metadata: Metadata = {
 export default async function SignupPage() {
   const session = await auth();
   if (session?.user) {
-    redirect("/app");
+    const landing = await resolvePostAuthLanding(session);
+    if (landing === "account_disabled") redirect("/account-disabled");
+    if (landing === "app") redirect("/app");
+    /* profile_error — same recovery path as login */
+    redirect("/login");
   }
 
   return (

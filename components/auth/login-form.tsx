@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,11 +9,14 @@ import { authFieldClass, authLabelClass } from "@/lib/auth-field";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
+import { SignOutButton } from "@/components/account/sign-out-button";
 
 type LoginFormProps = {
   callbackUrl: string;
   /** From `/login?error=` (auth callback or config failures) */
   initialError?: string | null;
+  /** Session cookie present but `user_profiles` / access could not be loaded — avoid redirect loop */
+  sessionWithoutProfile?: boolean;
 };
 
 function messageForAuthError(code: string | null | undefined): string | null {
@@ -24,8 +26,7 @@ function messageForAuthError(code: string | null | undefined): string | null {
   return null;
 }
 
-export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
-  const router = useRouter();
+export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(() => messageForAuthError(initialError));
@@ -51,14 +52,23 @@ export function LoginForm({ callbackUrl, initialError }: LoginFormProps) {
       return;
     }
 
-    router.push(callbackUrl);
-    router.refresh();
+    /* Full navigation so middleware + RSC see Set-Cookie before /app renders */
+    window.location.assign(callbackUrl);
   }
 
   return (
     <div className="relative overflow-hidden rounded-[1.15rem] border border-white/[0.07] bg-bv-surface/55 shadow-bv-float backdrop-blur-md">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
       <div className="relative px-6 pb-8 pt-7 sm:px-8 sm:pb-9 sm:pt-8">
+        {sessionWithoutProfile ? (
+          <div className="mb-6 space-y-3 rounded-[0.65rem] border border-amber-500/25 bg-amber-500/[0.08] px-3.5 py-3 text-[13px] leading-relaxed text-amber-100">
+            <p>
+              You&apos;re signed in, but your workspace profile didn&apos;t load. This usually means the database migration
+              isn&apos;t applied or Supabase can&apos;t run <span className="font-mono text-[12px]">ensure_user_profile</span>.
+            </p>
+            <SignOutButton />
+          </div>
+        ) : null}
         <div className="mb-8 flex items-start justify-between gap-4 border-b border-white/[0.06] pb-6">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Credentials</p>
