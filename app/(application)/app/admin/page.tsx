@@ -20,9 +20,10 @@ export default async function AdminPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="Administration"
+        variant="signature"
+        eyebrow="Control"
         title="Users"
-        description="Entitlements and access — service role actions; changes apply immediately."
+        description="Search, review access, and adjust entitlements. Changes apply immediately."
       />
       <AdminUsersTable users={users} />
     </div>

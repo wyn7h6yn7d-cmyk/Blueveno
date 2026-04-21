@@ -13,7 +13,7 @@ import { Bell, KeyRound, LogOut, Shield, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const field =
-  "h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600";
+  "h-10 rounded-xl border-white/[0.1] bg-black/25 text-[15px] text-zinc-100 shadow-[inset_0_1px_2px_oklch(0_0_0/0.15)] placeholder:text-zinc-600";
 
 export function SettingsProfileForm() {
   const router = useRouter();
@@ -146,15 +146,16 @@ export function SettingsProfileForm() {
   return (
     <div className="space-y-8">
       <PageHeader
+        variant="signature"
         eyebrow="Settings"
         title="Account"
-        description="Profile, password, and sessions."
+        description="Profile, security, and how you sign out."
         actions={
           <Button
             type="submit"
             form="profile-form"
             variant="outline"
-            className="h-9 rounded-xl border-white/[0.1] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.06]"
+            className="h-10 rounded-xl border-white/[0.12] bg-white/[0.04] px-4 text-[13px] text-zinc-100 hover:bg-white/[0.08]"
             disabled={loading || saving}
           >
             {saving ? "Saving…" : "Save changes"}
@@ -327,11 +328,11 @@ export function SettingsProfileForm() {
         {accountMessage ? <p className="mt-5 text-sm text-zinc-400">{accountMessage}</p> : null}
       </DashboardCard>
 
-      <DashboardCard eyebrow="Notifications" title="Alerts" description="Optional updates about your workspace.">
-        <div className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">
+      <DashboardCard eyebrow="Notifications" title="Alerts" description="Optional — we only send what you ask for.">
+        <div className="flex items-start gap-3 rounded-xl border border-dashed border-white/[0.08] bg-black/15 px-4 py-4">
           <Bell className="mt-0.5 size-4 shrink-0 text-zinc-500" strokeWidth={1.75} />
-          <p className="text-[14px] leading-relaxed text-zinc-400">
-            Notification preferences are not enabled yet. Nothing is sent until you opt in.
+          <p className="text-[14px] leading-relaxed text-zinc-500">
+            Product alerts are off by default. When we add preferences, they will live here.
           </p>
         </div>
       </DashboardCard>

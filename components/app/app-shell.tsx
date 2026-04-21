@@ -44,8 +44,8 @@ export function AppShell({ children, user, access }: AppShellProps) {
             <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.06]" aria-hidden />
             <div className="pointer-events-none absolute inset-0 bg-app-shell-key" aria-hidden />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[48%] bg-app-shell-floor" aria-hidden />
-            <div className="pointer-events-none absolute inset-0 bg-scanlines opacity-[0.045]" aria-hidden />
-            <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.035]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-scanlines opacity-[0.028]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.022]" aria-hidden />
             <WorkspaceGate>
               <div className="relative mx-auto min-h-full max-w-[1600px] px-4 py-7 md:px-7 md:py-9 lg:px-10">
                 {children}

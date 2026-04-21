@@ -75,7 +75,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-[3.25rem] shrink-0 items-center gap-3 border-b border-white/[0.07] bg-[linear-gradient(180deg,oklch(0.125_0.028_262/0.97),oklch(0.102_0.028_264/0.94))] px-3 shadow-[0_1px_0_0_oklch(1_0_0_/0.04)] backdrop-blur-xl md:h-16 md:gap-4 md:px-5">
+    <header className="sticky top-0 z-40 flex h-[3.25rem] shrink-0 items-center gap-3 border-b border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.13_0.03_262/0.98),oklch(0.105_0.028_264/0.96))] px-3 shadow-[0_1px_0_0_oklch(1_0_0_/0.05)] backdrop-blur-xl md:h-16 md:gap-4 md:px-5">
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger
           className={cn(
@@ -102,7 +102,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
 
       <div className="min-w-0 flex-1">
         <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
-        <p className="font-display truncate text-[1.125rem] font-medium tracking-tight text-zinc-50 sm:mt-0.5 sm:text-lg">
+        <p className="font-display truncate text-[1.125rem] font-semibold tracking-[-0.02em] text-zinc-50 sm:mt-0.5 sm:text-lg">
           {label}
         </p>
       </div>
