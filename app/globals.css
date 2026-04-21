@@ -616,6 +616,17 @@ body {
   --accent-glow: oklch(0.52 0.12 252 / 0.28);
 }
 
+/* Blueveno homepage — large slow-moving light plate (no blur filter) */
+@keyframes bv-home-atmo-orb {
+  0%,
+  100% {
+    transform: translate3d(-4%, 6%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(7%, -5%, 0) scale(1.08);
+  }
+}
+
 /* Blueveno homepage — refined atmosphere: grids, parallax plates, line drift, scan */
 @keyframes bv-home-atmo-parallax-a {
   0%,
@@ -688,18 +699,23 @@ body {
     opacity: 0;
   }
   14% {
-    opacity: 0.072;
+    opacity: 0.14;
   }
   50% {
-    opacity: 0.048;
+    opacity: 0.1;
   }
   86% {
-    opacity: 0.062;
+    opacity: 0.12;
   }
   100% {
     transform: translate3d(218%, 0, 0);
     opacity: 0;
   }
+}
+
+.bv-home-atmo-orb {
+  animation: bv-home-atmo-orb 88s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 .bv-home-atmo-parallax-a {
@@ -714,18 +730,18 @@ body {
 
 .bv-home-atmo-grid {
   background-image:
-    linear-gradient(to right, oklch(1 0 0 / 0.038) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(1 0 0 / 0.028) 1px, transparent 1px);
+    linear-gradient(to right, oklch(1 0 0 / 0.048) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.036) 1px, transparent 1px);
   background-size: 56px 56px;
-  animation: bv-home-atmo-grid-travel 78s linear infinite;
+  animation: bv-home-atmo-grid-travel 52s linear infinite;
 }
 
 .bv-home-atmo-grid-fine {
   background-image:
-    linear-gradient(to right, oklch(0.58 0.1 252 / 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.55 0.09 252 / 0.042) 1px, transparent 1px);
+    linear-gradient(to right, oklch(0.58 0.1 252 / 0.078) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.55 0.09 252 / 0.062) 1px, transparent 1px);
   background-size: 56px 56px;
-  animation: bv-home-atmo-grid-travel-rev 96s linear infinite;
+  animation: bv-home-atmo-grid-travel-rev 64s linear infinite;
 }
 
 .bv-home-atmo-h-lines {
@@ -733,11 +749,11 @@ body {
     to bottom,
     transparent 0,
     transparent 46px,
-    oklch(0.62 0.08 252 / 0.055) 47px,
+    oklch(0.62 0.08 252 / 0.088) 47px,
     transparent 48px,
     transparent 96px
   );
-  animation: bv-home-atmo-h-drift 118s linear infinite;
+  animation: bv-home-atmo-h-drift 86s linear infinite;
 }
 
 .bv-home-atmo-v-lines {
@@ -745,11 +761,11 @@ body {
     to right,
     transparent 0,
     transparent 62px,
-    oklch(0.58 0.07 252 / 0.048) 63px,
+    oklch(0.58 0.07 252 / 0.075) 63px,
     transparent 64px,
     transparent 124px
   );
-  animation: bv-home-atmo-v-drift 152s linear infinite;
+  animation: bv-home-atmo-v-drift 108s linear infinite;
 }
 
 .bv-home-atmo-pulse {
@@ -757,27 +773,33 @@ body {
     -11deg,
     transparent 0,
     transparent 20px,
-    oklch(0.52 0.1 252 / 0.055) 21px,
+    oklch(0.52 0.1 252 / 0.085) 21px,
     transparent 22px,
     transparent 48px
   );
-  animation: bv-home-atmo-pulse-shift 88s linear infinite;
+  animation: bv-home-atmo-pulse-shift 62s linear infinite;
 }
 
 .bv-home-atmo-scan {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    oklch(0.58 0.11 252 / 0.042) 42%,
-    oklch(0.62 0.12 250 / 0.058) 50%,
-    oklch(0.58 0.11 252 / 0.042) 58%,
+    oklch(0.58 0.11 252 / 0.1) 42%,
+    oklch(0.62 0.12 250 / 0.14) 50%,
+    oklch(0.58 0.11 252 / 0.1) 58%,
     transparent 100%
   );
-  animation: bv-home-atmo-scan-sweep 104s ease-in-out infinite;
+  animation: bv-home-atmo-scan-sweep 76s ease-in-out infinite;
   will-change: transform, opacity;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .bv-home-atmo-orb {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+
   .bv-home-atmo-parallax-a,
   .bv-home-atmo-parallax-b {
     animation: none;
@@ -798,6 +820,72 @@ body {
     opacity: 0;
     transform: none;
     will-change: auto;
+  }
+
+  .bv-hero-card-shell::before,
+  .bv-hero-shimmer {
+    animation: none !important;
+  }
+}
+
+/* Marketing hero — rotating rim + light sweep (paired with hero-interactive.tsx) */
+@keyframes bv-hero-border-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bv-hero-shimmer {
+  0% {
+    transform: translateX(-130%) skewX(-14deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(230%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+
+.bv-hero-card-shell {
+  position: relative;
+  border-radius: 1.4rem;
+  padding: 1px;
+  overflow: hidden;
+}
+
+.bv-hero-card-shell::before {
+  content: "";
+  position: absolute;
+  inset: -140%;
+  z-index: 0;
+  background: conic-gradient(
+    from 200deg,
+    oklch(0.52 0.14 252 / 0.55),
+    transparent 22%,
+    oklch(0.42 0.11 258 / 0.18),
+    transparent 48%,
+    oklch(0.58 0.13 248 / 0.42),
+    transparent 72%,
+    oklch(0.48 0.12 252 / 0.35)
+  );
+  animation: bv-hero-border-spin 26s linear infinite;
+  will-change: transform;
+}
+
+.bv-hero-shimmer {
+  animation: bv-hero-shimmer 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-hero-card-shell::before {
+    animation: none;
+  }
+
+  .bv-hero-shimmer {
+    animation: none;
   }
 }
 

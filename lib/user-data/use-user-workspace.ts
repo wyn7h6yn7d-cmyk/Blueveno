@@ -6,6 +6,7 @@ import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
 import { createClient } from "@/lib/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
+import { readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
 
 function toUserDbError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
@@ -63,10 +64,30 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   const [lastError, setLastError] = useState<string | null>(null);
   const userIdRef = useRef(userId);
   const didTokenRefreshRefetch = useRef(false);
+  /** Used to avoid accepting a transient empty client read right after load */
+  const mountTimeRef = useRef(Date.now());
 
   useEffect(() => {
     userIdRef.current = userId;
   }, [userId]);
+
+  useEffect(() => {
+    mountTimeRef.current = Date.now();
+  }, [userId]);
+
+  /** Hydrate from local cache when there is no RSC snapshot */
+  useEffect(() => {
+    if (!userId) return;
+    if (initialWorkspace !== undefined) {
+      if (initialWorkspace.journal.length > 0) writeJournalCache(userId, initialWorkspace);
+      return;
+    }
+    const cached = readJournalCache(userId);
+    if (cached && cached.journal.length > 0) {
+      setData((prev) => (prev.journal.length === 0 ? cached : prev));
+      setReady(true);
+    }
+  }, [userId, initialWorkspace]);
 
   useEffect(() => {
     didTokenRefreshRefetch.current = false;
@@ -74,10 +95,21 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     const isCancelled = () => cancelled;
     const supabase = createClient();
 
-    // RSC refresh / navigation: replace local snapshot when server sends new props (not derivable — local mutations exist)
+    // RSC refresh / navigation: merge so empty server props never wipe cache / optimistic rows
     if (initialWorkspace !== undefined) {
       /* eslint-disable react-hooks/set-state-in-effect -- server props after router.refresh / navigation */
-      setData(initialWorkspace);
+      setData((prev) => {
+        if (initialWorkspace.journal.length > 0) {
+          if (userId) writeJournalCache(userId, initialWorkspace);
+          return initialWorkspace;
+        }
+        if (prev.journal.length > 0) return prev;
+        if (userId) {
+          const cached = readJournalCache(userId);
+          if (cached && cached.journal.length > 0) return cached;
+        }
+        return initialWorkspace;
+      });
       setReady(true);
       /* eslint-enable react-hooks/set-state-in-effect */
     }
@@ -135,10 +167,12 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
 
       setData((prev) => {
         const next = mapJournalRowsFromDb(resolved);
-        // Transient RLS / JWT race: never replace real rows with an empty client read
-        if (prev.journal.length > 0 && next.journal.length === 0) {
+        const sinceMount = Date.now() - mountTimeRef.current;
+        // Transient empty client read (RLS/JWT): ignore for a short window, then trust server
+        if (prev.journal.length > 0 && next.journal.length === 0 && sinceMount < 45_000) {
           return prev;
         }
+        if (uid) writeJournalCache(uid, next);
         return next;
       });
       setLastError(null);
@@ -262,7 +296,11 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         note: (inserted.note as string | null) ?? undefined,
         tradingViewUrl: (inserted.tradingview_url as string | null) ?? undefined,
       };
-      setData((prev) => ({ ...prev, journal: [mapped, ...prev.journal].slice(0, 200) }));
+      setData((prev) => {
+        const next = { ...prev, journal: [mapped, ...prev.journal].slice(0, 200) };
+        if (userId) writeJournalCache(userId, next);
+        return next;
+      });
       return { ok: true as const };
     },
     [userId],
@@ -277,14 +315,19 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         setLastError(toUserDbError(error.message));
         return;
       }
-      setData((prev) => ({ ...prev, journal: prev.journal.filter((j) => j.id !== id) }));
+      setData((prev) => {
+        const next = { ...prev, journal: prev.journal.filter((j) => j.id !== id) };
+        if (userId) writeJournalCache(userId, next);
+        return next;
+      });
     },
     [userId],
   );
 
   const replaceAll = useCallback((next: UserWorkspaceSnapshot) => {
     setData(next);
-  }, []);
+    if (userId) writeJournalCache(userId, next);
+  }, [userId]);
 
   return { data, ready, lastError, addRow, removeRow, replaceAll };
 }
