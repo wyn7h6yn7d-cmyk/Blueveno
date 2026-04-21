@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Bell, KeyRound, LogOut, Shield, User } from "lucide-react";
+import { KeyRound, LogOut, Shield, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DISPLAY_CURRENCY_CODES,
@@ -400,15 +400,6 @@ export function SettingsProfileForm() {
           </Button>
         </div>
         {accountMessage ? <p className="mt-5 text-sm text-zinc-400">{accountMessage}</p> : null}
-      </DashboardCard>
-
-      <DashboardCard eyebrow="Notifications" title="Alerts" description="Optional — we only send what you ask for.">
-        <div className="flex items-start gap-3 rounded-xl border border-dashed border-white/[0.08] bg-black/15 px-4 py-4">
-          <Bell className="mt-0.5 size-4 shrink-0 text-zinc-500" strokeWidth={1.75} />
-          <p className="text-[14px] leading-relaxed text-zinc-500">
-            Product alerts are off by default. When we add preferences, they will live here.
-          </p>
-        </div>
       </DashboardCard>
 
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">
