@@ -106,7 +106,7 @@ export function HeroCommandSurface() {
                 aria-label="Surface mode"
                 onKeyDown={onKeyNav}
               >
-                <div className="inline-flex rounded-full border border-white/[0.08] bg-[oklch(0.055_0.042_268)] p-1">
+                <div className="grid w-full max-w-md grid-cols-3 rounded-full border border-white/[0.08] bg-[oklch(0.055_0.042_268)] p-1">
                   {modes.map((m) => {
                     const on = mode === m.id;
                     return (
@@ -120,7 +120,7 @@ export function HeroCommandSurface() {
                         aria-controls={panelId(m.id)}
                         onClick={() => setMode(m.id)}
                         className={cn(
-                          "relative min-h-[44px] rounded-full px-5 py-2.5 text-[12px] font-semibold tracking-[-0.02em] transition-colors sm:px-7 sm:text-[13px]",
+                          "relative flex min-h-[44px] min-w-0 items-center justify-center rounded-full border border-transparent px-2 py-2.5 text-center text-[12px] font-medium tracking-[-0.02em] transition-colors sm:px-3 sm:text-[13px]",
                           on ? "text-[oklch(0.04_0.04_268)]" : "text-zinc-500 hover:text-zinc-300",
                         )}
                       >

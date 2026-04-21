@@ -49,21 +49,14 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
   return (
     <div className="relative flex w-full min-h-[min(620px,78vh)] flex-col lg:min-h-[min(720px,82vh)]">
       <div
-        className="bv-hero-card-shell shadow-[0_0_0_1px_oklch(0.52_0.12_252/0.14),0_64px_160px_-60px_rgba(0,0,0,0.94),0_0_80px_-40px_oklch(0.48_0.14_252/0.18)]"
+        className="relative rounded-[1.35rem] p-[1px] bg-[linear-gradient(145deg,oklch(0.44_0.12_252/0.5),oklch(0.2_0.06_268/0.32)_42%,oklch(0.36_0.1_252/0.42))] shadow-[0_0_0_1px_oklch(0.52_0.12_252/0.14),0_64px_160px_-60px_rgba(0,0,0,0.94),0_0_80px_-40px_oklch(0.48_0.14_252/0.18)]"
         role="region"
         aria-label="Product preview"
       >
         <div
-          className="relative z-10 flex h-full min-h-[inherit] flex-col overflow-hidden rounded-[1.32rem] bg-[oklch(0.032_0.048_274)]"
+          className="relative z-10 flex h-full min-h-[inherit] flex-col overflow-hidden rounded-[calc(1.35rem-1px)] bg-[oklch(0.032_0.048_274)]"
           style={{ boxShadow: "inset 0 0 0 1px oklch(0.52 0.12 252 / 0.12)" }}
         >
-          <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-[1.32rem]">
-            <div
-              className="bv-hero-shimmer absolute -inset-y-12 left-0 w-[55%] max-w-md bg-gradient-to-r from-transparent via-white/[0.07] to-transparent"
-              aria-hidden
-            />
-          </div>
-
           <div className="relative flex min-h-[inherit] flex-col">
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[oklch(0.52_0.12_252/0.16)] bg-[linear-gradient(180deg,oklch(0.052_0.046_268/0.95)_0%,oklch(0.042_0.044_270)_100%)] px-4 py-3.5 sm:px-5">
               <div className="flex min-w-0 items-center gap-3">
@@ -75,10 +68,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                 <span className="truncate font-mono text-[10px] tracking-[0.14em] text-zinc-500 sm:inline">Session</span>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/35 opacity-75 motion-reduce:animate-none" />
-                  <span className="relative inline-flex size-2 rounded-full bg-emerald-400/90" />
-                </span>
+                <span className="relative inline-flex size-2 rounded-full bg-emerald-400/90 shadow-[0_0_0_3px_oklch(0.72_0.14_160/0.2)]" />
                 <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">Live</span>
               </div>
             </div>
@@ -89,7 +79,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
               aria-label="Preview mode"
               onKeyDown={onTabKeyDown}
             >
-              <div className="relative inline-flex w-full max-w-lg rounded-full border border-white/[0.1] bg-[oklch(0.055_0.042_268)] p-1 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)]">
+              <div className="relative grid w-full max-w-lg grid-cols-3 rounded-full border border-white/[0.1] bg-[oklch(0.055_0.042_268)] p-1 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07)]">
                 {modes.map((m, i) => {
                   const selected = mode === m.id;
                   return (
@@ -105,7 +95,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                       tabIndex={selected ? 0 : -1}
                       onClick={() => go(m.id)}
                       className={cn(
-                        "relative flex-1 rounded-full py-3 text-center text-[12px] font-semibold tracking-[-0.02em] transition-colors duration-200 sm:min-h-[48px] sm:py-2.5 sm:text-[13px]",
+                        "relative flex min-h-[44px] min-w-0 items-center justify-center rounded-full border border-transparent py-3 text-center text-[12px] font-medium tracking-[-0.02em] transition-colors duration-200 sm:min-h-[48px] sm:py-2.5 sm:text-[13px]",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.14_252/0.55)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.04_0.04_270)]",
                         "active:scale-[0.98] motion-reduce:active:scale-100",
                         selected ? "text-[oklch(0.035_0.045_268)]" : "text-zinc-500 hover:text-zinc-200",

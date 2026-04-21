@@ -407,7 +407,6 @@ function ReviewLinkPanel({ compact }: { compact?: boolean }) {
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
               strokeDasharray="4 3"
-              className="animate-bv-review-link"
             />
             <circle cx="4" cy="48" r="3.5" fill="oklch(0.62 0.13 252)" stroke="oklch(0.08 0.03 268)" strokeWidth="1" />
             <circle cx="44" cy="88" r="3.5" fill="oklch(0.62 0.13 252)" stroke="oklch(0.08 0.03 268)" strokeWidth="1" />

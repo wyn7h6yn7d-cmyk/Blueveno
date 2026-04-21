@@ -259,7 +259,6 @@ export function HeroPremium() {
               )}
             >
               <div className="relative overflow-hidden rounded-[calc(1rem-1px)] bg-[linear-gradient(168deg,oklch(0.11_0.04_264/0.98),oklch(0.055_0.03_268/0.99))] sm:rounded-[calc(1.65rem-1px)]">
-                <div className="bv-home-hero-grid pointer-events-none absolute inset-0 rounded-[inherit] opacity-[0.28]" aria-hidden />
                 <div className="relative z-[1]">
                   <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] px-4 py-3 sm:px-6 sm:py-3.5">
                     <div className="flex items-center gap-2.5">
@@ -278,7 +277,7 @@ export function HeroPremium() {
                       role="tablist"
                       aria-label="Preview mode"
                       onKeyDown={onTabKeyDown}
-                      className="relative flex w-full rounded-xl bg-black/55 p-1 ring-1 ring-white/[0.07] sm:rounded-2xl sm:p-1.5"
+                      className="grid w-full grid-cols-3 gap-0 rounded-xl bg-black/55 p-1 ring-1 ring-white/[0.07] sm:rounded-2xl sm:p-1.5"
                     >
                       {MODES.map(({ id, label }) => {
                         const selected = mode === id;
@@ -293,12 +292,10 @@ export function HeroPremium() {
                             tabIndex={selected ? 0 : -1}
                             onClick={() => setMode(id)}
                             className={cn(
-                              "relative flex-1 rounded-lg py-2 text-[12px] font-semibold tracking-[-0.02em] transition-colors duration-200 sm:rounded-xl sm:py-2.5 sm:text-[13px]",
+                              "relative flex min-h-[2.5rem] min-w-0 items-center justify-center rounded-lg border border-transparent px-1 py-2 text-center text-[12px] font-medium leading-none tracking-[-0.02em] transition-colors duration-200 sm:min-h-[2.75rem] sm:rounded-xl sm:py-2.5 sm:text-[13px]",
                               selected
-                                ? "text-zinc-50 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.1)]"
+                                ? "border-white/[0.1] bg-[linear-gradient(180deg,oklch(0.24_0.07_262/0.92),oklch(0.12_0.04_268/0.95))] text-zinc-50 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.1)]"
                                 : "text-zinc-500 hover:text-zinc-300",
-                              selected &&
-                                "border border-white/[0.1] bg-[linear-gradient(180deg,oklch(0.24_0.07_262/0.92),oklch(0.12_0.04_268/0.95))]",
                             )}
                           >
                             <span className="relative z-10">{label}</span>
@@ -327,9 +324,7 @@ export function HeroPremium() {
                     </AnimatePresence>
                   </div>
 
-                  <div className="relative overflow-hidden border-t border-white/[0.05]">
-                    <div className="bv-home-hero-wave pointer-events-none h-5 w-full opacity-[0.4] sm:h-6" aria-hidden />
-                  </div>
+                  <div className="border-t border-white/[0.05]" />
 
                   <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-3.5">
                     <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600 sm:text-[10px]">Surface</p>

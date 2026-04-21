@@ -24,7 +24,7 @@ export function HomeNavigation() {
             <Link
               key={l.href}
               href={l.href}
-              className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 transition duration-300 hover:text-zinc-200"
+              className="text-[12px] font-medium uppercase tracking-[0.14em] text-zinc-100 transition duration-300 hover:text-white"
             >
               {l.label}
             </Link>
@@ -33,7 +33,7 @@ export function HomeNavigation() {
         <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/login"
-            className="inline-flex min-h-[44px] items-center px-2 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500 transition hover:text-zinc-200 sm:px-3"
+            className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium tracking-[-0.02em] text-zinc-100 transition hover:text-white sm:px-3"
           >
             Sign in
           </Link>
@@ -50,7 +50,7 @@ export function HomeNavigation() {
           <Link
             key={l.href}
             href={l.href}
-            className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500 transition hover:text-zinc-200"
+            className="text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-100 transition hover:text-white"
           >
             {l.label}
           </Link>
