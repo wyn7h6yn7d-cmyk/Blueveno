@@ -28,6 +28,7 @@ export interface JournalEntry {
   pnlR: number | null;
   setupTags: string[];
   notes: string | null;
+  tradingViewUrl: string | null;
 }
 
 export interface AnalyticsSnapshot {

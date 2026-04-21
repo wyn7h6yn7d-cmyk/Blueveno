@@ -4,16 +4,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
 import {
-  Bell,
-  BookOpen,
-  Command,
-  ExternalLink,
-  FileText,
   LogOut,
   Menu,
   Search,
-  Sparkles,
-  User,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,16 +32,18 @@ type AppTopbarProps = {
 export function AppTopbar({ user }: AppTopbarProps) {
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
-  const initials =
-    user.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() ||
-    user.email?.slice(0, 2).toUpperCase() ||
-    "BV";
+  const safeName = typeof user?.name === "string" && user.name.trim() ? user.name.trim() : null;
+  const safeEmail = typeof user?.email === "string" && user.email.trim() ? user.email.trim() : null;
+  const labelName = safeName ?? safeEmail ?? "Account";
+  const initials = (safeName ?? safeEmail ?? "Account")
+    .split(/[\s@._-]+/)
+    .filter(Boolean)
+    .map((n) => n[0] ?? "")
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-border/80 bg-bv-raised/82 px-3 backdrop-blur-xl supports-[backdrop-filter]:bg-bv-raised/72 md:h-[3.75rem] md:gap-4 md:px-5">
@@ -97,54 +93,11 @@ export function AppTopbar({ user }: AppTopbarProps) {
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "hidden gap-2 text-zinc-400 sm:inline-flex",
-            )}
-          >
-            <Sparkles className="size-4" strokeWidth={1.75} />
-            <span className="hidden lg:inline">Quick actions</span>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-              Actions
-            </DropdownMenuLabel>
-            <DropdownMenuItem className="gap-2" onClick={() => router.push("/app/journal#add")}>
-              <BookOpen className="size-4 opacity-70" />
-              New journal entry
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled className="gap-2">
-              <FileText className="size-4 opacity-70" />
-              Session recap
-              <span className="ml-auto font-mono text-[10px] text-zinc-600">Soon</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled className="gap-2">
-              <Command className="size-4 opacity-70" />
-              Command palette
-              <span className="ml-auto font-mono text-[10px] text-zinc-600">Soon</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="relative text-zinc-400 hover:text-zinc-100"
-          aria-label="Notifications"
-          title="Notifications (placeholder)"
-        >
-          <Bell className="size-[18px]" strokeWidth={1.75} />
-          <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-bv-cyan-electric ring-2 ring-bv-raised" />
-        </Button>
-
-        <DropdownMenu>
+        <DropdownMenu open={accountOpen} onOpenChange={setAccountOpen}>
           <DropdownMenuTrigger
             className={cn(
               buttonVariants({ variant: "outline", size: "icon-sm" }),
-              "size-9 rounded-full border-white/[0.1] bg-white/[0.03] p-0 hover:bg-white/[0.06]",
+              "size-9 rounded-full border-white/[0.1] bg-white/[0.03] p-0 hover:bg-white/[0.06] focus-visible:ring-2 focus-visible:ring-primary/50",
             )}
             aria-label="Account menu"
           >
@@ -154,33 +107,30 @@ export function AppTopbar({ user }: AppTopbarProps) {
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
+          <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuLabel>
               <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium text-zinc-100">{user.name ?? "Trader"}</span>
-                <span className="text-xs font-normal text-zinc-500">{user.email}</span>
+                <span className="text-sm font-medium text-zinc-100">{labelName}</span>
+                <span className="text-xs font-normal text-zinc-500">{safeEmail ?? "Account"}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/app/settings")} className="gap-2">
-              <User className="size-4" />
-              Profile & workspace
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/app/settings/billing")} className="gap-2">
-              Billing
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/")} className="gap-2">
-              <ExternalLink className="size-4" />
-              Marketing site
+              <Settings className="size-4" />
+              Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
               className="gap-2"
               onClick={async () => {
-                await createClient().auth.signOut();
-                router.push("/");
-                router.refresh();
+                try {
+                  await createClient().auth.signOut();
+                } finally {
+                  setAccountOpen(false);
+                  router.push("/");
+                  router.refresh();
+                }
               }}
             >
               <LogOut className="size-4" />

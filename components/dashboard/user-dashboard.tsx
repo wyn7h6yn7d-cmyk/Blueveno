@@ -2,19 +2,18 @@
 
 import { useId, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Link2, NotebookPen } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
-import { PanelGrid, Panel } from "@/components/app/panel-grid";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { AccountTrackingPanel } from "@/components/dashboard/account-tracking-panel";
-import { RuleViolationTracker } from "@/components/dashboard/rule-violation-tracker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { computeKpis, cumulativeSeries } from "@/lib/user-data/kpi";
+import { EmptyState } from "@/components/app/empty-state";
+import { isValidTradingViewUrl } from "@/lib/tradingview";
 
 type Props = {
   userId: string;
@@ -51,6 +50,8 @@ export function UserDashboard({ userId, email }: Props) {
   const [setup, setSetup] = useState("");
   const [r, setR] = useState("");
   const [tag, setTag] = useState("");
+  const [tradingViewUrl, setTradingViewUrl] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
   const [recapCopied, setRecapCopied] = useState(false);
 
   const kpis = useMemo(() => computeKpis(data.journal), [data.journal]);
@@ -62,6 +63,11 @@ export function UserDashboard({ userId, email }: Props) {
   const onAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!sym.trim() || !r.trim()) return;
+    if (!isValidTradingViewUrl(tradingViewUrl)) {
+      setUrlError("Enter a valid TradingView URL.");
+      return;
+    }
+    setUrlError(null);
     const t = time.trim() || new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
     addRow({
       time: t,
@@ -69,11 +75,13 @@ export function UserDashboard({ userId, email }: Props) {
       setup: setup.trim() || "—",
       r: r.trim(),
       tag: tag.trim() || "Manual",
+      tradingViewUrl: tradingViewUrl.trim() || undefined,
     });
     setSym("");
     setSetup("");
     setR("");
     setTag("");
+    setTradingViewUrl("");
     setTime("");
   };
 
@@ -106,7 +114,7 @@ export function UserDashboard({ userId, email }: Props) {
       <PageHeader
         eyebrow="Workspace"
         title="Overview"
-        description="Your trades and metrics stay on this device until broker ingest is connected. Add fills below — each account has its own workspace."
+        description="Clean by default: every new account starts empty. Add your first trading day and begin tracking this week."
         actions={
           <Link
             href="/app/journal"
@@ -192,7 +200,20 @@ export function UserDashboard({ userId, email }: Props) {
                 className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
               />
             </div>
-            <div className="flex items-end sm:col-span-2 lg:col-span-6">
+            <div className="space-y-2 sm:col-span-2 lg:col-span-4">
+              <Label htmlFor="dash-tv" className="text-[13px] text-zinc-400">
+                TradingView link
+              </Label>
+              <Input
+                id="dash-tv"
+                type="url"
+                value={tradingViewUrl}
+                onChange={(e) => setTradingViewUrl(e.target.value)}
+                placeholder="https://www.tradingview.com/chart/..."
+                className="h-10 rounded-xl border-white/10 bg-bv-surface-inset/80 text-[15px] text-zinc-100 placeholder:text-zinc-600"
+              />
+            </div>
+            <div className="flex items-end sm:col-span-2 lg:col-span-2">
               <Button
                 type="submit"
                 className="h-10 w-full rounded-xl bg-[oklch(0.72_0.14_250)] text-[15px] text-[oklch(0.12_0.04_265)] hover:bg-[oklch(0.78_0.12_250)] sm:w-auto sm:px-8"
@@ -200,6 +221,7 @@ export function UserDashboard({ userId, email }: Props) {
                 Add to journal
               </Button>
             </div>
+            {urlError ? <p className="sm:col-span-2 lg:col-span-6 text-sm text-rose-300">{urlError}</p> : null}
           </form>
         )}
       </DashboardCard>
@@ -224,116 +246,94 @@ export function UserDashboard({ userId, email }: Props) {
         </div>
       </section>
 
-      <PanelGrid>
-        <Panel span={8}>
-          <DashboardCard
-            eyebrow="Equity curve"
-            title="Cumulative R (your entries)"
-            description="Built from fills you add — oldest to newest on the horizontal axis."
-            variant="inset"
-            footer={
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
-                  {data.journal.length ? `${data.journal.length} fills · local workspace` : "No fills yet"}
-                </p>
-                <Link
-                  href="/app/analytics"
-                  className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.12_250)] hover:underline"
-                >
-                  Analytics
-                  <ArrowUpRight className="size-3.5" />
-                </Link>
-              </div>
-            }
-          >
-            <div className="relative h-44 overflow-hidden rounded-xl border border-white/[0.06] bg-[oklch(0.08_0.03_265)] md:h-52">
-              <div className="absolute inset-0 bg-grid-fine opacity-25" aria-hidden />
-              <svg className="relative h-full w-full" viewBox="0 0 480 160" preserveAspectRatio="none" aria-hidden>
-                <defs>
-                  <linearGradient id={`${gid}-eq`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="oklch(0.55 0.2 250 / 0.35)" />
-                    <stop offset="100%" stopColor="oklch(0.55 0.2 250 / 0)" />
-                  </linearGradient>
-                  <linearGradient id={`${gid}-ln`} x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="oklch(0.55 0.18 250)" />
-                    <stop offset="100%" stopColor="oklch(0.72 0.12 255)" />
-                  </linearGradient>
-                </defs>
-                {paths ? (
-                  <>
-                    <path d={paths.area} fill={`url(#${gid}-eq)`} />
-                    <path
-                      d={paths.line}
-                      fill="none"
-                      stroke={`url(#${gid}-ln)`}
-                      strokeWidth="1.75"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  </>
-                ) : (
-                  <path
-                    d="M12,120 L468,118"
-                    fill="none"
-                    stroke="oklch(0.35 0.06 260)"
-                    strokeWidth="1.25"
-                    strokeDasharray="4 6"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                )}
-              </svg>
-              <div className="absolute bottom-3 left-4 max-w-[80%] font-mono text-[9px] leading-relaxed text-zinc-600">
-                {data.journal.length ? "Cumulative R from your journal" : "Add trades above to plot your curve"}
-              </div>
+      <DashboardCard
+        eyebrow="Week tracker"
+        title="Daily P&L progression"
+        description="Only your own entries are visualized here — nothing is seeded."
+        variant="inset"
+      >
+        {data.journal.length === 0 ? (
+          <EmptyState
+            icon={CalendarDays}
+            title="No trading days yet"
+            description="Start tracking your week by adding your first journal entry. Green and red day trends appear automatically."
+            className="border-none bg-transparent py-8"
+          />
+        ) : (
+          <div className="relative h-44 overflow-hidden rounded-xl border border-white/[0.06] bg-[oklch(0.08_0.03_265)] md:h-52">
+            <div className="absolute inset-0 bg-grid-fine opacity-25" aria-hidden />
+            <svg className="relative h-full w-full" viewBox="0 0 480 160" preserveAspectRatio="none" aria-hidden>
+              <defs>
+                <linearGradient id={`${gid}-eq`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="oklch(0.55 0.2 250 / 0.35)" />
+                  <stop offset="100%" stopColor="oklch(0.55 0.2 250 / 0)" />
+                </linearGradient>
+                <linearGradient id={`${gid}-ln`} x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="oklch(0.55 0.18 250)" />
+                  <stop offset="100%" stopColor="oklch(0.72 0.12 255)" />
+                </linearGradient>
+              </defs>
+              {paths ? (
+                <>
+                  <path d={paths.area} fill={`url(#${gid}-eq)`} />
+                  <path d={paths.line} fill="none" stroke={`url(#${gid}-ln)`} strokeWidth="1.75" vectorEffect="non-scaling-stroke" />
+                </>
+              ) : null}
+            </svg>
+            <div className="absolute bottom-3 left-4 max-w-[80%] font-mono text-[9px] leading-relaxed text-zinc-600">
+              Cumulative R from your journal
             </div>
-          </DashboardCard>
-        </Panel>
+          </div>
+        )}
+      </DashboardCard>
 
-        <Panel span={4}>
-          <DashboardCard
-            eyebrow="Session recap"
-            title="Today"
-            description="Summary from your latest logged fills."
-          >
+      <DashboardCard
+        eyebrow="Day review"
+        title="Latest notes"
+        description="Quick recap from your most recent entries."
+      >
+        {lastTwo.length === 0 ? (
+          <EmptyState
+            icon={NotebookPen}
+            title="Add your first journal entry"
+            description="After your first entry, your day recap appears here with notes and P&L context."
+            className="border-none bg-transparent py-8"
+            action={
+              <Link
+                href="/app/journal#add"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
+                )}
+              >
+                Open journal
+              </Link>
+            }
+          />
+        ) : (
+          <>
             <ul className="space-y-3 text-[15px] leading-relaxed text-zinc-300">
-              {lastTwo.length ? (
-                lastTwo.map((j) => (
-                  <li key={j.id} className="flex gap-2">
-                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[oklch(0.65_0.14_250)]" />
-                    <span>
-                      <span className="font-mono text-zinc-500">{j.time}</span> · {j.sym} · {j.setup} ·{" "}
-                      <span className="font-mono tabular-nums text-zinc-100">{j.r} R</span>
-                    </span>
-                  </li>
-                ))
-              ) : (
-                <li className="text-zinc-500">No fills yet — use the form above to log your first trade.</li>
-              )}
+              {lastTwo.map((j) => (
+                <li key={j.id} className="flex gap-2">
+                  <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[oklch(0.65_0.14_250)]" />
+                  <span>
+                    <span className="font-mono text-zinc-500">{j.time}</span> · {j.sym} · {j.setup} ·{" "}
+                    <span className="font-mono tabular-nums text-zinc-100">{j.r} R</span>
+                  </span>
+                </li>
+              ))}
             </ul>
             <Button
               type="button"
               variant="outline"
               className="mt-5 h-10 w-full rounded-xl border-white/[0.1] bg-transparent text-[15px] text-zinc-200 hover:bg-white/[0.05]"
               onClick={copyRecap}
-              disabled={!lastTwo.length}
             >
               {recapCopied ? "Copied" : "Copy recap"}
             </Button>
-            <p className="mt-2 text-center font-mono text-[10px] text-zinc-600">Test period — all features open</p>
-          </DashboardCard>
-        </Panel>
-      </PanelGrid>
-
-      <section aria-label="Risk and accounts">
-        <p className="mb-4 font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-600">Operational view</p>
-        <PanelGrid>
-          <Panel span={6}>
-            <RuleViolationTracker />
-          </Panel>
-          <Panel span={6}>
-            <AccountTrackingPanel />
-          </Panel>
-        </PanelGrid>
-      </section>
+          </>
+        )}
+      </DashboardCard>
 
       <DashboardCard
         eyebrow="Recent executions"
@@ -378,8 +378,15 @@ export function UserDashboard({ userId, email }: Props) {
             <tbody>
               {data.journal.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
-                    No entries yet — add a fill with the form above.
+                  <td colSpan={5} className="px-4 py-8">
+                    <div className="py-2">
+                      <EmptyState
+                        icon={Link2}
+                        title="Paste your TradingView link"
+                        description="Create your first entry in Journal, add your notes, and attach a TradingView chart URL for clear day review."
+                        className="border-none bg-transparent py-5"
+                      />
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -390,9 +397,17 @@ export function UserDashboard({ userId, email }: Props) {
                     <td className="px-4 py-3 text-zinc-400">{row.setup}</td>
                     <td className="px-4 py-3 text-right font-mono tabular-nums text-zinc-200">{row.r}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-zinc-400">
-                        {row.tag}
-                      </span>
+                      <div className="inline-flex items-center gap-2">
+                        <span className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] text-zinc-400">
+                          {row.tag}
+                        </span>
+                        <Link
+                          href={`/app/journal/${row.id}`}
+                          className="font-mono text-[10px] text-[oklch(0.8_0.1_248)] hover:underline"
+                        >
+                          Detail
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -404,8 +419,7 @@ export function UserDashboard({ userId, email }: Props) {
 
       <div className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 ring-1 ring-white/[0.03]">
         <p className="text-[15px] leading-relaxed text-zinc-500">
-          Workspace data is stored in this browser for your account until server sync ships. Clearing site data resets the
-          journal.
+          Data flow: every account has its own empty workspace on first login. We never seed demo trades, metrics, or analytics.
         </p>
       </div>
     </div>

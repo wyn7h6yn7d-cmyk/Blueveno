@@ -3,22 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Activity,
   BookOpen,
-  ClipboardList,
+  CalendarDays,
   CreditCard,
   LayoutDashboard,
-  LineChart,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const APP_NAV = [
   { href: "/app", label: "Overview", icon: LayoutDashboard },
+  { href: "/app/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/app/journal", label: "Journal", icon: BookOpen },
-  { href: "/app/analytics", label: "Analytics", icon: LineChart },
-  { href: "/app/playbooks", label: "Playbooks", icon: Activity },
-  { href: "/app/reviews", label: "Reviews", icon: ClipboardList },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ] as const;
 

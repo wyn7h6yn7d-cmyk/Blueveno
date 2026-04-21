@@ -196,6 +196,112 @@ body {
   );
 }
 
+@keyframes bv-orb-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(16px, -10px, 0) scale(1.04);
+    opacity: 0.66;
+  }
+}
+
+@keyframes bv-orb-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.42;
+  }
+  50% {
+    transform: translate3d(-14px, 12px, 0) scale(1.03);
+    opacity: 0.58;
+  }
+}
+
+.hero-orb-a {
+  animation: bv-orb-drift-a 18s ease-in-out infinite;
+}
+
+.hero-orb-b {
+  animation: bv-orb-drift-b 22s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb-a,
+  .hero-orb-b {
+    animation: none;
+  }
+}
+
+@keyframes bv-grid-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-28px, -20px, 0);
+  }
+}
+
+@keyframes bv-wave-slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(120px, 0, 0);
+  }
+}
+
+@keyframes bv-wave-slide-rev {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-140px, 0, 0);
+  }
+}
+
+.bg-market-grid-drift {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.024) 1px, transparent 1px);
+  background-size: 42px 42px;
+  animation: bv-grid-drift 42s linear infinite;
+}
+
+.bg-market-wave {
+  background-image: repeating-linear-gradient(
+    176deg,
+    transparent 0px,
+    transparent 21px,
+    oklch(0.72 0.08 248 / 0.085) 22px,
+    transparent 23px,
+    transparent 52px
+  );
+  animation: bv-wave-slide 34s linear infinite;
+}
+
+.bg-market-wave-reverse {
+  background-image: repeating-linear-gradient(
+    6deg,
+    transparent 0px,
+    transparent 25px,
+    oklch(0.66 0.07 252 / 0.065) 26px,
+    transparent 27px,
+    transparent 58px
+  );
+  animation: bv-wave-slide-rev 46s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-market-grid-drift,
+  .bg-market-wave,
+  .bg-market-wave-reverse {
+    animation: none;
+  }
+}
+
 /** Accent gradient — ice → cobalt (cold clarity, not neon) */
 .text-gradient-electric {
   background: linear-gradient(
