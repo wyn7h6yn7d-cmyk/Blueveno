@@ -1,7 +1,7 @@
 import { AmbientField } from "./ambient-field";
 import { CalendarSection } from "./calendar-section";
 import { FinalCta } from "./final-cta";
-import { HeroSection } from "./hero-section";
+import { HeroCinematicReview } from "./hero-cinematic-review";
 import { HomeFooter } from "./home-footer";
 import { HomeNavigation } from "./home-navigation";
 import { HomePricingSection } from "./home-pricing-section";
@@ -20,7 +20,7 @@ export function BluevenoHomePage() {
       <AmbientField />
       <HomeNavigation />
       <main id="main-content">
-        <HeroSection />
+        <HeroCinematicReview />
         <ValueStrip />
         <CalendarSection />
         <JournalDaySection />
