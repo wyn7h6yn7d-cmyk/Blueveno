@@ -57,9 +57,9 @@ function money(v: number): string {
 }
 
 function toneClass(v: number): string {
-  if (v > 0) return "border-emerald-400/30 bg-emerald-500/12 text-emerald-200";
-  if (v < 0) return "border-rose-400/30 bg-rose-500/12 text-rose-200";
-  return "border-white/[0.08] bg-white/[0.02] text-zinc-300";
+  if (v > 0) return "border-emerald-400/35 bg-emerald-500/14 text-emerald-100";
+  if (v < 0) return "border-rose-400/35 bg-rose-500/14 text-rose-100";
+  return "border-white/[0.09] bg-white/[0.03] text-zinc-300";
 }
 
 function weekDateRangeLabel(week: DayCell[]): string {
@@ -135,7 +135,7 @@ export function PnlCalendar({ entries }: Props) {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[oklch(0.1_0.02_260/0.75)] p-3 ring-1 ring-white/[0.03]">
+      <div className="overflow-x-auto rounded-2xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.028_262/0.86),oklch(0.1_0.03_264/0.84))] p-3 shadow-[inset_0_1px_0_oklch(1_0_0_/0.04)]">
         <div className="grid min-w-[840px] grid-cols-8 gap-2">
           {WEEKDAYS.map((d) => (
             <div key={d} className="px-2 py-1 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
@@ -159,7 +159,7 @@ export function PnlCalendar({ entries }: Props) {
                   const content = (
                     <div
                       className={cn(
-                        "flex h-[98px] flex-col justify-between rounded-xl border p-2.5 transition",
+                        "flex h-[102px] flex-col justify-between rounded-xl border p-2.5 transition duration-200",
                         dayClasses,
                         day.inMonth ? "" : "opacity-45",
                       )}
@@ -167,7 +167,7 @@ export function PnlCalendar({ entries }: Props) {
                       <p className="font-mono text-[11px]">{day.date.getDate()}</p>
                       {hasData ? (
                         <div className="text-right">
-                          <div className="font-mono text-[14px] font-semibold tabular-nums">{money(agg!.total)}</div>
+                          <div className="font-mono text-[15px] font-semibold tabular-nums">{money(agg!.total)}</div>
                           <div className="mt-0.5 font-mono text-[10px] text-zinc-400">
                             {agg!.count} {agg!.count === 1 ? "entry" : "entries"}
                           </div>
@@ -192,10 +192,7 @@ export function PnlCalendar({ entries }: Props) {
                 })}
 
                 <div
-                  className={cn(
-                    "flex h-[98px] flex-col items-center justify-center rounded-xl border p-2 text-center",
-                    toneClass(weekly),
-                  )}
+                  className={cn("flex h-[102px] flex-col items-center justify-center rounded-xl border p-2 text-center shadow-[inset_0_1px_0_oklch(1_0_0_/0.03)]", toneClass(weekly))}
                 >
                   <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-500">Week {i + 1}</p>
                   <p className="mt-1 font-mono text-[15px] font-semibold tabular-nums">{money(weekly)}</p>

@@ -5,6 +5,14 @@ import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
 import { createClient } from "@/lib/supabase/client";
 
+function toUserDbError(message: string | undefined) {
+  const normalized = (message ?? "").toLowerCase();
+  if (normalized.includes("journal_entries") && normalized.includes("could not find")) {
+    return "Database is not initialized yet (journal_entries table missing). Run Supabase migrations and reload.";
+  }
+  return message ?? "Could not save entry.";
+}
+
 export function useUserWorkspace(userId: string | undefined) {
   const [data, setData] = useState<UserWorkspaceSnapshot>(EMPTY_WORKSPACE);
   const [ready, setReady] = useState(false);
@@ -29,6 +37,7 @@ export function useUserWorkspace(userId: string | undefined) {
         .order("created_at", { ascending: false });
       if (cancelled) return;
       if (error || !rows) {
+        setLastError(toUserDbError(error?.message));
         setData(EMPTY_WORKSPACE);
         setReady(true);
         return;
@@ -95,7 +104,7 @@ export function useUserWorkspace(userId: string | undefined) {
 
       const { data: inserted, error } = insertResult;
       if (error || !inserted) {
-        const msg = error?.message ?? "Could not save entry.";
+        const msg = toUserDbError(error?.message);
         setLastError(msg);
         return { ok: false as const, error: msg };
       }
@@ -122,7 +131,10 @@ export function useUserWorkspace(userId: string | undefined) {
       if (!userId) return;
       const supabase = createClient();
       const { error } = await supabase.from("journal_entries").delete().eq("user_id", userId).eq("id", id);
-      if (error) return;
+      if (error) {
+        setLastError(toUserDbError(error.message));
+        return;
+      }
       setData((prev) => ({ ...prev, journal: prev.journal.filter((j) => j.id !== id) }));
     },
     [userId],

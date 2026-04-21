@@ -17,23 +17,27 @@ create index if not exists journal_entries_user_id_created_at_idx
 
 alter table public.journal_entries enable row level security;
 
-create policy if not exists "journal_entries_select_own"
+drop policy if exists "journal_entries_select_own" on public.journal_entries;
+create policy "journal_entries_select_own"
   on public.journal_entries
   for select
   using (auth.uid() = user_id);
 
-create policy if not exists "journal_entries_insert_own"
+drop policy if exists "journal_entries_insert_own" on public.journal_entries;
+create policy "journal_entries_insert_own"
   on public.journal_entries
   for insert
   with check (auth.uid() = user_id);
 
-create policy if not exists "journal_entries_update_own"
+drop policy if exists "journal_entries_update_own" on public.journal_entries;
+create policy "journal_entries_update_own"
   on public.journal_entries
   for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy if not exists "journal_entries_delete_own"
+drop policy if exists "journal_entries_delete_own" on public.journal_entries;
+create policy "journal_entries_delete_own"
   on public.journal_entries
   for delete
   using (auth.uid() = user_id);

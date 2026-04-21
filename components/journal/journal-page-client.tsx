@@ -173,6 +173,11 @@ export function JournalPageClient({ userId }: Props) {
 
             {urlError ? <p className="sm:col-span-2 lg:col-span-3 text-sm text-rose-300">{urlError}</p> : null}
             {saveError ? <p className="sm:col-span-2 lg:col-span-3 text-sm text-rose-300">{saveError}</p> : null}
+            {saveError?.toLowerCase().includes("database is not initialized") ? (
+              <p className="sm:col-span-2 lg:col-span-3 text-xs text-zinc-400">
+                Apply migration `supabase/migrations/20260421_create_journal_entries.sql` (and then reload the app).
+              </p>
+            ) : null}
           </form>
         )}
       </DashboardCard>
