@@ -46,7 +46,7 @@ export function DashboardCard({
           </div>
         </header>
       )}
-      <div className="min-h-0 flex-1 p-5 sm:p-6">{children}</div>
+      <div className="min-h-0 min-w-0 flex-1 p-5 sm:p-6">{children}</div>
       {footer ? (
         <footer className="border-t border-white/[0.06] bg-black/15 px-5 py-3.5 sm:px-6">{footer}</footer>
       ) : null}

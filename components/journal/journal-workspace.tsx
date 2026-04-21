@@ -149,12 +149,12 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         }
       />
 
-      <section className="grid gap-6 xl:grid-cols-[1.35fr_1fr] xl:items-start xl:gap-8">
+      <section className="grid min-w-0 gap-6 xl:grid-cols-[1.35fr_1fr] xl:items-start xl:gap-8">
         <DashboardCard
           eyebrow="Signature view"
           title="Month &amp; days"
           description="Same calendar as the Calendar tab — tap a day with P&amp;L to focus it below."
-          className="min-h-0 xl:sticky xl:top-4"
+          className="min-h-0 min-w-0 xl:sticky xl:top-4"
         >
           {!ready ? (
             <div className="h-40 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
@@ -173,6 +173,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         <DashboardCard
           eyebrow="Log"
           title="Today’s trade"
+          className="min-w-0"
           description={
             canWriteJournal
               ? "Enter the day’s P&L in your display currency (change it in Settings). Add a TradingView link when you want the chart one tap away."

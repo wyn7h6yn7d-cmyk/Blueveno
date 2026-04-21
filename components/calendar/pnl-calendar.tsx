@@ -147,7 +147,7 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
   }, [cursor]);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[oklch(0.62_0.11_252)]">Month</p>
@@ -181,24 +181,24 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
         </div>
       </div>
 
-      <div className="-mx-1 overflow-x-auto overflow-y-visible pb-1 [scrollbar-gutter:stable]">
+      <div className="w-full min-w-0 overflow-x-hidden pb-1">
         <div
           className={cn(
-            "min-w-[min(100%,860px)] rounded-2xl border border-[oklch(0.52_0.12_252/0.22)]",
+            "w-full min-w-0 rounded-2xl border border-[oklch(0.52_0.12_252/0.22)]",
             "bg-[linear-gradient(168deg,oklch(0.125_0.034_262/0.96),oklch(0.088_0.028_264/0.94))]",
-            "p-3 shadow-[inset_0_1px_0_oklch(1_0_0_/0.05),0_28px_90px_-40px_rgba(0,0,0,0.65)] ring-1 ring-[oklch(0.52_0.12_252/0.1)] sm:min-w-[860px]",
+            "p-2 shadow-[inset_0_1px_0_oklch(1_0_0_/0.05),0_28px_90px_-40px_rgba(0,0,0,0.65)] ring-1 ring-[oklch(0.52_0.12_252/0.1)] sm:p-3",
           )}
         >
-          <div className="grid min-w-[min(100%,860px)] grid-cols-8 gap-2 sm:gap-2.5">
+          <div className="grid w-full min-w-0 grid-cols-8 gap-1.5 sm:gap-2.5">
             {WEEKDAYS.map((d) => (
               <div
                 key={d}
-                className="px-1 py-2 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500 sm:px-2"
+                className="min-w-0 px-0.5 py-2 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-500 sm:px-1 sm:text-[10px] sm:tracking-[0.18em]"
               >
                 {d}
               </div>
             ))}
-            <div className="px-1 py-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-[oklch(0.72_0.11_252)] sm:px-2">
+            <div className="min-w-0 px-0.5 py-2 text-center font-mono text-[9px] uppercase tracking-[0.14em] text-[oklch(0.72_0.11_252)] sm:px-1 sm:text-[10px] sm:tracking-[0.2em]">
               Week
             </div>
 
@@ -219,7 +219,7 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                     const content = (
                       <div
                         className={cn(
-                          "group relative flex min-h-[108px] flex-col justify-between rounded-xl border p-2.5 transition duration-200 sm:min-h-[118px] sm:p-3",
+                          "group relative flex min-h-[100px] min-w-0 flex-col justify-between rounded-xl border p-2 transition duration-200 sm:min-h-[118px] sm:p-3",
                           cellClasses,
                           hasData && "hover:ring-1 hover:ring-[oklch(0.55_0.12_252/0.35)]",
                         )}
@@ -239,10 +239,10 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                             </span>
                           ) : null}
                         </div>
-                        <div className="text-right">
+                        <div className="min-w-0 text-right">
                           {hasData ? (
                             <>
-                              <div className="font-display text-[1.05rem] font-semibold tabular-nums tracking-[-0.03em] sm:text-[1.15rem]">
+                              <div className="break-words font-display text-[0.75rem] font-semibold leading-tight tabular-nums tracking-[-0.03em] sm:text-[1.05rem] md:text-[1.15rem]">
                                 {formatSignedPnlAmount(agg!.total, displayCurrency)}
                               </div>
                               <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-white/45">
@@ -264,29 +264,37 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                         <Link
                           key={day.key}
                           href={`/app/journal?date=${encodeURIComponent(day.key)}`}
-                          className="block outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]"
+                          className="block min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]"
                         >
                           {content}
                         </Link>
                       );
                     }
-                    return <div key={day.key}>{content}</div>;
+                    return (
+                      <div key={day.key} className="min-w-0">
+                        {content}
+                      </div>
+                    );
                   })}
 
                   <div
                     className={cn(
-                      "relative flex min-h-[108px] min-w-[5.75rem] flex-col justify-between overflow-hidden rounded-xl border p-2.5 text-center sm:min-h-[118px] sm:min-w-[6.5rem] sm:p-3",
+                      "relative flex min-h-[100px] min-w-0 flex-col justify-between overflow-hidden rounded-xl border p-2 text-left sm:min-h-[118px] sm:p-3",
                       weekRailClasses(weekly),
                     )}
                   >
                     <div className={cn("absolute left-0 top-2 bottom-2 w-[3px] rounded-full", weekAccent(weekly))} />
-                    <div className="pl-2 text-left">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/45">Week {i + 1}</p>
-                      <p className="mt-1 font-mono text-[10px] text-white/70">{weekDateRangeLabel(week)}</p>
+                    <div className="min-w-0 pl-1.5 sm:pl-2">
+                      <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-white/45 sm:text-[9px] sm:tracking-[0.2em]">
+                        Wk {i + 1}
+                      </p>
+                      <p className="mt-0.5 font-mono text-[9px] text-white/70 sm:mt-1 sm:text-[10px]">{weekDateRangeLabel(week)}</p>
                     </div>
-                    <div className="pl-2 text-left">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/40">Σ</p>
-                      <p className="font-display text-xl font-semibold tabular-nums tracking-[-0.04em] sm:text-2xl">
+                    <div className="min-w-0 pl-1.5 sm:pl-2">
+                      <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
+                        Σ
+                      </p>
+                      <p className="break-words font-display text-[0.75rem] font-semibold leading-tight tabular-nums tracking-[-0.04em] sm:text-lg md:text-xl lg:text-2xl">
                         {formatSignedPnlAmount(weekly, displayCurrency)}
                       </p>
                     </div>
