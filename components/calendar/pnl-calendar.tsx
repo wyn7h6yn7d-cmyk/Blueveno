@@ -192,9 +192,9 @@ export function PnlCalendar({ entries }: Props) {
                     </div>
                   );
 
-                  if (agg?.latestEntryId) {
+                  if (hasData) {
                     return (
-                      <Link key={day.key} href={`/app/journal/${agg.latestEntryId}`} className="block">
+                      <Link key={day.key} href={`/app?date=${encodeURIComponent(day.key)}`} className="block">
                         {content}
                       </Link>
                     );

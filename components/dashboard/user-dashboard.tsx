@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CalendarDays, NotebookPen, Plus } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -21,6 +21,8 @@ type Props = {
   userId: string;
   email: string;
   initialWorkspace: UserWorkspaceSnapshot;
+  /** From /app?date=YYYY-MM-DD (e.g. calendar day tap) */
+  highlightDate?: string;
 };
 
 function toKey(d: Date): string {
@@ -72,7 +74,7 @@ function streakFromDaily(daily: Array<{ key: string; pnl: number }>) {
   return `${count} ${positive ? "green" : "red"} day${count === 1 ? "" : "s"}`;
 }
 
-export function UserDashboard({ userId, email, initialWorkspace }: Props) {
+export function UserDashboard({ userId, email, initialWorkspace, highlightDate }: Props) {
   const { data, ready, addRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
   const [entryDate, setEntryDate] = useState(() => toKey(new Date()));
   const [symbol, setSymbol] = useState("");
@@ -124,7 +126,14 @@ export function UserDashboard({ userId, email, initialWorkspace }: Props) {
     };
   }, [dayAgg]);
 
-  const recentRows = sortedRows.slice(0, 5);
+  useEffect(() => {
+    if (!highlightDate || !ready || sortedRows.length === 0) return;
+    const t = window.setTimeout(() => {
+      const el = document.querySelector(`[data-journal-date="${highlightDate}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [highlightDate, ready, sortedRows.length]);
 
   const onQuickAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +151,7 @@ export function UserDashboard({ userId, email, initialWorkspace }: Props) {
       sym: symbol.trim().toUpperCase(),
       setup: "Day",
       r: pnl.trim(),
-      tag: "Overview",
+      tag: "Journal",
       note: note.trim() || undefined,
       tradingViewUrl: tradingViewUrl.trim() || undefined,
     });
@@ -163,17 +172,17 @@ export function UserDashboard({ userId, email, initialWorkspace }: Props) {
     <div className="space-y-12">
       <PageHeader
         eyebrow="Workspace"
-        title="Overview"
+        title="Journal"
         description="P&amp;L snapshot, calendar, and a fast path to log a day without leaving this screen."
         actions={
           <Link
-            href="/app/journal"
+            href="/app#add"
             className={cn(
               buttonVariants({ variant: "outline" }),
               "h-10 min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-4 text-[13px] text-zinc-100 hover:bg-white/[0.07]",
             )}
           >
-            Open journal
+            Jump to add
           </Link>
         }
       />
@@ -230,7 +239,7 @@ export function UserDashboard({ userId, email, initialWorkspace }: Props) {
           title="Log a day"
           description="Same fields as the journal. Optional chart link must be a valid TradingView URL if provided."
         >
-          <form onSubmit={onQuickAdd} className="grid gap-4">
+          <form id="add" onSubmit={onQuickAdd} className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="ov-date" className={labelCls}>
@@ -314,15 +323,15 @@ export function UserDashboard({ userId, email, initialWorkspace }: Props) {
       </section>
 
       <DashboardCard eyebrow="Journal" title="Latest entries" description="Newest days first—open detail or your chart.">
-        {recentRows.length === 0 ? (
+        {sortedRows.length === 0 ? (
           <EmptyState
             icon={NotebookPen}
             title="No journal days yet"
-            description="Use Quick add above or the Journal page to create your first day."
+            description="Use Quick add above to create your first day."
             className="border-none bg-transparent py-6 ring-0"
           />
         ) : (
-          <JournalDayList rows={recentRows} />
+          <JournalDayList rows={sortedRows} highlightDate={highlightDate} />
         )}
       </DashboardCard>
 

@@ -39,7 +39,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
   const fallbackInitial = displayName.charAt(0).toUpperCase() || "A";
   const sectionLabel = pathname.startsWith("/app/calendar")
     ? "Calendar"
-    : pathname.startsWith("/app/journal")
+    : pathname.startsWith("/app/journal/")
       ? "Journal"
       : pathname.startsWith("/app/settings/billing")
         ? "Billing"
@@ -51,7 +51,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
               ? "Reviews"
               : pathname.startsWith("/app/playbooks")
                 ? "Playbooks"
-                : "Overview";
+                : "Journal";
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -116,7 +116,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
           Calendar
         </Link>
         <Link
-          href="/app/journal#add"
+          href="/app#add"
           className={cn(
             buttonVariants({ variant: "outline", size: "sm" }),
             "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-3.5 text-[13px] text-zinc-200 hover:bg-white/[0.07]",

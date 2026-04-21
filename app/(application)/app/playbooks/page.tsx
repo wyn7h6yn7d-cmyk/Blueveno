@@ -22,7 +22,7 @@ export default async function PlaybooksPage() {
         title="Strategy notes"
         description="Reserved for disciplined playbooks tied to your journal—empty until you want them."
         actions={
-          <Link href="/app/journal#add" className={outlineAction}>
+          <Link href="/app#add" className={outlineAction}>
             New entry
           </Link>
         }
@@ -34,7 +34,7 @@ export default async function PlaybooksPage() {
           title="Journal comes first"
           description="Strategy layers ship after core journaling—add real days, then this area can grow with your process."
           action={
-            <Link href="/app/journal#add" className={outlineAction}>
+            <Link href="/app#add" className={outlineAction}>
               Open journal
             </Link>
           }

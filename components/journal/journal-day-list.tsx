@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import type { JournalRow } from "@/lib/user-data/types";
+import { cn } from "@/lib/utils";
 
 type Props = {
   rows: JournalRow[];
+  highlightDate?: string;
 };
 
 function dayLabel(row: JournalRow): string {
@@ -13,13 +15,26 @@ function dayLabel(row: JournalRow): string {
   return "—";
 }
 
-export function JournalDayList({ rows }: Props) {
+/** YYYY-MM-DD for matching calendar ?date= links */
+function rowDateKey(row: JournalRow): string {
+  if (row.entryDate) return row.entryDate;
+  if (row.createdAt) return new Date(row.createdAt).toISOString().slice(0, 10);
+  return "";
+}
+
+export function JournalDayList({ rows, highlightDate }: Props) {
   return (
     <div className="space-y-4">
       {rows.map((row) => (
         <article
           key={row.id}
-          className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition-colors hover:border-white/[0.1] hover:bg-white/[0.025]"
+          data-journal-date={rowDateKey(row)}
+          className={cn(
+            "rounded-xl border bg-white/[0.02] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)] transition-colors hover:border-white/[0.1] hover:bg-white/[0.025]",
+            highlightDate && rowDateKey(row) === highlightDate
+              ? "border-[oklch(0.58_0.12_252/0.55)] ring-1 ring-[oklch(0.55_0.12_252/0.35)]"
+              : "border-white/[0.08]",
+          )}
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>

@@ -43,8 +43,8 @@ middleware.ts            # Protects /app/*
 | `/` | Marketing homepage |
 | `/pricing` | Plans (Free / Pro / Elite) |
 | `/login`, `/signup` | Auth |
-| `/app` | Dashboard overview |
-| `/app/journal` | Trade stream / auto-journal |
+| `/app` | Journal — P&L, calendar, entries |
+| `/app/journal/[id]` | Single day detail |
 | `/app/analytics` | Performance analytics |
 | `/app/playbooks` | Tags & playbooks |
 | `/app/reviews` | Screenshots & recaps |

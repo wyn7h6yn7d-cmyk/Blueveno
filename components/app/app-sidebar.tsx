@@ -2,18 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BookOpen,
-  CalendarDays,
-  LayoutDashboard,
-  Settings,
-} from "lucide-react";
+import { BookOpen, CalendarDays, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const APP_NAV = [
-  { href: "/app", label: "Overview", icon: LayoutDashboard },
+  { href: "/app", label: "Journal", icon: BookOpen },
   { href: "/app/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/app/journal", label: "Journal", icon: BookOpen },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -31,7 +25,7 @@ export function AppSidebarNav({ onNavigate, className }: AppSidebarNavProps) {
       {APP_NAV.map((item) => {
         const active =
           item.href === "/app"
-            ? pathname === "/app"
+            ? pathname === "/app" || pathname.startsWith("/app/journal")
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link

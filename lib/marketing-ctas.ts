@@ -27,7 +27,7 @@ export const marketingCtas = {
       { label: "Join early access", href: "/#cta" as const },
       { label: "Get access", href: "/#cta" as const },
       { label: "See plans", href: "/pricing" as const },
-      { label: "See session recaps", href: "/app/journal" as const },
+      { label: "See session recaps", href: "/app" as const },
     ],
     pricing: { label: "Compare plans", href: "/pricing" as const },
   },

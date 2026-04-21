@@ -22,7 +22,7 @@ export default async function ReviewsPage() {
         title="Day review"
         description="A place for chart-backed reviews once journal days include links and notes."
         actions={
-          <Link href="/app/journal#add" className={outlineAction}>
+          <Link href="/app#add" className={outlineAction}>
             New entry
           </Link>
         }
@@ -34,7 +34,7 @@ export default async function ReviewsPage() {
           title="Save days with chart links"
           description="Journal days that include a TradingView URL and notes will surface here in a future iteration."
           action={
-            <Link href="/app/journal#add" className={outlineAction}>
+            <Link href="/app#add" className={outlineAction}>
               Open journal
             </Link>
           }

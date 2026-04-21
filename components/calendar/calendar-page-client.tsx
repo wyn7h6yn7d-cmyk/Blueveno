@@ -31,7 +31,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
         title="Daily & weekly P&amp;L"
         description="Month grid with day tones and per-week totals. Tap a day to open its journal record."
         actions={
-          <Link href="/app/journal#add" className={outlineAction}>
+          <Link href="/app#add" className={outlineAction}>
             New entry
           </Link>
         }
@@ -48,7 +48,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             title="Your month view is empty"
             description="Add a trading day in the journal—colors and weekly totals derive from your entries only."
             action={
-              <Link href="/app/journal#add" className={outlineAction}>
+              <Link href="/app#add" className={outlineAction}>
                 New entry
               </Link>
             }

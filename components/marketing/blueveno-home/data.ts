@@ -30,6 +30,11 @@ export function weekRowSum(row: string[]) {
   }, 0);
 }
 
+/** Sum of demo P&L across all day cells in a month grid */
+export function monthTotalSum(rows: string[][]) {
+  return rows.reduce((acc, row) => acc + weekRowSum(row), 0);
+}
+
 export function dayCellTone(day: string) {
   if (!day) return "empty" as const;
   const v = pnlMap[day];

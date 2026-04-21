@@ -4,20 +4,19 @@ import type { KeyboardEvent, MutableRefObject } from "react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
-import { calendarRows, dayCellTone, pnlMap, weekRowSum } from "./data";
+import { calendarRows, dayCellTone, monthTotalSum, pnlMap } from "./data";
 import { cn } from "@/lib/utils";
 import { ExternalLink } from "lucide-react";
 
-type HeroMode = "day" | "chart" | "week";
+type HeroMode = "day" | "chart" | "month";
 
 const modes: { id: HeroMode; label: string }[] = [
   { id: "day", label: "Day" },
   { id: "chart", label: "Chart" },
-  { id: "week", label: "Week" },
+  { id: "month", label: "Month" },
 ];
 
-const order: HeroMode[] = ["day", "chart", "week"];
-const heroWeekRow = calendarRows[1]!;
+const order: HeroMode[] = ["day", "chart", "month"];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 const springTab = { type: "spring" as const, stiffness: 420, damping: 32 };
@@ -246,92 +245,96 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                   </motion.div>
                 )}
 
-                {mode === "week" && (
+                {mode === "month" && (
                   <motion.div
-                    key="week"
+                    key="month"
                     role="tabpanel"
-                    id={`${groupId}-panel-week`}
-                    aria-labelledby={`${groupId}-week`}
+                    id={`${groupId}-panel-month`}
+                    aria-labelledby={`${groupId}-month`}
                     initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
                     transition={{ duration: 0.4, ease }}
-                    className="absolute inset-0 flex flex-col p-5 sm:p-7 lg:p-9"
+                    className="absolute inset-0 flex flex-col overflow-y-auto p-4 sm:p-6 lg:p-8"
                   >
-                    <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.07] pb-5">
+                    <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.07] pb-4">
                       <div>
-                        <p className="font-mono text-[10px] uppercase tracking-[0.34em] text-zinc-600">Week</p>
-                        <p className="mt-2 font-mono text-[12px] text-zinc-400">Apr 3 — 9</p>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.34em] text-zinc-600">Month</p>
+                        <p className="mt-2 font-mono text-[12px] text-zinc-400">April · Mon — Sun</p>
                       </div>
                       <span className="rounded-lg border border-[oklch(0.52_0.12_252/0.25)] bg-[oklch(0.52_0.12_252/0.08)] px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-[oklch(0.65_0.11_252)]">
-                        W14
+                        30 days
                       </span>
                     </div>
 
-                    <div className="mt-6 flex min-h-0 flex-1 flex-col">
-                      <div className="mb-2.5 hidden grid-cols-7 gap-2 sm:grid">
+                    <div className="mt-4 flex min-h-0 flex-1 flex-col">
+                      <div className="mb-2 hidden grid-cols-7 gap-1 sm:grid sm:gap-1.5">
                         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
                           <div
                             key={`${d}-${i}`}
-                            className={`text-center font-mono text-[9px] uppercase tracking-[0.2em] ${i >= 5 ? "text-zinc-600" : "text-zinc-500"}`}
+                            className={`text-center font-mono text-[8px] uppercase tracking-[0.18em] sm:text-[9px] ${i >= 5 ? "text-zinc-600" : "text-zinc-500"}`}
                           >
                             {d}
                           </div>
                         ))}
                       </div>
 
-                      <div className="grid flex-1 grid-cols-7 gap-2 sm:gap-2.5">
-                        {heroWeekRow.map((day, di) => {
-                          const tone = dayCellTone(day);
-                          const pnl = day ? pnlMap[day] : undefined;
-                          const toneClass =
-                            tone === "empty"
-                              ? "bg-[oklch(0.07_0.035_270/0.55)]"
-                              : tone === "up"
-                                ? "bg-emerald-500/[0.32] shadow-[inset_0_0_0_1px_oklch(0.72_0.14_155/0.45)]"
-                                : tone === "down"
-                                  ? "bg-rose-500/[0.28] shadow-[inset_0_0_0_1px_oklch(0.65_0.2_15/0.42)]"
-                                  : "bg-white/[0.07] shadow-[inset_0_0_0_1px_oklch(1_0_0/0.12)]";
-                          const display =
-                            typeof pnl === "number" && pnl !== 0
-                              ? `${pnl > 0 ? "+" : "−"}$${Math.abs(pnl)}`
-                              : "—";
+                      <div className="flex min-h-0 flex-1 flex-col gap-1.5 sm:gap-2">
+                        {calendarRows.map((row, ri) => (
+                          <div key={ri} className="grid min-h-0 flex-1 grid-cols-7 gap-1 sm:gap-1.5">
+                            {row.map((day, di) => {
+                              const tone = dayCellTone(day);
+                              const pnl = day ? pnlMap[day] : undefined;
+                              const toneClass =
+                                tone === "empty"
+                                  ? "bg-[oklch(0.07_0.035_270/0.55)]"
+                                  : tone === "up"
+                                    ? "bg-emerald-500/[0.32] shadow-[inset_0_0_0_1px_oklch(0.72_0.14_155/0.45)]"
+                                    : tone === "down"
+                                      ? "bg-rose-500/[0.28] shadow-[inset_0_0_0_1px_oklch(0.65_0.2_15/0.42)]"
+                                      : "bg-white/[0.07] shadow-[inset_0_0_0_1px_oklch(1_0_0/0.12)]";
+                              const display =
+                                typeof pnl === "number" && pnl !== 0
+                                  ? `${pnl > 0 ? "+" : "−"}$${Math.abs(pnl)}`
+                                  : "—";
 
-                          return (
-                            <div
-                              key={`${day}-${di}`}
-                              className={cn(
-                                "flex min-h-[5.5rem] flex-col justify-between rounded-lg p-2.5 sm:min-h-[6.25rem] sm:p-3",
-                                toneClass,
-                              )}
-                            >
-                              {day ? (
-                                <>
-                                  <span className="font-mono text-[10px] font-medium tabular-nums text-zinc-500">{day}</span>
-                                  <span
-                                    className={cn(
-                                      "font-display text-sm tabular-nums leading-none sm:text-base",
-                                      typeof pnl === "number" && pnl > 0
-                                        ? "text-emerald-100"
-                                        : typeof pnl === "number" && pnl < 0
-                                          ? "text-rose-100"
-                                          : "text-zinc-500",
-                                    )}
-                                  >
-                                    {display}
-                                  </span>
-                                </>
-                              ) : null}
-                            </div>
-                          );
-                        })}
+                              return (
+                                <div
+                                  key={`${ri}-${di}-${day || "pad"}`}
+                                  className={cn(
+                                    "flex min-h-[2.65rem] flex-col justify-between rounded-md p-1.5 sm:min-h-[3.1rem] sm:rounded-lg sm:p-2",
+                                    toneClass,
+                                  )}
+                                >
+                                  {day ? (
+                                    <>
+                                      <span className="font-mono text-[9px] font-medium tabular-nums text-zinc-500 sm:text-[10px]">{day}</span>
+                                      <span
+                                        className={cn(
+                                          "font-display text-[10px] tabular-nums leading-none sm:text-xs",
+                                          typeof pnl === "number" && pnl > 0
+                                            ? "text-emerald-100"
+                                            : typeof pnl === "number" && pnl < 0
+                                              ? "text-rose-100"
+                                              : "text-zinc-500",
+                                        )}
+                                      >
+                                        {display}
+                                      </span>
+                                    </>
+                                  ) : null}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ))}
                       </div>
 
-                      <div className="mt-8 flex items-center justify-between gap-4 rounded-xl border border-[oklch(0.52_0.14_252/0.28)] bg-[linear-gradient(135deg,oklch(0.08_0.06_262/0.6)_0%,oklch(0.05_0.05_270/0.5)_100%)] px-5 py-4 sm:px-6 sm:py-5">
-                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-zinc-500">Week total</span>
-                        <span className="font-display text-3xl tabular-nums tracking-[-0.05em] text-emerald-100 sm:text-4xl">
+                      <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-[oklch(0.52_0.14_252/0.28)] bg-[linear-gradient(135deg,oklch(0.08_0.06_262/0.6)_0%,oklch(0.05_0.05_270/0.5)_100%)] px-4 py-3.5 sm:px-6 sm:py-5">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-zinc-500">Month total</span>
+                        <span className="font-display text-2xl tabular-nums tracking-[-0.05em] text-emerald-100 sm:text-3xl lg:text-4xl">
                           {(() => {
-                            const s = weekRowSum(heroWeekRow);
+                            const s = monthTotalSum(calendarRows);
                             if (s === 0) return "—";
                             return `${s > 0 ? "+" : "−"}$${Math.abs(s)}`;
                           })()}
@@ -437,7 +440,7 @@ export function HeroSection() {
             variants={fadeUp}
             className="mt-7 max-w-[36ch] text-[15px] leading-relaxed tracking-[-0.02em] text-zinc-500"
           >
-            Log the day, link the chart, read the week — one disciplined surface.
+            Log the day, link the chart, read the month — one disciplined surface.
           </motion.p>
           <motion.div variants={fadeUp} className="mt-10 flex flex-wrap gap-3 sm:gap-4">
             <PremiumPrimaryLink href="/signup">Open Blueveno</PremiumPrimaryLink>

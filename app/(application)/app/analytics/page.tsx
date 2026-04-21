@@ -22,7 +22,7 @@ export default async function AnalyticsPage() {
         title="Performance"
         description="Aggregates from your journal only—no demo or seeded curves."
         actions={
-          <Link href="/app/journal#add" className={outlineAction}>
+          <Link href="/app#add" className={outlineAction}>
             New entry
           </Link>
         }
@@ -34,7 +34,7 @@ export default async function AnalyticsPage() {
           title="Log trading days to see trends"
           description="Performance views stay empty until your journal has real days—nothing synthetic is shown."
           action={
-            <Link href="/app/journal#add" className={outlineAction}>
+            <Link href="/app#add" className={outlineAction}>
               Open journal
             </Link>
           }

@@ -41,7 +41,7 @@ export default async function JournalDetailPage({ params }: Props) {
         description="Simple day detail view with note and chart link."
         actions={
           <Link
-            href="/app/journal"
+            href="/app"
             className={cn(
               buttonVariants({ variant: "outline" }),
               "h-9 rounded-xl border-white/[0.1] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
