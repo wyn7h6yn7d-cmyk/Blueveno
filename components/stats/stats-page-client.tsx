@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useMemo } from "react";
+import { useId, useMemo, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
@@ -73,7 +73,8 @@ function CumulativeChart({ points }: { points: { i: number; y: number }[] }) {
   );
 }
 
-function DailyBars({ bars }: { bars: { date: string; pnl: number }[] }) {
+function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; currency: string }) {
+  const [tip, setTip] = useState<{ i: number; x: number; y: number } | null>(null);
   const w = 560;
   const h = 148;
   const pad = 16;
@@ -86,40 +87,72 @@ function DailyBars({ bars }: { bars: { date: string; pnl: number }[] }) {
   const step = inner / Math.max(bars.length, 1);
   const midY = h / 2;
   const maxH = midY - pad;
+
+  const showTip = (i: number) => (e: ReactPointerEvent<SVGRectElement>) => {
+    setTip({ i, x: e.clientX, y: e.clientY });
+  };
+
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-40 w-full max-w-full" role="img" aria-label="Daily P and L bars">
-      <line
-        x1={pad}
-        y1={midY}
-        x2={w - pad}
-        y2={midY}
-        stroke="oklch(0.4 0.02 260)"
-        strokeOpacity="0.35"
-        strokeWidth="1"
-      />
-      {bars.map((b, i) => {
-        const x = pad + i * step + (step - barW) / 2;
-        const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
-        const fill = b.pnl >= 0 ? "oklch(0.58 0.14 155)" : "oklch(0.55 0.17 18)";
-        if (b.pnl >= 0) {
+    <div className="relative" onPointerLeave={() => setTip(null)}>
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-40 w-full max-w-full" role="img" aria-label="Daily P and L bars">
+        <line
+          x1={pad}
+          y1={midY}
+          x2={w - pad}
+          y2={midY}
+          stroke="oklch(0.4 0.02 260)"
+          strokeOpacity="0.35"
+          strokeWidth="1"
+        />
+        {bars.map((b, i) => {
+          const x = pad + i * step + (step - barW) / 2;
+          const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
+          const fill = b.pnl >= 0 ? "oklch(0.58 0.14 155)" : "oklch(0.55 0.17 18)";
+          if (b.pnl >= 0) {
+            return (
+              <rect
+                key={b.date}
+                x={x}
+                y={midY - bh}
+                width={barW}
+                height={Math.max(bh, 1)}
+                rx={3}
+                fill={fill}
+                opacity={0.9}
+              />
+            );
+          }
           return (
-            <rect
-              key={b.date}
-              x={x}
-              y={midY - bh}
-              width={barW}
-              height={Math.max(bh, 1)}
-              rx={3}
-              fill={fill}
-              opacity={0.9}
-            />
+            <rect key={b.date} x={x} y={midY} width={barW} height={Math.max(bh, 1)} rx={3} fill={fill} opacity={0.9} />
           );
-        }
-        return (
-          <rect key={b.date} x={x} y={midY} width={barW} height={Math.max(bh, 1)} rx={3} fill={fill} opacity={0.9} />
-        );
-      })}
-    </svg>
+        })}
+        {bars.map((b, i) => (
+          <rect
+            key={`hit-${b.date}`}
+            x={pad + i * step}
+            y={0}
+            width={step}
+            height={h}
+            fill="transparent"
+            className="cursor-default"
+            onPointerEnter={showTip(i)}
+            onPointerMove={showTip(i)}
+          />
+        ))}
+      </svg>
+      {tip ? (
+        <div
+          role="tooltip"
+          className="pointer-events-none fixed z-[100] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.96)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)] backdrop-blur-sm"
+          style={{ left: tip.x + 14, top: tip.y + 14 }}
+        >
+          <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
+            {formatSignedPnlAmount(bars[tip.i].pnl, currency)}
+          </p>
+          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{bars[tip.i].date}</p>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -289,7 +322,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           </DashboardCard>
 
           <DashboardCard eyebrow="Days" title="Daily outcomes" description="One bar per calendar day — green above the line, red below." variant="inset">
-            <DailyBars bars={stats.dailyBars} />
+            <DailyBars bars={stats.dailyBars} currency={displayCurrency} />
           </DashboardCard>
 
           <DashboardCard eyebrow="Weeks" title="Weekly totals" description="Recent weeks, same rhythm as the calendar rail.">
