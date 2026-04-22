@@ -389,19 +389,19 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         </p>
                       </div>
                       <div
-                        className="max-w-[62%] rounded-md border border-white/[0.12] bg-black/25 px-1.5 py-1 sm:max-w-[68%] sm:rounded-lg sm:px-2 sm:py-1.5"
+                        className="max-w-[76%] rounded-xl border border-white/[0.16] bg-black/35 px-2.5 py-2 sm:max-w-[78%] sm:px-3 sm:py-2.5"
                         title={weeklySummary ?? "No weekly reflection"}
                       >
-                        <p className="font-mono text-[6px] uppercase tracking-[0.14em] text-white/45 sm:text-[7px]">Reflection</p>
+                        <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-white/55 sm:text-[9px]">Reflection</p>
                         {weeklyReflectionRows.length === 0 ? (
-                          <p className="mt-0.5 line-clamp-2 text-[8px] leading-snug text-white/75 sm:text-[9px]">
+                          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-[12px]">
                             No weekly reflection
                           </p>
                         ) : (
-                          <div className="mt-0.5 space-y-0.5">
+                          <div className="mt-1 space-y-1">
                             {weeklyReflectionRows.map((row) => (
-                              <p key={row.label} className="line-clamp-1 text-[8px] leading-snug text-white/75 sm:text-[9px]">
-                                <span className="text-white/45">{row.label}:</span> {row.value}
+                              <p key={row.label} className="line-clamp-1 text-[11px] leading-snug text-white/85 sm:text-[12px]">
+                                <span className="text-white/55">{row.label}:</span> {row.value}
                               </p>
                             ))}
                           </div>
