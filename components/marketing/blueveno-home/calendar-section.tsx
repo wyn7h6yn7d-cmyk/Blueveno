@@ -79,7 +79,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
               </span>
             </h2>
             <p className="mt-4 max-w-md text-[14px] leading-[1.55] tracking-[-0.02em] text-zinc-500 sm:mt-5 sm:text-[15px]">
-              Green, red, flat — week totals with quality score on the rail.
+              Green, red, flat - week totals with Week Quality on the rail.
             </p>
           </div>
 
@@ -101,6 +101,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
             const sum = weekRowSum(row);
             const weekLabel = `Week ${ri + 1}`;
             const featured = ri === 1;
+            const quality = ri === 1 ? 86 : ri === 2 ? 78 : 82;
 
             return (
               <motion.article
@@ -124,6 +125,14 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                     "ring-1 ring-[oklch(0.55_0.14_252/0.35)] shadow-[0_28px_72px_-40px_oklch(0.35_0.12_252/0.3),inset_0_1px_0_0_oklch(1_0_0/0.07)]",
                 )}
               >
+                {featured ? (
+                  <motion.div
+                    aria-hidden
+                    className="pointer-events-none absolute -right-20 -top-16 h-56 w-56 rounded-full bg-[radial-gradient(circle,oklch(0.48_0.14_252/0.26),transparent_68%)]"
+                    animate={reducedMotion ? undefined : { opacity: [0.45, 0.78, 0.45], scale: [1, 1.04, 1] }}
+                    transition={reducedMotion ? undefined : { duration: 4.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                  />
+                ) : null}
                 <div className="mb-3 flex flex-wrap items-end justify-between gap-2 border-b border-white/[0.06] pb-3 sm:mb-4 sm:gap-3 sm:pb-4">
                   <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
                     <span className="font-display text-[clamp(1.2rem,2.5vw,1.65rem)] font-semibold tracking-[-0.04em] text-zinc-50">
@@ -262,12 +271,13 @@ export function CalendarSection({ className }: CalendarSectionProps) {
 
                     <div
                       className={cn(
-                        "flex w-full min-h-[3.5rem] flex-col justify-center rounded-xl border px-4 py-3.5 sm:min-h-0 sm:w-[min(9rem,28%)] sm:shrink-0 sm:rounded-2xl sm:px-4 sm:py-4 lg:w-[10rem] lg:px-5 lg:py-5",
+                        "relative flex w-full min-h-[3.5rem] flex-col justify-center overflow-hidden rounded-xl border px-4 py-3.5 sm:min-h-0 sm:w-[min(9rem,28%)] sm:shrink-0 sm:rounded-2xl sm:px-4 sm:py-4 lg:w-[10rem] lg:px-5 lg:py-5",
                         "border-[oklch(0.55_0.14_252/0.42)]",
                         "bg-[linear-gradient(158deg,oklch(0.18_0.07_262/0.82)_0%,oklch(0.09_0.045_268/0.9)_100%)]",
                         "shadow-[inset_0_1px_0_0_oklch(0.55_0.12_252/0.22),0_18px_52px_-34px_oklch(0.38_0.12_252/0.45)]",
                       )}
                     >
+                      <span className="pointer-events-none absolute -right-8 -top-7 h-20 w-20 rounded-full bg-[radial-gradient(circle,oklch(0.58_0.14_252/0.25),transparent_70%)]" />
                       <span className="font-mono text-[9px] uppercase tracking-[0.26em] text-zinc-500 lg:text-[10px]">
                         Week total
                       </span>
@@ -280,7 +290,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                         {formatWeekTotal(sum)}
                       </span>
                       <span className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-[oklch(0.72_0.11_252)]">
-                        Quality {ri === 1 ? "86" : ri === 2 ? "78" : "82"}%
+                        Week Quality {quality}%
                       </span>
                     </div>
                   </div>

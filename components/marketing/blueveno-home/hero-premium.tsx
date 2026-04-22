@@ -106,26 +106,16 @@ function DayPanel() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-5">
-        {["Followed plan", "Respected stop", "No revenge"].map((tag) => (
-          <div
-            key={tag}
-            className="rounded-lg border border-[oklch(0.52_0.12_252/0.34)] bg-[oklch(0.16_0.06_262/0.8)] px-2.5 py-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-300 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]"
-          >
-            {tag}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-4">
-        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-400">Mood · Focused</span>
-        <div className="flex items-center gap-2">
-          <span className="rounded-md border border-emerald-400/25 bg-emerald-500/[0.12] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-200/95">
-            Win
-          </span>
-          <span className="rounded-md border border-[oklch(0.55_0.12_252/0.35)] bg-[oklch(0.16_0.06_262/0.55)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-200">
-            100% discipline
-          </span>
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-white/[0.06] pt-5">
+        <div className="min-w-0">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Signature</p>
+          <p className="mt-1 font-display text-[clamp(1.05rem,2vw,1.35rem)] font-semibold tracking-[-0.03em] text-zinc-100">
+            Discipline Score
+          </p>
+          <p className="mt-1 text-[12px] text-zinc-400">Mood: Focused · Plan, stop, and execution all respected.</p>
+        </div>
+        <div className="relative flex size-[4.75rem] items-center justify-center rounded-full border border-emerald-400/45 bg-[radial-gradient(circle_at_40%_30%,oklch(0.34_0.1_155/0.58),oklch(0.13_0.06_160/0.42))] shadow-[inset_0_1px_0_0_oklch(0.9_0.07_155/0.18),0_0_30px_oklch(0.45_0.14_155/0.22)]">
+          <span className="font-display text-[1.05rem] font-semibold tabular-nums tracking-[-0.04em] text-emerald-100">100</span>
         </div>
       </div>
     </div>
@@ -192,6 +182,16 @@ function WeekPanel() {
       </div>
 
       <div className="min-h-0 flex-1 py-5">
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-[oklch(0.55_0.12_252/0.35)] bg-[linear-gradient(160deg,oklch(0.22_0.08_262/0.82),oklch(0.1_0.05_268/0.9))] px-4 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_42px_-28px_oklch(0.35_0.12_252/0.35)]">
+          <div>
+            <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-400">Signature</p>
+            <p className="mt-1 font-display text-[1rem] font-semibold tracking-[-0.03em] text-zinc-100">Week Quality</p>
+          </div>
+          <div className="relative flex h-10 min-w-[5.5rem] items-center justify-center rounded-xl border border-[oklch(0.62_0.13_252/0.42)] bg-[oklch(0.12_0.05_266/0.7)]">
+            <span className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_50%_40%,oklch(0.55_0.14_252/0.2),transparent_72%)]" />
+            <span className="relative font-display text-[1.1rem] font-semibold tracking-[-0.04em] text-[oklch(0.86_0.08_252)]">87%</span>
+          </div>
+        </div>
         <div className="grid h-full min-h-0 min-w-0 grid-cols-7 grid-rows-[auto_minmax(0,1fr)] gap-x-1.5 gap-y-2 sm:gap-x-2">
           {DAY_LABELS.map((d) => (
             <div
@@ -316,6 +316,12 @@ export function HeroPremium() {
                 "shadow-[0_40px_120px_-52px_rgba(0,0,0,0.9),0_0_0_1px_oklch(0.46_0.11_252/0.24),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
               )}
             >
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-[radial-gradient(ellipse_at_70%_20%,oklch(0.48_0.14_252/0.18),transparent_60%)]"
+                animate={reduced ? undefined : { opacity: [0.42, 0.72, 0.42] }}
+                transition={reduced ? undefined : { duration: 5.6, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+              />
               <div
                 className={cn(
                   "relative overflow-hidden rounded-[calc(1rem-1px)] sm:rounded-[calc(1.75rem-1px)]",
