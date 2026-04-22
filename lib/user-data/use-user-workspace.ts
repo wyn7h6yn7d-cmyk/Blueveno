@@ -11,7 +11,7 @@ import {
   JOURNAL_SELECT_WITHOUT_ENTRY_DATE,
 } from "@/lib/user-data/journal-entry-columns";
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
-import { readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
+import { clearJournalCache, readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
 import { useAccess } from "@/components/access/access-provider";
 
 function toUserDbError(message: string | undefined) {
@@ -20,6 +20,15 @@ function toUserDbError(message: string | undefined) {
     return "Database is not initialized yet (journal_entries table missing). Run Supabase migrations and reload.";
   }
   return message ?? "Could not save entry.";
+}
+
+function isMissingWeeklyReflectionsTableError(message: string | undefined, code: string | undefined) {
+  const normalized = (message ?? "").toLowerCase();
+  return (
+    (code ?? "").toUpperCase() === "PGRST205" ||
+    (normalized.includes("weekly_reflections") &&
+      (normalized.includes("does not exist") || normalized.includes("could not find the table")))
+  );
 }
 
 type UseUserWorkspaceOptions = {
@@ -441,10 +450,41 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     [userId, canWriteJournal],
   );
 
+  const resetJournal = useCallback(async () => {
+    if (!userId) return { ok: false as const, error: "Not signed in." };
+    setLastError(null);
+    const supabase = createClient();
+
+    const { data: authUser } = await supabase.auth.getUser();
+    if (authUser.user?.id !== userId) {
+      const msg = "Session not ready. Refresh the page and try again.";
+      setLastError(msg);
+      return { ok: false as const, error: msg };
+    }
+
+    const { error: reflectionsError } = await supabase.from("weekly_reflections").delete().eq("user_id", userId);
+    if (reflectionsError && !isMissingWeeklyReflectionsTableError(reflectionsError.message, reflectionsError.code)) {
+      const msg = toUserDbError(reflectionsError.message);
+      setLastError(msg);
+      return { ok: false as const, error: msg };
+    }
+
+    const { error } = await supabase.from("journal_entries").delete().eq("user_id", userId);
+    if (error) {
+      const msg = toUserDbError(error.message);
+      setLastError(msg);
+      return { ok: false as const, error: msg };
+    }
+
+    setData(EMPTY_WORKSPACE);
+    clearJournalCache(userId);
+    return { ok: true as const };
+  }, [userId]);
+
   const replaceAll = useCallback((next: UserWorkspaceSnapshot) => {
     setData(next);
     if (userId) writeJournalCache(userId, next);
   }, [userId]);
 
-  return { data, ready, lastError, addRow, updateRow, removeRow, replaceAll };
+  return { data, ready, lastError, addRow, updateRow, removeRow, resetJournal, replaceAll };
 }

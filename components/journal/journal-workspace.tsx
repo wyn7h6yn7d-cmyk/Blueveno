@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, LineChart, NotebookPen, Plus } from "lucide-react";
+import { AlertTriangle, CalendarDays, LineChart, NotebookPen, Plus } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
@@ -71,7 +71,7 @@ function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefine
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
   const { canWriteJournal, displayCurrency } = useAccess();
-  const { data, ready, addRow, lastError, removeRow } = useUserWorkspace(userId, { initialWorkspace });
+  const { data, ready, addRow, lastError, removeRow, resetJournal } = useUserWorkspace(userId, { initialWorkspace });
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");
@@ -91,6 +91,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [weeklyMsg, setWeeklyMsg] = useState<string | null>(null);
   const [weeklySaving, setWeeklySaving] = useState(false);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
+  const [resettingJournal, setResettingJournal] = useState(false);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
   const weekStartKey = useMemo(() => {
     const base = new Date(`${weekAnchorDate}T12:00:00`);
     return toDayKey(startOfWeekMonday(base));
@@ -272,6 +274,32 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     setWeeklyMsg(error ? weeklyReflectionErrorMessage(error, "save") : "Weekly reflection saved.");
   };
 
+  const onResetJournal = async () => {
+    if (resettingJournal) return;
+    const firstConfirm = window.confirm(
+      "Reset journal will permanently delete all your journal entries and weekly reflections. Continue?",
+    );
+    if (!firstConfirm) return;
+    const typed = window.prompt('Type "RESET JOURNAL" to confirm this permanent action.');
+    if ((typed ?? "").trim().toUpperCase() !== "RESET JOURNAL") {
+      setResetMsg("Reset cancelled. Confirmation text did not match.");
+      return;
+    }
+    setResetMsg(null);
+    setResettingJournal(true);
+    const result = await resetJournal();
+    setResettingJournal(false);
+    if (!result.ok) {
+      setResetMsg(result.error ?? "Could not reset journal.");
+      return;
+    }
+    setWeeklyWorked("");
+    setWeeklySlipped("");
+    setWeeklyFocus("");
+    setWeeklyMsg(null);
+    setResetMsg("Journal reset completed.");
+  };
+
   return (
     <div className="space-y-10">
       <PageHeader
@@ -285,6 +313,16 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
               Calendar
             </Link>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => void onResetJournal()}
+              disabled={resettingJournal}
+              className="h-10 rounded-xl px-4"
+            >
+              <AlertTriangle className="mr-2 size-4" strokeWidth={1.9} />
+              {resettingJournal ? "Resetting…" : "Reset journal"}
+            </Button>
             <a href="#add" className={appPrimaryCta}>
               <Plus className="mr-2 size-4" strokeWidth={2} />
               New entry
@@ -292,6 +330,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           </div>
         }
       />
+      {resetMsg ? (
+        <p className={cn("text-[13px]", resetMsg.includes("completed") ? "text-zinc-400" : "text-rose-300/95")}>
+          {resetMsg}
+        </p>
+      ) : null}
 
       <section className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10">
         <DashboardCard
