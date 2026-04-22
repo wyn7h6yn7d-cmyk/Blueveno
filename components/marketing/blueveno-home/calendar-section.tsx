@@ -83,13 +83,12 @@ export function CalendarSection({ className }: CalendarSectionProps) {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-5 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-600 lg:justify-end">
-            <span className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.1] bg-[oklch(0.08_0.035_268/0.72)] px-2.5 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] lg:justify-end">
+            <span className="inline-flex items-center gap-2 rounded-md border border-emerald-400/25 bg-emerald-500/[0.08] px-2.5 py-1">
               <span className="size-2 rounded-full bg-emerald-400/85" aria-hidden />
               Win
             </span>
-            <span className="text-zinc-700">·</span>
-            <span className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-md border border-rose-400/25 bg-rose-500/[0.08] px-2.5 py-1">
               <span className="size-2 rounded-full bg-rose-400/85" aria-hidden />
               Loss
             </span>

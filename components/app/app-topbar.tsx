@@ -62,16 +62,26 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   const handleSignOut = async () => {
     if (signingOut) return;
     setSigningOut(true);
+    const startedAt = Date.now();
     try {
       const supabase = createClient();
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error(error);
+        setSigningOut(false);
+        return;
       }
     } catch (e) {
       console.error(e);
-    } finally {
       setSigningOut(false);
+      return;
+    }
+
+    // Keep the sign-out state visible briefly to avoid a UI flash before route change.
+    const minVisualMs = 900;
+    const remaining = minVisualMs - (Date.now() - startedAt);
+    if (remaining > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remaining));
     }
     router.replace("/login");
     router.refresh();

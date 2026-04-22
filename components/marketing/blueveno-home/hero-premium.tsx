@@ -174,8 +174,7 @@ function WeekPanel() {
           This week
         </p>
         <div className="text-right">
-          <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500">Net</p>
-          <p className="font-display mt-0.5 text-[clamp(1.5rem,4vw,2.1rem)] font-semibold tabular-nums tracking-[-0.045em] text-emerald-300 [text-shadow:0_0_40px_oklch(0.55_0.14_155/0.3)]">
+          <p className="font-display text-[clamp(1.5rem,4vw,2.1rem)] font-semibold tabular-nums tracking-[-0.045em] text-emerald-300 [text-shadow:0_0_40px_oklch(0.55_0.14_155/0.3)]">
             {fmtEur(WEEK_DEMO_TOTAL)}
           </p>
         </div>

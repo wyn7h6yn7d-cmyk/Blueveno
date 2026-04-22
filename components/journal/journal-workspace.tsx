@@ -127,7 +127,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   useEffect(() => {
     let cancelled = false;
     if (!userId) return;
+    /* eslint-disable react-hooks/set-state-in-effect -- loading flag toggles around async reflection fetch */
     setWeeklyLoading(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
     const supabase = createClient();
     void (async () => {
       try {
