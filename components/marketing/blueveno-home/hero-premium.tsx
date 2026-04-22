@@ -235,17 +235,19 @@ function HeroProductBottomStrip({ mode }: BottomStripProps) {
         : { left: "Weekly quality", right: "Score + reflection ready" };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-6 sm:py-4">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-h-[3.35rem] items-center justify-between gap-3 px-4 py-3.5 sm:min-h-[3.6rem] sm:px-6 sm:py-4">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <span className="size-1.5 shrink-0 rounded-full bg-[oklch(0.55_0.12_252/0.9)] shadow-[0_0_10px_oklch(0.55_0.12_252/0.45)]" aria-hidden />
-        <p className="truncate font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400 sm:text-[11px]">{copy.left}</p>
+        <p className="truncate whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400 sm:text-[11px]">
+          {copy.left}
+        </p>
       </div>
-      <p className="hidden text-right font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500 sm:block sm:text-[11px]">
+      <p className="hidden max-w-[46%] truncate whitespace-nowrap text-right font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500 sm:block sm:text-[11px]">
         {copy.right}
       </p>
       <Link
         href="/login"
-        className="ml-auto font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.72_0.12_252)] transition hover:text-zinc-200 sm:text-[11px]"
+        className="ml-3 shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.72_0.12_252)] transition hover:text-zinc-200 sm:text-[11px]"
       >
         Sign in →
       </Link>
