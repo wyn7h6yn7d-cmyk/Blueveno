@@ -24,11 +24,12 @@ function fmtPnl(n: number | null, currency: string) {
   return formatSignedPnlAmount(n, currency);
 }
 
-function CumulativeChart({ points, currency }: { points: { i: number; y: number }[]; currency: string }) {
+function CumulativeChart({ points, currency }: { points: { i: number; t: string; y: number }[]; currency: string }) {
+  const [tip, setTip] = useState<{ i: number; x: number; y: number } | null>(null);
   const uid = useId();
   const fillId = `${uid}-cum-fill`;
   const w = 560;
-  const h = 168;
+  const h = 188;
   const pad = 14;
   if (points.length < 2) {
     return (
@@ -42,21 +43,25 @@ function CumulativeChart({ points, currency }: { points: { i: number; y: number 
   const maxY = Math.max(0, ...ys);
   const span = Math.max(maxY - minY, 1e-6);
   const n = points.length;
-  const startY = points[0]?.y ?? 0;
   const endY = points[n - 1]?.y ?? 0;
-  const net = endY - startY;
+  const net = endY;
   const toX = (i: number) => pad + (i / Math.max(n - 1, 1)) * (w - pad * 2);
-  const toY = (y: number) => pad + (1 - (y - minY) / span) * (h - pad * 2);
+  const plotBottom = h - 28;
+  const toY = (y: number) => pad + (1 - (y - minY) / span) * (plotBottom - pad);
   const d = points
     .map((p, i) => `${i === 0 ? "M" : "L"} ${toX(i).toFixed(1)} ${toY(p.y).toFixed(1)}`)
     .join(" ");
+
+  const showTip = (i: number) => (e: ReactPointerEvent<SVGRectElement>) => {
+    setTip({ i, x: e.clientX, y: e.clientY });
+  };
+
+  const xTickIndexes = [0, Math.floor((n - 1) / 2), n - 1];
+  const xTickLabels = xTickIndexes.map((i) => ({ i, date: points[i]?.t ?? "" }));
+
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Start</p>
-          <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-200">{formatSignedPnlAmount(startY, currency)}</p>
-        </div>
+    <div className="relative space-y-3" onPointerLeave={() => setTip(null)}>
+      <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
           <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Current</p>
           <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-100">{formatSignedPnlAmount(endY, currency)}</p>
@@ -72,10 +77,6 @@ function CumulativeChart({ points, currency }: { points: { i: number; y: number 
             {formatSignedPnlAmount(net, currency)}
           </p>
         </div>
-        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Points</p>
-          <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-200">{n}</p>
-        </div>
       </div>
 
       <svg viewBox={`0 0 ${w} ${h}`} className="h-48 w-full max-w-full" role="img" aria-label="Cumulative P and L">
@@ -86,7 +87,7 @@ function CumulativeChart({ points, currency }: { points: { i: number; y: number 
           </linearGradient>
         </defs>
         <path
-          d={`${d} L ${toX(n - 1)} ${h - pad} L ${toX(0)} ${h - pad} Z`}
+          d={`${d} L ${toX(n - 1)} ${plotBottom} L ${toX(0)} ${plotBottom} Z`}
           fill={`url(#${fillId})`}
           className="opacity-95"
         />
@@ -99,6 +100,39 @@ function CumulativeChart({ points, currency }: { points: { i: number; y: number 
           strokeLinejoin="round"
           className="drop-shadow-[0_0_12px_oklch(0.55_0.12_252/0.25)]"
         />
+        <line x1={pad} y1={plotBottom} x2={w - pad} y2={plotBottom} stroke="oklch(0.4 0.02 260)" strokeOpacity="0.35" strokeWidth="1" />
+
+        {xTickLabels.map(({ i, date }) => (
+          <text key={`tick-${i}`} x={toX(i)} y={h - 10} textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"} className="fill-zinc-500 font-mono text-[10px]">
+            {date}
+          </text>
+        ))}
+
+        {points.map((p, i) => (
+          <rect
+            key={`hit-${i}`}
+            x={toX(i) - ((w - pad * 2) / Math.max(n - 1, 1)) / 2}
+            y={0}
+            width={(w - pad * 2) / Math.max(n - 1, 1)}
+            height={h}
+            fill="transparent"
+            className="cursor-default"
+            onPointerEnter={showTip(i)}
+            onPointerMove={showTip(i)}
+          />
+        ))}
+
+        {tip ? (
+          <circle
+            cx={toX(tip.i)}
+            cy={toY(points[tip.i]?.y ?? 0)}
+            r={4}
+            fill="oklch(0.74 0.11 250)"
+            stroke="oklch(0.11 0.03 266)"
+            strokeWidth="1.5"
+          />
+        ) : null}
+
         <text
           x={w - pad}
           y={toY(maxY) - 4}
@@ -116,6 +150,18 @@ function CumulativeChart({ points, currency }: { points: { i: number; y: number 
           {formatSignedPnlAmount(minY, currency)}
         </text>
       </svg>
+      {tip ? (
+        <div
+          role="tooltip"
+          className="pointer-events-none fixed z-[100] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]"
+          style={{ left: tip.x + 14, top: tip.y + 14 }}
+        >
+          <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
+            {formatSignedPnlAmount(points[tip.i]?.y ?? 0, currency)}
+          </p>
+          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{points[tip.i]?.t ?? ""}</p>
+        </div>
+      ) : null}
     </div>
   );
 }
