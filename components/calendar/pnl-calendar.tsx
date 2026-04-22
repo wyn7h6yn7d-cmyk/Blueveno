@@ -13,6 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 type Props = {
   entries: JournalRow[];
   displayCurrency: string;
+  weeklyReflections?: WeeklyReflectionSummary[];
 };
 
 type DayCell = {
@@ -25,6 +26,13 @@ type DayAggregate = {
   total: number;
   latestEntryId: string | null;
   count: number;
+};
+
+type WeeklyReflectionSummary = {
+  weekStart: string;
+  whatWorked: string | null;
+  whatSlipped: string | null;
+  nextWeekFocus: string | null;
 };
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -106,7 +114,23 @@ function weekDateRangeLabel(week: DayCell[]): string {
   return `${String(start).padStart(2, "0")}–${String(end).padStart(2, "0")}`;
 }
 
-export function PnlCalendar({ entries, displayCurrency }: Props) {
+function startOfWeekMonday(date: Date): Date {
+  const copy = new Date(date);
+  const day = (copy.getDay() + 6) % 7;
+  copy.setHours(0, 0, 0, 0);
+  copy.setDate(copy.getDate() - day);
+  return copy;
+}
+
+function weekSummaryFromReflection(reflection?: WeeklyReflectionSummary): string | null {
+  if (!reflection) return null;
+  const pick = [reflection.whatWorked, reflection.whatSlipped, reflection.nextWeekFocus]
+    .map((value) => value?.trim() ?? "")
+    .find((value) => value.length > 0);
+  return pick ?? null;
+}
+
+export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
 
   const aggregates = useMemo(() => {
@@ -145,6 +169,14 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
     }
     return out;
   }, [cursor]);
+
+  const weeklyReflectionsByWeekStart = useMemo(() => {
+    const map = new Map<string, WeeklyReflectionSummary>();
+    for (const reflection of weeklyReflections) {
+      map.set(reflection.weekStart, reflection);
+    }
+    return map;
+  }, [weeklyReflections]);
 
   /** Tight week rail on small screens so the grid fits without huge horizontal scroll */
   const calendarGridCols = cn(
@@ -239,6 +271,9 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                 const agg = aggregates.get(day.key);
                 return acc + (agg?.total ?? 0);
               }, 0);
+              const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
+              const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
+              const weeklySummary = weekSummaryFromReflection(weeklyReflection);
 
               return (
                 <Fragment key={`week-row-${i}`}>
@@ -352,6 +387,12 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                         >
                           {formatSignedPnlAmount(weekly, displayCurrency)}
                         </span>
+                      </p>
+                      <p
+                        className="mt-1 line-clamp-2 min-h-[1.7rem] text-[9px] leading-snug text-white/65 sm:mt-1.5 sm:min-h-[2rem] sm:text-[10px]"
+                        title={weeklySummary ?? "No weekly reflection"}
+                      >
+                        {weeklySummary ?? "No weekly reflection"}
                       </p>
                     </div>
                   </div>

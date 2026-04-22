@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BarChart3, CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -10,6 +11,14 @@ import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { useAccess } from "@/components/access/access-provider";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { createClient } from "@/lib/supabase/client";
+
+type WeeklyReflectionSummary = {
+  weekStart: string;
+  whatWorked: string | null;
+  whatSlipped: string | null;
+  nextWeekFocus: string | null;
+};
 
 type Props = {
   userId: string;
@@ -19,6 +28,34 @@ type Props = {
 export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const { displayCurrency } = useAccess();
   const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
+  const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionSummary[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+
+    const supabase = createClient();
+    void (async () => {
+      const { data: rows, error } = await supabase
+        .from("weekly_reflections")
+        .select("week_start, what_worked, what_slipped, next_week_focus")
+        .eq("user_id", userId)
+        .order("week_start", { ascending: false });
+      if (cancelled || error) return;
+      setWeeklyReflections(
+        (rows ?? []).map((row) => ({
+          weekStart: String(row.week_start),
+          whatWorked: row.what_worked ?? null,
+          whatSlipped: row.what_slipped ?? null,
+          nextWeekFocus: row.next_week_focus ?? null,
+        })),
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   return (
     <div className="space-y-10">
@@ -69,7 +106,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             aria-hidden
           />
           <div className="relative">
-            <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} />
+            <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} weeklyReflections={weeklyReflections} />
           </div>
         </div>
       )}

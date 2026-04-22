@@ -19,20 +19,6 @@ import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
 
-const ROW_24H_MS = 24 * 60 * 60 * 1000;
-
-function rowEventTimeMs(row: JournalRow): number {
-  if (row.createdAt) {
-    const t = Date.parse(row.createdAt);
-    if (!Number.isNaN(t)) return t;
-  }
-  if (row.entryDate) {
-    const t = Date.parse(`${row.entryDate}T12:00:00`);
-    if (!Number.isNaN(t)) return t;
-  }
-  return 0;
-}
-
 type Props = {
   userId: string;
   email: string;
@@ -51,6 +37,22 @@ type WeeklyReflectionRow = {
   what_slipped: string | null;
   next_week_focus: string | null;
 };
+
+type SupabaseErrorLike = {
+  message?: string;
+  code?: string;
+};
+
+function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefined, action: "load" | "save"): string {
+  const message = (error?.message ?? "").toLowerCase();
+  if (message.includes("weekly_reflections") && (message.includes("does not exist") || message.includes("column"))) {
+    return "Weekly reflection needs the latest database migration.";
+  }
+  if (message.includes("row-level security") || message.includes("permission denied")) {
+    return "No permission to access weekly reflection for this account.";
+  }
+  return action === "load" ? "Could not load weekly reflection." : "Could not save weekly reflection.";
+}
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
   const { canWriteJournal, displayCurrency } = useAccess();
@@ -87,15 +89,14 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     });
   }, [data.journal]);
 
-  const latestEntriesLast24h = useMemo(() => {
-    // eslint-disable-next-line react-hooks/purity -- rolling 24h window for latest entries
-    const cutoff = Date.now() - ROW_24H_MS;
-    return sortedRows.filter((row) => rowEventTimeMs(row) >= cutoff);
+  const latestEntriesToday = useMemo(() => {
+    const todayKey = toDayKey(new Date());
+    return sortedRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === todayKey);
   }, [sortedRows]);
 
   const rowsForLatestEntries = useMemo(() => {
     const byId = new Map<string, JournalRow>();
-    for (const r of latestEntriesLast24h) byId.set(r.id, r);
+    for (const r of latestEntriesToday) byId.set(r.id, r);
     if (highlightDate) {
       for (const r of sortedRows) {
         if (dayKeyFromRow(r.entryDate, r.createdAt) === highlightDate) {
@@ -108,7 +109,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       const bk = dayKeyFromRow(b.entryDate, b.createdAt);
       return bk.localeCompare(ak);
     });
-  }, [sortedRows, latestEntriesLast24h, highlightDate]);
+  }, [sortedRows, latestEntriesToday, highlightDate]);
 
   useEffect(() => {
     if (!highlightDate || !ready || rowsForLatestEntries.length === 0) return;
@@ -126,21 +127,22 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     const supabase = createClient();
     void (async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("weekly_reflections")
           .select("week_start, what_worked, what_slipped, next_week_focus")
           .eq("user_id", userId)
           .eq("week_start", weekStartKey)
           .maybeSingle();
+        if (error) throw error;
         if (cancelled) return;
         const row = (data ?? null) as WeeklyReflectionRow | null;
         setWeeklyWorked(row?.what_worked ?? "");
         setWeeklySlipped(row?.what_slipped ?? "");
         setWeeklyFocus(row?.next_week_focus ?? "");
         setWeeklyMsg(null);
-      } catch {
+      } catch (error) {
         if (cancelled) return;
-        setWeeklyMsg("Could not load weekly reflection.");
+        setWeeklyMsg(weeklyReflectionErrorMessage(error as SupabaseErrorLike, "load"));
       } finally {
         if (cancelled) return;
         setWeeklyLoading(false);
@@ -203,18 +205,44 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     setWeeklyMsg(null);
     setWeeklySaving(true);
     const supabase = createClient();
-    const { error } = await supabase.from("weekly_reflections").upsert(
-      {
-        user_id: userId,
-        week_start: weekStartKey,
-        what_worked: weeklyWorked.trim() || null,
-        what_slipped: weeklySlipped.trim() || null,
-        next_week_focus: weeklyFocus.trim() || null,
-      },
-      { onConflict: "user_id,week_start" },
-    );
+    const payload = {
+      user_id: userId,
+      week_start: weekStartKey,
+      what_worked: weeklyWorked.trim() || null,
+      what_slipped: weeklySlipped.trim() || null,
+      next_week_focus: weeklyFocus.trim() || null,
+    };
+
+    let error: SupabaseErrorLike | null = null;
+    const upsertResult = await supabase.from("weekly_reflections").upsert(payload, { onConflict: "user_id,week_start" });
+    error = upsertResult.error;
+
+    // Fallback for environments where upsert conflict metadata is unavailable.
+    if (
+      error &&
+      (error.code === "42P10" ||
+        error.message?.toLowerCase().includes("on conflict") ||
+        error.message?.toLowerCase().includes("unique or exclusion constraint"))
+    ) {
+      const insertResult = await supabase.from("weekly_reflections").insert(payload);
+      if (insertResult.error?.code === "23505") {
+        const updateResult = await supabase
+          .from("weekly_reflections")
+          .update({
+            what_worked: payload.what_worked,
+            what_slipped: payload.what_slipped,
+            next_week_focus: payload.next_week_focus,
+          })
+          .eq("user_id", userId)
+          .eq("week_start", weekStartKey);
+        error = updateResult.error;
+      } else {
+        error = insertResult.error;
+      }
+    }
+
     setWeeklySaving(false);
-    setWeeklyMsg(error ? "Could not save weekly reflection." : "Weekly reflection saved.");
+    setWeeklyMsg(error ? weeklyReflectionErrorMessage(error, "save") : "Weekly reflection saved.");
   };
 
   return (
@@ -412,7 +440,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           eyebrow="Recent"
           title="Latest activity"
           className="min-h-0 min-w-0 lg:sticky lg:top-6"
-          description="Newest from the last day — plus any day you opened via a calendar link (?date=)."
+          description="Only today's calendar-day trades — plus any day you opened via a calendar link (?date=)."
         >
           {sortedRows.length === 0 ? (
             <EmptyState
@@ -428,7 +456,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           ) : rowsForLatestEntries.length === 0 ? (
             <EmptyState
               icon={NotebookPen}
-              title="Nothing new in the last 24 hours"
+              title="No trades logged for today"
               description="Open Calendar for the month grid, or Stats for the full picture."
               className="border-none bg-transparent py-8 ring-0"
             />
