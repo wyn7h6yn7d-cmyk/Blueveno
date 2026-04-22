@@ -180,7 +180,7 @@ function WeekPanel() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 py-5">
+      <div className="min-h-0 flex-1 pt-5 pb-8">
         <div className="mb-4 flex items-center justify-between rounded-2xl border border-[oklch(0.55_0.12_252/0.35)] bg-[linear-gradient(160deg,oklch(0.22_0.08_262/0.82),oklch(0.1_0.05_268/0.9))] px-4 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_42px_-28px_oklch(0.35_0.12_252/0.35)]">
           <div>
             <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-400">Signature</p>
