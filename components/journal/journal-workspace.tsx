@@ -99,6 +99,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     e.preventDefault();
     if (!canWriteJournal) return;
     if (!entryDate.trim() || !symbol.trim() || !pnl.trim()) return;
+    if (pnl.includes(".")) {
+      setSaveError("Use comma for decimals (e.g. 100,80). Dot is not allowed.");
+      return;
+    }
     if (!isValidTradingViewUrl(tradingViewUrl)) {
       setUrlError(
         "Use a valid TradingView chart URL (e.g. https://www.tradingview.com/chart/…), or leave the field empty.",
@@ -201,8 +205,16 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 <Input
                   id="jw-pnl"
                   value={pnl}
-                  onChange={(e) => setPnl(e.target.value)}
-                  placeholder="+120 or −40"
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (next.includes(".")) {
+                      setSaveError("Use comma for decimals (e.g. 100,80). Dot is not allowed.");
+                    } else if (saveError?.includes("comma for decimals")) {
+                      setSaveError(null);
+                    }
+                    setPnl(next.replace(/\./g, ""));
+                  }}
+                  placeholder="+120,80 or −40"
                   required
                   disabled={!canWriteJournal}
                   className={cn(inputCls, "font-mono disabled:opacity-45")}

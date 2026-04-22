@@ -5,15 +5,17 @@ import type { JournalRow } from "@/lib/user-data/types";
  * Values are treated as monetary amounts in the user's chosen display currency.
  */
 export function parsePnlAmount(raw: string): number | null {
-  const s = raw
+  const cleaned = raw
     .trim()
     .replace(/[Rr]\s*$/u, "")
     .replace(/[$€£¥₹]/g, "")
     .replace(/−/g, "-")
-    .replace(/\s+/g, "")
-    .replace(/,/g, "");
-  if (!s) return null;
-  const n = Number.parseFloat(s);
+    .replace(/\s+/g, "");
+  if (!cleaned) return null;
+  if (cleaned.includes(",") && cleaned.includes(".")) return null;
+  const normalized = cleaned.includes(",") ? cleaned.replace(",", ".") : cleaned;
+  if (!/^[+-]?\d+(\.\d+)?$/.test(normalized)) return null;
+  const n = Number.parseFloat(normalized);
   return Number.isFinite(n) ? n : null;
 }
 
