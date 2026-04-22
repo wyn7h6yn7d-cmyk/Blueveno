@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, CalendarDays } from "lucide-react";
-import { PageHeader } from "@/components/app/page-header";
+import { CalendarDays } from "lucide-react";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { useAccess } from "@/components/access/access-provider";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
-import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { appPrimaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
 
 type WeeklyReflectionSummary = {
@@ -58,24 +57,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   }, [userId]);
 
   return (
-    <div className="space-y-10">
-      <PageHeader
-        variant="signature"
-        eyebrow="Blueveno"
-        title="Calendar"
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/app/stats" className={appSecondaryCta}>
-              <BarChart3 className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
-              Stats
-            </Link>
-            <Link href="/app/journal#add" className={appPrimaryCta}>
-              Log a day
-            </Link>
-          </div>
-        }
-      />
-
+    <div className="space-y-10 pt-2">
       {!ready ? (
         <DashboardCard eyebrow="Loading" title="Syncing your journal" description="Pulling entries from your workspace.">
           <div className="h-48 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />

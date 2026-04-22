@@ -42,6 +42,8 @@ type WeeklyReflectionRow = {
 type SupabaseErrorLike = {
   message?: string;
   code?: string;
+  details?: string;
+  hint?: string;
 };
 
 function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefined, action: "load" | "save"): string {
@@ -55,7 +57,11 @@ function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefine
   if (message.includes("row-level security") || message.includes("permission denied")) {
     return "No permission to access weekly reflection for this account.";
   }
-  return action === "load" ? "Could not load weekly reflection." : "Could not save weekly reflection.";
+  const base = action === "load" ? "Could not load weekly reflection." : "Could not save weekly reflection.";
+  const code = error?.code?.trim();
+  const raw = error?.message?.trim();
+  if (!code && !raw) return base;
+  return `${base} ${code ? `[${code}] ` : ""}${raw ?? ""}`.trim();
 }
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
@@ -552,7 +558,16 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             <Button type="submit" disabled={!canWriteJournal || weeklySaving || weeklyLoading} className="h-10 rounded-xl px-4">
               {weeklySaving ? "Saving…" : "Save weekly reflection"}
             </Button>
-            {weeklyMsg ? <p className="text-[13px] text-zinc-400">{weeklyMsg}</p> : null}
+            {weeklyMsg ? (
+              <p
+                className={cn(
+                  "text-[13px]",
+                  weeklyMsg.includes("saved") ? "text-zinc-400" : "text-rose-300/95",
+                )}
+              >
+                {weeklyMsg}
+              </p>
+            ) : null}
           </div>
         </form>
       </DashboardCard>
