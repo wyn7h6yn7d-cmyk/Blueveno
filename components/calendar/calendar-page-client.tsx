@@ -63,7 +63,6 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
         variant="signature"
         eyebrow="Blueveno"
         title="Calendar"
-        description="Your month at a glance — daily P&amp;L, week totals on the rail, and one tap into day detail."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Link href="/app/stats" className={appSecondaryCta}>

@@ -18,6 +18,7 @@ import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
+import { waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
 
 type Props = {
   userId: string;
@@ -45,6 +46,9 @@ type SupabaseErrorLike = {
 
 function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefined, action: "load" | "save"): string {
   const message = (error?.message ?? "").toLowerCase();
+  if (message.includes("jwt") || message.includes("token") || message.includes("session")) {
+    return "Session not ready. Refresh the page and try again.";
+  }
   if (message.includes("weekly_reflections") && (message.includes("does not exist") || message.includes("column"))) {
     return "Weekly reflection needs the latest database migration.";
   }
@@ -127,6 +131,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     const supabase = createClient();
     void (async () => {
       try {
+        const sessionOk = await waitForSessionUser(supabase, userId, () => cancelled);
+        if (!sessionOk) {
+          throw { message: "Session not ready." } satisfies SupabaseErrorLike;
+        }
         const { data, error } = await supabase
           .from("weekly_reflections")
           .select("week_start, what_worked, what_slipped, next_week_focus")
@@ -205,6 +213,12 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     setWeeklyMsg(null);
     setWeeklySaving(true);
     const supabase = createClient();
+    const { data: authUser } = await supabase.auth.getUser();
+    if (authUser.user?.id !== userId) {
+      setWeeklySaving(false);
+      setWeeklyMsg("Session not ready. Refresh the page and try again.");
+      return;
+    }
     const payload = {
       user_id: userId,
       week_start: weekStartKey,
