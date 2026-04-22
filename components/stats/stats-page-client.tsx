@@ -24,7 +24,7 @@ function fmtPnl(n: number | null, currency: string) {
   return formatSignedPnlAmount(n, currency);
 }
 
-function CumulativeChart({ points }: { points: { i: number; y: number }[] }) {
+function CumulativeChart({ points, currency }: { points: { i: number; y: number }[]; currency: string }) {
   const uid = useId();
   const fillId = `${uid}-cum-fill`;
   const w = 560;
@@ -42,34 +42,81 @@ function CumulativeChart({ points }: { points: { i: number; y: number }[] }) {
   const maxY = Math.max(0, ...ys);
   const span = Math.max(maxY - minY, 1e-6);
   const n = points.length;
+  const startY = points[0]?.y ?? 0;
+  const endY = points[n - 1]?.y ?? 0;
+  const net = endY - startY;
   const toX = (i: number) => pad + (i / Math.max(n - 1, 1)) * (w - pad * 2);
   const toY = (y: number) => pad + (1 - (y - minY) / span) * (h - pad * 2);
   const d = points
     .map((p, i) => `${i === 0 ? "M" : "L"} ${toX(i).toFixed(1)} ${toY(p.y).toFixed(1)}`)
     .join(" ");
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-48 w-full max-w-full" role="img" aria-label="Cumulative P and L">
-      <defs>
-        <linearGradient id={fillId} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.58 0.14 252)" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="oklch(0.1 0.04 266)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path
-        d={`${d} L ${toX(n - 1)} ${h - pad} L ${toX(0)} ${h - pad} Z`}
-        fill={`url(#${fillId})`}
-        className="opacity-95"
-      />
-      <path
-        d={d}
-        fill="none"
-        stroke="oklch(0.74 0.11 250)"
-        strokeWidth="2.25"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="drop-shadow-[0_0_12px_oklch(0.55_0.12_252/0.25)]"
-      />
-    </svg>
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Start</p>
+          <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-200">{formatSignedPnlAmount(startY, currency)}</p>
+        </div>
+        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Current</p>
+          <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-100">{formatSignedPnlAmount(endY, currency)}</p>
+        </div>
+        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Change</p>
+          <p
+            className={cn(
+              "mt-1 font-mono text-[13px] tabular-nums",
+              net >= 0 ? "text-emerald-200" : "text-rose-200",
+            )}
+          >
+            {formatSignedPnlAmount(net, currency)}
+          </p>
+        </div>
+        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Points</p>
+          <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-200">{n}</p>
+        </div>
+      </div>
+
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-48 w-full max-w-full" role="img" aria-label="Cumulative P and L">
+        <defs>
+          <linearGradient id={fillId} x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="oklch(0.58 0.14 252)" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="oklch(0.1 0.04 266)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path
+          d={`${d} L ${toX(n - 1)} ${h - pad} L ${toX(0)} ${h - pad} Z`}
+          fill={`url(#${fillId})`}
+          className="opacity-95"
+        />
+        <path
+          d={d}
+          fill="none"
+          stroke="oklch(0.74 0.11 250)"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="drop-shadow-[0_0_12px_oklch(0.55_0.12_252/0.25)]"
+        />
+        <text
+          x={w - pad}
+          y={toY(maxY) - 4}
+          textAnchor="end"
+          className="fill-zinc-500 font-mono text-[10px]"
+        >
+          {formatSignedPnlAmount(maxY, currency)}
+        </text>
+        <text
+          x={w - pad}
+          y={toY(minY) - 4}
+          textAnchor="end"
+          className="fill-zinc-500 font-mono text-[10px]"
+        >
+          {formatSignedPnlAmount(minY, currency)}
+        </text>
+      </svg>
+    </div>
   );
 }
 
@@ -321,7 +368,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             variant="inset"
             className="overflow-hidden"
           >
-            <CumulativeChart points={stats.cumulative} />
+            <CumulativeChart points={stats.cumulative} currency={displayCurrency} />
           </DashboardCard>
 
           <DashboardCard eyebrow="Days" title="Daily P&amp;L" description="One bar per calendar day." variant="inset">

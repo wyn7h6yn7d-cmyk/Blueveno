@@ -194,7 +194,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                   } else if (saveError?.includes("comma for decimals")) {
                     setSaveError(null);
                   }
-                  setPnl(next.replace(/\./g, ""));
+                  setPnl(next);
                 }}
                 placeholder="+120,80 or −40"
                 required
