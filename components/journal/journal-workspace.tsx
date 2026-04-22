@@ -48,20 +48,25 @@ type SupabaseErrorLike = {
 
 function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefined, action: "load" | "save"): string {
   const message = (error?.message ?? "").toLowerCase();
+  const code = (error?.code ?? "").toUpperCase();
   if (message.includes("jwt") || message.includes("token") || message.includes("session")) {
     return "Session not ready. Refresh the page and try again.";
   }
-  if (message.includes("weekly_reflections") && (message.includes("does not exist") || message.includes("column"))) {
+  if (
+    code === "PGRST205" ||
+    (message.includes("weekly_reflections") &&
+      (message.includes("does not exist") || message.includes("column") || message.includes("could not find the table")))
+  ) {
     return "Weekly reflection needs the latest database migration.";
   }
   if (message.includes("row-level security") || message.includes("permission denied")) {
     return "No permission to access weekly reflection for this account.";
   }
   const base = action === "load" ? "Could not load weekly reflection." : "Could not save weekly reflection.";
-  const code = error?.code?.trim();
+  const rawCode = error?.code?.trim();
   const raw = error?.message?.trim();
-  if (!code && !raw) return base;
-  return `${base} ${code ? `[${code}] ` : ""}${raw ?? ""}`.trim();
+  if (!rawCode && !raw) return base;
+  return `${base} ${rawCode ? `[${rawCode}] ` : ""}${raw ?? ""}`.trim();
 }
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {

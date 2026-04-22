@@ -368,13 +368,24 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     )}
                   >
                     <div className={cn("absolute left-0 top-2 bottom-2 w-[2px] rounded-full sm:top-3 sm:bottom-3 sm:w-[3px] lg:w-1", weekAccent(weekly))} />
-                    <div className="min-w-0 pl-2 sm:pl-3">
-                      <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/45 sm:text-[9px] sm:tracking-[0.2em]">
-                        Wk {i + 1}
-                      </p>
-                      <p className="mt-0.5 hidden font-mono text-[9px] tabular-nums text-white/70 sm:mt-1 sm:block sm:text-[10px]">
-                        {weekDateRangeLabel(week)}
-                      </p>
+                    <div className="flex items-start justify-between gap-2 pl-2 sm:gap-3 sm:pl-3">
+                      <div className="min-w-0">
+                        <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/45 sm:text-[9px] sm:tracking-[0.2em]">
+                          Wk {i + 1}
+                        </p>
+                        <p className="mt-0.5 hidden font-mono text-[9px] tabular-nums text-white/70 sm:mt-1 sm:block sm:text-[10px]">
+                          {weekDateRangeLabel(week)}
+                        </p>
+                      </div>
+                      <div
+                        className="max-w-[62%] rounded-md border border-white/[0.12] bg-black/25 px-1.5 py-1 sm:max-w-[68%] sm:rounded-lg sm:px-2 sm:py-1.5"
+                        title={weeklySummary ?? "No weekly reflection"}
+                      >
+                        <p className="font-mono text-[6px] uppercase tracking-[0.14em] text-white/45 sm:text-[7px]">Reflection</p>
+                        <p className="mt-0.5 line-clamp-2 text-[8px] leading-snug text-white/75 sm:text-[9px]">
+                          {weeklySummary ?? "No weekly reflection"}
+                        </p>
+                      </div>
                     </div>
                     <div className="min-w-0 overflow-hidden pl-2 sm:pl-3">
                       <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
@@ -387,12 +398,6 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         >
                           {formatSignedPnlAmount(weekly, displayCurrency)}
                         </span>
-                      </p>
-                      <p
-                        className="mt-1 line-clamp-2 min-h-[1.7rem] text-[9px] leading-snug text-white/65 sm:mt-1.5 sm:min-h-[2rem] sm:text-[10px]"
-                        title={weeklySummary ?? "No weekly reflection"}
-                      >
-                        {weeklySummary ?? "No weekly reflection"}
                       </p>
                     </div>
                   </div>
