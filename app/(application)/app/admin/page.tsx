@@ -27,9 +27,9 @@ export default async function AdminPage() {
     <div className="space-y-8">
       <PageHeader
         variant="signature"
-        eyebrow="Control"
-        title="Users"
-        description="Search, review access, and adjust entitlements. Changes apply immediately."
+        eyebrow="Admin"
+        title="User Control Center"
+        description="Manage roles, premium access, trials, and account status in one place."
       />
       <AdminUsersTable users={users} />
     </div>

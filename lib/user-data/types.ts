@@ -13,6 +13,11 @@ export type JournalRow = {
   note?: string;
   /** Optional TradingView chart URL */
   tradingViewUrl?: string;
+  /** Optional behavior tag for the day */
+  moodState?: "Calm" | "Focused" | "Hesitant" | "Tilted";
+  followedPlan?: boolean;
+  respectedStop?: boolean;
+  noRevengeTrade?: boolean;
 };
 
 export type UserWorkspaceSnapshot = {

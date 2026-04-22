@@ -19,6 +19,7 @@ import { appSecondaryCta } from "@/lib/ui/app-surface";
 const labelCls = "text-[12px] font-medium tracking-wide text-zinc-400";
 const inputCls =
   "h-11 rounded-xl border-white/[0.1] bg-black/25 text-[15px] shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] placeholder:text-zinc-600 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
+const MOOD_OPTIONS = ["Calm", "Focused", "Hesitant", "Tilted"] as const;
 
 type Props = {
   userId: string;
@@ -41,6 +42,10 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
   const [pnl, setPnl] = useState(initialRow.r);
   const [note, setNote] = useState(initialRow.note ?? "");
   const [tradingViewUrl, setTradingViewUrl] = useState(initialRow.tradingViewUrl ?? "");
+  const [moodState, setMoodState] = useState<(typeof MOOD_OPTIONS)[number]>(initialRow.moodState ?? "Focused");
+  const [followedPlan, setFollowedPlan] = useState(Boolean(initialRow.followedPlan));
+  const [respectedStop, setRespectedStop] = useState(Boolean(initialRow.respectedStop));
+  const [noRevengeTrade, setNoRevengeTrade] = useState(Boolean(initialRow.noRevengeTrade));
   const [saveError, setSaveError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -73,6 +78,10 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       tag: preserved.current.tag,
       note: note.trim() || undefined,
       tradingViewUrl: tradingViewUrlForSave(tradingViewUrl),
+      moodState,
+      followedPlan,
+      respectedStop,
+      noRevengeTrade,
     });
     setSaving(false);
     if (!result.ok) {
@@ -218,6 +227,49 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                 "shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
               )}
             />
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Behavior layer</p>
+            <div className="space-y-2">
+              <Label htmlFor="je-mood" className={labelCls}>
+                Mood / state
+              </Label>
+              <select
+                id="je-mood"
+                value={moodState}
+                onChange={(e) => setMoodState(e.target.value as (typeof MOOD_OPTIONS)[number])}
+                disabled={!canWriteJournal}
+                className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
+              >
+                {MOOD_OPTIONS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {[
+                { id: "je-plan", label: "Followed my plan", checked: followedPlan, set: setFollowedPlan },
+                { id: "je-stop", label: "Respected my stop", checked: respectedStop, set: setRespectedStop },
+                { id: "je-revenge", label: "No revenge trade", checked: noRevengeTrade, set: setNoRevengeTrade },
+              ].map((c) => (
+                <label
+                  key={c.id}
+                  className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-[13px] text-zinc-300"
+                >
+                  <input
+                    type="checkbox"
+                    checked={c.checked}
+                    onChange={(e) => c.set(e.target.checked)}
+                    disabled={!canWriteJournal}
+                    className="size-4 rounded border-white/[0.2] bg-transparent"
+                  />
+                  {c.label}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">

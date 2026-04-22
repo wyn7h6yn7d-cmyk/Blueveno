@@ -57,21 +57,21 @@ function monthLabel(d: Date): string {
 function dayCellClasses(total: number, hasData: boolean, inMonth: boolean): string {
   if (!hasData) {
     return cn(
-      "border border-white/[0.14] bg-[linear-gradient(165deg,oklch(0.11_0.03_264/0.72),oklch(0.07_0.025_268/0.62))] text-zinc-500",
+      "border border-white/[0.14] bg-[linear-gradient(165deg,oklch(0.12_0.032_264/0.76),oklch(0.075_0.026_268/0.66))] text-zinc-500",
       !inMonth && "opacity-38",
     );
   }
   if (total > 0) {
     return cn(
-      "border border-emerald-400/48 bg-[linear-gradient(155deg,oklch(0.26_0.1_155/0.52),oklch(0.12_0.05_160/0.42))] text-emerald-50",
-      "shadow-[inset_0_1px_0_0_oklch(0.88_0.08_155/0.2),0_0_0_1px_oklch(0.45_0.12_155/0.12)]",
+      "border border-emerald-400/58 bg-[linear-gradient(155deg,oklch(0.29_0.11_155/0.62),oklch(0.13_0.06_160/0.5))] text-emerald-50",
+      "shadow-[inset_0_1px_0_0_oklch(0.9_0.08_155/0.24),0_0_0_1px_oklch(0.5_0.14_155/0.16)]",
       !inMonth && "opacity-58",
     );
   }
   if (total < 0) {
     return cn(
-      "border border-rose-400/42 bg-[linear-gradient(155deg,oklch(0.28_0.09_18/0.48),oklch(0.12_0.05_22/0.38))] text-rose-50",
-      "shadow-[inset_0_1px_0_0_oklch(0.9_0.06_15/0.12),0_0_0_1px_oklch(0.45_0.14_15/0.1)]",
+      "border border-rose-400/56 bg-[linear-gradient(155deg,oklch(0.31_0.11_18/0.6),oklch(0.13_0.06_22/0.5))] text-rose-50",
+      "shadow-[inset_0_1px_0_0_oklch(0.92_0.07_15/0.16),0_0_0_1px_oklch(0.5_0.15_15/0.14)]",
       !inMonth && "opacity-58",
     );
   }
@@ -148,16 +148,17 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
 
   /** Tight week rail on small screens so the grid fits without huge horizontal scroll */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(3.75rem,4.5rem)]",
-    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(10.5rem,15rem)]",
-    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(13.5rem,19rem)]",
+    "[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(4.6rem,5.4rem)]",
+    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12rem,16.5rem)]",
+    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(15rem,21rem)]",
+    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(16.5rem,23rem)]",
   );
 
   const headerBox =
     "flex min-h-[2.35rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.1rem] sm:rounded-xl sm:px-1 sm:py-2.5";
 
   return (
-    <div className="min-w-0 space-y-5">
+    <div className="min-w-0 space-y-6">
       <div
         className={cn(
           "flex flex-wrap items-end justify-between gap-3 rounded-xl border border-[oklch(0.52_0.12_252/0.22)] bg-[linear-gradient(168deg,oklch(0.12_0.04_262/0.85),oklch(0.07_0.03_266/0.88))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:gap-4 sm:rounded-2xl sm:p-6",
@@ -202,7 +203,7 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
               "w-full min-w-0 max-w-full sm:max-w-none",
               "rounded-xl border border-[oklch(0.52_0.12_252/0.32)] sm:rounded-[1.35rem]",
               "bg-[linear-gradient(168deg,oklch(0.12_0.036_262/0.98),oklch(0.065_0.03_264/0.97))]",
-              "p-2 shadow-[inset_0_1px_0_oklch(1_0_0_/0.06),0_32px_100px_-44px_rgba(0,0,0,0.72)] sm:p-3.5 lg:p-5",
+              "p-2.5 shadow-[inset_0_1px_0_oklch(1_0_0_/0.06),0_36px_110px_-44px_rgba(0,0,0,0.74)] sm:p-4 lg:p-5.5",
             )}
           >
             <div
@@ -257,7 +258,7 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                     const content = (
                       <div
                         className={cn(
-                          "group relative box-border flex h-full min-h-[86px] min-w-0 flex-col justify-between rounded-lg p-1.5 transition duration-200 sm:min-h-[148px] sm:rounded-xl sm:p-3.5 lg:min-h-[160px] lg:p-4",
+                          "group relative box-border flex h-full min-h-[98px] min-w-0 flex-col justify-between rounded-lg p-2 transition duration-200 sm:min-h-[170px] sm:rounded-xl sm:p-4 lg:min-h-[186px] lg:p-4.5",
                           cellClasses,
                           hasData && "hover:brightness-[1.05] hover:ring-2 hover:ring-[oklch(0.58_0.12_252/0.5)]",
                         )}
@@ -283,11 +284,11 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                               <div
                                 className={cn(
                                   "font-display font-semibold leading-[1.15] tabular-nums tracking-[-0.03em]",
-                                  "text-[10px] sm:text-[clamp(0.625rem,2.1vw,1.0625rem)] lg:text-[clamp(0.75rem,1.9vw,1.125rem)] lg:tracking-[-0.035em]",
+                                  "text-[11px] sm:text-[clamp(0.72rem,2vw,1.16rem)] lg:text-[clamp(0.86rem,1.85vw,1.28rem)] lg:tracking-[-0.04em]",
                                 )}
                               >
                                 <span
-                                  className="block min-w-0 w-full truncate"
+                                  className="block min-w-0 w-full truncate whitespace-nowrap"
                                   title={formatSignedPnlAmount(agg!.total, displayCurrency)}
                                 >
                                   {formatSignedPnlAmount(agg!.total, displayCurrency)}
@@ -327,7 +328,7 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
 
                   <div
                     className={cn(
-                      "relative box-border flex min-h-[86px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 text-left sm:min-h-[148px] sm:rounded-xl sm:p-4 lg:min-h-[160px] lg:p-4",
+                      "relative box-border flex min-h-[98px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2.5 text-left sm:min-h-[170px] sm:rounded-xl sm:p-4.5 lg:min-h-[186px] lg:p-5",
                       weekRailClasses(weekly),
                     )}
                   >
@@ -344,9 +345,9 @@ export function PnlCalendar({ entries, displayCurrency }: Props) {
                       <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
                         Σ
                       </p>
-                      <p className="font-display text-[0.7rem] font-semibold leading-[1.1] tabular-nums tracking-[-0.03em] sm:text-[clamp(0.85rem,3.5vw,1.35rem)] sm:leading-none md:text-2xl lg:text-[clamp(1rem,2.8vw,1.85rem)] lg:tracking-[-0.045em]">
+                      <p className="font-display text-[0.76rem] font-semibold leading-[1.08] tabular-nums tracking-[-0.03em] sm:text-[clamp(0.95rem,3.2vw,1.48rem)] sm:leading-none md:text-[1.65rem] lg:text-[clamp(1.12rem,2.6vw,2rem)] lg:tracking-[-0.045em]">
                         <span
-                          className="block min-w-0 w-full truncate"
+                          className="block min-w-0 w-full truncate whitespace-nowrap"
                           title={formatSignedPnlAmount(weekly, displayCurrency)}
                         >
                           {formatSignedPnlAmount(weekly, displayCurrency)}

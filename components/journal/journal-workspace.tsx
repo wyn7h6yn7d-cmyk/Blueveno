@@ -10,13 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
+import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 import { EmptyState } from "@/components/app/empty-state";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 import { isValidTradingViewUrl, tradingViewUrlForSave } from "@/lib/tradingview";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { createClient } from "@/lib/supabase/client";
 
 const ROW_24H_MS = 24 * 60 * 60 * 1000;
 
@@ -42,6 +43,14 @@ type Props = {
 const labelCls = "text-[12px] font-medium tracking-wide text-zinc-400";
 const inputCls =
   "h-11 rounded-xl border-white/[0.1] bg-black/25 text-[15px] shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] placeholder:text-zinc-600 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
+const MOOD_OPTIONS = ["Calm", "Focused", "Hesitant", "Tilted"] as const;
+
+type WeeklyReflectionRow = {
+  week_start: string;
+  what_worked: string | null;
+  what_slipped: string | null;
+  next_week_focus: string | null;
+};
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
   const { canWriteJournal, displayCurrency } = useAccess();
@@ -51,9 +60,24 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [pnl, setPnl] = useState("");
   const [note, setNote] = useState("");
   const [tradingViewUrl, setTradingViewUrl] = useState("");
+  const [moodState, setMoodState] = useState<(typeof MOOD_OPTIONS)[number]>("Focused");
+  const [followedPlan, setFollowedPlan] = useState(false);
+  const [respectedStop, setRespectedStop] = useState(false);
+  const [noRevengeTrade, setNoRevengeTrade] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [weekAnchorDate, setWeekAnchorDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [weeklyWorked, setWeeklyWorked] = useState("");
+  const [weeklySlipped, setWeeklySlipped] = useState("");
+  const [weeklyFocus, setWeeklyFocus] = useState("");
+  const [weeklyMsg, setWeeklyMsg] = useState<string | null>(null);
+  const [weeklySaving, setWeeklySaving] = useState(false);
+  const [weeklyLoading, setWeeklyLoading] = useState(false);
+  const weekStartKey = useMemo(() => {
+    const base = new Date(`${weekAnchorDate}T12:00:00`);
+    return toDayKey(startOfWeekMonday(base));
+  }, [weekAnchorDate]);
 
   const sortedRows = useMemo(() => {
     return [...data.journal].sort((a, b) => {
@@ -95,6 +119,38 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     return () => window.clearTimeout(t);
   }, [highlightDate, ready, rowsForLatestEntries.length]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+    setWeeklyLoading(true);
+    const supabase = createClient();
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from("weekly_reflections")
+          .select("week_start, what_worked, what_slipped, next_week_focus")
+          .eq("user_id", userId)
+          .eq("week_start", weekStartKey)
+          .maybeSingle();
+        if (cancelled) return;
+        const row = (data ?? null) as WeeklyReflectionRow | null;
+        setWeeklyWorked(row?.what_worked ?? "");
+        setWeeklySlipped(row?.what_slipped ?? "");
+        setWeeklyFocus(row?.next_week_focus ?? "");
+        setWeeklyMsg(null);
+      } catch {
+        if (cancelled) return;
+        setWeeklyMsg("Could not load weekly reflection.");
+      } finally {
+        if (cancelled) return;
+        setWeeklyLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, weekStartKey]);
+
   const onQuickAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canWriteJournal) return;
@@ -121,6 +177,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       tag: "Journal",
       note: note.trim() || undefined,
       tradingViewUrl: tradingViewUrlForSave(tradingViewUrl),
+      moodState,
+      followedPlan,
+      respectedStop,
+      noRevengeTrade,
     });
     setSaving(false);
     if (!result.ok) {
@@ -131,6 +191,30 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     setPnl("");
     setNote("");
     setTradingViewUrl("");
+    setMoodState("Focused");
+    setFollowedPlan(false);
+    setRespectedStop(false);
+    setNoRevengeTrade(false);
+  };
+
+  const onSaveWeeklyReflection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId || !canWriteJournal) return;
+    setWeeklyMsg(null);
+    setWeeklySaving(true);
+    const supabase = createClient();
+    const { error } = await supabase.from("weekly_reflections").upsert(
+      {
+        user_id: userId,
+        week_start: weekStartKey,
+        what_worked: weeklyWorked.trim() || null,
+        what_slipped: weeklySlipped.trim() || null,
+        next_week_focus: weeklyFocus.trim() || null,
+      },
+      { onConflict: "user_id,week_start" },
+    );
+    setWeeklySaving(false);
+    setWeeklyMsg(error ? "Could not save weekly reflection." : "Weekly reflection saved.");
   };
 
   return (
@@ -238,6 +322,52 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               />
             </div>
 
+            <div className="space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Behavior layer</p>
+              <div className="space-y-2">
+                <Label htmlFor="jw-mood" className={labelCls}>
+                  Mood / state
+                </Label>
+                <select
+                  id="jw-mood"
+                  value={moodState}
+                  onChange={(e) => setMoodState(e.target.value as (typeof MOOD_OPTIONS)[number])}
+                  disabled={!canWriteJournal}
+                  className={cn(
+                    inputCls,
+                    "w-full rounded-xl px-3.5 disabled:opacity-45",
+                  )}
+                >
+                  {MOOD_OPTIONS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {[
+                  { id: "plan", label: "Followed my plan", checked: followedPlan, set: setFollowedPlan },
+                  { id: "stop", label: "Respected my stop", checked: respectedStop, set: setRespectedStop },
+                  { id: "revenge", label: "No revenge trade", checked: noRevengeTrade, set: setNoRevengeTrade },
+                ].map((c) => (
+                  <label
+                    key={c.id}
+                    className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-[13px] text-zinc-300"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={c.checked}
+                      onChange={(e) => c.set(e.target.checked)}
+                      disabled={!canWriteJournal}
+                      className="size-4 rounded border-white/[0.2] bg-transparent"
+                    />
+                    {c.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div className="rounded-xl border border-[oklch(0.52_0.12_252/0.2)] bg-[linear-gradient(168deg,oklch(0.1_0.04_264/0.5),oklch(0.06_0.03_268/0.45))] p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] text-[oklch(0.74_0.11_252)]">
@@ -313,6 +443,75 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           )}
         </DashboardCard>
       </section>
+
+      <DashboardCard
+        eyebrow="Weekly reflection"
+        title="What worked / slipped / next focus"
+        description="Short weekly note to keep behavior and execution aligned."
+      >
+        <form className="space-y-4" onSubmit={onSaveWeeklyReflection}>
+          <div className="grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-center">
+            <Label htmlFor="jr-week" className={labelCls}>
+              Week anchor date
+            </Label>
+            <Input
+              id="jr-week"
+              type="date"
+              value={weekAnchorDate}
+              onChange={(e) => setWeekAnchorDate(e.target.value)}
+              disabled={!canWriteJournal || weeklyLoading}
+              className={cn(inputCls, "disabled:opacity-45")}
+            />
+          </div>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="jr-worked" className={labelCls}>
+                What worked
+              </Label>
+              <textarea
+                id="jr-worked"
+                value={weeklyWorked}
+                onChange={(e) => setWeeklyWorked(e.target.value)}
+                rows={4}
+                disabled={!canWriteJournal || weeklyLoading}
+                className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jr-slipped" className={labelCls}>
+                What slipped
+              </Label>
+              <textarea
+                id="jr-slipped"
+                value={weeklySlipped}
+                onChange={(e) => setWeeklySlipped(e.target.value)}
+                rows={4}
+                disabled={!canWriteJournal || weeklyLoading}
+                className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jr-focus" className={labelCls}>
+                Next week focus
+              </Label>
+              <textarea
+                id="jr-focus"
+                value={weeklyFocus}
+                onChange={(e) => setWeeklyFocus(e.target.value)}
+                rows={4}
+                disabled={!canWriteJournal || weeklyLoading}
+                className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="submit" disabled={!canWriteJournal || weeklySaving || weeklyLoading} className="h-10 rounded-xl px-4">
+              {weeklySaving ? "Saving…" : "Save weekly reflection"}
+            </Button>
+            {weeklyMsg ? <p className="text-[13px] text-zinc-400">{weeklyMsg}</p> : null}
+          </div>
+        </form>
+      </DashboardCard>
 
       <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-5 py-4">
         <p className="text-[14px] text-zinc-500">

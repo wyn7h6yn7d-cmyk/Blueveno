@@ -36,6 +36,20 @@ function accessBadgeClass(state: AccessState): string {
   }
 }
 
+function formatDate(v: string | null): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString();
+}
+
+function formatDateTime(v: string | null): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString();
+}
+
 export function AdminUsersTable({ users }: Props) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -46,6 +60,23 @@ export function AdminUsersTable({ users }: Props) {
     if (!q) return users;
     return users.filter((u) => u.email.toLowerCase().includes(q) || u.access_state.includes(q));
   }, [users, query]);
+
+  const summary = useMemo(() => {
+    let admins = 0;
+    let paid = 0;
+    let disabled = 0;
+    let entries = 0;
+    for (const u of filtered) {
+      if (u.is_admin) admins += 1;
+      const isPrimary = u.email.toLowerCase() === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
+      if (isPrimary || u.premium_active || u.manual_premium || u.subscription_label.toLowerCase().includes("active")) {
+        paid += 1;
+      }
+      if (u.account_disabled) disabled += 1;
+      entries += u.journal_entry_count;
+    }
+    return { admins, paid, disabled, entries };
+  }, [filtered]);
 
   function run(label: string, fn: () => Promise<void>) {
     setMessage(null);
@@ -58,6 +89,25 @@ export function AdminUsersTable({ users }: Props) {
 
   return (
     <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Visible users</p>
+          <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{filtered.length}</p>
+        </div>
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Admins</p>
+          <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.admins}</p>
+        </div>
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Paid</p>
+          <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.paid}</p>
+        </div>
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Entries</p>
+          <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.entries}</p>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative max-w-md flex-1">
           <Search
@@ -74,7 +124,7 @@ export function AdminUsersTable({ users }: Props) {
           />
         </div>
         <p className="font-mono text-[11px] text-zinc-500">
-          {filtered.length} of {users.length} users
+          {filtered.length} of {users.length} users · {summary.disabled} disabled
         </p>
       </div>
 
@@ -85,7 +135,7 @@ export function AdminUsersTable({ users }: Props) {
       ) : null}
 
       <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.11_0.035_264/0.92),oklch(0.085_0.03_266/0.94))] shadow-[0_24px_64px_-40px_rgba(0,0,0,0.75)]">
-        <table className="w-full min-w-[960px] border-collapse text-left text-[13px]">
+        <table className="w-full min-w-[1080px] border-collapse text-left text-[13px]">
           <thead>
             <tr className="border-b border-white/[0.08] bg-black/20 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
               <th className="px-4 py-3.5">Email</th>
@@ -93,7 +143,7 @@ export function AdminUsersTable({ users }: Props) {
               <th className="px-4 py-3.5">Access</th>
               <th className="px-4 py-3.5">Created</th>
               <th className="px-4 py-3.5">Trial ends</th>
-              <th className="px-4 py-3.5">Subscription</th>
+              <th className="px-4 py-3.5">Paid</th>
               <th className="px-4 py-3.5">Entries</th>
               <th className="px-4 py-3.5">Last active</th>
               <th className="px-4 py-3.5">Actions</th>
@@ -102,6 +152,11 @@ export function AdminUsersTable({ users }: Props) {
           <tbody>
             {filtered.map((u) => {
               const isPrimary = u.email.toLowerCase() === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
+              const isPaid =
+                isPrimary ||
+                u.premium_active ||
+                u.manual_premium ||
+                u.subscription_label.toLowerCase().includes("active");
               return (
                 <tr
                   key={u.user_id}
@@ -119,19 +174,24 @@ export function AdminUsersTable({ users }: Props) {
                       {u.access_state.replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">
-                    {new Date(u.created_at).toLocaleDateString()}
+                  <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">{formatDate(u.created_at)}</td>
+                  <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">{formatDate(u.trial_ends_at)}</td>
+                  <td className="px-4 py-3.5">
+                    <span
+                      className={cn(
+                        "inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]",
+                        isPaid
+                          ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
+                          : "border-zinc-500/30 bg-zinc-800/40 text-zinc-300",
+                      )}
+                    >
+                      {isPaid ? "Paid" : "Unpaid"}
+                    </span>
                   </td>
-                  <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">
-                    {new Date(u.trial_ends_at).toLocaleDateString()}
-                  </td>
-                  <td className="max-w-[11rem] truncate px-4 py-3.5 text-zinc-500">{u.subscription_label}</td>
                   <td className="px-4 py-3.5 tabular-nums text-zinc-400">{u.journal_entry_count}</td>
-                  <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">
-                    {u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "—"}
-                  </td>
+                  <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">{formatDateTime(u.last_active_at)}</td>
                   <td className="px-4 py-3">
-                    <div className="flex min-w-[260px] flex-wrap gap-1.5">
+                    <div className="flex min-w-[320px] flex-wrap gap-1.5">
                       <button
                         type="button"
                         disabled={pending}
@@ -141,7 +201,7 @@ export function AdminUsersTable({ users }: Props) {
                         )}
                         onClick={() => run("Grant premium", () => grantPremium(u.user_id))}
                       >
-                        Grant
+                        Grant premium
                       </button>
                       <button
                         type="button"
@@ -152,7 +212,7 @@ export function AdminUsersTable({ users }: Props) {
                         )}
                         onClick={() => run("Revoke premium", () => revokePremium(u.user_id))}
                       >
-                        Revoke
+                        Revoke premium
                       </button>
                       <button
                         type="button"
@@ -163,7 +223,7 @@ export function AdminUsersTable({ users }: Props) {
                         )}
                         onClick={() => run("Extend trial", () => extendTrialDays(u.user_id, 7))}
                       >
-                        +7d
+                        Extend trial +7d
                       </button>
                       <button
                         type="button"
@@ -174,7 +234,7 @@ export function AdminUsersTable({ users }: Props) {
                         )}
                         onClick={() => run("Make admin", () => makeAdmin(u.user_id))}
                       >
-                        Admin
+                        Make admin
                       </button>
                       <button
                         type="button"
@@ -185,7 +245,7 @@ export function AdminUsersTable({ users }: Props) {
                         )}
                         onClick={() => run("Remove admin", () => removeAdmin(u.user_id))}
                       >
-                        −Admin
+                        Remove admin
                       </button>
                       <button
                         type="button"

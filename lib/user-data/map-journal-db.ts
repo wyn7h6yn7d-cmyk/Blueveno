@@ -13,6 +13,10 @@ export type JournalRowDb = {
   tag: string;
   note: string | null;
   tradingview_url: string | null;
+  mood_state?: "Calm" | "Focused" | "Hesitant" | "Tilted" | null;
+  followed_plan?: boolean | null;
+  respected_stop?: boolean | null;
+  no_revenge_trade?: boolean | null;
 };
 
 export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
@@ -27,6 +31,10 @@ export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
     tag: r.tag ?? "Manual",
     note: r.note ?? undefined,
     tradingViewUrl: r.tradingview_url ?? undefined,
+    moodState: r.mood_state ?? undefined,
+    followedPlan: r.followed_plan ?? false,
+    respectedStop: r.respected_stop ?? false,
+    noRevengeTrade: r.no_revenge_trade ?? false,
   };
 }
 

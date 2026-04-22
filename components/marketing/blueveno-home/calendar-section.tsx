@@ -79,7 +79,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
               </span>
             </h2>
             <p className="mt-4 max-w-md text-[14px] leading-[1.55] tracking-[-0.02em] text-zinc-500 sm:mt-5 sm:text-[15px]">
-              Green, red, flat — week totals on the rail.
+              Green, red, flat — week totals with quality score on the rail.
             </p>
           </div>
 
@@ -278,6 +278,9 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                         )}
                       >
                         {formatWeekTotal(sum)}
+                      </span>
+                      <span className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-[oklch(0.72_0.11_252)]">
+                        Quality {ri === 1 ? "86" : ri === 2 ? "78" : "82"}%
                       </span>
                     </div>
                   </div>

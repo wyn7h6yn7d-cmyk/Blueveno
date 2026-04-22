@@ -87,52 +87,46 @@ function ChartPreviewSvg() {
   );
 }
 
-function chipClass() {
-  return cn(
-    "rounded-lg border border-[oklch(0.52_0.12_252/0.35)] bg-[oklch(0.16_0.06_262/0.85)] px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-zinc-300",
-    "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] sm:px-3 sm:text-[11px]",
-  );
-}
-
 function DayPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-white/[0.06] pb-5">
-        <div>
-          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-400">
-            <span className="text-[oklch(0.78_0.1_252)]">Thu</span>
-            <span className="mx-2 text-zinc-600">·</span>
-            <span className="text-zinc-200">May 8</span>
-          </p>
-          <p className="font-display mt-3 text-[clamp(1.15rem,2.8vw,1.45rem)] font-semibold tracking-[-0.03em] text-zinc-100">
-            NQ Long
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500">Day P&amp;L</p>
-          <p className="font-display mt-1 text-[clamp(1.65rem,4.5vw,2.35rem)] font-semibold tabular-nums tracking-[-0.05em] text-emerald-300 [text-shadow:0_0_48px_oklch(0.55_0.14_155/0.35)]">
-            +$180
-          </p>
-        </div>
-      </div>
-
-      <div className="min-h-[4.5rem] flex-1 py-5">
-        <p className="text-[15px] leading-[1.55] tracking-[-0.02em] text-zinc-300 sm:text-[16px]">
-          Clean trend off the open — stood aside through the lunch chop, re-entered the afternoon leg.
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.1_0.045_262/0.95),oklch(0.055_0.03_268/0.98))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-6">
+      <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] pb-5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-400">
+          <span className="text-[oklch(0.8_0.11_252)]">THU</span> · MAY 8
+        </p>
+        <p className="font-display text-[clamp(1.7rem,4.6vw,2.55rem)] font-semibold tabular-nums tracking-[-0.05em] text-emerald-300 [text-shadow:0_0_44px_oklch(0.56_0.15_155/0.34)]">
+          +$180
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t border-white/[0.05] pt-5">
-        <span className={chipClass()}>A+ setup</span>
-        <span className={chipClass()}>Clean execution</span>
-        <span className={chipClass()}>Review ready</span>
+      <div className="flex-1 py-6">
+        <p className="font-display text-[clamp(1.2rem,2.8vw,1.6rem)] font-semibold tracking-[-0.03em] text-zinc-100">NQ Long</p>
+        <p className="mt-3 max-w-[44ch] text-[15px] leading-[1.6] tracking-[-0.015em] text-zinc-300 sm:text-[16px]">
+          Clean drive, no revenge entries. Followed plan and protected gains into close.
+        </p>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.05] pt-4">
-        <span className="font-mono text-[12px] font-semibold tracking-wide text-zinc-200">NQ</span>
-        <span className="rounded-md border border-emerald-400/25 bg-emerald-500/[0.12] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-200/95">
-          Win
-        </span>
+      <div className="grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-5">
+        {["Followed plan", "Respected stop", "No revenge"].map((tag) => (
+          <div
+            key={tag}
+            className="rounded-lg border border-[oklch(0.52_0.12_252/0.34)] bg-[oklch(0.16_0.06_262/0.8)] px-2.5 py-2 text-center font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-300 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]"
+          >
+            {tag}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-4">
+        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-400">Mood · Focused</span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-md border border-emerald-400/25 bg-emerald-500/[0.12] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-200/95">
+            Win
+          </span>
+          <span className="rounded-md border border-[oklch(0.55_0.12_252/0.35)] bg-[oklch(0.16_0.06_262/0.55)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-200">
+            100% discipline
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -140,29 +134,29 @@ function DayPanel() {
 
 function ChartPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(168deg,oklch(0.095_0.045_262/0.96),oklch(0.05_0.03_268/0.99))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-6">
       <div className="shrink-0 flex items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
         <div className="flex items-center gap-2.5">
           <span className="relative flex size-2.5 items-center justify-center">
             <span className="absolute inset-0 rounded-full bg-emerald-400/40 blur-[3px]" aria-hidden />
             <span className="relative size-2 rounded-full bg-emerald-400 shadow-[0_0_12px_oklch(0.72_0.16_155/0.7)]" />
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-300">Linked chart</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-300">TradingView linked</span>
         </div>
         <span className="rounded-lg border border-white/[0.1] bg-black/40 px-2.5 py-1 font-mono text-[10px] text-zinc-400">NQ · 15m</span>
       </div>
 
-      <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-[oklch(0.48_0.12_252/0.4)] bg-[linear-gradient(165deg,oklch(0.08_0.04_268/0.98),oklch(0.045_0.03_272/0.99))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_48px_-28px_oklch(0_0_0/0.9)]">
+      <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-[oklch(0.5_0.13_252/0.45)] bg-[linear-gradient(165deg,oklch(0.07_0.04_268/0.98),oklch(0.04_0.03_272/0.99))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_20px_56px_-30px_oklch(0_0_0/0.92)]">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,oklch(0.42_0.12_252/0.08),transparent_42%)]" />
         <div className="relative h-full min-h-0 p-3 sm:p-4">
           <ChartPreviewSvg />
         </div>
       </div>
 
-      <div className="mt-4 shrink-0 flex flex-wrap items-end justify-between gap-4 border-t border-white/[0.05] pt-4">
+      <div className="mt-4 shrink-0 flex items-end justify-between gap-4 border-t border-white/[0.06] pt-4">
         <div>
-          <p className="font-mono text-[12px] font-semibold tracking-wide text-zinc-200">NQ1!</p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">Saved · 15:42 local</p>
+          <p className="font-mono text-[12px] font-semibold tracking-wide text-zinc-200">NQ1! · CME</p>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">Saved 15:42 · review linked</p>
         </div>
         <a
           href={TV_SAMPLE}
@@ -184,7 +178,7 @@ function ChartPanel() {
 
 function WeekPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.095_0.045_262/0.96),oklch(0.052_0.03_268/0.99))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-6">
       <div className="shrink-0 flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.06] pb-5">
         <p className="font-display text-[clamp(1.2rem,3vw,1.65rem)] font-semibold tracking-[-0.035em] text-zinc-50">
           This week
@@ -223,7 +217,7 @@ function WeekPanel() {
         </div>
       </div>
 
-      <p className="shrink-0 border-t border-white/[0.05] pt-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-400 sm:text-[12px]">
+      <p className="shrink-0 border-t border-white/[0.06] pt-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-300 sm:text-[12px]">
         4 green days · 1 red day · 2 flat
       </p>
     </div>
@@ -235,10 +229,10 @@ type BottomStripProps = { mode: ViewMode };
 function HeroProductBottomStrip({ mode }: BottomStripProps) {
   const copy =
     mode === "day"
-      ? { left: "Review saved", right: "Synced to your workspace" }
+      ? { left: "Mood + discipline logged", right: "Calm / Focused / Hesitant / Tilted" }
       : mode === "chart"
         ? { left: "TradingView fingerprint", right: "Chart linked to session" }
-        : { left: "Weekly edge", right: "Rhythm at a glance" };
+        : { left: "Weekly quality", right: "Score + reflection ready" };
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 sm:px-6 sm:py-4">
@@ -297,13 +291,13 @@ export function HeroPremium() {
               id="hero-heading"
               className="font-display mt-5 text-[clamp(1.65rem,4vw,2.75rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-zinc-50 sm:mt-6"
             >
-              Cold precision.{" "}
+              Track the result.{" "}
               <span className="bg-gradient-to-r from-zinc-100 via-[oklch(0.9_0.04_250)] to-[oklch(0.65_0.12_252)] bg-clip-text text-transparent">
-                One solution.
+                Review the behavior.
               </span>
             </h1>
             <p className="mx-auto mt-5 max-w-[26rem] text-[15px] leading-[1.55] tracking-[-0.018em] text-zinc-400 sm:text-[16px] lg:mx-0">
-              Journal, chart, week — one surface. No spreadsheets.
+              Log the day, save the chart, and see how you actually traded — calm, focused, hesitant, or tilted.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
               <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
@@ -311,25 +305,26 @@ export function HeroPremium() {
             </div>
           </div>
 
-          {/* Preview — right on desktop (product slab: internal layout only) */}
+          {/* Preview — right on desktop (premium interactive slab) */}
           <div className="relative mx-auto w-full max-w-[620px] lg:mx-0 lg:max-w-none">
             <div
               className={cn(
-                "relative rounded-2xl p-[1px] sm:rounded-[1.75rem]",
-                "bg-[linear-gradient(150deg,oklch(0.48_0.14_252/0.65),oklch(0.2_0.07_268/0.42)_42%,oklch(0.42_0.14_252/0.55))]",
-                "shadow-[0_36px_100px_-48px_rgba(0,0,0,0.88),0_0_0_1px_oklch(0.42_0.11_252/0.22),inset_0_1px_0_0_oklch(0.65_0.1_252/0.12)]",
+                "relative rounded-2xl p-[1px] sm:rounded-[1.8rem]",
+                "bg-[linear-gradient(145deg,oklch(0.55_0.14_252/0.65)_0%,oklch(0.2_0.06_268/0.42)_40%,oklch(0.52_0.15_252/0.58)_100%)]",
+                "shadow-[0_40px_120px_-52px_rgba(0,0,0,0.9),0_0_0_1px_oklch(0.46_0.11_252/0.24),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
               )}
             >
               <div
                 className={cn(
                   "relative overflow-hidden rounded-[calc(1rem-1px)] sm:rounded-[calc(1.75rem-1px)]",
-                  "bg-[linear-gradient(172deg,oklch(0.095_0.045_262/0.99),oklch(0.045_0.028_272/0.995))]",
-                  "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06),inset_0_-32px_64px_-48px_oklch(0_0_0/0.55)]",
+                  "bg-[linear-gradient(172deg,oklch(0.092_0.045_262/0.995),oklch(0.042_0.028_272/0.998))]",
+                  "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),inset_0_-36px_72px_-52px_oklch(0_0_0/0.62)]",
                 )}
               >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_85%_-10%,oklch(0.42_0.14_252/0.14),transparent_52%)]" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_85%_at_88%_-12%,oklch(0.44_0.14_252/0.16),transparent_52%)]" />
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent,oklch(0_0_0/0.18)_95%)]" />
                 <div className="relative z-[1]">
-                  <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] px-4 py-3.5 sm:px-6 sm:py-4">
+                  <div className="flex items-center justify-between gap-3 border-b border-white/[0.09] px-4 py-3.5 sm:px-6 sm:py-4">
                     <div className="flex items-center gap-2.5">
                       <span className="flex gap-1.5" aria-hidden>
                         <span className="size-2 rounded-full bg-[oklch(0.45_0.14_25)] shadow-[0_0_8px_oklch(0.5_0.14_25/0.4)]" />
@@ -344,7 +339,7 @@ export function HeroPremium() {
                     </span>
                   </div>
 
-                  <div className="border-b border-white/[0.06] bg-[linear-gradient(180deg,oklch(0.06_0.03_268/0.5),transparent)] px-3 py-3.5 sm:px-5 sm:py-4">
+                  <div className="border-b border-white/[0.06] bg-[linear-gradient(180deg,oklch(0.07_0.04_268/0.55),transparent)] px-3 py-3.5 sm:px-5 sm:py-4">
                     <LayoutGroup id={`${tabId}-hero-tabs`}>
                       <div
                         role="tablist"
@@ -388,7 +383,7 @@ export function HeroPremium() {
 
                   <div className="border-b border-white/[0.05] px-4 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
                     {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[27.5rem] sm:h-[30.5rem] lg:h-[31.5rem]">
+                    <div className="relative h-[28.25rem] sm:h-[31.25rem] lg:h-[32rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}

@@ -15,8 +15,9 @@ export function resolveAccess(profile: UserProfileRow, sessionEmail: string | nu
   const email = (sessionEmail ?? "").toLowerCase().trim();
   const fixedAdmin = email === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
 
+  // Primary product owner account is permanently full-access (admin + premium).
   const admin = fixedAdmin || profile.is_admin;
-  const premium = profile.manual_premium || profile.premium_active;
+  const premium = fixedAdmin || profile.manual_premium || profile.premium_active;
   const trialEnd = parseTrialEnd(profile.trial_ends_at);
   const trialActive = !premium && trialEnd.getTime() > Date.now();
 

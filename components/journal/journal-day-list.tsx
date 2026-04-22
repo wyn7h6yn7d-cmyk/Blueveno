@@ -116,6 +116,11 @@ function JournalDayCard({
                   {row.tag}
                 </span>
               ) : null}
+              {row.moodState ? (
+                <span className="rounded border border-[oklch(0.52_0.12_252/0.3)] bg-[oklch(0.16_0.06_262/0.65)] px-2 py-0.5 font-mono text-[10px] text-zinc-300">
+                  {row.moodState}
+                </span>
+              ) : null}
               {row.tradingViewUrl ? (
                 <a
                   href={row.tradingViewUrl}
@@ -125,6 +130,11 @@ function JournalDayCard({
                 >
                   Chart
                 </a>
+              ) : null}
+              {row.followedPlan || row.respectedStop || row.noRevengeTrade ? (
+                <span className="font-mono text-[10px] text-zinc-500">
+                  Disciplined: {Number(Boolean(row.followedPlan)) + Number(Boolean(row.respectedStop)) + Number(Boolean(row.noRevengeTrade))}/3
+                </span>
               ) : null}
             </div>
 

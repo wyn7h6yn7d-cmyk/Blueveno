@@ -65,11 +65,41 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
       ) : (
         <div className="relative">
           <div
-            className="pointer-events-none absolute -inset-x-4 -top-8 bottom-0 hidden bg-[radial-gradient(ellipse_80%_55%_at_50%_0%,oklch(0.42_0.12_252/0.12),transparent_62%)] md:block"
+            className="pointer-events-none absolute -inset-x-4 -top-8 bottom-0 hidden bg-[radial-gradient(ellipse_82%_58%_at_46%_0%,oklch(0.42_0.12_252/0.13),transparent_64%)] md:block"
             aria-hidden
           />
-          <div className="relative">
-            <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} />
+          <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.42fr)_minmax(17.5rem,0.58fr)] xl:items-start">
+            <div className="xl:min-w-0">
+              <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} />
+            </div>
+
+            <DashboardCard
+              eyebrow="Logging"
+              title="Keep the month alive"
+              description="Calendar is your signature surface — keep it sharp by logging each close."
+              className="xl:sticky xl:top-6"
+            >
+              <div className="space-y-4">
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Rhythm</p>
+                  <p className="mt-2 text-[14px] leading-relaxed text-zinc-300">
+                    One entry per day keeps week totals and trend lines meaningful.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[oklch(0.52_0.12_252/0.26)] bg-[linear-gradient(168deg,oklch(0.1_0.04_264/0.5),oklch(0.06_0.03_268/0.45))] p-4">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Quick actions</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link href="/app/journal#add" className={appPrimaryCta}>
+                      Log a day
+                    </Link>
+                    <Link href="/app/stats" className={appSecondaryCta}>
+                      Review stats
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </DashboardCard>
           </div>
         </div>
       )}

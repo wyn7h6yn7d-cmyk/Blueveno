@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useMemo, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useId, useMemo, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
 import { useAccess } from "@/components/access/access-provider";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { computeTradingStats } from "@/lib/user-data/trading-stats";
+import { computeTradingStats, type WeeklyReflectionStat } from "@/lib/user-data/trading-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { cn } from "@/lib/utils";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   userId: string;
@@ -291,7 +292,26 @@ function WeeklyTrend({
 export function StatsPageClient({ userId, initialWorkspace }: Props) {
   const { displayCurrency } = useAccess();
   const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
-  const stats = useMemo(() => computeTradingStats(data.journal), [data.journal]);
+  const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionStat[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+    const supabase = createClient();
+    void (async () => {
+      const { data: rows } = await supabase
+        .from("weekly_reflections")
+        .select("week_start")
+        .eq("user_id", userId);
+      if (cancelled) return;
+      setWeeklyReflections(((rows ?? []) as WeeklyReflectionStat[]).filter((r) => Boolean(r.week_start)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const stats = useMemo(() => computeTradingStats(data.journal, weeklyReflections), [data.journal, weeklyReflections]);
 
   const netR = stats.cumulative.length > 0 ? stats.cumulative[stats.cumulative.length - 1]?.y ?? 0 : 0;
 
@@ -356,6 +376,40 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Trading days</p>
               <p className="font-display mt-2 text-3xl tabular-nums text-zinc-50">{stats.dailyBars.length}</p>
+            </div>
+          </section>
+
+          <section
+            className="grid gap-4 rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.12_0.035_262/0.9),oklch(0.08_0.03_266/0.92))] p-5 sm:grid-cols-2 lg:grid-cols-5"
+            aria-label="Behavior and discipline"
+          >
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Avg discipline</p>
+              <p className="mt-2 font-display text-2xl tabular-nums text-zinc-100">
+                {stats.avgDisciplineScore != null ? `${stats.avgDisciplineScore}%` : "—"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">This week quality</p>
+              <p className="mt-2 font-display text-2xl tabular-nums text-zinc-100">
+                {stats.thisWeekDisciplineScore != null ? `${stats.thisWeekDisciplineScore}%` : "—"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Best week quality</p>
+              <p className="mt-2 font-display text-2xl tabular-nums text-zinc-100">
+                {stats.bestWeekQuality ? `${stats.bestWeekQuality.score}%` : "—"}
+              </p>
+              <p className="mt-1 text-[12px] text-zinc-500">{stats.bestWeekQuality?.weekStart ?? ""}</p>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 lg:col-span-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Mood distribution</p>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[13px] text-zinc-300 sm:grid-cols-4">
+                <p>Calm: <span className="tabular-nums text-zinc-100">{stats.moodBreakdown.calm}</span></p>
+                <p>Focused: <span className="tabular-nums text-zinc-100">{stats.moodBreakdown.focused}</span></p>
+                <p>Hesitant: <span className="tabular-nums text-zinc-100">{stats.moodBreakdown.hesitant}</span></p>
+                <p>Tilted: <span className="tabular-nums text-zinc-100">{stats.moodBreakdown.tilted}</span></p>
+              </div>
             </div>
           </section>
 
@@ -424,6 +478,31 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           <DashboardCard eyebrow="Weeks" title="Weekly totals" description="Recent weeks — same rhythm as the calendar.">
             <WeeklyTrend weekly={stats.weekly} currency={displayCurrency} />
           </DashboardCard>
+
+          {stats.correlationHints.length > 0 ? (
+            <DashboardCard
+              eyebrow="Hints"
+              title="Behavior correlation hints"
+              description="Lightweight signal checks from your own sample."
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                {stats.correlationHints.map((h) => (
+                  <div key={h.label} className="rounded-xl border border-white/[0.07] bg-black/15 px-4 py-3">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">{h.label}</p>
+                    <p
+                      className={cn(
+                        "mt-2 font-display text-xl tabular-nums tracking-[-0.02em]",
+                        h.avgPnl >= 0 ? "text-emerald-200" : "text-rose-200",
+                      )}
+                    >
+                      {fmtPnl(h.avgPnl, displayCurrency)}
+                    </p>
+                    <p className="mt-1 text-[12px] text-zinc-500">{h.sample} entries</p>
+                  </div>
+                ))}
+              </div>
+            </DashboardCard>
+          ) : null}
         </>
       )}
     </div>

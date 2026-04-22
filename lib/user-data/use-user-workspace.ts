@@ -262,11 +262,18 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         note: row.note ?? null,
         tradingview_url: row.tradingViewUrl ?? null,
       };
+      const behaviorPayload = {
+        mood_state: row.moodState ?? null,
+        followed_plan: row.followedPlan ?? false,
+        respected_stop: row.respectedStop ?? false,
+        no_revenge_trade: row.noRevengeTrade ?? false,
+      };
 
       let insertResult = await supabase
         .from("journal_entries")
         .insert({
           ...basePayload,
+          ...behaviorPayload,
           entry_date: row.entryDate ?? null,
         })
         .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
@@ -297,6 +304,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         tag: (inserted.tag as string) ?? "Manual",
         note: (inserted.note as string | null) ?? undefined,
         tradingViewUrl: (inserted.tradingview_url as string | null) ?? undefined,
+        moodState: (inserted.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
+        followedPlan: (inserted.followed_plan as boolean | null) ?? false,
+        respectedStop: (inserted.respected_stop as boolean | null) ?? false,
+        noRevengeTrade: (inserted.no_revenge_trade as boolean | null) ?? false,
       };
       setData((prev) => {
         const next = { ...prev, journal: [mapped, ...prev.journal].slice(0, 200) };
@@ -335,6 +346,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         tag: row.tag,
         note: row.note ?? null,
         tradingview_url: row.tradingViewUrl ?? null,
+        mood_state: row.moodState ?? null,
+        followed_plan: row.followedPlan ?? false,
+        respected_stop: row.respectedStop ?? false,
+        no_revenge_trade: row.noRevengeTrade ?? false,
         entry_date: row.entryDate ?? null,
       };
 
@@ -381,6 +396,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         tag: (updated.tag as string) ?? "Manual",
         note: (updated.note as string | null) ?? undefined,
         tradingViewUrl: (updated.tradingview_url as string | null) ?? undefined,
+        moodState: (updated.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
+        followedPlan: (updated.followed_plan as boolean | null) ?? false,
+        respectedStop: (updated.respected_stop as boolean | null) ?? false,
+        noRevengeTrade: (updated.no_revenge_trade as boolean | null) ?? false,
       };
       setData((prev) => {
         const next = {

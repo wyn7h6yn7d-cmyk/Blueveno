@@ -113,6 +113,22 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
         </dl>
 
         <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Behavior</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {row.mood_state ? (
+              <span className="rounded border border-[oklch(0.52_0.12_252/0.3)] bg-[oklch(0.16_0.06_262/0.65)] px-2 py-0.5 font-mono text-[10px] text-zinc-300">
+                {row.mood_state}
+              </span>
+            ) : (
+              <span className="text-sm text-zinc-500">No mood/state added.</span>
+            )}
+            {row.followed_plan ? <span className="rounded border border-emerald-400/25 bg-emerald-500/[0.1] px-2 py-0.5 text-[11px] text-emerald-200">Followed plan</span> : null}
+            {row.respected_stop ? <span className="rounded border border-emerald-400/25 bg-emerald-500/[0.1] px-2 py-0.5 text-[11px] text-emerald-200">Respected stop</span> : null}
+            {row.no_revenge_trade ? <span className="rounded border border-emerald-400/25 bg-emerald-500/[0.1] px-2 py-0.5 text-[11px] text-emerald-200">No revenge</span> : null}
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Note</p>
           <p className="mt-2 text-sm leading-relaxed text-zinc-300">{(row.note as string | null) ?? "No note added."}</p>
         </div>

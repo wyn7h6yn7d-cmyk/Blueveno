@@ -20,6 +20,23 @@ export type SessionPnlRow = {
   winEntries: number;
 };
 
+export type WeeklyReflectionStat = {
+  week_start: string;
+};
+
+export type MoodBreakdown = {
+  calm: number;
+  focused: number;
+  hesitant: number;
+  tilted: number;
+};
+
+export type CorrelationStat = {
+  label: string;
+  sample: number;
+  avgPnl: number;
+};
+
 export type TradingStatsSnapshot = {
   cumulative: CumulativePoint[];
   dailyBars: DailyBar[];
@@ -35,6 +52,11 @@ export type TradingStatsSnapshot = {
   monthly: MonthlyBlock[];
   /** P&L by FX session (UTC windows), one bucket per entry */
   sessionPnl: SessionPnlRow[];
+  avgDisciplineScore: number | null;
+  thisWeekDisciplineScore: number | null;
+  bestWeekQuality: { weekStart: string; score: number } | null;
+  moodBreakdown: MoodBreakdown;
+  correlationHints: CorrelationStat[];
 };
 
 function weekLabel(weekStart: string) {
@@ -77,14 +99,51 @@ function computeSessionPnlBreakdown(journal: JournalRow[]): SessionPnlRow[] {
   });
 }
 
+function clamp100(n: number): number {
+  return Math.max(0, Math.min(100, n));
+}
+
+function dayDisciplineScore(row: JournalRow): number {
+  const checks =
+    Number(Boolean(row.followedPlan)) +
+    Number(Boolean(row.respectedStop)) +
+    Number(Boolean(row.noRevengeTrade));
+  return Math.round((checks / 3) * 100);
+}
+
 /** Aggregate P&L by calendar day (multiple rows same day sum). */
-export function computeTradingStats(journal: JournalRow[]): TradingStatsSnapshot {
+export function computeTradingStats(
+  journal: JournalRow[],
+  weeklyReflections: WeeklyReflectionStat[] = [],
+): TradingStatsSnapshot {
   const dayMap = new Map<string, number>();
+  const dayDisciplineMap = new Map<string, { sum: number; count: number }>();
+  const dayMoodMap = new Map<string, JournalRow["moodState"]>();
+  const moodBreakdown: MoodBreakdown = { calm: 0, focused: 0, hesitant: 0, tilted: 0 };
+  const calmPnl: number[] = [];
+  const focusedPnl: number[] = [];
+  const tiltedPnl: number[] = [];
+  const planTrue: number[] = [];
+  const planFalse: number[] = [];
+
   for (const row of journal) {
     const key = dayKeyFromRow(row.entryDate, row.createdAt);
     const p = parsePnlAmount(row.r);
     if (p === null) continue;
     dayMap.set(key, (dayMap.get(key) ?? 0) + p);
+
+    const score = dayDisciplineScore(row);
+    const d = dayDisciplineMap.get(key);
+    dayDisciplineMap.set(key, d ? { sum: d.sum + score, count: d.count + 1 } : { sum: score, count: 1 });
+    if (row.moodState) {
+      dayMoodMap.set(key, row.moodState);
+    }
+
+    if (row.moodState === "Calm") calmPnl.push(p);
+    if (row.moodState === "Focused") focusedPnl.push(p);
+    if (row.moodState === "Tilted") tiltedPnl.push(p);
+    if (row.followedPlan) planTrue.push(p);
+    else planFalse.push(p);
   }
 
   const dates = [...dayMap.keys()].sort((a, b) => a.localeCompare(b));
@@ -199,6 +258,54 @@ export function computeTradingStats(journal: JournalRow[]): TradingStatsSnapshot
 
   const sessionPnl = computeSessionPnlBreakdown(journal);
 
+  let disciplineTotal = 0;
+  let disciplineDays = 0;
+  for (const [dayKey, v] of dayDisciplineMap.entries()) {
+    const dayScore = Math.round(v.sum / Math.max(v.count, 1));
+    disciplineTotal += dayScore;
+    disciplineDays += 1;
+    const mood = dayMoodMap.get(dayKey);
+    if (mood === "Calm") moodBreakdown.calm += 1;
+    if (mood === "Focused") moodBreakdown.focused += 1;
+    if (mood === "Hesitant") moodBreakdown.hesitant += 1;
+    if (mood === "Tilted") moodBreakdown.tilted += 1;
+  }
+  const avgDisciplineScore = disciplineDays > 0 ? Math.round(disciplineTotal / disciplineDays) : null;
+
+  const reflectionWeeks = new Set(weeklyReflections.map((r) => r.week_start));
+  const weekDiscipline = new Map<string, { sum: number; count: number }>();
+  for (const [dayKey, v] of dayDisciplineMap.entries()) {
+    const ws = toDayKey(startOfWeekMonday(new Date(`${dayKey}T12:00:00`)));
+    const ds = Math.round(v.sum / Math.max(v.count, 1));
+    const prev = weekDiscipline.get(ws);
+    weekDiscipline.set(ws, prev ? { sum: prev.sum + ds, count: prev.count + 1 } : { sum: ds, count: 1 });
+  }
+
+  let bestWeekQuality: { weekStart: string; score: number } | null = null;
+  for (const [weekStart, v] of weekDiscipline.entries()) {
+    const base = v.sum / Math.max(v.count, 1);
+    const withBonus = clamp100(Math.round(base + (reflectionWeeks.has(weekStart) ? 5 : 0)));
+    if (!bestWeekQuality || withBonus > bestWeekQuality.score) {
+      bestWeekQuality = { weekStart, score: withBonus };
+    }
+  }
+
+  const thisWeekKey = toDayKey(startOfWeekMonday(new Date()));
+  const thisWeekRaw = weekDiscipline.get(thisWeekKey);
+  const thisWeekDisciplineScore = thisWeekRaw
+    ? clamp100(Math.round(thisWeekRaw.sum / Math.max(thisWeekRaw.count, 1) + (reflectionWeeks.has(thisWeekKey) ? 5 : 0)))
+    : null;
+
+  const correlationHints: CorrelationStat[] = [];
+  const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
+  if (calmPnl.length >= 3) correlationHints.push({ label: "Avg P&L on Calm days", sample: calmPnl.length, avgPnl: avg(calmPnl) });
+  if (focusedPnl.length >= 3) correlationHints.push({ label: "Avg P&L on Focused days", sample: focusedPnl.length, avgPnl: avg(focusedPnl) });
+  if (tiltedPnl.length >= 3) correlationHints.push({ label: "Avg P&L on Tilted days", sample: tiltedPnl.length, avgPnl: avg(tiltedPnl) });
+  if (planTrue.length >= 3 && planFalse.length >= 3) {
+    correlationHints.push({ label: "Avg P&L when Followed plan = true", sample: planTrue.length, avgPnl: avg(planTrue) });
+    correlationHints.push({ label: "Avg P&L when Followed plan = false", sample: planFalse.length, avgPnl: avg(planFalse) });
+  }
+
   return {
     cumulative,
     dailyBars,
@@ -213,5 +320,10 @@ export function computeTradingStats(journal: JournalRow[]): TradingStatsSnapshot
     streakLabel,
     monthly,
     sessionPnl,
+    avgDisciplineScore,
+    thisWeekDisciplineScore,
+    bestWeekQuality,
+    moodBreakdown,
+    correlationHints,
   };
 }
