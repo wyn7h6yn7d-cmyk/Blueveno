@@ -135,7 +135,7 @@ function weekReflectionLines(reflection?: WeeklyReflectionSummary): { label: str
   const rows = [
     { label: "Worked", value: reflection.whatWorked?.trim() ?? "" },
     { label: "Slipped", value: reflection.whatSlipped?.trim() ?? "" },
-    { label: "Focus", value: reflection.nextWeekFocus?.trim() ?? "" },
+    { label: "Focus for next week", value: reflection.nextWeekFocus?.trim() ?? "" },
   ].filter((row) => row.value.length > 0);
   return rows;
 }
