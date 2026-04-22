@@ -130,6 +130,16 @@ function weekSummaryFromReflection(reflection?: WeeklyReflectionSummary): string
   return pick ?? null;
 }
 
+function weekReflectionLines(reflection?: WeeklyReflectionSummary): { label: string; value: string }[] {
+  if (!reflection) return [];
+  const rows = [
+    { label: "Worked", value: reflection.whatWorked?.trim() ?? "" },
+    { label: "Slipped", value: reflection.whatSlipped?.trim() ?? "" },
+    { label: "Focus", value: reflection.nextWeekFocus?.trim() ?? "" },
+  ].filter((row) => row.value.length > 0);
+  return rows;
+}
+
 export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
 
@@ -274,6 +284,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
               const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
               const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
               const weeklySummary = weekSummaryFromReflection(weeklyReflection);
+              const weeklyReflectionRows = weekReflectionLines(weeklyReflection);
 
               return (
                 <Fragment key={`week-row-${i}`}>
@@ -382,9 +393,19 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         title={weeklySummary ?? "No weekly reflection"}
                       >
                         <p className="font-mono text-[6px] uppercase tracking-[0.14em] text-white/45 sm:text-[7px]">Reflection</p>
-                        <p className="mt-0.5 line-clamp-2 text-[8px] leading-snug text-white/75 sm:text-[9px]">
-                          {weeklySummary ?? "No weekly reflection"}
-                        </p>
+                        {weeklyReflectionRows.length === 0 ? (
+                          <p className="mt-0.5 line-clamp-2 text-[8px] leading-snug text-white/75 sm:text-[9px]">
+                            No weekly reflection
+                          </p>
+                        ) : (
+                          <div className="mt-0.5 space-y-0.5">
+                            {weeklyReflectionRows.map((row) => (
+                              <p key={row.label} className="line-clamp-1 text-[8px] leading-snug text-white/75 sm:text-[9px]">
+                                <span className="text-white/45">{row.label}:</span> {row.value}
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="min-w-0 overflow-hidden pl-2 sm:pl-3">
