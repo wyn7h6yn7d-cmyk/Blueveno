@@ -36,13 +36,13 @@ export function WorkspaceSessionClock({ serverTimeZone }: Props) {
 
   return (
     <div
-      className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2"
+      className="flex min-w-0 max-w-full flex-wrap items-center gap-1 sm:gap-2"
       title="FX session windows are approximate (UTC). Clock uses your timezone from Settings."
     >
       <div
         className={cn(
-          "inline-flex max-w-[min(100%,14rem)] flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg border border-white/[0.1]",
-          "bg-white/[0.04] px-2 py-0.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:max-w-none sm:px-2.5 sm:py-1",
+          "inline-flex min-w-0 max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg border border-white/[0.1]",
+          "bg-white/[0.04] px-1.5 py-0.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:px-2.5 sm:py-1 sm:max-w-none",
         )}
       >
         <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-zinc-500 sm:text-[9px] sm:tracking-[0.2em]">

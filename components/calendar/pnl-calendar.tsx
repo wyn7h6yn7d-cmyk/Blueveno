@@ -188,9 +188,9 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
     return map;
   }, [weeklyReflections]);
 
-  /** Tight week rail on small screens so the grid fits without huge horizontal scroll */
+  /** Below sm: min day column width so copy fits; outer wrapper scrolls horizontally. sm+: fluid tracks. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(4.6rem,5.4rem)]",
+    "[grid-template-columns:repeat(7,minmax(2.85rem,1fr))_minmax(5.25rem,6rem)]",
     "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12rem,16.5rem)]",
     "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(15rem,21rem)]",
     "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(16.5rem,23rem)]",
@@ -253,7 +253,12 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                 "rounded-lg border border-white/[0.08] bg-black/25 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)] sm:rounded-xl sm:p-2.5 lg:p-3",
               )}
             >
-              <div className={cn("grid w-full min-w-0 gap-1 sm:gap-2.5 lg:gap-3", calendarGridCols)}>
+              <div
+                className={cn(
+                  "grid min-w-0 gap-1 max-sm:w-max max-sm:min-w-full sm:w-full sm:gap-2.5 lg:gap-3",
+                  calendarGridCols,
+                )}
+              >
             {WEEKDAYS.map((d) => (
               <div
                 key={d}
@@ -304,22 +309,26 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     const content = (
                       <div
                         className={cn(
-                          "group relative box-border flex h-full min-h-[98px] min-w-0 flex-col justify-between rounded-lg p-2 transition duration-200 sm:min-h-[170px] sm:rounded-xl sm:p-4 lg:min-h-[186px] lg:p-4.5",
+                          "group relative box-border flex h-full min-h-[98px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 transition duration-200 sm:min-h-[170px] sm:rounded-xl sm:p-4 lg:min-h-[186px] lg:p-4.5",
                           cellClasses,
                           hasData && "hover:brightness-[1.05] hover:ring-2 hover:ring-[oklch(0.58_0.12_252/0.5)]",
                         )}
                       >
-                        <div className="flex items-start justify-between gap-1">
+                        <div className="flex min-w-0 flex-col items-stretch gap-0.5 self-stretch">
                           <span
                             className={cn(
-                              "font-mono text-[10px] tabular-nums sm:text-[12px]",
-                              hasData ? "text-white/75" : "text-zinc-500",
+                              "font-mono text-[11px] tabular-nums sm:text-[12px]",
+                              hasData
+                                ? "text-white/90"
+                                : day.inMonth
+                                  ? "text-zinc-300"
+                                  : "text-zinc-500",
                             )}
                           >
                             {day.date.getDate()}
                           </span>
                           {hasData && agg!.count > 1 ? (
-                            <span className="shrink-0 rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/75 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]">
+                            <span className="w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/85 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]">
                               {agg!.count}×
                             </span>
                           ) : null}
@@ -346,8 +355,10 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                             </>
                           ) : (
                             <>
-                              <div className="font-mono text-[11px] tabular-nums text-zinc-600 sm:text-[13px]">—</div>
-                              <div className="mt-0.5 font-mono text-[7px] text-zinc-600 sm:mt-1 sm:text-[9px]">No trade</div>
+                              <div className="font-mono text-[11px] tabular-nums text-zinc-500 sm:text-[13px]">—</div>
+                              <div className="mt-0.5 line-clamp-2 text-center font-mono text-[8px] leading-snug text-zinc-400 sm:mt-1 sm:text-[9px] sm:leading-normal">
+                                No trades
+                              </div>
                             </>
                           )}
                         </div>

@@ -88,7 +88,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   };
 
   return (
-    <header className="flex h-[3.25rem] shrink-0 items-center gap-3 border-b border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.13_0.03_262/0.98),oklch(0.105_0.028_264/0.96))] px-3 shadow-[0_1px_0_0_oklch(1_0_0_/0.05)] backdrop-blur-xl md:h-16 md:gap-4 md:px-5">
+    <header className="flex min-h-[3.25rem] shrink-0 items-center gap-2 border-b border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.13_0.03_262/0.98),oklch(0.105_0.028_264/0.96))] px-2 shadow-[0_1px_0_0_oklch(1_0_0_/0.05)] backdrop-blur-xl sm:gap-3 sm:px-3 md:h-16 md:gap-4 md:px-5">
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger
           className={cn(
@@ -113,14 +113,16 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-w-0 flex-1 items-stretch gap-2 sm:gap-4">
-        <div className="min-w-0 shrink-0">
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-4">
+        <div className="min-w-0 flex-1 overflow-hidden pr-1">
           <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
-          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1.5 sm:gap-x-3">
-            <p className="font-display truncate text-base font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:text-[1.0625rem]">
+          <div className="mt-0.5 flex min-w-0 flex-col items-start gap-1 sm:mt-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5">
+            <p className="font-display w-full min-w-0 truncate text-base font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.0625rem]">
               {label}
             </p>
-            <WorkspaceSessionClock serverTimeZone={user.timezone} />
+            <div className="min-w-0 max-w-full">
+              <WorkspaceSessionClock serverTimeZone={user.timezone} />
+            </div>
           </div>
         </div>
         {helloName ? (
@@ -136,7 +138,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         ) : null}
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+      <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2">
         <Link
           href="/"
           className={cn(
