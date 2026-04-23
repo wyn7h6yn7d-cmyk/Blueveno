@@ -188,9 +188,9 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
     return map;
   }, [weeklyReflections]);
 
-  /** Below sm: min day column width so copy fits; outer wrapper scrolls horizontally. sm+: fluid tracks. */
+  /** Below sm: day cols + week rail wide enough for reflection text (scroll horizontally). sm+: fluid tracks. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(7,minmax(2.85rem,1fr))_minmax(5.25rem,6rem)]",
+    "[grid-template-columns:repeat(7,minmax(2.85rem,1fr))_minmax(11.75rem,13rem)]",
     "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12rem,16.5rem)]",
     "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(15rem,21rem)]",
     "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(16.5rem,23rem)]",
@@ -385,34 +385,39 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
 
                   <div
                     className={cn(
-                      "relative box-border flex min-h-[98px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2.5 text-left sm:min-h-[170px] sm:rounded-xl sm:p-4.5 lg:min-h-[186px] lg:p-5",
+                      "relative box-border flex min-h-[128px] min-w-0 flex-col justify-between gap-2 overflow-hidden rounded-lg p-2 text-left sm:min-h-[170px] sm:gap-0 sm:rounded-xl sm:p-4.5 lg:min-h-[186px] lg:p-5",
                       weekRailClasses(weekly),
                     )}
                   >
                     <div className={cn("absolute left-0 top-2 bottom-2 w-[2px] rounded-full sm:top-3 sm:bottom-3 sm:w-[3px] lg:w-1", weekAccent(weekly))} />
-                    <div className="flex items-start justify-between gap-2 pl-2 sm:gap-3 sm:pl-3">
-                      <div className="min-w-0">
-                        <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/45 sm:text-[9px] sm:tracking-[0.2em]">
+                    <div className="flex min-w-0 flex-col gap-2 pl-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:pl-3">
+                      <div className="flex shrink-0 items-baseline gap-2 sm:flex-col sm:items-start sm:gap-0">
+                        <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-white/55 sm:text-[9px] sm:tracking-[0.2em]">
                           Wk {i + 1}
                         </p>
-                        <p className="mt-0.5 hidden font-mono text-[9px] tabular-nums text-white/70 sm:mt-1 sm:block sm:text-[10px]">
+                        <p className="font-mono text-[8px] tabular-nums text-white/65 sm:mt-1 sm:text-[10px] sm:text-white/70">
                           {weekDateRangeLabel(week)}
                         </p>
                       </div>
                       <div
-                        className="max-w-[76%] rounded-xl border border-white/[0.16] bg-black/35 px-2.5 py-2 sm:max-w-[78%] sm:px-3 sm:py-2.5"
+                        className="min-w-0 w-full rounded-lg border border-white/[0.16] bg-black/35 px-2 py-1.5 sm:max-w-[78%] sm:rounded-xl sm:px-3 sm:py-2.5"
                         title={weeklySummary ?? "No weekly reflection"}
                       >
-                        <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-white/55 sm:text-[9px]">Reflection</p>
+                        <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-white/60 sm:text-[9px] sm:tracking-[0.18em]">
+                          Reflection
+                        </p>
                         {weeklyReflectionRows.length === 0 ? (
-                          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-[12px]">
+                          <p className="mt-1 line-clamp-3 text-[10px] leading-snug text-white/85 sm:text-[12px]">
                             No weekly reflection
                           </p>
                         ) : (
-                          <div className="mt-1 space-y-1">
+                          <div className="mt-1 space-y-1 sm:space-y-1">
                             {weeklyReflectionRows.map((row) => (
-                              <p key={row.label} className="line-clamp-1 text-[11px] leading-snug text-white/85 sm:text-[12px]">
-                                <span className="text-white/55">{row.label}:</span> {row.value}
+                              <p
+                                key={row.label}
+                                className="break-words text-[10px] leading-snug text-white/85 [overflow-wrap:anywhere] sm:text-[12px] line-clamp-3 sm:line-clamp-2"
+                              >
+                                <span className="font-medium text-white/50">{row.label}:</span> {row.value}
                               </p>
                             ))}
                           </div>
