@@ -357,7 +357,7 @@ export function HeroPremium() {
   return (
     <section
       id="hero"
-      className="relative overflow-x-clip border-b border-white/[0.08] pb-20 pt-20 sm:pb-24 sm:pt-24 lg:pb-24 lg:pt-28"
+      className="relative overflow-x-clip border-b border-white/[0.08] pb-12 pt-[4.5rem] sm:pb-14 sm:pt-[5.25rem] lg:pb-14 lg:pt-24"
       aria-labelledby="hero-heading"
     >
       <div
@@ -366,12 +366,12 @@ export function HeroPremium() {
       />
 
       <div className="relative z-10 mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
-        <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-12 xl:gap-14">
+        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center lg:gap-8 xl:gap-10">
           <div className="text-center lg:text-left">
             <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[oklch(0.66_0.1_252)]">PREMIUM TRADING JOURNAL</p>
             <h1
               id="hero-heading"
-              className="mt-5 [font-family:var(--font-heading),Georgia,serif] text-[clamp(2rem,4.8vw,4.2rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-zinc-50 sm:mt-6"
+              className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(1.9rem,4.2vw,3.7rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-zinc-50 sm:mt-5"
             >
               Track the result.
               <br />
@@ -379,16 +379,16 @@ export function HeroPremium() {
                 Review the behavior.
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-[25rem] text-[16px] leading-[1.6] tracking-[-0.015em] text-zinc-300 lg:mx-0">
+            <p className="mx-auto mt-5 max-w-[25rem] text-[15px] leading-[1.55] tracking-[-0.015em] text-zinc-300 lg:mx-0">
               Log the day. Save the chart.
               <br />
               See the week in one clear place.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
               <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
               <PremiumGhostLink href="/app">Open workspace</PremiumGhostLink>
             </div>
-            <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:mt-9">
               {SUPPORT_CARDS.map(({ icon: Icon, title, subtitle }) => (
                 <div key={title} className="text-left">
                   <div className="mb-2 inline-flex size-8 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03]">
@@ -402,6 +402,10 @@ export function HeroPremium() {
           </div>
 
           <div className="relative mx-auto w-full max-w-[760px] [perspective:1800px] lg:mx-0 lg:max-w-none">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-x-8 -inset-y-6 rounded-[2.25rem] bg-[conic-gradient(from_120deg_at_62%_24%,transparent_0deg,oklch(0.62_0.14_248/0.16)_62deg,transparent_122deg,oklch(0.58_0.12_252/0.12)_210deg,transparent_300deg)] blur-2xl"
+            />
             <motion.div
               className={cn(
                 "relative rounded-2xl p-[1px] sm:rounded-[1.8rem]",
@@ -486,9 +490,9 @@ export function HeroPremium() {
                     </LayoutGroup>
                   </div>
 
-                  <div className="border-b border-white/[0.05] px-4 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
+                  <div className="border-b border-white/[0.05] px-4 py-5 sm:px-7 sm:py-6 lg:px-8 lg:py-6">
                     {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[24.5rem] sm:h-[30rem] lg:h-[32rem]">
+                    <div className="relative h-[27rem] sm:h-[29rem] lg:h-[30rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}
