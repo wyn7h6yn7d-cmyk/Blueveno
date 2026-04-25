@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OpenCookieSettingsButton } from "@/components/legal/open-cookie-settings-button";
 
 export function HomeFooter() {
   return (
@@ -15,6 +16,12 @@ export function HomeFooter() {
           <Link href="/terms" className="transition hover:text-zinc-400">
             Terms
           </Link>
+          <Link href="/cookies" className="transition hover:text-zinc-400">
+            Cookies
+          </Link>
+          <OpenCookieSettingsButton className="transition hover:text-zinc-400">
+            Manage cookies
+          </OpenCookieSettingsButton>
           <a href="mailto:hello@blueveno.com" className="transition hover:text-zinc-400">
             Contact
           </a>

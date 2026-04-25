@@ -12,12 +12,49 @@ export default function TermsPage() {
       <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Legal</p>
       <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight">Terms of Service</h1>
       <p className="mt-6 text-[15px] leading-relaxed text-zinc-400">
-        This is a concise placeholder for pre-launch review. A full terms document will be published before public billing.
-        By using Blueveno you agree to use the product responsibly and accept that trading involves risk; the software is a
-        performance tool, not investment advice.
+        These Terms govern access to and use of Blueveno. By creating an account or using the service, you agree to these
+        Terms.
       </p>
-      <p className="mt-6 text-[15px] leading-relaxed text-zinc-400">
-        For questions contact{" "}
+
+      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">1. Service scope</h2>
+      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
+        Blueveno provides journaling, review, and analytics tooling for trading performance. Blueveno is educational and
+        operational software and does not provide investment, legal, tax, or financial advice.
+      </p>
+
+      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">2. Account and security</h2>
+      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
+        You are responsible for keeping your credentials secure and for activity under your account. You must provide
+        accurate information and notify us if you believe your account is compromised.
+      </p>
+
+      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">3. Acceptable use</h2>
+      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
+        You agree not to misuse the service, interfere with platform security, attempt unauthorized access, reverse engineer
+        protected systems, or use Blueveno for unlawful purposes.
+      </p>
+
+      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">4. Data and content</h2>
+      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
+        You retain rights to your journal content and uploaded links. You grant Blueveno the limited rights necessary to
+        host, process, and display your content to operate the service.
+      </p>
+
+      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">5. Disclaimers and liability</h2>
+      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
+        The service is provided on an &quot;as is&quot; and &quot;as available&quot; basis. To the maximum extent permitted by law, Blueveno
+        disclaims warranties and is not liable for indirect, incidental, or consequential damages arising from your use of
+        the service.
+      </p>
+
+      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">6. Changes and termination</h2>
+      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
+        We may update these Terms from time to time. Continued use after updates means acceptance of the revised Terms. We
+        may suspend or terminate accounts that violate these Terms or threaten platform integrity.
+      </p>
+
+      <p className="mt-10 text-[15px] leading-relaxed text-zinc-400">
+        Questions about these Terms:{" "}
         <a href="mailto:hello@blueveno.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
           hello@blueveno.com
         </a>

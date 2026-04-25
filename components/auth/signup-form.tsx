@@ -14,15 +14,30 @@ export function SignupForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setPending(true);
     setMessage(null);
     setIsError(false);
+
+    if (password !== confirmPassword) {
+      setIsError(true);
+      setMessage("Passwords do not match.");
+      return;
+    }
+
+    if (!acceptedLegal) {
+      setIsError(true);
+      setMessage("You must accept the Terms and Privacy Policy to create an account.");
+      return;
+    }
+
+    setPending(true);
 
     if (!isSupabaseConfigured()) {
       setPending(false);
@@ -119,6 +134,44 @@ export function SignupForm() {
                 Minimum eight characters. A password manager is recommended.
               </p>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="signup-confirm-password" className={authLabelClass}>
+                Confirm password
+              </Label>
+              <Input
+                id="signup-confirm-password"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
+                placeholder="Repeat your password"
+                className={cn(authFieldClass)}
+              />
+            </div>
+
+            <label className="flex items-start gap-3 rounded-[0.65rem] border border-white/[0.08] bg-white/[0.02] px-3.5 py-3 text-[12px] leading-relaxed text-zinc-300">
+              <input
+                type="checkbox"
+                checked={acceptedLegal}
+                onChange={(e) => setAcceptedLegal(e.target.checked)}
+                required
+                className="mt-0.5 size-4 accent-[oklch(0.62_0.15_252)]"
+              />
+              <span>
+                I agree to the{" "}
+                <a href="/terms" className="underline underline-offset-4 hover:text-zinc-100">
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" className="underline underline-offset-4 hover:text-zinc-100">
+                  Privacy Policy
+                </a>
+                .
+              </span>
+            </label>
 
             {message ? (
               <p
