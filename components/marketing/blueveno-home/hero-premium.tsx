@@ -416,13 +416,13 @@ export function HeroPremium() {
           <div className="relative mx-auto w-full max-w-[760px] [perspective:1800px] lg:mx-0 lg:max-w-none">
             <div
               aria-hidden
-              className="pointer-events-none absolute -inset-x-8 -inset-y-6 rounded-[2.25rem] bg-[conic-gradient(from_120deg_at_62%_24%,transparent_0deg,oklch(0.62_0.14_248/0.18)_62deg,transparent_122deg,oklch(0.58_0.12_252/0.14)_210deg,transparent_300deg)] blur-2xl"
+              className="pointer-events-none absolute -inset-x-9 -inset-y-7 rounded-[2.35rem] bg-[conic-gradient(from_120deg_at_62%_24%,transparent_0deg,oklch(0.66_0.16_248/0.28)_62deg,transparent_122deg,oklch(0.62_0.14_252/0.22)_210deg,transparent_300deg)] blur-[30px]"
             />
             <motion.div
               className={cn(
                 "relative rounded-2xl p-[1px] sm:rounded-[1.85rem]",
                 "bg-[linear-gradient(145deg,oklch(0.55_0.14_252/0.65)_0%,oklch(0.2_0.06_268/0.42)_40%,oklch(0.52_0.15_252/0.58)_100%)]",
-                "shadow-[0_46px_128px_-52px_rgba(0,0,0,0.92),0_0_0_1px_oklch(0.46_0.11_252/0.24),0_0_90px_-48px_oklch(0.6_0.14_252/0.44),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
+                "shadow-[0_46px_128px_-52px_rgba(0,0,0,0.92),0_0_0_1px_oklch(0.46_0.11_252/0.24),0_0_90px_-48px_oklch(0.6_0.14_252/0.44),0_0_130px_-44px_oklch(0.66_0.16_252/0.42),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
               )}
               style={{ ...slabStyle, rotateX, rotateY, scale }}
               onPointerMove={onPointerMove}
@@ -431,9 +431,9 @@ export function HeroPremium() {
             >
               <motion.div
                 aria-hidden
-                className="pointer-events-none absolute -inset-6 rounded-[2rem] bg-[radial-gradient(ellipse_at_70%_20%,oklch(0.48_0.14_252/0.18),transparent_60%)]"
-                animate={reduced ? undefined : { opacity: [0.42, 0.72, 0.42] }}
-                transition={reduced ? undefined : { duration: 5.6, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                className="pointer-events-none absolute -inset-7 rounded-[2.2rem] bg-[radial-gradient(ellipse_at_70%_20%,oklch(0.58_0.16_252/0.28),transparent_62%)]"
+                animate={reduced ? undefined : { opacity: [0.55, 0.92, 0.55] }}
+                transition={reduced ? undefined : { duration: 4.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
               />
               <div
                 className={cn(
