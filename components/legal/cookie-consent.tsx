@@ -146,34 +146,34 @@ export function CookieConsentModal() {
             <p className="font-display text-[1.15rem] font-semibold tracking-[-0.03em] text-zinc-50">Blueveno</p>
           </div>
           <p className="mt-4 text-[15px] leading-relaxed text-zinc-200">
-            Kasutame küpsiseid, et tagada saidi töökindlus, turvalisus ja parem kasutajakogemus. Saad valida, millised
-            valikulised küpsised lubad.
+            We use cookies to keep the site reliable and secure, and to improve your experience. You can choose which
+            optional cookie categories to allow.
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-zinc-400">
-            Lisainfo: <Link href="/cookies" className="underline underline-offset-4 hover:text-zinc-200">Küpsiste poliitika</Link>,{" "}
-            <Link href="/privacy" className="underline underline-offset-4 hover:text-zinc-200">Privaatsuspoliitika</Link> ja{" "}
-            <Link href="/terms" className="underline underline-offset-4 hover:text-zinc-200">Tingimused</Link>.
+            Learn more: <Link href="/cookies" className="underline underline-offset-4 hover:text-zinc-200">Cookie Policy</Link>,{" "}
+            <Link href="/privacy" className="underline underline-offset-4 hover:text-zinc-200">Privacy Policy</Link>, and{" "}
+            <Link href="/terms" className="underline underline-offset-4 hover:text-zinc-200">Terms of Service</Link>.
           </p>
         </div>
 
         {(showSettings || hasOptionalEnabled) ? (
           <div className="space-y-3 border-b border-white/[0.08] px-5 py-4 sm:px-7 sm:py-5">
             <ToggleRow
-              title="Vajalikud küpsised"
-              description="Need on vajalikud saidi põhifunktsioonide jaoks ning neid ei saa välja lülitada."
+              title="Necessary cookies"
+              description="Required for core site functionality and cannot be disabled."
               checked
               disabled
               onChange={() => undefined}
             />
             <ToggleRow
-              title="Kolmanda osapoole küpsised"
-              description="Aitavad mõõta teenuse toimivust ja parandada kasutajakogemust."
+              title="Third-party cookies"
+              description="Help us measure service performance and improve user experience."
               checked={thirdParty}
               onChange={setThirdParty}
             />
             <ToggleRow
-              title="Turundusküpsised"
-              description="Kasutatakse reklaami ja kampaaniate asjakohasemaks muutmiseks."
+              title="Marketing cookies"
+              description="Used to improve campaign and advertising relevance."
               checked={marketing}
               onChange={setMarketing}
             />
@@ -186,21 +186,21 @@ export function CookieConsentModal() {
             onClick={acceptAll}
             className="inline-flex min-h-[2.7rem] items-center justify-center rounded-full border border-emerald-300/35 bg-[linear-gradient(180deg,oklch(0.58_0.18_150),oklch(0.46_0.15_152))] px-5 text-[15px] font-semibold text-white shadow-[0_0_42px_-16px_oklch(0.68_0.16_150/0.85)] transition hover:brightness-105"
           >
-            Nõustun kõigiga
+            Accept all
           </button>
           <button
             type="button"
             onClick={() => setShowSettings((v) => !v)}
             className="inline-flex min-h-[2.7rem] items-center justify-center rounded-full border border-white/[0.18] bg-white/[0.05] px-5 text-[15px] font-medium text-zinc-100 transition hover:bg-white/[0.1]"
           >
-            Seaded
+            Settings
           </button>
           <button
             type="button"
             onClick={saveCurrent}
             className="inline-flex min-h-[2.7rem] items-center justify-center rounded-full border border-white/[0.24] bg-transparent px-5 text-[15px] font-medium text-zinc-100 transition hover:bg-white/[0.06]"
           >
-            Salvesta muudatused
+            Save preferences
           </button>
         </div>
       </div>
