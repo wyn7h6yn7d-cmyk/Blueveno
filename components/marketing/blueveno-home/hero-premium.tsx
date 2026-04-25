@@ -3,7 +3,7 @@
 import { useId, useMemo, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import Link from "next/link";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion, useSpring } from "framer-motion";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight, CheckCircle2, ExternalLink, LineChart, Shield, Target } from "lucide-react";
 import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,11 @@ const MODES: { id: ViewMode; label: string }[] = [
   { id: "chart", label: "Chart" },
   { id: "week", label: "Week" },
 ];
+const SUPPORT_CARDS = [
+  { icon: LineChart, title: "Trade. Journal. Improve.", subtitle: "All in one calm workspace." },
+  { icon: Shield, title: "Private by design.", subtitle: "Your data stays yours." },
+  { icon: Target, title: "Built for consistency.", subtitle: "Better habits, better results." },
+] as const;
 
 const WEEK_DAYS = [
   { day: "Mon", pnl: 120 },
@@ -244,7 +249,7 @@ function WeekPanel() {
             <div className="mt-2 space-y-1.5">
               {["Followed plan", "Respected stop", "No revenge trade"].map((item) => (
                 <div key={item} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
-                  <span className="size-1.5 rounded-full bg-blue-300" />
+                  <CheckCircle2 className="size-3.5 text-blue-300" />
                   {item}
                 </div>
               ))}
@@ -290,9 +295,10 @@ function HeroProductBottomStrip({ mode }: BottomStripProps) {
       </p>
       <Link
         href="/login"
-        className="ml-3 shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.72_0.12_252)] transition hover:text-zinc-200 sm:text-[11px]"
+        className="ml-3 inline-flex shrink-0 items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.72_0.12_252)] transition hover:text-zinc-200 sm:text-[11px]"
       >
-        Sign in →
+        Sign in
+        <ArrowRight className="size-3.5" />
       </Link>
     </div>
   );
@@ -303,8 +309,9 @@ export function HeroPremium() {
   const [isHovering, setIsHovering] = useState(false);
   const reducedMotion = useReducedMotion();
   const reduced = reducedMotion === true;
-  const rotateX = useSpring(0, { stiffness: 190, damping: 25, mass: 0.6 });
-  const rotateY = useSpring(0, { stiffness: 190, damping: 25, mass: 0.6 });
+  const rotateX = useSpring(0, { stiffness: 220, damping: 24, mass: 0.55 });
+  const rotateY = useSpring(0, { stiffness: 220, damping: 24, mass: 0.55 });
+  const scale = useSpring(1, { stiffness: 180, damping: 24, mass: 0.65 });
   const tabId = useId();
   const panelId = `${tabId}-panel`;
 
@@ -333,14 +340,16 @@ export function HeroPremium() {
     const rect = e.currentTarget.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
-    rotateY.set((px - 0.5) * 5.6);
-    rotateX.set((0.5 - py) * 4.2);
+    rotateY.set((px - 0.5) * 10);
+    rotateX.set((0.5 - py) * 8);
+    scale.set(1.012);
   }
 
   function onPointerLeave() {
     setIsHovering(false);
     rotateX.set(0);
     rotateY.set(0);
+    scale.set(1);
   }
 
   return (
@@ -378,13 +387,11 @@ export function HeroPremium() {
               <PremiumGhostLink href="/app">Open workspace</PremiumGhostLink>
             </div>
             <div className="mt-12 grid grid-cols-3 gap-4">
-              {[
-                ["Trade. Journal. Improve.", "All in one calm workspace."],
-                ["Private by design.", "Your data stays yours."],
-                ["Built for consistency.", "Better habits, better results."],
-              ].map(([title, subtitle]) => (
+              {SUPPORT_CARDS.map(({ icon: Icon, title, subtitle }) => (
                 <div key={title} className="text-left">
-                  <div className="mb-2 size-8 rounded-lg border border-white/[0.1] bg-white/[0.03]" />
+                  <div className="mb-2 inline-flex size-8 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03]">
+                    <Icon className="size-4 text-zinc-300" />
+                  </div>
                   <p className="text-xs font-medium text-zinc-300">{title}</p>
                   <p className="mt-1 text-[11px] text-zinc-500">{subtitle}</p>
                 </div>
@@ -392,14 +399,14 @@ export function HeroPremium() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[620px] lg:mx-0 lg:max-w-none">
+          <div className="relative mx-auto w-full max-w-[620px] [perspective:1800px] lg:mx-0 lg:max-w-none">
             <motion.div
               className={cn(
                 "relative rounded-2xl p-[1px] sm:rounded-[1.8rem]",
                 "bg-[linear-gradient(145deg,oklch(0.55_0.14_252/0.65)_0%,oklch(0.2_0.06_268/0.42)_40%,oklch(0.52_0.15_252/0.58)_100%)]",
                 "shadow-[0_40px_120px_-52px_rgba(0,0,0,0.9),0_0_0_1px_oklch(0.46_0.11_252/0.24),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
               )}
-              style={{ ...slabStyle, rotateX, rotateY }}
+              style={{ ...slabStyle, rotateX, rotateY, scale }}
               onPointerMove={onPointerMove}
               onPointerEnter={() => setIsHovering(true)}
               onPointerLeave={onPointerLeave}
