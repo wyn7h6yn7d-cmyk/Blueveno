@@ -14,7 +14,7 @@ export function HomePricingSection() {
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-[640px] px-5 sm:px-8">
+      <div className="relative mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
         <p className="text-center font-mono text-[10px] uppercase tracking-[0.4em] text-[oklch(0.62_0.12_252)]">Pricing</p>
         <h2
           id="home-pricing-heading"
@@ -26,7 +26,7 @@ export function HomePricingSection() {
           {PRICING_EUR.trialDays}-day trial, then Premium. Cancel anytime.
         </p>
 
-        <div className="relative mt-12 overflow-hidden rounded-[1.75rem] border border-[oklch(0.5_0.13_252/0.42)] bg-[linear-gradient(168deg,oklch(0.11_0.045_262/0.96)_0%,oklch(0.048_0.04_272/0.99)_100%)] px-7 py-12 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_48px_120px_-56px_rgba(0,0,0,0.88)] sm:px-11 sm:py-14">
+        <div className="relative mx-auto mt-12 max-w-[760px] overflow-hidden rounded-[1.75rem] border border-[oklch(0.5_0.13_252/0.42)] bg-[linear-gradient(168deg,oklch(0.11_0.045_262/0.96)_0%,oklch(0.048_0.04_272/0.99)_100%)] px-7 py-12 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_48px_120px_-56px_rgba(0,0,0,0.88)] sm:px-11 sm:py-14">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[oklch(0.55_0.12_252/0.25)] to-transparent" aria-hidden />
 
           <div className="relative text-center">

@@ -153,8 +153,9 @@ export function AmbientField() {
       aria-hidden
     >
       {/* Base */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.048_0.048_268)_0%,oklch(0.03_0.05_274)_46%,oklch(0.022_0.054_278)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.045_0.05_266)_0%,oklch(0.028_0.056_272)_44%,oklch(0.02_0.056_278)_100%)]" />
       <div className="absolute inset-0 bg-grid-fine opacity-[0.2]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_78%_55%_at_22%_26%,oklch(0.4_0.12_248/0.18),transparent_62%),radial-gradient(ellipse_65%_45%_at_86%_18%,oklch(0.36_0.1_254/0.14),transparent_58%)]" />
 
       {/* Chart layers — back → front; different speeds + one reverse for parallax */}
       <div className="absolute inset-0 opacity-[0.46] sm:opacity-[0.52]">
@@ -162,6 +163,7 @@ export function AmbientField() {
         <ChartTrack layerIndex={1} durationSec={146} reverse opacity={0.78} />
         <ChartTrack layerIndex={0} durationSec={112} opacity={1} />
       </div>
+      <div className="absolute inset-0 bg-[linear-gradient(118deg,transparent_0%,transparent_33%,oklch(0.66_0.15_248/0.12)_40%,transparent_46%,transparent_58%,oklch(0.6_0.13_242/0.08)_64%,transparent_70%)]" />
 
       {/* Restrained edge vignette + slight top wash so hero copy stays crisp */}
       <div

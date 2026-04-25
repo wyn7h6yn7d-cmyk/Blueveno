@@ -177,7 +177,7 @@ function ChartPanel() {
 function WeekPanel() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.095_0.045_262/0.96),oklch(0.052_0.03_268/0.99))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-6">
-      <div className="shrink-0 grid grid-cols-2 gap-2.5 border-b border-white/[0.06] pb-4">
+      <div className="shrink-0 grid grid-cols-1 gap-2.5 border-b border-white/[0.06] pb-4 sm:grid-cols-2">
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Week summary</p>
           <p className="mt-1.5 font-display text-[1.9rem] font-semibold tracking-[-0.05em] text-emerald-300">{formatPnl(1247.63)}</p>
@@ -197,43 +197,45 @@ function WeekPanel() {
       </div>
 
       <div className="min-h-0 flex-1 pt-4">
-        <div className="grid h-[11.8rem] min-h-0 min-w-0 grid-cols-[6.2rem_repeat(5,minmax(0,1fr))_5.7rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
-          <div className="px-2" />
-          {WEEK_DAYS.map((d) => (
-            <div
-              key={d.day}
-              className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500"
-            >
-              {d.day}
-            </div>
-          ))}
-          <div className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500">Week Total</div>
-          {[
-            { label: "May 5 - 11", values: [186.4, -42.1, 248.75, 123.3, 205.6], total: 721.95 },
-            { label: "May 12 - 18", values: [-153.2, 97.6, 310.4, -68.5, 229.1], total: 415.4 },
-            { label: "May 19 - 25", values: [267.9, 134.4, -71.3, 142.2, 188.7], total: 661.9 },
-            { label: "May 26 - Jun 1", values: [89.3, -33.8, 0, 0, 0], total: 55.5 },
-          ].map((row) => (
-            <div key={row.label} className="contents">
-              <div className="flex items-center pl-2 text-[10px] text-zinc-500">
-                {row.label}
+        <div className="overflow-x-auto pb-1">
+          <div className="grid h-[11.8rem] min-w-[34rem] grid-cols-[6.2rem_repeat(5,minmax(0,1fr))_5.7rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
+            <div className="px-2" />
+            {WEEK_DAYS.map((d) => (
+              <div
+                key={d.day}
+                className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500"
+              >
+                {d.day}
               </div>
-              {row.values.map((value, idx) => (
-                <div
-                  key={`${row.label}-${idx}`}
-                  className={cn("flex items-center justify-center rounded-lg border text-[11px] font-medium tabular-nums", weekCellClass(value))}
-                >
-                  {value === 0 ? "—" : formatPnl(value)}
+            ))}
+            <div className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500">Week Total</div>
+            {[
+              { label: "May 5 - 11", values: [186.4, -42.1, 248.75, 123.3, 205.6], total: 721.95 },
+              { label: "May 12 - 18", values: [-153.2, 97.6, 310.4, -68.5, 229.1], total: 415.4 },
+              { label: "May 19 - 25", values: [267.9, 134.4, -71.3, 142.2, 188.7], total: 661.9 },
+              { label: "May 26 - Jun 1", values: [89.3, -33.8, 0, 0, 0], total: 55.5 },
+            ].map((row) => (
+              <div key={row.label} className="contents">
+                <div className="flex items-center pl-2 text-[10px] text-zinc-500">
+                  {row.label}
                 </div>
-              ))}
-              <div className="flex items-center justify-center rounded-lg border border-emerald-400/32 bg-emerald-400/10 text-[11px] font-semibold tabular-nums text-emerald-200">
-                {formatPnl(row.total)}
+                {row.values.map((value, idx) => (
+                  <div
+                    key={`${row.label}-${idx}`}
+                    className={cn("flex items-center justify-center rounded-lg border text-[11px] font-medium tabular-nums", weekCellClass(value))}
+                  >
+                    {value === 0 ? "—" : formatPnl(value)}
+                  </div>
+                ))}
+                <div className="flex items-center justify-center rounded-lg border border-emerald-400/32 bg-emerald-400/10 text-[11px] font-semibold tabular-nums text-emerald-200">
+                  {formatPnl(row.total)}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
             <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Behavior today</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -261,9 +263,9 @@ function WeekPanel() {
         </div>
       </div>
 
-      <div className="mt-3 grid shrink-0 grid-cols-[1fr_auto_auto] items-center gap-3 border-t border-white/[0.06] pt-3.5">
+      <div className="mt-3 grid shrink-0 grid-cols-[1fr_auto] items-center gap-3 border-t border-white/[0.06] pt-3.5 sm:grid-cols-[1fr_auto_auto]">
         <p className="truncate text-[11px] text-zinc-400">Linked chart • Review ready</p>
-        <span className="rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300">Week</span>
+        <span className="hidden rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300 sm:inline-flex">Week</span>
         <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
           View notes
         </button>
@@ -363,13 +365,13 @@ export function HeroPremium() {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-10">
+      <div className="relative z-10 mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
         <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-12 xl:gap-14">
           <div className="text-center lg:text-left">
             <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[oklch(0.66_0.1_252)]">PREMIUM TRADING JOURNAL</p>
             <h1
               id="hero-heading"
-              className="font-display mt-5 text-[clamp(2rem,4.8vw,4.2rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-zinc-50 sm:mt-6"
+              className="mt-5 [font-family:var(--font-heading),Georgia,serif] text-[clamp(2rem,4.8vw,4.2rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-zinc-50 sm:mt-6"
             >
               Track the result.
               <br />
@@ -386,7 +388,7 @@ export function HeroPremium() {
               <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
               <PremiumGhostLink href="/app">Open workspace</PremiumGhostLink>
             </div>
-            <div className="mt-12 grid grid-cols-3 gap-4">
+            <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {SUPPORT_CARDS.map(({ icon: Icon, title, subtitle }) => (
                 <div key={title} className="text-left">
                   <div className="mb-2 inline-flex size-8 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03]">
@@ -399,7 +401,7 @@ export function HeroPremium() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[620px] [perspective:1800px] lg:mx-0 lg:max-w-none">
+          <div className="relative mx-auto w-full max-w-[760px] [perspective:1800px] lg:mx-0 lg:max-w-none">
             <motion.div
               className={cn(
                 "relative rounded-2xl p-[1px] sm:rounded-[1.8rem]",
@@ -486,7 +488,7 @@ export function HeroPremium() {
 
                   <div className="border-b border-white/[0.05] px-4 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
                     {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[28.25rem] sm:h-[31.25rem] lg:h-[32rem]">
+                    <div className="relative h-[26rem] sm:h-[31.25rem] lg:h-[32rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}

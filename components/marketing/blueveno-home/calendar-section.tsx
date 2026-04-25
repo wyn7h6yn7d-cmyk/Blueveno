@@ -64,7 +64,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-[1480px] px-4 sm:px-8 lg:px-10">
+      <div className="relative mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
         <div className="mb-10 flex flex-col gap-8 lg:mb-14 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
           <div className="max-w-2xl">
             <p className="font-mono text-[10px] uppercase tracking-[0.38em] text-[oklch(0.62_0.12_252)]">Signature</p>

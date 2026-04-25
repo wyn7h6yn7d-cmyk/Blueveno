@@ -13,7 +13,7 @@ export function JournalDaySection() {
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-[1220px] px-5 sm:px-8 lg:px-10">
+      <div className="relative mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-12">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.36em] text-[oklch(0.62_0.12_252)]">Record</p>

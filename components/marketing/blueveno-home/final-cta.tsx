@@ -12,7 +12,7 @@ export function FinalCta() {
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-[720px] px-5 text-center sm:px-8">
+      <div className="relative mx-auto max-w-[1320px] px-5 text-center sm:px-8 lg:px-10">
         <h2
           id="cta-heading"
           className="font-display text-[clamp(1.5rem,3.5vw,2.35rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-zinc-50"
