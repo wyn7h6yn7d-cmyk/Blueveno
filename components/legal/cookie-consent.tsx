@@ -18,26 +18,9 @@ const STORAGE_KEY = "blueveno.cookie.consent";
 const COOKIE_NAME = "blueveno_cookie_consent";
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
-function buildConsent(thirdParty: boolean, marketing: boolean): CookieConsent {
-  return {
-    necessary: true,
-    thirdParty,
-    marketing,
-    updatedAt: new Date().toISOString(),
-    version: CONSENT_VERSION,
-  };
-}
-
-function persistConsent(consent: CookieConsent) {
-  const json = JSON.stringify(consent);
-  localStorage.setItem(STORAGE_KEY, json);
-  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(json)}; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
-}
-
-function readConsent(): CookieConsent | null {
+function parseConsent(raw: string | null): CookieConsent | null {
+  if (!raw) return null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<CookieConsent>;
     if (parsed.version !== CONSENT_VERSION || typeof parsed.thirdParty !== "boolean" || typeof parsed.marketing !== "boolean") {
       return null;
@@ -52,6 +35,53 @@ function readConsent(): CookieConsent | null {
   } catch {
     return null;
   }
+}
+
+function readConsentFromCookie(): CookieConsent | null {
+  try {
+    const all = document.cookie ? document.cookie.split("; ") : [];
+    const match = all.find((part) => part.startsWith(`${COOKIE_NAME}=`));
+    if (!match) return null;
+    const encoded = match.slice(COOKIE_NAME.length + 1);
+    return parseConsent(decodeURIComponent(encoded));
+  } catch {
+    return null;
+  }
+}
+
+function buildConsent(thirdParty: boolean, marketing: boolean): CookieConsent {
+  return {
+    necessary: true,
+    thirdParty,
+    marketing,
+    updatedAt: new Date().toISOString(),
+    version: CONSENT_VERSION,
+  };
+}
+
+function persistConsent(consent: CookieConsent) {
+  const json = JSON.stringify(consent);
+  try {
+    localStorage.setItem(STORAGE_KEY, json);
+  } catch {
+    // Ignore storage write errors (private mode / strict browser policies).
+  }
+  try {
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(json)}; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}; samesite=lax`;
+  } catch {
+    // Ignore cookie write errors; local state still prevents immediate re-open.
+  }
+}
+
+function readConsent(): CookieConsent | null {
+  let fromStorage: CookieConsent | null = null;
+  try {
+    fromStorage = parseConsent(localStorage.getItem(STORAGE_KEY));
+  } catch {
+    fromStorage = null;
+  }
+  if (fromStorage) return fromStorage;
+  return readConsentFromCookie();
 }
 
 function ToggleRow({
