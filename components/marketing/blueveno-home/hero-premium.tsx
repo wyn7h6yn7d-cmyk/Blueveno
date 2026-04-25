@@ -176,11 +176,11 @@ function ChartPanel() {
 
 function WeekPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.095_0.045_262/0.96),oklch(0.052_0.03_268/0.99))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-6">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.095_0.045_262/0.96),oklch(0.052_0.03_268/0.99))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-5">
       <div className="shrink-0 grid grid-cols-1 gap-2.5 border-b border-white/[0.06] pb-4 sm:grid-cols-2">
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Week summary</p>
-          <p className="mt-1.5 font-display text-[1.9rem] font-semibold tracking-[-0.05em] text-emerald-300">{formatPnl(1247.63)}</p>
+          <p className="mt-1.5 font-display text-[1.75rem] font-semibold tracking-[-0.05em] text-emerald-300 sm:text-[1.9rem]">{formatPnl(1247.63)}</p>
         </div>
         <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Discipline score</p>
@@ -196,9 +196,9 @@ function WeekPanel() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 pt-4">
+      <div className="min-h-0 flex-1 pt-3">
         <div className="overflow-x-auto pb-1">
-          <div className="grid h-[11.8rem] min-w-[34rem] grid-cols-[6.2rem_repeat(5,minmax(0,1fr))_5.7rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
+          <div className="grid h-[10.9rem] min-w-[33rem] grid-cols-[5.7rem_repeat(5,minmax(0,1fr))_5.5rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
             <div className="px-2" />
             {WEEK_DAYS.map((d) => (
               <div
@@ -222,12 +222,15 @@ function WeekPanel() {
                 {row.values.map((value, idx) => (
                   <div
                     key={`${row.label}-${idx}`}
-                    className={cn("flex items-center justify-center rounded-lg border text-[11px] font-medium tabular-nums", weekCellClass(value))}
+                    className={cn(
+                      "flex items-center justify-center rounded-lg border px-1 text-[10px] font-medium tabular-nums sm:text-[11px]",
+                      weekCellClass(value),
+                    )}
                   >
                     {value === 0 ? "—" : formatPnl(value)}
                   </div>
                 ))}
-                <div className="flex items-center justify-center rounded-lg border border-emerald-400/32 bg-emerald-400/10 text-[11px] font-semibold tabular-nums text-emerald-200">
+                <div className="flex items-center justify-center rounded-lg border border-emerald-400/32 bg-emerald-400/10 px-1 text-[10px] font-semibold tabular-nums text-emerald-200 sm:text-[11px]">
                   {formatPnl(row.total)}
                 </div>
               </div>
@@ -235,20 +238,20 @@ function WeekPanel() {
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+        <div className="mt-2.5 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-[1fr_1fr_0.78fr]">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Behavior today</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {["Calm", "Focused", "Hesitant", "Tired"].map((chip) => (
-                <span key={chip} className="rounded-full border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[10px] text-zinc-300">
+                <span key={chip} className="rounded-full border border-white/[0.12] bg-white/[0.04] px-2 py-0.5 text-[10px] text-zinc-300">
                   {chip}
                 </span>
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Discipline checks</p>
-            <div className="mt-2 space-y-1.5">
+            <div className="mt-2 space-y-1">
               {["Followed plan", "Respected stop", "No revenge trade"].map((item) => (
                 <div key={item} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
                   <CheckCircle2 className="size-3.5 text-blue-300" />
@@ -257,13 +260,13 @@ function WeekPanel() {
               ))}
             </div>
           </div>
-          <div className="flex min-w-[6.6rem] items-center justify-center rounded-xl border border-white/[0.08] bg-[radial-gradient(circle_at_55%_40%,oklch(0.48_0.12_252/0.34),transparent_62%)] p-2 text-center">
+          <div className="flex min-h-[5.5rem] items-center justify-center rounded-xl border border-white/[0.08] bg-[radial-gradient(circle_at_55%_40%,oklch(0.48_0.12_252/0.34),transparent_62%)] p-2 text-center">
             <p className="text-[11px] leading-tight text-zinc-300">Consistency compounds.</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-3 grid shrink-0 grid-cols-[1fr_auto] items-center gap-3 border-t border-white/[0.06] pt-3.5 sm:grid-cols-[1fr_auto_auto]">
+      <div className="mt-2.5 grid shrink-0 grid-cols-[1fr_auto] items-center gap-3 border-t border-white/[0.06] pt-3 sm:grid-cols-[1fr_auto_auto]">
         <p className="truncate text-[11px] text-zinc-400">Linked chart • Review ready</p>
         <span className="hidden rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300 sm:inline-flex">Week</span>
         <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
@@ -492,7 +495,7 @@ export function HeroPremium() {
 
                   <div className="border-b border-white/[0.05] px-4 py-5 sm:px-7 sm:py-6 lg:px-8 lg:py-6">
                     {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[27rem] sm:h-[29rem] lg:h-[30rem]">
+                    <div className="relative h-[26rem] sm:h-[28rem] lg:h-[29.5rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}
