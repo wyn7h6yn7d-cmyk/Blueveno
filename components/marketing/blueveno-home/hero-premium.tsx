@@ -269,9 +269,8 @@ function WeekPanel() {
         </div>
       </div>
 
-      <div className="mt-2 grid shrink-0 grid-cols-1 items-center gap-2 border-t border-white/[0.06] pt-2.5 sm:grid-cols-[1fr_auto_auto] sm:gap-3">
-        <p className="truncate text-[11px] text-zinc-400">Linked chart • Review ready</p>
-        <div className="flex items-center gap-2 sm:justify-self-end sm:col-span-2">
+      <div className="mt-2 grid shrink-0 grid-cols-1 items-center gap-2 border-t border-white/[0.06] pt-2.5 sm:flex sm:justify-end sm:gap-2">
+        <div className="flex items-center gap-2 sm:justify-self-end">
           <span className="rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300">Week</span>
           <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
             View notes
