@@ -130,13 +130,28 @@ function ToggleRow({
 }
 
 export function CookieConsentModal() {
-  const initialConsent = typeof window === "undefined" ? null : readConsent();
-  const [open, setOpen] = useState(() => initialConsent === null);
+  const [isReady, setIsReady] = useState(false);
+  const [open, setOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [thirdParty, setThirdParty] = useState(() => initialConsent?.thirdParty ?? false);
-  const [marketing, setMarketing] = useState(() => initialConsent?.marketing ?? false);
+  const [thirdParty, setThirdParty] = useState(false);
+  const [marketing, setMarketing] = useState(false);
 
   const hasOptionalEnabled = useMemo(() => thirdParty || marketing, [thirdParty, marketing]);
+
+  useEffect(() => {
+    const raf = window.requestAnimationFrame(() => {
+      const existing = readConsent();
+      if (existing) {
+        setThirdParty(existing.thirdParty);
+        setMarketing(existing.marketing);
+        setOpen(false);
+      } else {
+        setOpen(true);
+      }
+      setIsReady(true);
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, []);
 
   useEffect(() => {
     function onOpenSettings() {
@@ -165,7 +180,7 @@ export function CookieConsentModal() {
     setOpen(false);
   }
 
-  if (!open) return null;
+  if (!isReady || !open) return null;
 
   return (
     <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/55 p-3 sm:p-6">
