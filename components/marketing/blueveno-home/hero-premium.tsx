@@ -6,7 +6,6 @@ import { AnimatePresence, LayoutGroup, motion, useReducedMotion, useSpring } fro
 import { ExternalLink } from "lucide-react";
 import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
 import { cn } from "@/lib/utils";
-import { BluevenoLogoMark } from "@/components/brand/blueveno-logo-mark";
 
 type ViewMode = "day" | "chart" | "week";
 
@@ -23,8 +22,6 @@ const WEEK_DAYS = [
   { day: "Thu", pnl: 90 },
   { day: "Fri", pnl: -20 },
 ] as const;
-
-const WEEK_TOTAL = WEEK_DAYS.reduce((acc, row) => acc + row.pnl, 0);
 
 function formatPnl(value: number) {
   const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
@@ -173,61 +170,99 @@ function ChartPanel() {
 }
 
 function WeekPanel() {
-  const greenCount = WEEK_DAYS.filter((d) => d.pnl > 0).length;
-  const redCount = WEEK_DAYS.filter((d) => d.pnl < 0).length;
-
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.095_0.045_262/0.96),oklch(0.052_0.03_268/0.99))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-6">
-      <div className="shrink-0 flex flex-wrap items-end justify-between gap-3 border-b border-white/[0.06] pb-5">
-        <p className="font-display text-[clamp(1.2rem,3vw,1.65rem)] font-semibold tracking-[-0.035em] text-zinc-50">
-          This week
-        </p>
-        <div className="text-right">
-          <p className="font-display text-[clamp(1.5rem,4vw,2.1rem)] font-semibold tabular-nums tracking-[-0.045em] text-emerald-300 [text-shadow:0_0_40px_oklch(0.55_0.14_155/0.3)]">
-            {formatPnl(WEEK_TOTAL)}
-          </p>
+      <div className="shrink-0 grid grid-cols-2 gap-2.5 border-b border-white/[0.06] pb-4">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Week summary</p>
+          <p className="mt-1.5 font-display text-[1.9rem] font-semibold tracking-[-0.05em] text-emerald-300">{formatPnl(1247.63)}</p>
+        </div>
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Discipline score</p>
+          <div className="mt-1.5 flex items-center gap-2.5">
+            <span className="inline-flex size-8 items-center justify-center rounded-full border border-emerald-400/45 text-sm font-semibold text-emerald-300">
+              87
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-200">Great week</p>
+              <p className="text-xs text-zinc-400">Keep building.</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 pt-5 pb-8">
-        <div className="mb-4 flex items-center justify-between rounded-2xl border border-[oklch(0.55_0.12_252/0.35)] bg-[linear-gradient(160deg,oklch(0.22_0.08_262/0.82),oklch(0.1_0.05_268/0.9))] px-4 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_42px_-28px_oklch(0.35_0.12_252/0.35)]">
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-400">Signature</p>
-            <p className="mt-1 font-display text-[1rem] font-semibold tracking-[-0.03em] text-zinc-100">Week quality</p>
-          </div>
-          <div className="relative flex h-10 min-w-[5.5rem] items-center justify-center rounded-xl border border-[oklch(0.62_0.13_252/0.42)] bg-[oklch(0.12_0.05_266/0.7)]">
-            <span className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_50%_40%,oklch(0.55_0.14_252/0.2),transparent_72%)]" />
-            <span className="relative font-display text-[1.1rem] font-semibold tracking-[-0.04em] text-[oklch(0.86_0.08_252)]">87%</span>
-          </div>
-        </div>
-        <div className="grid h-full min-h-0 min-w-0 grid-cols-5 grid-rows-[auto_minmax(0,1fr)] gap-x-2 gap-y-2">
+      <div className="min-h-0 flex-1 pt-4">
+        <div className="grid h-[11.8rem] min-h-0 min-w-0 grid-cols-[6.2rem_repeat(5,minmax(0,1fr))_5.7rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
+          <div className="px-2" />
           {WEEK_DAYS.map((d) => (
             <div
               key={d.day}
-              className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px]"
+              className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500"
             >
               {d.day}
             </div>
           ))}
-          {WEEK_DAYS.map((v) => (
-            <div
-              key={v.day}
-              className={cn(
-                "flex min-h-0 min-w-0 flex-col items-center justify-center rounded-xl border px-0.5 py-3",
-                weekCellClass(v.pnl),
-              )}
-            >
-              <span className="w-full min-w-0 px-0.5 text-center font-mono text-xs font-semibold tabular-nums leading-tight">
-                {formatPnl(v.pnl)}
-              </span>
+          <div className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500">Week Total</div>
+          {[
+            { label: "May 5 - 11", values: [186.4, -42.1, 248.75, 123.3, 205.6], total: 721.95 },
+            { label: "May 12 - 18", values: [-153.2, 97.6, 310.4, -68.5, 229.1], total: 415.4 },
+            { label: "May 19 - 25", values: [267.9, 134.4, -71.3, 142.2, 188.7], total: 661.9 },
+            { label: "May 26 - Jun 1", values: [89.3, -33.8, 0, 0, 0], total: 55.5 },
+          ].map((row) => (
+            <div key={row.label} className="contents">
+              <div className="flex items-center pl-2 text-[10px] text-zinc-500">
+                {row.label}
+              </div>
+              {row.values.map((value, idx) => (
+                <div
+                  key={`${row.label}-${idx}`}
+                  className={cn("flex items-center justify-center rounded-lg border text-[11px] font-medium tabular-nums", weekCellClass(value))}
+                >
+                  {value === 0 ? "—" : formatPnl(value)}
+                </div>
+              ))}
+              <div className="flex items-center justify-center rounded-lg border border-emerald-400/32 bg-emerald-400/10 text-[11px] font-semibold tabular-nums text-emerald-200">
+                {formatPnl(row.total)}
+              </div>
             </div>
           ))}
         </div>
+
+        <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Behavior today</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {["Calm", "Focused", "Hesitant", "Tired"].map((chip) => (
+                <span key={chip} className="rounded-full border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[10px] text-zinc-300">
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Discipline checks</p>
+            <div className="mt-2 space-y-1.5">
+              {["Followed plan", "Respected stop", "No revenge trade"].map((item) => (
+                <div key={item} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
+                  <span className="size-1.5 rounded-full bg-blue-300" />
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex min-w-[6.6rem] items-center justify-center rounded-xl border border-white/[0.08] bg-[radial-gradient(circle_at_55%_40%,oklch(0.48_0.12_252/0.34),transparent_62%)] p-2 text-center">
+            <p className="text-[11px] leading-tight text-zinc-300">Consistency compounds.</p>
+          </div>
+        </div>
       </div>
 
-      <p className="shrink-0 border-t border-white/[0.06] pt-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-zinc-300 sm:text-[12px]">
-        {greenCount} green days · {redCount} red days · Rhythm at a glance
-      </p>
+      <div className="mt-3 grid shrink-0 grid-cols-[1fr_auto_auto] items-center gap-3 border-t border-white/[0.06] pt-3.5">
+        <p className="truncate text-[11px] text-zinc-400">Linked chart • Review ready</p>
+        <span className="rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300">Week</span>
+        <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
+          View notes
+        </button>
+      </div>
     </div>
   );
 }
@@ -311,7 +346,7 @@ export function HeroPremium() {
   return (
     <section
       id="hero"
-      className="relative overflow-hidden border-b border-white/[0.08] pb-16 pt-16 sm:pb-20 sm:pt-20 lg:pb-24 lg:pt-24"
+      className="relative overflow-hidden border-b border-white/[0.08] pb-16 pt-20 sm:pb-20 sm:pt-24 lg:pb-24 lg:pt-28"
       aria-labelledby="hero-heading"
     >
       <div
@@ -322,10 +357,7 @@ export function HeroPremium() {
       <div className="relative z-10 mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-10">
         <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-12 xl:gap-14">
           <div className="text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.03] px-3 py-1.5">
-              <BluevenoLogoMark className="size-4" />
-              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.68_0.1_252)]">TRADING JOURNAL</p>
-            </div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[oklch(0.66_0.1_252)]">PREMIUM TRADING JOURNAL</p>
             <h1
               id="hero-heading"
               className="font-display mt-5 text-[clamp(2rem,4.8vw,4.2rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-zinc-50 sm:mt-6"
@@ -336,19 +368,26 @@ export function HeroPremium() {
                 Review the behavior.
               </span>
             </h1>
-            <p className="mx-auto mt-6 max-w-[33rem] text-[15px] leading-[1.6] tracking-[-0.015em] text-zinc-300 sm:text-[17px] lg:mx-0">
-              Log the day, save the chart, and see how you actually traded — calm, focused, hesitant, or tilted.
+            <p className="mx-auto mt-6 max-w-[25rem] text-[16px] leading-[1.6] tracking-[-0.015em] text-zinc-300 lg:mx-0">
+              Log the day. Save the chart.
+              <br />
+              See the week in one clear place.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
               <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
-              <PremiumGhostLink href="/app">See the workspace</PremiumGhostLink>
+              <PremiumGhostLink href="/app">Open workspace</PremiumGhostLink>
             </div>
-            <p className="mt-4 text-xs uppercase tracking-[0.12em] text-zinc-500 lg:pl-1">7-day free trial. Then premium.</p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
-              {["Mood states", "Discipline checks", "Weekly rhythm"].map((signal) => (
-                <span key={signal} className="rounded-full border border-white/[0.12] bg-white/[0.02] px-3 py-1.5 text-xs text-zinc-400">
-                  {signal}
-                </span>
+            <div className="mt-12 grid grid-cols-3 gap-4">
+              {[
+                ["Trade. Journal. Improve.", "All in one calm workspace."],
+                ["Private by design.", "Your data stays yours."],
+                ["Built for consistency.", "Better habits, better results."],
+              ].map(([title, subtitle]) => (
+                <div key={title} className="text-left">
+                  <div className="mb-2 size-8 rounded-lg border border-white/[0.1] bg-white/[0.03]" />
+                  <p className="text-xs font-medium text-zinc-300">{title}</p>
+                  <p className="mt-1 text-[11px] text-zinc-500">{subtitle}</p>
+                </div>
               ))}
             </div>
           </div>

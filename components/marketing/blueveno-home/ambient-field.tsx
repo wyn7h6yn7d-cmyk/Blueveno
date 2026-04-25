@@ -154,13 +154,13 @@ export function AmbientField() {
     >
       {/* Base */}
       <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.048_0.048_268)_0%,oklch(0.03_0.05_274)_46%,oklch(0.022_0.054_278)_100%)]" />
-      <div className="absolute inset-0 bg-grid-fine opacity-[0.16]" />
+      <div className="absolute inset-0 bg-grid-fine opacity-[0.2]" />
 
       {/* Chart layers — back → front; different speeds + one reverse for parallax */}
-      <div className="absolute inset-0 opacity-[0.42] sm:opacity-[0.46]">
-        <ChartTrack layerIndex={2} durationSec={188} opacity={0.54} />
-        <ChartTrack layerIndex={1} durationSec={138} reverse opacity={0.74} />
-        <ChartTrack layerIndex={0} durationSec={108} opacity={0.96} />
+      <div className="absolute inset-0 opacity-[0.46] sm:opacity-[0.52]">
+        <ChartTrack layerIndex={2} durationSec={196} opacity={0.6} />
+        <ChartTrack layerIndex={1} durationSec={146} reverse opacity={0.78} />
+        <ChartTrack layerIndex={0} durationSec={112} opacity={1} />
       </div>
 
       {/* Restrained edge vignette + slight top wash so hero copy stays crisp */}
