@@ -32,7 +32,7 @@ export default async function ReviewsPage() {
         <EmptyState
           icon={Camera}
           title="Save days with chart links"
-          description="Journal days that include a TradingView URL and notes will surface here in a future iteration."
+          description="Journal days that include a saved chart URL and notes will surface here in a future iteration."
           action={
             <Link href="/app/journal#add" className={outlineAction}>
               Open journal

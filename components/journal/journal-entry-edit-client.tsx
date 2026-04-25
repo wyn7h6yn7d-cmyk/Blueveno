@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { isValidTradingViewUrl, normalizeTradingViewUrlInput, tradingViewUrlForSave } from "@/lib/tradingview";
+import { chartUrlForSave, isValidChartUrl, normalizeChartUrlInput } from "@/lib/tradingview";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
@@ -41,7 +41,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
   const [symbol, setSymbol] = useState(initialRow.sym);
   const [pnl, setPnl] = useState(initialRow.r);
   const [note, setNote] = useState(initialRow.note ?? "");
-  const [tradingViewUrl, setTradingViewUrl] = useState(initialRow.tradingViewUrl ?? "");
+  const [chartUrl, setChartUrl] = useState(initialRow.tradingViewUrl ?? "");
   const [moodState, setMoodState] = useState<(typeof MOOD_OPTIONS)[number]>(initialRow.moodState ?? "Focused");
   const [followedPlan, setFollowedPlan] = useState(Boolean(initialRow.followedPlan));
   const [respectedStop, setRespectedStop] = useState(Boolean(initialRow.respectedStop));
@@ -60,10 +60,8 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       setSaveError("Use comma for decimals (e.g. 100,80). Dot is not allowed.");
       return;
     }
-    if (!isValidTradingViewUrl(tradingViewUrl)) {
-      setUrlError(
-        "Use a valid TradingView chart URL (e.g. https://www.tradingview.com/chart/…), or leave the field empty.",
-      );
+    if (!isValidChartUrl(chartUrl)) {
+      setUrlError("Use a valid chart URL (e.g. https://linked-chart.com/session/...), or leave the field empty.");
       return;
     }
     setUrlError(null);
@@ -77,7 +75,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       r: pnl.trim(),
       tag: preserved.current.tag,
       note: note.trim() || undefined,
-      tradingViewUrl: tradingViewUrlForSave(tradingViewUrl),
+      tradingViewUrl: chartUrlForSave(chartUrl),
       moodState,
       followedPlan,
       respectedStop,
@@ -134,7 +132,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-200/80">Read-only</p>
               <p className="mt-1 text-[14px] leading-relaxed text-zinc-200">
-                Upgrade to Premium to edit entries, add a TradingView link, or change P&amp;L.
+                Upgrade to Premium to edit entries, add a linked chart, or change P&amp;L.
               </p>
             </div>
           </div>
@@ -152,7 +150,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
         title={initialRow.sym}
         description={
           canWriteJournal
-            ? `Adjust P&L in ${displayCurrency} (set in Settings). TradingView link is optional.`
+            ? `Adjust P&L in ${displayCurrency} (set in Settings). Linked chart is optional.`
             : "Fields are locked until you upgrade — your saved values stay visible below."
         }
       >
@@ -275,21 +273,21 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <div className="space-y-2">
               <Label htmlFor="je-tv" className={cn(labelCls, "text-zinc-300")}>
-                TradingView chart
+                Linked chart
                 <span className="ml-2 font-normal text-zinc-600">Optional</span>
               </Label>
               <Input
                 id="je-tv"
                 type="url"
-                value={tradingViewUrl}
-                onChange={(e) => setTradingViewUrl(e.target.value)}
+                value={chartUrl}
+                onChange={(e) => setChartUrl(e.target.value)}
                 onBlur={(e) => {
                   const v = e.target.value.trim();
                   if (!v) return;
-                  const n = normalizeTradingViewUrlInput(v);
-                  if (n !== v) setTradingViewUrl(n);
+                  const n = normalizeChartUrlInput(v);
+                  if (n !== v) setChartUrl(n);
                 }}
-                placeholder="https://www.tradingview.com/chart/…"
+                placeholder="https://linked-chart.com/session/..."
                 disabled={!canWriteJournal}
                 className={cn(inputCls, "disabled:opacity-45")}
               />

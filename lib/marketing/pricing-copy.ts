@@ -56,7 +56,7 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
     expiredNote: "Read-only",
   },
   {
-    feature: "Notes & TradingView link per day",
+    feature: "Notes & linked chart per day",
     trial: "yes",
     premium: "yes",
     expired: "no",

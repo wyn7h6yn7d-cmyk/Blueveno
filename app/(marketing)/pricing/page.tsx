@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 const premiumFeatures = [
   "Unlimited new trading days & edits",
-  "Notes and a saved TradingView chart link per day",
+  "Notes and a saved chart link per day",
   "Daily P&L and calendar with weekly totals",
   "Stats and overview for your history",
 ];

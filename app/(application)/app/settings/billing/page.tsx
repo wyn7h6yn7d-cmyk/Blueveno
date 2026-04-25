@@ -13,7 +13,7 @@ import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 const PREMIUM_LABEL = "Blueveno Premium";
 
 const PREMIUM_INCLUDES = [
-  "Journal — day P&L, notes, optional TradingView link",
+  "Journal — day P&L, notes, optional linked chart",
   "Calendar with colour-coded days and week totals",
   "Stats & overview for your trading history",
 ] as const;

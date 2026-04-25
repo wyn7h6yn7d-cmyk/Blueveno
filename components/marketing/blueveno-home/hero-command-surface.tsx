@@ -78,7 +78,7 @@ export function HeroCommandSurface() {
             Clarity at the close.
           </h1>
           <p className="mx-auto mt-5 max-w-[40ch] text-[15px] leading-relaxed tracking-[-0.02em] text-zinc-500">
-            One disciplined surface for the day, your chart, and the numbers—calm review, no noise.
+            One disciplined surface for the day, saved chart, and the numbers - calm review, no noise.
           </p>
         </div>
 
@@ -276,10 +276,10 @@ export function HeroCommandSurface() {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-6">
                       <p className="min-w-0 flex-1 truncate font-mono text-[12px] text-[oklch(0.78_0.09_250)] sm:text-[13px]">
-                        tradingview.com/chart/…
+                        linked-chart.com/session/…
                       </p>
                       <a
-                        href="https://www.tradingview.com"
+                        href="/signup"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[oklch(0.52_0.14_252/0.45)] bg-[oklch(0.52_0.12_252/0.15)] px-4 py-2 text-[12px] font-semibold text-zinc-100 transition hover:border-[oklch(0.58_0.14_252/0.55)] hover:bg-[oklch(0.52_0.12_252/0.22)]"

@@ -13,7 +13,7 @@ import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 import { EmptyState } from "@/components/app/empty-state";
 import { JournalDayList } from "@/components/journal/journal-day-list";
-import { isValidTradingViewUrl, tradingViewUrlForSave } from "@/lib/tradingview";
+import { chartUrlForSave, isValidChartUrl } from "@/lib/tradingview";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
@@ -76,7 +76,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");
   const [note, setNote] = useState("");
-  const [tradingViewUrl, setTradingViewUrl] = useState("");
+  const [chartUrl, setChartUrl] = useState("");
   const [moodState, setMoodState] = useState<(typeof MOOD_OPTIONS)[number]>("Focused");
   const [followedPlan, setFollowedPlan] = useState(false);
   const [respectedStop, setRespectedStop] = useState(false);
@@ -184,10 +184,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       setSaveError("Use comma for decimals (e.g. 100,80). Dot is not allowed.");
       return;
     }
-    if (!isValidTradingViewUrl(tradingViewUrl)) {
-      setUrlError(
-        "Use a valid TradingView chart URL (e.g. https://www.tradingview.com/chart/…), or leave the field empty.",
-      );
+    if (!isValidChartUrl(chartUrl)) {
+      setUrlError("Use a valid chart URL (e.g. https://linked-chart.com/session/...), or leave the field empty.");
       return;
     }
     setUrlError(null);
@@ -201,7 +199,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       r: pnl.trim(),
       tag: "Journal",
       note: note.trim() || undefined,
-      tradingViewUrl: tradingViewUrlForSave(tradingViewUrl),
+      tradingViewUrl: chartUrlForSave(chartUrl),
       moodState,
       followedPlan,
       respectedStop,
@@ -215,7 +213,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     setSymbol("");
     setPnl("");
     setNote("");
-    setTradingViewUrl("");
+    setChartUrl("");
     setMoodState("Focused");
     setFollowedPlan(false);
     setRespectedStop(false);
@@ -343,7 +341,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           className="min-h-0 min-w-0"
           description={
             canWriteJournal
-              ? "P&amp;L uses your display currency from Settings. TradingView is optional — paste when you want the chart next to the number. The calendar page picks up the same entries."
+              ? "P&amp;L uses your display currency from Settings. Linked chart is optional - paste when you want the chart next to the number. The calendar page picks up the same entries."
               : "Read-only: your history stays here. Upgrade to log new days."
           }
         >
@@ -473,15 +471,15 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 </span>
                 <div className="min-w-0 flex-1 space-y-2.5">
                   <Label htmlFor="jw-tv" className={cn(labelCls, "text-zinc-200")}>
-                    TradingView link
+                    Linked chart
                     <span className="ml-2 font-normal text-zinc-600">Optional</span>
                   </Label>
                   <Input
                     id="jw-tv"
                     type="url"
-                    value={tradingViewUrl}
-                    onChange={(e) => setTradingViewUrl(e.target.value)}
-                    placeholder="https://www.tradingview.com/chart/…"
+                    value={chartUrl}
+                    onChange={(e) => setChartUrl(e.target.value)}
+                    placeholder="https://linked-chart.com/session/..."
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "disabled:opacity-45")}
                   />

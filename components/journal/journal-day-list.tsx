@@ -171,7 +171,7 @@ function JournalDayCard({
                   prefetch
                   title={
                     canWriteJournal
-                      ? "Edit entry — add notes or a TradingView link"
+                      ? "Edit entry — add notes or a linked chart"
                       : "Read-only — upgrade to edit entries"
                   }
                   className="inline-flex items-center gap-1 font-mono text-[11px] text-[oklch(0.78_0.1_250)] underline-offset-4 transition hover:text-[oklch(0.85_0.08_250)] hover:underline"

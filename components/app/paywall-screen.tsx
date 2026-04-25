@@ -48,7 +48,7 @@ export function PaywallScreen() {
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
-                TradingView link per day
+                Linked chart per day
               </li>
             </ul>
           </div>

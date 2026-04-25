@@ -269,7 +269,12 @@ function WeekPanel() {
         </div>
       </div>
 
-      <div className="mt-2 grid shrink-0 grid-cols-1 items-center gap-2 border-t border-white/[0.06] pt-2.5 sm:flex sm:justify-end sm:gap-2">
+      <div className="mt-2 grid shrink-0 grid-cols-1 items-center gap-2 border-t border-white/[0.06] pt-2.5 sm:grid-cols-[1fr_auto_auto] sm:gap-3">
+        <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+          <span className="rounded-md border border-white/[0.1] bg-white/[0.03] px-1.5 py-1 text-[10px] text-zinc-300">Linked chart</span>
+          <span className="size-1 rounded-full bg-emerald-400" />
+          <span>Review ready</span>
+        </div>
         <div className="flex items-center gap-2 sm:justify-self-end">
           <span className="rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300">Week</span>
           <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
@@ -378,29 +383,29 @@ export function HeroPremium() {
       />
 
       <div className="relative z-10 mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
-        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center lg:gap-7 xl:gap-9">
-          <div className="text-center lg:text-left">
+        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:gap-7 xl:gap-9">
+          <div className="text-left">
             <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[oklch(0.66_0.1_252)]">PREMIUM TRADING JOURNAL</p>
             <h1
               id="hero-heading"
-              className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(1.9rem,4.2vw,3.7rem)] font-semibold leading-[1.01] tracking-[-0.052em] text-zinc-50 sm:mt-5"
+              className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(2.2rem,5vw,4.25rem)] font-semibold leading-[0.97] tracking-[-0.056em] text-zinc-50 sm:mt-5"
             >
               Track the result.
               <br />
-              <span className="bg-gradient-to-r from-zinc-100 via-[oklch(0.9_0.04_250)] to-[oklch(0.65_0.12_252)] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-zinc-100 via-[oklch(0.9_0.05_250)] to-[oklch(0.62_0.15_252)] bg-clip-text text-transparent">
                 Review the behavior.
               </span>
             </h1>
-            <p className="mx-auto mt-5 max-w-[25rem] text-[15px] leading-[1.52] tracking-[-0.014em] text-zinc-300 lg:mx-0">
+            <p className="mt-5 max-w-[26rem] text-[16px] leading-[1.52] tracking-[-0.016em] text-zinc-300">
               Log the day. Save the chart.
               <br />
               See the week in one clear place.
             </p>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
+            <div className="mt-7 flex flex-wrap items-center gap-3 sm:gap-4">
               <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
               <PremiumGhostLink href="/app">Open workspace</PremiumGhostLink>
             </div>
-            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:mt-9">
+            <div className="mt-8 grid grid-cols-3 gap-3 lg:mt-9">
               {SUPPORT_CARDS.map(({ icon: Icon, title, subtitle }) => (
                 <div key={title} className="text-left">
                   <div className="mb-2 inline-flex size-8 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03]">
@@ -413,7 +418,7 @@ export function HeroPremium() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[760px] [perspective:1800px] lg:mx-0 lg:max-w-none">
+          <div className="relative mx-auto w-full max-w-[860px] [perspective:1800px] lg:mx-0 lg:max-w-none">
             <div
               aria-hidden
               className="pointer-events-none absolute -inset-x-9 -inset-y-7 rounded-[2.35rem] bg-[conic-gradient(from_120deg_at_62%_24%,transparent_0deg,oklch(0.66_0.16_248/0.28)_62deg,transparent_122deg,oklch(0.62_0.14_252/0.22)_210deg,transparent_300deg)] blur-[30px]"
@@ -504,7 +509,7 @@ export function HeroPremium() {
 
                   <div className="border-b border-white/[0.05] px-4 py-4 sm:px-7 sm:py-5 lg:px-8 lg:py-5">
                     {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[25rem] sm:h-[26rem] lg:h-[27rem]">
+                    <div className="relative h-[25.6rem] sm:h-[27rem] lg:h-[28rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}

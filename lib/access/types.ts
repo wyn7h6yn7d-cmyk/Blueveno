@@ -20,7 +20,7 @@ export type AccessContext = {
   state: AccessState;
   /** Journal insert/update/delete — enforced in Postgres via RLS + mirrored in UI */
   canWriteJournal: boolean;
-  /** Read-only trial: can still use the app, view data, open TradingView links */
+  /** Read-only trial: can still use the app, view data, open saved chart links */
   isReadOnlyTrial: boolean;
   isAdmin: boolean;
   trialEndsAt: string | null;

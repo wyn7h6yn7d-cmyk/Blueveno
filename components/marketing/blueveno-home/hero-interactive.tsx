@@ -207,7 +207,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                           <span className="text-emerald-500/90" aria-hidden>
                             ●
                           </span>
-                          <span className="truncate text-[oklch(0.78_0.09_250)]">tradingview.com/chart/xK9… · NQ1!</span>
+                          <span className="truncate text-[oklch(0.78_0.09_250)]">linked-chart.com/session/xK9… · NQ1!</span>
                         </div>
                         <span className="shrink-0 rounded border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-emerald-300/90">
                           Linked
@@ -222,7 +222,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                       </div>
                       <div className="flex flex-col gap-3 border-t border-white/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4">
                         <a
-                          href="https://www.tradingview.com"
+                          href="/signup"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="group inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-full border border-[oklch(0.52_0.14_252/0.5)] bg-[oklch(0.52_0.12_252/0.22)] px-6 text-[13px] font-semibold text-zinc-50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)] transition hover:border-[oklch(0.6_0.14_252/0.6)] hover:bg-[oklch(0.52_0.12_252/0.32)] active:scale-[0.99] motion-reduce:active:scale-100 sm:w-auto"
@@ -415,7 +415,7 @@ export function HeroSection() {
             variants={fadeUp}
             className="font-mono text-[10px] uppercase tracking-[0.42em] text-[oklch(0.58_0.11_252)]"
           >
-            Trading journal
+            Premium trading journal
           </motion.p>
           <motion.h1
             id="hero-heading"

@@ -134,7 +134,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
         </div>
 
         <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">TradingView</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Linked chart</p>
           {chartUrl ? (
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <p className="max-w-full break-all text-sm text-zinc-400">{chartUrl}</p>
