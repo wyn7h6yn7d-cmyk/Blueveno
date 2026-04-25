@@ -5,19 +5,19 @@ import { cn } from "@/lib/utils";
  * (low contrast, readable content on top; motion respects prefers-reduced-motion).
  */
 
-const VB = { w: 1400, h: 300 } as const;
+const VB = { w: 1560, h: 340 } as const;
 
 function sampleY(i: number, n: number, layer: number): number {
   const t = (i / n) * Math.PI * 2;
-  const mid = VB.h * (0.5 + layer * 0.028);
-  const amp = VB.h * (0.09 - layer * 0.012);
+  const mid = VB.h * (0.52 + layer * 0.028);
+  const amp = VB.h * (0.11 - layer * 0.016);
   return (
     mid +
     amp *
-      (0.42 * Math.sin(t * 2.18 + layer * 0.62) +
-        0.22 * Math.sin(t * 4.9 + layer * 1.04) +
-        0.16 * Math.sin(t * 8.2 + layer * 0.44) +
-        0.06 * Math.sin(t * 15.2 + layer * 1.38))
+      (0.46 * Math.sin(t * 2.26 + layer * 0.62) +
+        0.26 * Math.sin(t * 5.1 + layer * 1.04) +
+        0.18 * Math.sin(t * 8.6 + layer * 0.44) +
+        0.08 * Math.sin(t * 15.4 + layer * 1.38))
   );
 }
 
@@ -43,27 +43,27 @@ const AREA_PATH_0 = buildAreaD(LINE_PATHS[0]);
 
 const STROKES = [
   {
-    stroke: "oklch(0.58 0.1 238)",
-    width: 1.25,
+    stroke: "oklch(0.62 0.12 238)",
+    width: 1.35,
     glow: [
-      "drop-shadow(0 0 5px oklch(0.66 0.11 238 / 0.44))",
-      "drop-shadow(0 0 18px oklch(0.58 0.09 238 / 0.25))",
+      "drop-shadow(0 0 7px oklch(0.7 0.13 238 / 0.54))",
+      "drop-shadow(0 0 22px oklch(0.62 0.1 238 / 0.36))",
     ],
   },
   {
-    stroke: "oklch(0.52 0.062 212)",
-    width: 1.08,
+    stroke: "oklch(0.56 0.08 212)",
+    width: 1.16,
     glow: [
-      "drop-shadow(0 0 4px oklch(0.56 0.09 208 / 0.34))",
-      "drop-shadow(0 0 13px oklch(0.52 0.07 212 / 0.18))",
+      "drop-shadow(0 0 5px oklch(0.6 0.1 208 / 0.4))",
+      "drop-shadow(0 0 16px oklch(0.56 0.08 212 / 0.28))",
     ],
   },
   {
-    stroke: "oklch(0.5 0.062 168)",
-    width: 0.95,
+    stroke: "oklch(0.54 0.075 168)",
+    width: 1.05,
     glow: [
-      "drop-shadow(0 0 3px oklch(0.54 0.08 168 / 0.28))",
-      "drop-shadow(0 0 10px oklch(0.48 0.06 172 / 0.16))",
+      "drop-shadow(0 0 4px oklch(0.58 0.09 168 / 0.34))",
+      "drop-shadow(0 0 12px oklch(0.52 0.07 172 / 0.24))",
     ],
   },
 ] as const;
@@ -169,25 +169,25 @@ export function AmbientField() {
       aria-hidden
     >
       {/* Base */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.043_0.052_266)_0%,oklch(0.027_0.058_272)_44%,oklch(0.019_0.056_278)_100%)]" />
-      <div className="absolute inset-0 bg-grid-fine opacity-[0.24]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_78%_55%_at_22%_26%,oklch(0.4_0.12_248/0.18),transparent_62%),radial-gradient(ellipse_65%_45%_at_86%_18%,oklch(0.36_0.1_254/0.14),transparent_58%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,oklch(0.62_0.08_250/0.05)_1px,transparent_1px)] bg-[length:84px_100%] opacity-45" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.046_0.058_266)_0%,oklch(0.027_0.065_272)_44%,oklch(0.019_0.062_278)_100%)]" />
+      <div className="absolute inset-0 bg-grid-fine opacity-[0.36]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_78%_55%_at_22%_26%,oklch(0.46_0.15_248/0.3),transparent_62%),radial-gradient(ellipse_65%_45%_at_86%_18%,oklch(0.4_0.13_254/0.24),transparent_58%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,oklch(0.62_0.08_250/0.08)_1px,transparent_1px)] bg-[length:84px_100%] opacity-60" />
 
       {/* Chart layers — back → front; different speeds + one reverse for parallax */}
-      <div className="absolute inset-0 opacity-[0.5] sm:opacity-[0.56]">
-        <ChartTrack layerIndex={2} durationSec={214} opacity={0.6} />
-        <ChartTrack layerIndex={1} durationSec={158} reverse opacity={0.8} />
-        <ChartTrack layerIndex={0} durationSec={120} opacity={1} />
+      <div className="absolute inset-0 opacity-[0.72] sm:opacity-[0.82]">
+        <ChartTrack layerIndex={2} durationSec={188} opacity={0.8} />
+        <ChartTrack layerIndex={1} durationSec={138} reverse opacity={0.96} />
+        <ChartTrack layerIndex={0} durationSec={112} opacity={1} />
       </div>
-      <div className="absolute inset-0 bg-[linear-gradient(118deg,transparent_0%,transparent_33%,oklch(0.66_0.15_248/0.12)_40%,transparent_46%,transparent_58%,oklch(0.6_0.13_242/0.08)_64%,transparent_70%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(118deg,transparent_0%,transparent_33%,oklch(0.7_0.16_248/0.28)_40%,transparent_46%,transparent_58%,oklch(0.64_0.14_242/0.2)_64%,transparent_70%)]" />
 
       {/* Restrained edge vignette + slight top wash so hero copy stays crisp */}
       <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_125%_85%_at_50%_42%,oklch(0.05_0.04_268/0)_0%,oklch(0.018_0.045_276/0.72)_100%)]"
+        className="absolute inset-0 bg-[radial-gradient(ellipse_125%_85%_at_50%_42%,oklch(0.05_0.04_268/0)_0%,oklch(0.018_0.045_276/0.58)_100%)]"
         style={{ mixBlendMode: "multiply" }}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.04_0.045_272/0.5)_0%,transparent_28%,transparent_62%,oklch(0.02_0.05_278/0.55)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.04_0.045_272/0.42)_0%,transparent_28%,transparent_62%,oklch(0.02_0.05_278/0.48)_100%)]" />
     </div>
   );
 }
