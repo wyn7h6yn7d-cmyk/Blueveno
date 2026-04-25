@@ -74,15 +74,13 @@ export function JournalDaySection() {
 
                 <div className="flex flex-col justify-center rounded-2xl border border-[oklch(0.52_0.12_252/0.28)] bg-[oklch(0.06_0.04_268/0.65)] p-5 sm:p-6">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">TradingView</span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Saved chart</span>
                     <span className="rounded border border-emerald-500/20 bg-emerald-500/[0.08] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-emerald-200/90">
                       Linked
                     </span>
                   </div>
                   <a
-                    href="https://www.tradingview.com/chart/"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="/signup"
                     className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl border border-[oklch(0.55_0.12_252/0.45)] bg-[linear-gradient(180deg,oklch(0.2_0.07_262/0.9),oklch(0.1_0.045_268/0.95))] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] transition hover:border-[oklch(0.62_0.12_252/0.55)]"
                   >
                     Open chart

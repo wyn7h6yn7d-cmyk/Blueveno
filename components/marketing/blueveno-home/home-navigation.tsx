@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BluevenoLogoMark } from "@/components/brand/blueveno-logo-mark";
 import { PremiumPrimaryLink } from "./premium-button";
 
 const links = [
@@ -11,13 +12,14 @@ const links = [
 
 export function HomeNavigation() {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.07] bg-[oklch(0.035_0.042_270/0.92)] font-sans backdrop-blur-xl backdrop-saturate-150">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.08] bg-[oklch(0.03_0.04_272/0.88)] font-sans backdrop-blur-2xl backdrop-saturate-150">
       <div className="mx-auto flex h-[3.75rem] max-w-[1320px] items-center justify-between px-4 sm:h-[4rem] sm:px-8 lg:px-10">
         <Link
           href="/"
-          className="font-display text-[17px] font-semibold tracking-[-0.04em] text-zinc-50 transition hover:text-white"
+          className="inline-flex items-center gap-2.5 transition-opacity hover:opacity-100"
         >
-          Blueveno
+          <BluevenoLogoMark className="size-6" />
+          <span className="font-display text-[1.02rem] font-semibold tracking-[-0.04em] text-zinc-50">Blueveno</span>
         </Link>
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Page">
           {links.map((l) => (
@@ -38,7 +40,7 @@ export function HomeNavigation() {
             Sign in
           </Link>
           <PremiumPrimaryLink href="/signup" compact>
-            Sign up
+            Start free
           </PremiumPrimaryLink>
         </div>
       </div>

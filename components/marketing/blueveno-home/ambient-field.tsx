@@ -5,19 +5,19 @@ import { cn } from "@/lib/utils";
  * (low contrast, readable content on top; motion respects prefers-reduced-motion).
  */
 
-const VB = { w: 1000, h: 260 } as const;
+const VB = { w: 1200, h: 280 } as const;
 
 function sampleY(i: number, n: number, layer: number): number {
   const t = (i / n) * Math.PI * 2;
-  const mid = VB.h * (0.46 + layer * 0.038);
-  const amp = VB.h * (0.13 - layer * 0.018);
+  const mid = VB.h * (0.48 + layer * 0.032);
+  const amp = VB.h * (0.1 - layer * 0.014);
   return (
     mid +
     amp *
-      (0.42 * Math.sin(t * 2 + layer * 0.72) +
-        0.28 * Math.sin(t * 5 + layer * 1.08) +
-        0.17 * Math.sin(t * 9 + layer * 0.41) +
-        0.13 * Math.sin(t * 14 + layer * 1.52))
+      (0.42 * Math.sin(t * 2.1 + layer * 0.62) +
+        0.24 * Math.sin(t * 4.7 + layer * 1.04) +
+        0.18 * Math.sin(t * 8.6 + layer * 0.44) +
+        0.08 * Math.sin(t * 14.8 + layer * 1.38))
   );
 }
 
@@ -43,30 +43,27 @@ const AREA_PATH_0 = buildAreaD(LINE_PATHS[0]);
 
 const STROKES = [
   {
-    stroke: "oklch(0.52 0.065 228)",
-    width: 1.15,
+    stroke: "oklch(0.56 0.08 236)",
+    width: 1.2,
     glow: [
-      "drop-shadow(0 0 4px oklch(0.58 0.09 230 / 0.42))",
-      "drop-shadow(0 0 14px oklch(0.52 0.08 228 / 0.28))",
-      "drop-shadow(0 0 28px oklch(0.48 0.06 252 / 0.16))",
+      "drop-shadow(0 0 4px oklch(0.62 0.1 236 / 0.38))",
+      "drop-shadow(0 0 16px oklch(0.56 0.08 236 / 0.22))",
     ],
   },
   {
-    stroke: "oklch(0.48 0.055 200)",
-    width: 1,
+    stroke: "oklch(0.5 0.058 210)",
+    width: 1.05,
     glow: [
-      "drop-shadow(0 0 3px oklch(0.52 0.07 205 / 0.32))",
-      "drop-shadow(0 0 10px oklch(0.46 0.06 210 / 0.2))",
-      "drop-shadow(0 0 20px oklch(0.42 0.05 220 / 0.1))",
+      "drop-shadow(0 0 3px oklch(0.54 0.08 205 / 0.3))",
+      "drop-shadow(0 0 12px oklch(0.5 0.07 208 / 0.16))",
     ],
   },
   {
-    stroke: "oklch(0.46 0.06 165)",
+    stroke: "oklch(0.48 0.06 168)",
     width: 0.95,
     glow: [
-      "drop-shadow(0 0 3px oklch(0.5 0.07 168 / 0.28))",
-      "drop-shadow(0 0 9px oklch(0.44 0.06 172 / 0.16))",
-      "drop-shadow(0 0 18px oklch(0.38 0.05 175 / 0.08))",
+      "drop-shadow(0 0 3px oklch(0.52 0.08 168 / 0.25))",
+      "drop-shadow(0 0 9px oklch(0.46 0.06 172 / 0.14))",
     ],
   },
 ] as const;
@@ -156,13 +153,14 @@ export function AmbientField() {
       aria-hidden
     >
       {/* Base */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.048_0.048_268)_0%,oklch(0.03_0.052_274)_48%,oklch(0.022_0.055_278)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,oklch(0.048_0.048_268)_0%,oklch(0.03_0.05_274)_46%,oklch(0.022_0.054_278)_100%)]" />
+      <div className="absolute inset-0 bg-grid-fine opacity-[0.16]" />
 
       {/* Chart layers — back → front; different speeds + one reverse for parallax */}
-      <div className="absolute inset-0 opacity-[0.4] sm:opacity-[0.44]">
-        <ChartTrack layerIndex={2} durationSec={168} opacity={0.55} />
-        <ChartTrack layerIndex={1} durationSec={124} reverse opacity={0.72} />
-        <ChartTrack layerIndex={0} durationSec={96} opacity={1} />
+      <div className="absolute inset-0 opacity-[0.42] sm:opacity-[0.46]">
+        <ChartTrack layerIndex={2} durationSec={188} opacity={0.54} />
+        <ChartTrack layerIndex={1} durationSec={138} reverse opacity={0.74} />
+        <ChartTrack layerIndex={0} durationSec={108} opacity={0.96} />
       </div>
 
       {/* Restrained edge vignette + slight top wash so hero copy stays crisp */}
