@@ -54,7 +54,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
     <section
       id="calendar"
       className={cn(
-        "scroll-mt-28 relative border-t border-white/[0.07] py-16 sm:scroll-mt-32 sm:py-20 lg:py-28",
+        "scroll-mt-28 relative z-20 border-t border-white/[0.07] py-16 sm:scroll-mt-32 sm:py-20 lg:py-28",
         className,
       )}
       aria-labelledby="cal-heading"

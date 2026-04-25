@@ -357,7 +357,7 @@ export function HeroPremium() {
   return (
     <section
       id="hero"
-      className="relative overflow-hidden border-b border-white/[0.08] pb-16 pt-20 sm:pb-20 sm:pt-24 lg:pb-24 lg:pt-28"
+      className="relative overflow-x-clip border-b border-white/[0.08] pb-20 pt-20 sm:pb-24 sm:pt-24 lg:pb-24 lg:pt-28"
       aria-labelledby="hero-heading"
     >
       <div
@@ -488,7 +488,7 @@ export function HeroPremium() {
 
                   <div className="border-b border-white/[0.05] px-4 py-6 sm:px-7 sm:py-7 lg:px-9 lg:py-8">
                     {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[26rem] sm:h-[31.25rem] lg:h-[32rem]">
+                    <div className="relative h-[24.5rem] sm:h-[30rem] lg:h-[32rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}

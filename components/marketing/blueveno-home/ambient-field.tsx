@@ -82,6 +82,7 @@ function ChartPanel({
   const id = `bv-ambient-${layerIndex}`;
   const s = STROKES[layerIndex];
   const lineD = LINE_PATHS[layerIndex];
+  const nodes = [8, 18, 29, 42, 55, 67, 79] as const;
 
   return (
     <svg
@@ -112,6 +113,21 @@ function ChartPanel({
         vectorEffect="non-scaling-stroke"
         style={{ filter: glowFilter(layerIndex) }}
       />
+      {nodes.map((idx) => {
+        const x = (idx / 88) * VB.w;
+        const y = sampleY(idx, 88, layerIndex);
+        return (
+          <circle
+            key={`${layerIndex}-${idx}`}
+            cx={x}
+            cy={y}
+            r={layerIndex === 0 ? 2.8 : layerIndex === 1 ? 2.2 : 1.9}
+            fill={s.stroke}
+            fillOpacity={layerIndex === 0 ? 0.9 : 0.62}
+            style={{ filter: glowFilter(layerIndex) }}
+          />
+        );
+      })}
     </svg>
   );
 }
