@@ -176,39 +176,39 @@ function ChartPanel() {
 
 function WeekPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.095_0.045_262/0.96),oklch(0.052_0.03_268/0.99))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-5">
-      <div className="shrink-0 grid grid-cols-1 gap-2.5 border-b border-white/[0.06] pb-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Week summary</p>
-          <p className="mt-1.5 font-display text-[1.75rem] font-semibold tracking-[-0.05em] text-emerald-300 sm:text-[1.9rem]">{formatPnl(1247.63)}</p>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[linear-gradient(165deg,oklch(0.092_0.046_262/0.98),oklch(0.046_0.03_268/0.99))] p-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08)] sm:p-4">
+      <div className="shrink-0 grid grid-cols-1 gap-2 border-b border-white/[0.07] pb-3.5 sm:grid-cols-2">
+        <div className="rounded-xl border border-white/[0.1] bg-[linear-gradient(170deg,oklch(0.1_0.04_264/0.82),oklch(0.06_0.03_270/0.86))] px-3.5 py-2.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Week summary</p>
+          <p className="mt-1.5 font-display text-[1.75rem] font-semibold tracking-[-0.05em] text-emerald-300 sm:text-[1.95rem]">{formatPnl(1247.63)}</p>
         </div>
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Discipline score</p>
+        <div className="rounded-xl border border-white/[0.1] bg-[linear-gradient(170deg,oklch(0.1_0.04_264/0.82),oklch(0.06_0.03_270/0.86))] px-3.5 py-2.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Discipline score</p>
           <div className="mt-1.5 flex items-center gap-2.5">
-            <span className="inline-flex size-8 items-center justify-center rounded-full border border-emerald-400/45 text-sm font-semibold text-emerald-300">
+            <span className="relative inline-flex size-9 items-center justify-center rounded-full border border-emerald-400/55 bg-[radial-gradient(circle_at_45%_30%,oklch(0.3_0.08_160/0.4),transparent_70%)] text-sm font-semibold text-emerald-300">
               87
             </span>
             <div>
-              <p className="text-sm font-semibold text-emerald-200">Great week</p>
+              <p className="text-[1rem] font-semibold text-emerald-200">Great week</p>
               <p className="text-xs text-zinc-400">Keep building.</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 pt-3">
+      <div className="min-h-0 flex-1 pt-2.5">
         <div className="overflow-x-auto pb-1">
-          <div className="grid h-[10.9rem] min-w-[33rem] grid-cols-[5.7rem_repeat(5,minmax(0,1fr))_5.5rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
+          <div className="grid h-[10.8rem] min-w-[33.5rem] grid-cols-[5.8rem_repeat(5,minmax(0,1fr))_5.8rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
             <div className="px-2" />
             {WEEK_DAYS.map((d) => (
               <div
                 key={d.day}
-                className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500"
+                className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.16em] text-zinc-500"
               >
                 {d.day}
               </div>
             ))}
-            <div className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500">Week Total</div>
+            <div className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.16em] text-zinc-500">Week total</div>
             {[
               { label: "May 5 - 11", values: [186.4, -42.1, 248.75, 123.3, 205.6], total: 721.95 },
               { label: "May 12 - 18", values: [-153.2, 97.6, 310.4, -68.5, 229.1], total: 415.4 },
@@ -230,7 +230,7 @@ function WeekPanel() {
                     {value === 0 ? "—" : formatPnl(value)}
                   </div>
                 ))}
-                <div className="flex items-center justify-center rounded-lg border border-emerald-400/32 bg-emerald-400/10 px-1 text-[10px] font-semibold tabular-nums text-emerald-200 sm:text-[11px]">
+                <div className="flex items-center justify-center rounded-lg border border-emerald-400/38 bg-emerald-400/12 px-1 text-[10px] font-semibold tabular-nums text-emerald-200 sm:text-[11px]">
                   {formatPnl(row.total)}
                 </div>
               </div>
@@ -238,19 +238,19 @@ function WeekPanel() {
           </div>
         </div>
 
-        <div className="mt-2.5 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-[1fr_1fr_0.78fr]">
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 sm:p-3">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Behavior today</p>
+        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-[1fr_1fr_0.78fr]">
+          <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] p-2.5 sm:p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Behavior today</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {["Calm", "Focused", "Hesitant", "Tired"].map((chip) => (
+              {["Calm", "Focused", "Hesitant", "Tilted"].map((chip) => (
                 <span key={chip} className="rounded-full border border-white/[0.12] bg-white/[0.04] px-2 py-0.5 text-[10px] text-zinc-300">
                   {chip}
                 </span>
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 sm:p-3">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">Discipline checks</p>
+          <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] p-2.5 sm:p-3">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Discipline checks</p>
             <div className="mt-2 space-y-1">
               {["Followed plan", "Respected stop", "No revenge trade"].map((item) => (
                 <div key={item} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
@@ -260,18 +260,23 @@ function WeekPanel() {
               ))}
             </div>
           </div>
-          <div className="flex min-h-[5.5rem] items-center justify-center rounded-xl border border-white/[0.08] bg-[radial-gradient(circle_at_55%_40%,oklch(0.48_0.12_252/0.34),transparent_62%)] p-2 text-center">
-            <p className="text-[11px] leading-tight text-zinc-300">Consistency compounds.</p>
+          <div className="relative flex min-h-[5.5rem] items-center justify-center overflow-hidden rounded-xl border border-white/[0.09] bg-[linear-gradient(160deg,oklch(0.08_0.04_266/0.8),oklch(0.05_0.03_270/0.9))] p-2 text-center">
+            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_48%_45%,oklch(0.55_0.13_250/0.35),transparent_60%)]" />
+            <span className="pointer-events-none absolute left-1/2 top-1/2 size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.35)]" />
+            <span className="pointer-events-none absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.2)]" />
+            <p className="relative text-[11px] leading-tight text-zinc-300">Consistency compounds.</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-2.5 grid shrink-0 grid-cols-[1fr_auto] items-center gap-3 border-t border-white/[0.06] pt-3 sm:grid-cols-[1fr_auto_auto]">
+      <div className="mt-2 grid shrink-0 grid-cols-1 items-center gap-2 border-t border-white/[0.06] pt-2.5 sm:grid-cols-[1fr_auto_auto] sm:gap-3">
         <p className="truncate text-[11px] text-zinc-400">Linked chart • Review ready</p>
-        <span className="hidden rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300 sm:inline-flex">Week</span>
-        <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
-          View notes
-        </button>
+        <div className="flex items-center gap-2 sm:justify-self-end sm:col-span-2">
+          <span className="rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300">Week</span>
+          <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
+            View notes
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -341,13 +346,18 @@ export function HeroPremium() {
   }
 
   function onPointerMove(e: PointerEvent<HTMLDivElement>) {
-    if (reduced) return;
+    if (reduced || e.pointerType !== "mouse") return;
     const rect = e.currentTarget.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
     rotateY.set((px - 0.5) * 10);
     rotateX.set((0.5 - py) * 8);
     scale.set(1.012);
+  }
+
+  function onPointerEnter(e: PointerEvent<HTMLDivElement>) {
+    if (reduced || e.pointerType !== "mouse") return;
+    setIsHovering(true);
   }
 
   function onPointerLeave() {
@@ -369,12 +379,12 @@ export function HeroPremium() {
       />
 
       <div className="relative z-10 mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
-        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center lg:gap-8 xl:gap-10">
+        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-center lg:gap-7 xl:gap-9">
           <div className="text-center lg:text-left">
             <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[oklch(0.66_0.1_252)]">PREMIUM TRADING JOURNAL</p>
             <h1
               id="hero-heading"
-              className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(1.9rem,4.2vw,3.7rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-zinc-50 sm:mt-5"
+              className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(1.9rem,4.2vw,3.7rem)] font-semibold leading-[1.01] tracking-[-0.052em] text-zinc-50 sm:mt-5"
             >
               Track the result.
               <br />
@@ -382,7 +392,7 @@ export function HeroPremium() {
                 Review the behavior.
               </span>
             </h1>
-            <p className="mx-auto mt-5 max-w-[25rem] text-[15px] leading-[1.55] tracking-[-0.015em] text-zinc-300 lg:mx-0">
+            <p className="mx-auto mt-5 max-w-[25rem] text-[15px] leading-[1.52] tracking-[-0.014em] text-zinc-300 lg:mx-0">
               Log the day. Save the chart.
               <br />
               See the week in one clear place.
@@ -407,17 +417,17 @@ export function HeroPremium() {
           <div className="relative mx-auto w-full max-w-[760px] [perspective:1800px] lg:mx-0 lg:max-w-none">
             <div
               aria-hidden
-              className="pointer-events-none absolute -inset-x-8 -inset-y-6 rounded-[2.25rem] bg-[conic-gradient(from_120deg_at_62%_24%,transparent_0deg,oklch(0.62_0.14_248/0.16)_62deg,transparent_122deg,oklch(0.58_0.12_252/0.12)_210deg,transparent_300deg)] blur-2xl"
+              className="pointer-events-none absolute -inset-x-8 -inset-y-6 rounded-[2.25rem] bg-[conic-gradient(from_120deg_at_62%_24%,transparent_0deg,oklch(0.62_0.14_248/0.18)_62deg,transparent_122deg,oklch(0.58_0.12_252/0.14)_210deg,transparent_300deg)] blur-2xl"
             />
             <motion.div
               className={cn(
-                "relative rounded-2xl p-[1px] sm:rounded-[1.8rem]",
+                "relative rounded-2xl p-[1px] sm:rounded-[1.85rem]",
                 "bg-[linear-gradient(145deg,oklch(0.55_0.14_252/0.65)_0%,oklch(0.2_0.06_268/0.42)_40%,oklch(0.52_0.15_252/0.58)_100%)]",
-                "shadow-[0_40px_120px_-52px_rgba(0,0,0,0.9),0_0_0_1px_oklch(0.46_0.11_252/0.24),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
+                "shadow-[0_46px_128px_-52px_rgba(0,0,0,0.92),0_0_0_1px_oklch(0.46_0.11_252/0.24),0_0_90px_-48px_oklch(0.6_0.14_252/0.44),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
               )}
               style={{ ...slabStyle, rotateX, rotateY, scale }}
               onPointerMove={onPointerMove}
-              onPointerEnter={() => setIsHovering(true)}
+              onPointerEnter={onPointerEnter}
               onPointerLeave={onPointerLeave}
             >
               <motion.div
@@ -433,7 +443,7 @@ export function HeroPremium() {
                   "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),inset_0_-36px_72px_-52px_oklch(0_0_0/0.62)]",
                 )}
               >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_85%_at_88%_-12%,oklch(0.44_0.14_252/0.16),transparent_52%)]" />
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_85%_at_88%_-12%,oklch(0.44_0.14_252/0.19),transparent_52%)]" />
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent,oklch(0_0_0/0.18)_95%)]" />
                 <div className="relative z-[1]">
                   <div className="flex items-center justify-between gap-3 border-b border-white/[0.09] px-4 py-3.5 sm:px-6 sm:py-4">
@@ -451,13 +461,13 @@ export function HeroPremium() {
                     </span>
                   </div>
 
-                  <div className="border-b border-white/[0.06] bg-[linear-gradient(180deg,oklch(0.07_0.04_268/0.55),transparent)] px-3 py-3.5 sm:px-5 sm:py-4">
+                  <div className="border-b border-white/[0.06] bg-[linear-gradient(180deg,oklch(0.07_0.04_268/0.55),transparent)] px-3 py-3 sm:px-5 sm:py-3.5">
                     <LayoutGroup id={`${tabId}-hero-tabs`}>
                       <div
                         role="tablist"
                         aria-label="Preview mode"
                         onKeyDown={onTabKeyDown}
-                        className="relative grid w-full grid-cols-3 gap-1 rounded-2xl bg-black/60 p-1.5 ring-1 ring-[oklch(0.48_0.1_252/0.25)] sm:gap-1.5 sm:p-2"
+                        className="relative grid w-full grid-cols-3 gap-1 rounded-2xl bg-black/65 p-1.5 ring-1 ring-[oklch(0.48_0.1_252/0.3)] sm:gap-1.5 sm:p-2"
                       >
                         {MODES.map(({ id, label }) => {
                           const selected = mode === id;
@@ -472,7 +482,7 @@ export function HeroPremium() {
                               tabIndex={selected ? 0 : -1}
                               onClick={() => setMode(id)}
                               className={cn(
-                                "relative z-[1] flex min-h-[2.65rem] min-w-0 items-center justify-center rounded-xl px-2 py-2.5 text-center text-[13px] font-semibold leading-none tracking-[-0.02em] transition-colors duration-300 sm:min-h-[2.85rem] sm:text-[14px]",
+                                "relative z-[1] flex min-h-[2.55rem] min-w-0 items-center justify-center rounded-xl px-2 py-2 text-center text-[13px] font-semibold leading-none tracking-[-0.02em] transition-colors duration-300 sm:min-h-[2.75rem] sm:text-[14px]",
                                 selected ? "text-zinc-50" : "text-zinc-500 hover:text-zinc-300",
                               )}
                             >
@@ -493,9 +503,9 @@ export function HeroPremium() {
                     </LayoutGroup>
                   </div>
 
-                  <div className="border-b border-white/[0.05] px-4 py-5 sm:px-7 sm:py-6 lg:px-8 lg:py-6">
+                  <div className="border-b border-white/[0.05] px-4 py-4 sm:px-7 sm:py-5 lg:px-8 lg:py-5">
                     {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[26rem] sm:h-[28rem] lg:h-[29.5rem]">
+                    <div className="relative h-[25rem] sm:h-[26rem] lg:h-[27rem]">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                           id={panelId}
