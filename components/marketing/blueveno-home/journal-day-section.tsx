@@ -4,7 +4,7 @@ import { ExternalLink } from "lucide-react";
 export function JournalDaySection() {
   return (
     <section
-      id="day"
+      id="journal"
       className="scroll-mt-28 relative border-t border-white/[0.07] py-16 sm:scroll-mt-32 sm:py-20 lg:py-28"
       aria-labelledby="day-heading"
     >

@@ -2,7 +2,7 @@
 export function ValueStrip() {
   return (
     <section
-      id="strip"
+      id="essence"
       className="scroll-mt-28 relative border-b border-white/[0.06] sm:scroll-mt-32"
       aria-labelledby="strip-heading"
     >

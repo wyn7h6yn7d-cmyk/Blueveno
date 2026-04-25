@@ -238,7 +238,7 @@ function WeekPanel() {
           </div>
         </div>
 
-        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-[1fr_1fr_0.78fr]">
+        <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-[1fr_1fr_0.78fr]">
           <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] p-2.5 sm:p-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Behavior today</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -260,7 +260,7 @@ function WeekPanel() {
               ))}
             </div>
           </div>
-          <div className="relative flex min-h-[5.5rem] items-center justify-center overflow-hidden rounded-xl border border-white/[0.09] bg-[linear-gradient(160deg,oklch(0.08_0.04_266/0.8),oklch(0.05_0.03_270/0.9))] p-2 text-center">
+          <div className="relative col-span-2 flex min-h-[5.5rem] items-center justify-center overflow-hidden rounded-xl border border-white/[0.09] bg-[linear-gradient(160deg,oklch(0.08_0.04_266/0.8),oklch(0.05_0.03_270/0.9))] p-2 text-center lg:col-span-1">
             <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_48%_45%,oklch(0.55_0.13_250/0.35),transparent_60%)]" />
             <span className="pointer-events-none absolute left-1/2 top-1/2 size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.35)]" />
             <span className="pointer-events-none absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.2)]" />
