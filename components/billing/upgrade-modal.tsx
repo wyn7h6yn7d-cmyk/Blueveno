@@ -66,7 +66,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">{copy.description}</p>
         <p className="mt-4 rounded-lg border border-white/[0.1] bg-bv-surface-inset/50 px-3 py-2 text-[12px] leading-relaxed text-zinc-400">
-          View plans to choose the right access level for your workflow.
+          View plans to choose the right access level for your workflow, including support for up to 5 trading accounts.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link

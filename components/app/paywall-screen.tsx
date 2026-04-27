@@ -26,7 +26,8 @@ export function PaywallScreen() {
             Read-only mode is active
           </h1>
           <p className="mx-auto mt-4 max-w-sm text-[15px] leading-relaxed text-zinc-500">
-            Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep adding trading days.
+            Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep journaling and add more
+            accounts.
           </p>
           <div className="mt-10 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.12_252)]">Blueveno Premium</p>
@@ -44,6 +45,10 @@ export function PaywallScreen() {
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
                 Daily P&amp;L and notes
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
+                Track up to 5 trading accounts
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />

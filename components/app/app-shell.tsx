@@ -15,6 +15,14 @@ type AppShellProps = {
 };
 
 export function AppShell({ children, user, access }: AppShellProps) {
+  const accessLabel = access.isAdmin
+    ? "Admin"
+    : access.state === "premium_active"
+      ? "Premium"
+      : access.state === "trial_active"
+        ? "Trial"
+        : "Read-only";
+
   return (
     <AccessProvider value={access}>
       <div className="flex min-h-full bg-[linear-gradient(180deg,oklch(0.085_0.055_266),oklch(0.058_0.048_270)_54%,oklch(0.044_0.044_274)_100%)] text-zinc-100">
@@ -32,6 +40,15 @@ export function AppShell({ children, user, access }: AppShellProps) {
                 beta
               </span>
             </Link>
+          </div>
+          <div className="px-5 pt-2.5">
+            <div
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/35 bg-[linear-gradient(180deg,oklch(0.22_0.09_160/0.45),oklch(0.16_0.08_160/0.34))] px-2.5 py-1 shadow-[0_0_20px_-9px_rgba(52,211,153,0.8),inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+              title="Current workspace access state"
+            >
+              <span className="size-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.95)]" aria-hidden />
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-100">{accessLabel}</span>
+            </div>
           </div>
           <div className="flex flex-1 flex-col overflow-y-auto p-4">
             <AppSidebarNav isAdmin={access.isAdmin} />

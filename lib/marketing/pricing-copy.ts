@@ -49,6 +49,15 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
     expiredNote: "—",
   },
   {
+    feature: "Trading accounts",
+    trial: "text",
+    trialNote: "1 account",
+    premium: "text",
+    premiumNote: "Up to 5 accounts",
+    expired: "text",
+    expiredNote: "View and switch existing",
+  },
+  {
     feature: "Log new trading days",
     trial: "yes",
     premium: "yes",

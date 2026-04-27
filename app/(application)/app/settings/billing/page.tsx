@@ -12,6 +12,7 @@ const PREMIUM_LABEL = "Blueveno Premium";
 
 const PREMIUM_INCLUDES = [
   "Journal — day P&L, notes, optional linked chart",
+  "Track up to 5 trading accounts",
   "Calendar with colour-coded days and week totals",
   "Stats & overview for your trading history",
 ] as const;
@@ -102,7 +103,8 @@ export default async function BillingSettingsPage() {
                 </>
               ) : isReadOnly ? (
                 <>
-                  Your trial has ended. Your data remains safe, and you can return to full journaling access anytime.
+                  Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep journaling and add
+                  more accounts.
                   {trialEndLabel ? (
                     <>
                       {" "}
@@ -112,7 +114,7 @@ export default async function BillingSettingsPage() {
                 </>
               ) : isTrial ? (
                 <>
-                  Trial active with full access.
+                  7-day trial includes 1 trading account with full access for your first account.
                   {trialEndLabel ? (
                     <>
                       {" "}
@@ -121,9 +123,9 @@ export default async function BillingSettingsPage() {
                   ) : null}
                 </>
               ) : isPremium ? (
-                "Premium access is active for this account."
+                "Premium access is active. Track up to 5 trading accounts with ongoing write access."
               ) : (
-                "Blueveno Premium keeps journal, calendar, and stats fully available."
+                "Blueveno Premium keeps journaling active with full calendar and stats access."
               )}
             </div>
 

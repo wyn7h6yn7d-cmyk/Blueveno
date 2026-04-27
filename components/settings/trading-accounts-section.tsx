@@ -14,6 +14,11 @@ import { cn } from "@/lib/utils";
 import { TRADING_ACCOUNT_TYPES, type TradingAccount, type TradingAccountType } from "@/lib/trading-accounts/types";
 import { mapTradingAccountRow } from "@/lib/trading-accounts/map";
 import { useAccess } from "@/components/access/access-provider";
+import {
+  canManageTradingAccounts,
+  tradingAccountsMaxForAccess,
+  tradingAccountsUsageText,
+} from "@/lib/trading-accounts/entitlements";
 
 const field =
   "h-10 w-full min-w-0 rounded-xl border border-white/[0.12] bg-black/25 px-3 text-[14px] text-zinc-100 placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
@@ -35,10 +40,9 @@ const EMPTY_FORM: FormState = {
   startingBalance: "",
   notes: "",
 };
-const MAX_TRADING_ACCOUNTS = 5;
-
 export function TradingAccountsSection() {
-  const { canWriteJournal, isAdmin, isReadOnlyTrial } = useAccess();
+  const access = useAccess();
+  const { isReadOnlyTrial } = access;
   const searchParams = useSearchParams();
   const [userId, setUserId] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<TradingAccount[]>([]);
@@ -54,8 +58,9 @@ export function TradingAccountsSection() {
   const focusCreate = searchParams.get("new") === "1";
   const sectionParam = searchParams.get("section");
   const shouldShow = sectionParam === null || sectionParam === "accounts";
-  const canManage = isAdmin || canWriteJournal;
-  const atAccountLimit = accounts.length >= MAX_TRADING_ACCOUNTS;
+  const canManage = canManageTradingAccounts(access);
+  const maxAccounts = tradingAccountsMaxForAccess(access);
+  const atAccountLimit = accounts.length >= maxAccounts;
 
   async function load() {
     try {
@@ -129,7 +134,7 @@ export function TradingAccountsSection() {
     e.preventDefault();
     if (!userId || !canManage) return;
     if (!editingId && atAccountLimit) {
-      setMessage(`You can create up to ${MAX_TRADING_ACCOUNTS} trading accounts.`);
+      setMessage(maxAccounts === 1 ? "Upgrade to Premium to add more accounts." : "You've reached the 5-account limit.");
       return;
     }
     if (!form.name.trim()) {
@@ -243,6 +248,7 @@ export function TradingAccountsSection() {
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
               {editingId ? "Edit account" : "Create account"}
             </p>
+            <p className="text-[12px] text-zinc-500">{tradingAccountsUsageText(accounts.length, maxAccounts)}</p>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="accounts-create-name">Account name</Label>
@@ -345,7 +351,9 @@ export function TradingAccountsSection() {
             ) : null}
             {canManage && atAccountLimit && !editingId ? (
               <p className="text-[12px] text-zinc-500">
-                Account limit reached ({MAX_TRADING_ACCOUNTS}). Delete an account to create a new one.
+                {maxAccounts === 1
+                  ? "Upgrade to Premium to add more accounts."
+                  : "You've reached the 5-account limit."}
               </p>
             ) : null}
           </form>

@@ -54,17 +54,18 @@ export function TrialUpgradeBanner() {
           <p className="max-w-xl text-[13px] leading-relaxed text-zinc-500">
             {isExpired ? (
               <>
-                Your journal stays available in read-only access. Upgrade to keep adding trading days.
+                Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep journaling and add more
+                accounts.
                 {end ? ` Trial ended ${end}.` : null}
               </>
             ) : isEndingSoon ? (
               <>
-                Full access is still active. Keep your flow uninterrupted after trial by upgrading before{" "}
+                7-day trial includes 1 trading account. Full access is active for your first account. Upgrade before{" "}
                 <span className="text-zinc-300">{end ?? "it ends"}</span>.
               </>
             ) : (
               <>
-                Full write access is active for your trial period.
+                7-day trial includes 1 trading account. Full access is active for your first account.
                 {end ? ` Trial ends ${end}.` : null}
               </>
             )}

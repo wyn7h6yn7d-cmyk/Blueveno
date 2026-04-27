@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 
 const premiumFeatures = [
   "Unlimited new trading days & edits",
+  "Track up to 5 trading accounts",
   "Notes and a saved chart link per day",
   "Daily P&L and calendar with weekly totals",
   "Stats and overview for your history",
@@ -32,24 +33,28 @@ export default function PricingPage() {
             Start your {PRICING_EUR.trialDays}-day trial.
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-zinc-400 md:text-base">
-            Every account starts with a <strong className="font-medium text-zinc-300">{PRICING_EUR.trialDays}-day trial</strong> with full
-            access. After that, stay on Premium to keep logging — or keep read-only access to what you already built.
+            Every account starts with a <strong className="font-medium text-zinc-300">{PRICING_EUR.trialDays}-day trial</strong>. Trial
+            includes 1 trading account with full access for your first account. After trial, your data stays available in
+            read-only mode.
           </p>
         </div>
 
         <div className="mx-auto mt-14 max-w-3xl">
           <div className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.09] bg-[linear-gradient(165deg,oklch(0.13_0.04_262)_0%,oklch(0.078_0.032_266)_48%,oklch(0.058_0.035_268)_100%)] p-8 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Premium</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Premium — {formatEur(PRICING_EUR.monthly)}/month</p>
             <div className="mt-4 flex items-baseline gap-1.5">
               <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50 sm:text-5xl">{formatEur(PRICING_EUR.monthly)}</span>
               <span className="text-[15px] text-zinc-500">/ month</span>
             </div>
-            <p className="mt-4 text-[14px] leading-relaxed text-zinc-500">One clear monthly plan for Blueveno Premium.</p>
+            <p className="mt-4 text-[14px] leading-relaxed text-zinc-500">
+              Track up to 5 trading accounts. Keep adding journal days with full calendar and stats access.
+            </p>
           </div>
         </div>
 
         <p className="mx-auto mt-8 max-w-2xl text-center text-[13px] leading-relaxed text-zinc-500">
-          {PRICING_EUR.trialDays}-day free trial. After trial, your workspace is read-only until upgrade. Premium unlocks ongoing journaling.
+          {PRICING_EUR.trialDays}-day trial includes 1 trading account. Premium unlocks up to 5 accounts and ongoing write
+          access after trial.
         </p>
 
         {/* What premium includes */}

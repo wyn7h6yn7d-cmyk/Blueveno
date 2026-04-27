@@ -3,6 +3,8 @@
 import { Component, type ErrorInfo, type ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Wallet, X } from "lucide-react";
+import { useAccess } from "@/components/access/access-provider";
+import { tradingAccountsMaxForAccess } from "@/lib/trading-accounts/entitlements";
 import { useTradingAccounts } from "@/lib/trading-accounts/use-trading-accounts";
 
 type Props = {
@@ -42,6 +44,8 @@ class TopbarAccountSwitcherBoundary extends Component<{ children: ReactNode }, B
 
 function TopbarAccountSwitcherInner({ userId }: Props) {
   const router = useRouter();
+  const access = useAccess();
+  const maxAccounts = tradingAccountsMaxForAccess(access);
   const { accounts, activeAccountId, error: accountLoadError, setActiveAccount } = useTradingAccounts(userId);
   const [accountActionError, setAccountActionError] = useState<string | null>(null);
   const [accountErrorDismissed, setAccountErrorDismissed] = useState(false);
@@ -103,7 +107,13 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
         >
           Manage
         </button>
+        <span className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-400">
+          Accounts {Math.min(accounts.length, maxAccounts)}/{maxAccounts}
+        </span>
       </div>
+      {access.state === "trial_active" && maxAccounts === 1 && accounts.length >= 1 ? (
+        <p className="text-[11px] text-zinc-500 sm:text-[12px]">Upgrade to add more accounts.</p>
+      ) : null}
 
       {accountErrorMessage ? (
         <div className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/[0.14] px-2.5 py-1 text-[11px] text-rose-100 sm:max-w-[30rem] sm:text-[12px]">
