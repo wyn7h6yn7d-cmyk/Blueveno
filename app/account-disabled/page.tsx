@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/app/page-header";
 import { SignOutButton } from "@/components/account/sign-out-button";
+
+export const metadata: Metadata = {
+  title: "Account paused",
+  description: "This Blueveno workspace access has been disabled.",
+  alternates: {
+    canonical: "/account-disabled",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function AccountDisabledPage() {
   const session = await auth();

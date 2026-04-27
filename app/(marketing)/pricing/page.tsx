@@ -12,6 +12,14 @@ import {
 export const metadata: Metadata = {
   title: "Pricing",
   description: `Blueveno — ${PRICING_EUR.trialDays}-day free trial. Trial includes 1 trading account. After trial, read-only until upgrade. Premium unlocks ongoing journaling.`,
+  alternates: {
+    canonical: "/pricing",
+  },
+  openGraph: {
+    url: "/pricing",
+    title: "Pricing — Blueveno",
+    description: `Blueveno — ${PRICING_EUR.trialDays}-day free trial. Trial includes 1 trading account. After trial, read-only until upgrade. Premium unlocks ongoing journaling.`,
+  },
 };
 
 const premiumFeatures = [

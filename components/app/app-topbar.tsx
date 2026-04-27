@@ -121,7 +121,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
             <p className="font-display w-full min-w-0 truncate text-[1.03rem] font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.14rem]">
               {label}
             </p>
-            <TopbarAccountSwitcher userId={user.id} />
+            <TopbarAccountSwitcher />
           </div>
         </div>
       </div>

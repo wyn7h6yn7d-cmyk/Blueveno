@@ -68,7 +68,8 @@ npm run build
 ## Environment
 
 - Copy `.env.example` to `.env` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
-- **Auth:** email + password via Supabase Auth. If email confirmation is enabled, add redirect URLs in Supabase (including `{origin}/auth/callback` for the signup confirmation flow).
+- **Production domain:** `https://www.blueveno.com` — canonical URLs and Open Graph use this on Vercel production; preview deployments use the generated `VERCEL_URL` automatically. Override with `NEXT_PUBLIC_SITE_URL` only if needed (e.g. local tunnel).
+- **Auth:** email + password via Supabase Auth. If email confirmation is enabled, add redirect URLs in Supabase for each environment’s origin (e.g. `https://www.blueveno.com/auth/callback` in production, plus preview URLs as needed).
 - Stripe and billing: `docs/BILLING.md`.
 
 ## Design

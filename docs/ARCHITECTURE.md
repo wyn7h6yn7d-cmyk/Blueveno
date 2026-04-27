@@ -90,6 +90,7 @@ app/
 
 - Hero promise → Trust → Outcomes → Features → Deep dives → Workflow → Personas → Social proof → FAQ → CTA → Footer.  
 - Primary conversion: **Start free** → `/signup` (Stripe trial / billing as configured).
+- **Production URL:** `https://www.blueveno.com` — metadata base and OG URLs resolve via `lib/site-url.ts` (preview deploys keep `VERCEL_URL`).
 
 **App (authenticated)**
 

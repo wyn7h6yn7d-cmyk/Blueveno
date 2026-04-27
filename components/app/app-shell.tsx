@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { BluevenoWordmark } from "@/components/brand/blueveno-wordmark";
 import { AccessProvider } from "@/components/access/access-provider";
+import { TradingAccountsProvider } from "@/components/trading-accounts/trading-accounts-provider";
 import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
 import { AppTopbar } from "@/components/app/app-topbar";
 import { WorkspaceGate } from "@/components/app/workspace-gate";
@@ -25,8 +26,9 @@ export function AppShell({ children, user, access }: AppShellProps) {
 
   return (
     <AccessProvider value={access}>
-      <div className="flex min-h-full bg-[linear-gradient(180deg,oklch(0.085_0.055_266),oklch(0.058_0.048_270)_54%,oklch(0.044_0.044_274)_100%)] text-zinc-100">
-        <aside className="sticky top-0 z-30 hidden h-screen w-[17.25rem] shrink-0 flex-col border-r border-[oklch(0.58_0.09_252/0.28)] bg-[linear-gradient(180deg,oklch(0.14_0.045_262),oklch(0.092_0.038_266)_68%,oklch(0.078_0.034_270))] shadow-[inset_-1px_0_0_oklch(1_0_0_/0.06),24px_0_72px_-46px_oklch(0_0_0/0.88),0_0_72px_-40px_oklch(0.64_0.14_252/0.3)] lg:flex">
+      <TradingAccountsProvider userId={user.id}>
+        <div className="flex min-h-full bg-[linear-gradient(180deg,oklch(0.085_0.055_266),oklch(0.058_0.048_270)_54%,oklch(0.044_0.044_274)_100%)] text-zinc-100">
+          <aside className="sticky top-0 z-30 hidden h-screen w-[17.25rem] shrink-0 flex-col border-r border-[oklch(0.58_0.09_252/0.28)] bg-[linear-gradient(180deg,oklch(0.14_0.045_262),oklch(0.092_0.038_266)_68%,oklch(0.078_0.034_270))] shadow-[inset_-1px_0_0_oklch(1_0_0_/0.06),24px_0_72px_-46px_oklch(0_0_0/0.88),0_0_72px_-40px_oklch(0.64_0.14_252/0.3)] lg:flex">
           <div className="flex h-[4.35rem] items-center border-b border-white/[0.08] px-5">
             <Link
               href="/app"
@@ -74,6 +76,7 @@ export function AppShell({ children, user, access }: AppShellProps) {
           </div>
         </div>
       </div>
+      </TradingAccountsProvider>
     </AccessProvider>
   );
 }

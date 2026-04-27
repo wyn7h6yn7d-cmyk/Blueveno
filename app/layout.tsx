@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 import { PRODUCT_DESCRIPTION, PRODUCT_TAGLINE } from "@/lib/product";
 import { JetBrains_Mono, Plus_Jakarta_Sans, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
@@ -24,6 +25,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: `Blueveno — ${PRODUCT_TAGLINE}`,
     template: "%s — Blueveno",
@@ -33,6 +35,8 @@ export const metadata: Metadata = {
     title: `Blueveno — ${PRODUCT_TAGLINE}`,
     description: PRODUCT_DESCRIPTION,
     type: "website",
+    siteName: "Blueveno",
+    locale: "en",
   },
 };
 

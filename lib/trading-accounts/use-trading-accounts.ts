@@ -6,6 +6,7 @@ import { mapTradingAccountRow } from "@/lib/trading-accounts/map";
 import type { TradingAccount } from "@/lib/trading-accounts/types";
 
 type TradingAccountsState = {
+  userId: string | undefined;
   accounts: TradingAccount[];
   activeAccountId: string | null;
   loading: boolean;
@@ -71,6 +72,7 @@ export function useTradingAccounts(userId: string | undefined): TradingAccountsS
 
   return useMemo(
     () => ({
+      userId,
       accounts,
       activeAccountId,
       loading,
@@ -78,6 +80,6 @@ export function useTradingAccounts(userId: string | undefined): TradingAccountsS
       reload,
       setActiveAccount,
     }),
-    [accounts, activeAccountId, loading, error, reload, setActiveAccount],
+    [userId, accounts, activeAccountId, loading, error, reload, setActiveAccount],
   );
 }

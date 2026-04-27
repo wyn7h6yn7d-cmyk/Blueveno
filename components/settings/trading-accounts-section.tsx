@@ -11,14 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { cn } from "@/lib/utils";
-import { TRADING_ACCOUNT_TYPES, type TradingAccount, type TradingAccountType } from "@/lib/trading-accounts/types";
-import { mapTradingAccountRow } from "@/lib/trading-accounts/map";
+import { TRADING_ACCOUNT_TYPES, type TradingAccountType } from "@/lib/trading-accounts/types";
 import { useAccess } from "@/components/access/access-provider";
 import {
   canManageTradingAccounts,
   tradingAccountsMaxForAccess,
   tradingAccountsUsageText,
 } from "@/lib/trading-accounts/entitlements";
+import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 
 const field =
   "h-10 w-full min-w-0 rounded-xl border border-white/[0.12] bg-black/25 px-3 text-[14px] text-zinc-100 placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
@@ -44,10 +44,15 @@ export function TradingAccountsSection() {
   const access = useAccess();
   const { isReadOnlyTrial } = access;
   const searchParams = useSearchParams();
-  const [userId, setUserId] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState<TradingAccount[]>([]);
-  const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    userId,
+    accounts,
+    activeAccountId,
+    loading,
+    error: accountsLoadError,
+    reload,
+    setActiveAccount,
+  } = useTradingAccountsWorkspace();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -62,71 +67,19 @@ export function TradingAccountsSection() {
   const maxAccounts = tradingAccountsMaxForAccess(access);
   const atAccountLimit = accounts.length >= maxAccounts;
 
-  async function load() {
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-      setUserId(user.id);
-      const [{ data: profile, error: profileError }, { data: accountRows, error: accountError }] = await Promise.all([
-        supabase
-          .from("user_profiles")
-          .select("active_trading_account_id")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase.from("trading_accounts").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
-      ]);
-      if (profileError || accountError) {
-        setAccounts([]);
-        setActiveAccountId(null);
-        setMessage(profileError?.message ?? accountError?.message ?? "Could not load trading accounts.");
-        setLoading(false);
-        return;
-      }
-
-      const safeRows = Array.isArray(accountRows) ? accountRows : [];
-      const mapped = safeRows.map((row) => mapTradingAccountRow(row as unknown as Record<string, unknown>));
-      setAccounts(mapped);
-      setActiveAccountId((profile?.active_trading_account_id as string | null) ?? null);
-      setLoading(false);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Could not load trading accounts.";
-      setAccounts([]);
-      setActiveAccountId(null);
-      setMessage(message);
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- load fetches remote account/profile state into local form state */
-    void load();
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
-
   useEffect(() => {
     if (!focusCreate) return;
     const el = document.getElementById("accounts-create-name");
     el?.focus();
   }, [focusCreate, shouldShow]);
 
-  async function setActive(id: string) {
+  async function handleSetMainAccount(id: string) {
     if (!userId) return;
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("user_profiles")
-      .update({ active_trading_account_id: id, updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
-    if (error) {
-      setMessage(error.message);
+    const result = await setActiveAccount(id);
+    if (!result.ok) {
+      setMessage(result.error);
       return;
     }
-    setActiveAccountId(id);
     setMessage("Main account updated.");
   }
 
@@ -184,7 +137,7 @@ export function TradingAccountsSection() {
       }
       const newId = (data?.id as string | undefined) ?? null;
       if (newId && (!activeAccountId || accounts.length === 0)) {
-        await setActive(newId);
+        await setActiveAccount(newId);
       }
       setMessage("Account created.");
     }
@@ -192,7 +145,7 @@ export function TradingAccountsSection() {
     setEditingId(null);
     setForm(EMPTY_FORM);
     setSaving(false);
-    await load();
+    await reload();
   }
 
   async function onDeleteAccount() {
@@ -219,16 +172,24 @@ export function TradingAccountsSection() {
     const remaining = accounts.filter((a) => a.id !== deleteId);
     if (activeAccountId === deleteId) {
       const fallback = remaining[0]?.id ?? null;
-      await supabase
-        .from("user_profiles")
-        .update({ active_trading_account_id: fallback, updated_at: new Date().toISOString() })
-        .eq("user_id", userId);
-      setActiveAccountId(fallback);
+      if (fallback) {
+        await setActiveAccount(fallback);
+      } else {
+        const { error: clearActiveError } = await supabase
+          .from("user_profiles")
+          .update({ active_trading_account_id: null, updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+        if (clearActiveError) {
+          setDeleting(false);
+          setMessage(clearActiveError.message);
+          return;
+        }
+      }
     }
     setDeleting(false);
     setDeleteId(null);
     setMessage("Account deleted.");
-    await load();
+    await reload();
   }
 
   if (!shouldShow) return null;
@@ -241,6 +202,12 @@ export function TradingAccountsSection() {
         description="Create, edit, delete, and switch your main trading account."
       >
       {loading ? <p className="text-[14px] text-zinc-500">Loading trading accounts…</p> : null}
+
+      {!loading && accountsLoadError ? (
+        <p className="text-[14px] text-rose-300/95" role="alert">
+          {accountsLoadError}
+        </p>
+      ) : null}
 
       {!loading ? (
         <div className="space-y-5">
@@ -394,7 +361,7 @@ export function TradingAccountsSection() {
                       type="button"
                       variant="outline"
                       className="h-8 rounded-lg border-white/[0.12] bg-white/[0.03] px-3 text-[12px] text-zinc-200"
-                      onClick={() => void setActive(account.id)}
+                      onClick={() => void handleSetMainAccount(account.id)}
                       disabled={activeAccountId === account.id}
                     >
                       Set as main

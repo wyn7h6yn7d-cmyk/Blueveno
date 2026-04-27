@@ -4,6 +4,14 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "How Blueveno collects, uses, and protects your data.",
+  alternates: {
+    canonical: "/privacy",
+  },
+  openGraph: {
+    url: "/privacy",
+    title: "Privacy Policy — Blueveno",
+    description: "How Blueveno collects, uses, and protects your data.",
+  },
 };
 
 export default function PrivacyPage() {

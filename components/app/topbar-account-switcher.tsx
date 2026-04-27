@@ -5,11 +5,7 @@ import { useRouter } from "next/navigation";
 import { Wallet, X } from "lucide-react";
 import { useAccess } from "@/components/access/access-provider";
 import { tradingAccountsMaxForAccess } from "@/lib/trading-accounts/entitlements";
-import { useTradingAccounts } from "@/lib/trading-accounts/use-trading-accounts";
-
-type Props = {
-  userId: string;
-};
+import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 
 type BoundaryState = {
   hasError: boolean;
@@ -42,11 +38,11 @@ class TopbarAccountSwitcherBoundary extends Component<{ children: ReactNode }, B
   }
 }
 
-function TopbarAccountSwitcherInner({ userId }: Props) {
+function TopbarAccountSwitcherInner() {
   const router = useRouter();
   const access = useAccess();
   const maxAccounts = tradingAccountsMaxForAccess(access);
-  const { accounts, activeAccountId, error: accountLoadError, setActiveAccount } = useTradingAccounts(userId);
+  const { accounts, activeAccountId, error: accountLoadError, setActiveAccount } = useTradingAccountsWorkspace();
   const [accountActionError, setAccountActionError] = useState<string | null>(null);
   const [accountErrorDismissed, setAccountErrorDismissed] = useState(false);
   const activeAccount = accounts.find((a) => a.id === activeAccountId) ?? null;
@@ -81,7 +77,6 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
               setAccountActionError(null);
               const result = await setActiveAccount(selectedId);
               if (result.ok) {
-                router.refresh();
                 return;
               }
               setAccountActionError(result.error);
@@ -137,10 +132,10 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
   );
 }
 
-export function TopbarAccountSwitcher(props: Props) {
+export function TopbarAccountSwitcher() {
   return (
     <TopbarAccountSwitcherBoundary>
-      <TopbarAccountSwitcherInner {...props} />
+      <TopbarAccountSwitcherInner />
     </TopbarAccountSwitcherBoundary>
   );
 }

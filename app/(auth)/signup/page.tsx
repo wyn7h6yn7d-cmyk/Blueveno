@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   title: "Create account",
   description:
     "Create a Blueveno workspace. Start your 7-day free trial with 1 trading account and keep your history visible after trial.",
+  alternates: {
+    canonical: "/signup",
+  },
+  openGraph: {
+    url: "/signup",
+    title: "Create account — Blueveno",
+    description:
+      "Create a Blueveno workspace. Start your 7-day free trial with 1 trading account and keep your history visible after trial.",
+  },
 };
 
 export default async function SignupPage() {

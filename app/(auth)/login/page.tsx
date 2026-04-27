@@ -10,6 +10,15 @@ export const metadata: Metadata = {
   title: "Sign in",
   description:
     "Sign in to Blueveno to continue your journal, behavior review, and trading-account workflow.",
+  alternates: {
+    canonical: "/login",
+  },
+  openGraph: {
+    url: "/login",
+    title: "Sign in — Blueveno",
+    description:
+      "Sign in to Blueveno to continue your journal, behavior review, and trading-account workflow.",
+  },
 };
 
 type Props = {

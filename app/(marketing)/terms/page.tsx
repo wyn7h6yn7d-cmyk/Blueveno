@@ -4,6 +4,14 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "Terms for using Blueveno.",
+  alternates: {
+    canonical: "/terms",
+  },
+  openGraph: {
+    url: "/terms",
+    title: "Terms of Service — Blueveno",
+    description: "Terms for using Blueveno.",
+  },
 };
 
 export default function TermsPage() {

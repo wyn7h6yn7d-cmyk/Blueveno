@@ -4,6 +4,14 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Cookie Policy",
   description: "How Blueveno uses cookies and similar storage.",
+  alternates: {
+    canonical: "/cookies",
+  },
+  openGraph: {
+    url: "/cookies",
+    title: "Cookie Policy — Blueveno",
+    description: "How Blueveno uses cookies and similar storage.",
+  },
 };
 
 export default function CookiesPage() {
