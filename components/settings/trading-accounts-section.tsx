@@ -268,7 +268,7 @@ export function TradingAccountsSection() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label>Broker / platform</Label>
+                <Label>Broker / firm</Label>
                 <Input
                   className={field}
                   value={form.brokerPlatform}

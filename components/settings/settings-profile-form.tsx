@@ -438,7 +438,7 @@ export function SettingsProfileForm() {
       <DashboardCard
         eyebrow="Data & privacy"
         title="Data rights"
-        description="Access policy information and contact us for export/deletion requests."
+        description="Access policy information and contact us for deletion/support requests."
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <Link
@@ -448,19 +448,13 @@ export function SettingsProfileForm() {
             View privacy policy
           </Link>
           <a
-            href="mailto:hello@blueveno.com?subject=Blueveno%20Data%20Export%20Request"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
-          >
-            Request data export
-          </a>
-          <a
-            href="mailto:hello@blueveno.com?subject=Blueveno%20Account%20Deletion%20Request"
+            href="mailto:kennethalto95@gmail.com?subject=Blueveno%20Account%20Deletion%20Request"
             className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-400/30 bg-rose-500/[0.08] px-4 text-[13px] text-rose-200 transition hover:bg-rose-500/[0.14]"
           >
             Request account deletion
           </a>
           <a
-            href="mailto:hello@blueveno.com?subject=Blueveno%20Support%20Request"
+            href="mailto:kennethalto95@gmail.com?subject=Blueveno%20Support%20Request"
             className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
           >
             Contact support

@@ -13,7 +13,7 @@ export default function PrivacyPage() {
       <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight">Privacy Policy</h1>
       <p className="mt-6 text-[15px] leading-relaxed text-zinc-400">
         This Privacy Policy explains what data Blueveno processes, why it is processed, how long it is kept, and how you can
-        request access, export, or deletion.
+        request access, correction, or deletion.
       </p>
 
       <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">1. Data we process</h2>
@@ -64,15 +64,15 @@ export default function PrivacyPage() {
 
       <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">5. Your rights</h2>
       <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Depending on your jurisdiction, you may request access, correction, export, deletion, or restriction of your data.
+        Depending on your jurisdiction, you may request access, correction, deletion, or restriction of your data.
         You may also object to certain processing where applicable.
       </p>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">6. Export and deletion requests</h2>
+      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">6. Deletion requests and contact</h2>
       <p className="mt-10 text-[15px] leading-relaxed text-zinc-400">
-        For export or deletion requests, contact us from your account email so we can verify ownership:{" "}
-        <a href="mailto:hello@blueveno.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
-          hello@blueveno.com
+        For account deletion or support requests, contact us from your account email so we can verify ownership:{" "}
+        <a href="mailto:kennethalto95@gmail.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
+          kennethalto95@gmail.com
         </a>
         .
       </p>

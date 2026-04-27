@@ -68,8 +68,8 @@ export default function TermsPage() {
 
       <p className="mt-10 text-[15px] leading-relaxed text-zinc-400">
         Questions about these Terms:{" "}
-        <a href="mailto:hello@blueveno.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
-          hello@blueveno.com
+        <a href="mailto:kennethalto95@gmail.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
+          kennethalto95@gmail.com
         </a>
         .
       </p>

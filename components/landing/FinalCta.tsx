@@ -49,10 +49,10 @@ export function FinalCta() {
               <p className="mt-8 font-mono text-[10px] leading-snug text-zinc-600">
                 Questions?{" "}
                 <a
-                  href="mailto:hello@blueveno.com"
+                  href="mailto:kennethalto95@gmail.com"
                   className="text-zinc-500 underline-offset-2 hover:text-zinc-400 hover:underline"
                 >
-                  hello@blueveno.com
+                  kennethalto95@gmail.com
                 </a>
               </p>
             </div>

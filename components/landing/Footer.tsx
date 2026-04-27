@@ -16,7 +16,7 @@ const cols = [
     title: "Company",
     links: [
       { label: "Pricing", href: "/pricing" },
-      { label: "Contact", href: "mailto:hello@blueveno.com" },
+      { label: "Contact", href: "mailto:kennethalto95@gmail.com" },
     ],
   },
   {

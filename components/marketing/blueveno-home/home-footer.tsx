@@ -19,7 +19,7 @@ export function HomeFooter() {
             <Link href="/cookies" className="transition hover:text-zinc-400">
               Cookies
             </Link>
-            <a href="mailto:hello@blueveno.com" className="transition hover:text-zinc-400">
+            <a href="mailto:kennethalto95@gmail.com" className="transition hover:text-zinc-400">
               Contact
             </a>
             <span className="text-zinc-700">© {new Date().getFullYear()}</span>

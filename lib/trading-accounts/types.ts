@@ -1,4 +1,4 @@
-export const TRADING_ACCOUNT_TYPES = ["Live", "Demo", "Prop", "Challenge", "Funded", "Other"] as const;
+export const TRADING_ACCOUNT_TYPES = ["Live", "Demo", "Challenge", "Funded", "Other"] as const;
 
 export type TradingAccountType = (typeof TRADING_ACCOUNT_TYPES)[number];
 

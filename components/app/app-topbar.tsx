@@ -270,7 +270,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
                 onClick={() => router.push("/")}
               >
                 <Home className="size-4 text-zinc-400" />
-                Marketing home
+                Home page
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
