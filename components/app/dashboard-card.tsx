@@ -26,16 +26,16 @@ export function DashboardCard({
   return (
     <section
       className={cn(
-        "flex flex-col overflow-hidden rounded-2xl border border-white/[0.085]",
-        "bg-[linear-gradient(168deg,oklch(0.14_0.028_262/0.97),oklch(0.108_0.026_264/0.96))]",
-        "shadow-[0_22px_64px_-36px_rgba(0,0,0,0.75),inset_0_1px_0_0_oklch(1_0_0_/0.04)] ring-1 ring-white/[0.035]",
+        "flex flex-col overflow-hidden rounded-2xl border border-white/[0.11]",
+        "bg-[linear-gradient(168deg,oklch(0.155_0.032_262/0.97),oklch(0.115_0.028_264/0.96))]",
+        "shadow-[0_26px_72px_-38px_rgba(0,0,0,0.8),0_0_84px_-52px_oklch(0.52_0.13_252/0.22),inset_0_1px_0_0_oklch(1_0_0_/0.055)] ring-1 ring-white/[0.05]",
         variant === "inset" &&
-          "bg-[linear-gradient(172deg,oklch(0.118_0.03_264/0.95),oklch(0.095_0.028_266/0.94))] ring-white/[0.025]",
+          "bg-[linear-gradient(172deg,oklch(0.13_0.032_264/0.95),oklch(0.102_0.03_266/0.94))] ring-white/[0.03]",
         className,
       )}
     >
       {(eyebrow || title || description) && (
-        <header className="border-b border-white/[0.065] px-4 py-3.5 sm:px-6 sm:py-5">
+        <header className="border-b border-white/[0.08] px-4 py-4 sm:px-6 sm:py-5.5">
           <div className="flex flex-col gap-1">
             {eyebrow ? (
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{eyebrow}</p>
@@ -49,7 +49,7 @@ export function DashboardCard({
           </div>
         </header>
       )}
-      <div className={cn("min-h-0 min-w-0 flex-1 p-5 sm:p-6", contentClassName)}>{children}</div>
+      <div className={cn("min-h-0 min-w-0 flex-1 p-5.5 sm:p-6.5", contentClassName)}>{children}</div>
       {footer ? (
         <footer className="border-t border-white/[0.06] bg-black/15 px-4 py-3 sm:px-6 sm:py-3.5">{footer}</footer>
       ) : null}

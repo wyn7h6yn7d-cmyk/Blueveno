@@ -12,6 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAccess } from "@/components/access/access-provider";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 
@@ -27,19 +28,20 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
   const { removeRow } = useUserWorkspace(userId, { initialWorkspace });
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const chartUrl = row.tradingview_url as string | null;
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const chartUrl = row.chart_link_url as string | null;
   const rawPnl = String(row.r_value ?? "");
   const pnlNum = parsePnlAmount(rawPnl);
   const pnlTitle = pnlNum !== null ? formatSignedPnlAmount(pnlNum, displayCurrency) : rawPnl;
 
   const onDelete = async () => {
     if (!canWriteJournal) return;
-    if (!window.confirm("Delete this journal entry? This cannot be undone.")) return;
     setDeleteError(null);
     setDeleting(true);
     const result = await removeRow(row.id);
     setDeleting(false);
     if (result.ok) {
+      setConfirmOpen(false);
       router.push("/app/journal");
       router.refresh();
       return;
@@ -71,7 +73,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
                 variant="destructive"
                 disabled={deleting}
                 className="h-9 rounded-xl px-4"
-                onClick={() => void onDelete()}
+                onClick={() => setConfirmOpen(true)}
               >
                 <Trash2 className="mr-2 size-4" strokeWidth={2} aria-hidden />
                 {deleting ? "Deleting…" : "Delete"}
@@ -156,6 +158,19 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
           )}
         </div>
       </DashboardCard>
+      <ConfirmDialog
+        open={confirmOpen}
+        onCancel={() => {
+          if (deleting) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => void onDelete()}
+        destructive
+        pending={deleting}
+        title="Delete journal entry?"
+        description="This action is permanent and cannot be undone."
+        confirmLabel="Delete entry"
+      />
     </div>
   );
 }

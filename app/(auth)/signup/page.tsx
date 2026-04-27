@@ -31,7 +31,7 @@ export default async function SignupPage() {
           Open your <span className="text-gradient-cobalt">workspace</span>
         </>
       }
-      subtitle="Turn raw execution into proof. Start on the free tier and scale when your process—not hype—demands it."
+      subtitle="Turn raw execution into proof. Start with a 7-day trial, then keep full access on Premium."
       alternatePrompt="Already registered?"
       alternateHref="/login"
       alternateLabel="Sign in"

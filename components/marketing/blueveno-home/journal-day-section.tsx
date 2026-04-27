@@ -60,7 +60,7 @@ export function JournalDaySection() {
                   <blockquote className="mt-4 border-l-2 border-[oklch(0.55_0.14_252/0.55)] pl-4 text-[13px] leading-[1.6] tracking-[-0.015em] text-zinc-400 sm:mt-5 sm:pl-5 sm:text-[14px]">
                     Stopped after the drive. No afternoon drift.
                   </blockquote>
-                  <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="mt-4 grid grid-cols-1 gap-2 min-[560px]:grid-cols-3">
                     {["Followed plan", "Respected stop", "No revenge"].map((item) => (
                       <span
                         key={item}

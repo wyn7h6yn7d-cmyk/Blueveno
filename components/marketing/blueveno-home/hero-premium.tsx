@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useMemo, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import Link from "next/link";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion, useSpring } from "framer-motion";
-import { ArrowRight, CheckCircle2, ExternalLink, LineChart, Shield, Target } from "lucide-react";
+import { useMemo, useRef, useState, type PointerEvent } from "react";
+import { motion, useReducedMotion, useSpring } from "framer-motion";
+import { CheckCircle2, LineChart, Shield, Target } from "lucide-react";
+import { BluevenoLogoMark } from "@/components/brand/blueveno-logo-mark";
 import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
 import { cn } from "@/lib/utils";
 
@@ -14,223 +15,193 @@ const MODES: { id: ViewMode; label: string }[] = [
   { id: "chart", label: "Chart" },
   { id: "week", label: "Week" },
 ];
-const SUPPORT_CARDS = [
+
+const FEATURE_ITEMS = [
   { icon: LineChart, title: "Trade. Journal. Improve.", subtitle: "All in one calm workspace." },
   { icon: Shield, title: "Private by design.", subtitle: "Your data stays yours." },
-  { icon: Target, title: "Built for consistency.", subtitle: "Better habits, better results." },
+  { icon: Target, title: "Built for consistency.", subtitle: "Better habits, clearer self-review." },
 ] as const;
 
-const WEEK_DAYS = [
-  { day: "Mon", pnl: 120 },
-  { day: "Tue", pnl: -45 },
-  { day: "Wed", pnl: 180 },
-  { day: "Thu", pnl: 90 },
-  { day: "Fri", pnl: -20 },
+const WEEK_ROWS = [
+  { label: "May 5 - 9", values: [160, -42, 210, 98, 74], total: 500 },
+  { label: "May 12 - 16", values: [86, 132, -55, 122, 66], total: 351 },
+  { label: "May 19 - 23", values: [-18, 88, 176, -34, 120], total: 332 },
+  { label: "May 26 - 30", values: [102, 64, 0, 78, -16], total: 228 },
 ] as const;
 
 function formatPnl(value: number) {
-  const prefix = value > 0 ? "+" : value < 0 ? "-" : "";
-  return `${prefix}$${Math.abs(value).toLocaleString()}`;
+  const sign = value >= 0 ? "+" : "-";
+  return `${sign}$${Math.abs(value)}`;
 }
 
-function weekCellClass(n: number) {
-  if (n > 0)
-    return "border-emerald-400/45 bg-[linear-gradient(160deg,oklch(0.24_0.085_160/0.66),oklch(0.11_0.05_165/0.52))] text-emerald-50";
-  if (n < 0)
-    return "border-rose-400/40 bg-[linear-gradient(160deg,oklch(0.25_0.07_24/0.6),oklch(0.11_0.04_24/0.5))] text-rose-50";
-  return "border-white/[0.12] bg-white/[0.04] text-zinc-500";
+function weekCellTone(value: number) {
+  if (value > 0) {
+    return "border-emerald-400/40 bg-[linear-gradient(165deg,oklch(0.24_0.09_156/0.75),oklch(0.11_0.05_165/0.52))] text-emerald-50";
+  }
+  if (value < 0) {
+    return "border-rose-400/35 bg-[linear-gradient(165deg,oklch(0.24_0.08_26/0.7),oklch(0.11_0.05_24/0.5))] text-rose-50";
+  }
+  return "border-white/[0.1] bg-white/[0.04] text-zinc-500";
 }
 
-function ChartPreviewSvg() {
-  const gid = useId().replace(/:/g, "");
-  return (
-    <svg viewBox="0 0 420 280" className="h-full w-full" preserveAspectRatio="xMidYMid slice" aria-hidden>
+function HeroChartLayer({
+  className,
+  duration,
+  reverse,
+  pathA,
+  pathB,
+  glow,
+  nodeColor,
+  nodeOpacity = 0.72,
+  enabled = true,
+}: {
+  className?: string;
+  duration: number;
+  reverse?: boolean;
+  pathA: string;
+  pathB: string;
+  glow: string;
+  nodeColor: string;
+  nodeOpacity?: number;
+  enabled?: boolean;
+}) {
+  const body = (
+    <svg viewBox="0 0 1600 300" preserveAspectRatio="none" className="h-full w-[50%] shrink-0">
       <defs>
-        <linearGradient id={`${gid}-fill`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="oklch(0.52 0.16 252)" stopOpacity="0.28" />
-          <stop offset="100%" stopColor="oklch(0.06 0.03 268)" stopOpacity="0" />
+        <linearGradient id={`line-grad-${duration}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={glow} stopOpacity="0.58" />
+          <stop offset="100%" stopColor={glow} stopOpacity="0.18" />
         </linearGradient>
-        <linearGradient id={`${gid}-stroke`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="oklch(0.62 0.16 252)" />
-          <stop offset="100%" stopColor="oklch(0.48 0.12 252)" />
-        </linearGradient>
-        <radialGradient id={`${gid}-glow`} cx="50%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="oklch(0.45 0.14 252)" stopOpacity="0.2" />
-          <stop offset="100%" stopColor="oklch(0.08 0.03 268)" stopOpacity="0" />
+        <radialGradient id={`node-grad-${duration}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={nodeColor} stopOpacity={nodeOpacity} />
+          <stop offset="100%" stopColor={nodeColor} stopOpacity="0" />
         </radialGradient>
       </defs>
-      <rect width="420" height="280" fill={`url(#${gid}-glow)`} rx="14" />
-      <rect width="420" height="280" fill={`url(#${gid}-fill)`} rx="14" />
-      {[36, 70, 104, 138, 172, 206, 240].map((y) => (
-        <line key={y} x1="16" y1={y} x2="404" y2={y} stroke="oklch(0.64 0.04 248)" strokeOpacity="0.18" strokeWidth="1" />
+      {[24, 56, 88, 120, 152, 184, 216, 248].map((y) => (
+        <line key={y} x1="0" x2="1600" y1={y} y2={y} stroke="oklch(0.62 0.04 248)" strokeOpacity="0.09" strokeWidth="1" />
       ))}
-      <line x1="20" y1="138" x2="400" y2="138" stroke="oklch(0.66 0.12 252)" strokeOpacity="0.4" strokeWidth="1.1" />
       <path
-        d="M 30 195 C 72 172, 94 140, 132 132 C 158 126, 176 148, 206 145 C 230 142, 244 114, 270 108 C 305 98, 337 121, 387 82"
+        d={pathA}
         fill="none"
-        stroke={`url(#${gid}-stroke)`}
-        strokeWidth="2.8"
+        stroke={`url(#line-grad-${duration})`}
+        strokeWidth="2"
         strokeLinecap="round"
-        opacity="0.95"
+        style={{ filter: `drop-shadow(0 0 7px ${glow})` }}
+      />
+      <path
+        d={pathB}
+        fill="none"
+        stroke={`url(#line-grad-${duration})`}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeOpacity="0.8"
+      />
+      {[
+        [180, 170],
+        [348, 136],
+        [522, 178],
+        [734, 102],
+        [980, 148],
+        [1240, 94],
+        [1450, 164],
+      ].map(([x, y], i) => (
+        <g key={`${duration}-${i}`}>
+          <circle cx={x} cy={y} r="10" fill={`url(#node-grad-${duration})`} />
+          <circle cx={x} cy={y} r="2.1" fill={nodeColor} fillOpacity={nodeOpacity} />
+        </g>
+      ))}
+      {[
+        [94, 112],
+        [270, 166],
+        [610, 126],
+        [838, 166],
+        [1160, 122],
+        [1370, 96],
+      ].map(([x, y], i) => (
+        <circle key={`minor-${duration}-${i}`} cx={x} cy={y} r="1.35" fill={nodeColor} fillOpacity="0.4" />
+      ))}
+      <line x1="0" y1="150" x2="1600" y2="150" stroke={glow} strokeOpacity="0.12" strokeWidth="1" strokeDasharray="4 6" />
+      {[160, 320, 480, 640, 800, 960, 1120, 1280, 1440].map((x) => (
+        <line key={`v-${duration}-${x}`} x1={x} y1="0" x2={x} y2="300" stroke={glow} strokeOpacity="0.08" strokeWidth="0.9" />
+      ))}
+      <rect
+        x="0"
+        y="0"
+        width="1600"
+        height="300"
+        fill="none"
+        stroke={glow}
+        strokeOpacity="0.06"
+        strokeWidth="1"
+        strokeDasharray="3 7"
       />
     </svg>
   );
-}
 
-function DayPanel() {
-  const discipline = ["Followed plan", "Respected stop", "No revenge trade"];
+  if (!enabled) {
+    return <div className={cn("absolute inset-0 flex w-full", className)}>{body}</div>;
+  }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.1] bg-[linear-gradient(168deg,oklch(0.1_0.042_262/0.96),oklch(0.05_0.03_268/0.98))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08)] sm:p-6">
-      <div className="flex items-start justify-between gap-4 border-b border-white/[0.06] pb-5">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-400">THU · MAY 8</p>
-          <p className="mt-2 font-display text-xl font-semibold tracking-[-0.035em] text-zinc-100">NQ</p>
-        </div>
-        <p className="font-display text-[clamp(1.7rem,4.6vw,2.5rem)] font-semibold tabular-nums tracking-[-0.05em] text-emerald-300 [text-shadow:0_0_40px_oklch(0.56_0.15_155/0.3)]">
-          +$180
-        </p>
-      </div>
-
-      <div className="flex-1 py-6">
-        <p className="mt-3 max-w-[44ch] text-[15px] leading-[1.6] tracking-[-0.015em] text-zinc-300 sm:text-[16px]">
-          Opening drive only. Size held. No revenge after the flush.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {["Calm", "Focused", "Hesitant", "Tilted"].map((mood) => (
-            <span
-              key={mood}
-              className={cn(
-                "rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.14em]",
-                mood === "Focused"
-                  ? "border-[oklch(0.72_0.1_252/0.5)] bg-[oklch(0.32_0.09_252/0.35)] text-[oklch(0.9_0.03_252)]"
-                  : "border-white/[0.14] bg-white/[0.03] text-zinc-400",
-              )}
-            >
-              {mood}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-[1fr_auto] gap-4 border-t border-white/[0.06] pt-5">
-        <div className="space-y-2.5">
-          {discipline.map((item) => (
-            <div key={item} className="flex items-center gap-2 text-sm text-zinc-300">
-              <span className="size-1.5 rounded-full bg-emerald-300" />
-              {item}
-            </div>
-          ))}
-        </div>
-        <div className="flex min-w-[8.7rem] flex-col rounded-2xl border border-[oklch(0.55_0.12_252/0.35)] bg-[oklch(0.09_0.04_266/0.6)] px-4 py-3">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Discipline</span>
-          <span className="mt-1 font-display text-xl font-semibold tracking-[-0.035em] text-zinc-100">3/3</span>
-          <span className="text-xs text-zinc-400">100%</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ChartPanel() {
-  return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[linear-gradient(168deg,oklch(0.095_0.045_262/0.96),oklch(0.05_0.03_268/0.99))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.07)] sm:p-6">
-      <div className="shrink-0 flex items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
-        <div className="flex items-center gap-2.5">
-          <span className="relative flex size-2.5 items-center justify-center">
-            <span className="absolute inset-0 rounded-full bg-emerald-400/40 blur-[3px]" aria-hidden />
-            <span className="relative size-2 rounded-full bg-emerald-400 shadow-[0_0_12px_oklch(0.72_0.16_155/0.7)]" />
-          </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-300">Saved chart</span>
-        </div>
-        <span className="rounded-lg border border-white/[0.1] bg-black/40 px-2.5 py-1 font-mono text-[10px] text-zinc-400">NQ · 08 May</span>
-      </div>
-
-      <div className="relative mt-4 min-h-0 flex-1 overflow-hidden rounded-2xl border border-[oklch(0.5_0.13_252/0.45)] bg-[linear-gradient(165deg,oklch(0.07_0.04_268/0.98),oklch(0.04_0.03_272/0.99))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_20px_56px_-30px_oklch(0_0_0/0.92)]">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,oklch(0.42_0.12_252/0.08),transparent_42%)]" />
-        <div className="relative h-full min-h-0 p-3 sm:p-4">
-          <ChartPreviewSvg />
-        </div>
-      </div>
-
-      <div className="mt-4 shrink-0 flex items-end justify-between gap-4 border-t border-white/[0.06] pt-4">
-        <div>
-          <p className="font-mono text-[12px] font-semibold tracking-wide text-zinc-200">NQ · Session close</p>
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">Review attached</p>
-        </div>
-        <Link
-          href="/signup"
-          className={cn(
-            "inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[oklch(0.55_0.14_252/0.55)]",
-            "bg-[linear-gradient(180deg,oklch(0.28_0.09_262/0.96),oklch(0.14_0.05_268/0.98))] px-5 py-2.5 text-[13px] font-semibold text-zinc-50",
-            "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.1),0_8px_24px_-12px_oklch(0.35_0.12_252/0.5)] transition hover:border-[oklch(0.68_0.12_252/0.65)] hover:brightness-[1.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.45)]",
-          )}
-        >
-          Open chart
-          <ExternalLink className="size-4 opacity-90" strokeWidth={2} />
-        </Link>
-      </div>
-    </div>
+    <motion.div
+      className={cn("absolute inset-0 flex w-[200%]", className)}
+      animate={{ x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
+      transition={{ duration, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+      aria-hidden
+    >
+      {body}
+      {body}
+    </motion.div>
   );
 }
 
 function WeekPanel() {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-[linear-gradient(165deg,oklch(0.092_0.046_262/0.98),oklch(0.046_0.03_268/0.99))] p-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08)] sm:p-4">
-      <div className="shrink-0 grid grid-cols-1 gap-2 border-b border-white/[0.07] pb-3.5 sm:grid-cols-2">
-        <div className="rounded-xl border border-white/[0.1] bg-[linear-gradient(170deg,oklch(0.1_0.04_264/0.82),oklch(0.06_0.03_270/0.86))] px-3.5 py-2.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Week summary</p>
-          <p className="mt-1.5 font-display text-[1.75rem] font-semibold tracking-[-0.05em] text-emerald-300 sm:text-[1.95rem]">{formatPnl(1247.63)}</p>
+    <div className="flex h-full min-h-0 flex-col rounded-[1.35rem] border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.1_0.045_262/0.98),oklch(0.05_0.03_270/0.99))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08)] sm:p-5">
+      <div className="grid grid-cols-1 gap-2.5 border-b border-white/[0.07] pb-3.5 sm:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-xl border border-white/[0.11] bg-white/[0.03] px-3.5 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Week summary</p>
+          <p className="mt-1.5 font-display text-[2.1rem] font-semibold tracking-[-0.055em] text-emerald-300">+$1,348</p>
         </div>
-        <div className="rounded-xl border border-white/[0.1] bg-[linear-gradient(170deg,oklch(0.1_0.04_264/0.82),oklch(0.06_0.03_270/0.86))] px-3.5 py-2.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Discipline score</p>
+        <div className="rounded-xl border border-white/[0.11] bg-white/[0.03] px-3.5 py-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Discipline score</p>
           <div className="mt-1.5 flex items-center gap-2.5">
-            <span className="relative inline-flex size-9 items-center justify-center rounded-full border border-emerald-400/55 bg-[radial-gradient(circle_at_45%_30%,oklch(0.3_0.08_160/0.4),transparent_70%)] text-sm font-semibold text-emerald-300">
-              87
+            <span className="inline-flex size-11 items-center justify-center rounded-full border border-emerald-400/45 bg-emerald-400/10 text-sm font-semibold text-emerald-300">
+              86
             </span>
             <div>
-              <p className="text-[1rem] font-semibold text-emerald-200">Great week</p>
-              <p className="text-xs text-zinc-400">Keep building.</p>
+              <p className="text-[13px] font-medium text-zinc-200">High quality week</p>
+              <p className="text-[11px] text-zinc-500">Stable and controlled</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 pt-2.5">
+      <div className="mt-3 min-h-0 flex-1">
         <div className="overflow-x-auto pb-1">
-          <div className="grid h-[10.8rem] min-w-[33.5rem] grid-cols-[5.8rem_repeat(5,minmax(0,1fr))_5.8rem] grid-rows-[auto_repeat(4,minmax(0,1fr))] gap-x-1.5 gap-y-1.5">
-            <div className="px-2" />
-            {WEEK_DAYS.map((d) => (
-              <div
-                key={d.day}
-                className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.16em] text-zinc-500"
-              >
-                {d.day}
+          <div className="grid min-w-[30rem] grid-cols-[5.3rem_repeat(5,minmax(0,1fr))_5rem] gap-1.5 sm:min-w-[34rem] sm:grid-cols-[5.6rem_repeat(5,minmax(0,1fr))_5.4rem] lg:min-w-[37rem] lg:grid-cols-[5.7rem_repeat(5,minmax(0,1fr))_5.6rem]">
+            <div />
+            {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day) => (
+              <div key={day} className="text-center font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">
+                {day}
               </div>
             ))}
-            <div className="pb-0.5 text-center font-mono text-[8px] uppercase tracking-[0.16em] text-zinc-500">Week total</div>
-            {[
-              { label: "May 5 - 11", values: [186.4, -42.1, 248.75, 123.3, 205.6], total: 721.95 },
-              { label: "May 12 - 18", values: [-153.2, 97.6, 310.4, -68.5, 229.1], total: 415.4 },
-              { label: "May 19 - 25", values: [267.9, 134.4, -71.3, 142.2, 188.7], total: 661.9 },
-              { label: "May 26 - Jun 1", values: [89.3, -33.8, 0, 0, 0], total: 55.5 },
-            ].map((row) => (
+            <div className="text-center font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Total</div>
+            {WEEK_ROWS.map((row) => (
               <div key={row.label} className="contents">
-                <div className="flex items-center pl-2 text-[10px] text-zinc-500">
-                  {row.label}
-                </div>
-                {row.values.map((value, idx) => (
+                <div className="flex items-center text-[10px] text-zinc-500">{row.label}</div>
+                {row.values.map((v, idx) => (
                   <div
                     key={`${row.label}-${idx}`}
                     className={cn(
-                      "flex items-center justify-center rounded-lg border px-1 text-[10px] font-medium tabular-nums sm:text-[11px]",
-                      weekCellClass(value),
+                      "flex min-h-9 items-center justify-center rounded-lg border px-1.5 text-[10px] font-medium tabular-nums",
+                      weekCellTone(v),
                     )}
                   >
-                    {value === 0 ? "—" : formatPnl(value)}
+                    {v === 0 ? "—" : formatPnl(v)}
                   </div>
                 ))}
-                <div className="flex items-center justify-center rounded-lg border border-emerald-400/38 bg-emerald-400/12 px-1 text-[10px] font-semibold tabular-nums text-emerald-200 sm:text-[11px]">
+                <div className="flex min-h-9 items-center justify-center rounded-lg border border-emerald-400/35 bg-emerald-500/10 px-1.5 text-[10px] font-semibold text-emerald-200">
                   {formatPnl(row.total)}
                 </div>
               </div>
@@ -238,300 +209,214 @@ function WeekPanel() {
           </div>
         </div>
 
-        <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-[1fr_1fr_0.78fr]">
-          <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] p-2.5 sm:p-3">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 lg:grid-cols-[1fr_1fr_0.8fr]">
+          <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] p-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Behavior today</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {["Calm", "Focused", "Hesitant", "Tilted"].map((chip) => (
-                <span key={chip} className="rounded-full border border-white/[0.12] bg-white/[0.04] px-2 py-0.5 text-[10px] text-zinc-300">
+                <span key={chip} className="rounded-full border border-white/[0.12] bg-white/[0.05] px-2 py-0.5 text-[10px] text-zinc-300">
                   {chip}
                 </span>
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] p-2.5 sm:p-3">
+          <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] p-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Discipline checks</p>
             <div className="mt-2 space-y-1">
               {["Followed plan", "Respected stop", "No revenge trade"].map((item) => (
-                <div key={item} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
+                <p key={item} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
                   <CheckCircle2 className="size-3.5 text-blue-300" />
                   {item}
-                </div>
+                </p>
               ))}
             </div>
           </div>
-          <div className="relative col-span-2 flex min-h-[5.5rem] items-center justify-center overflow-hidden rounded-xl border border-white/[0.09] bg-[linear-gradient(160deg,oklch(0.08_0.04_266/0.8),oklch(0.05_0.03_270/0.9))] p-2 text-center lg:col-span-1">
-            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_48%_45%,oklch(0.55_0.13_250/0.35),transparent_60%)]" />
-            <span className="pointer-events-none absolute left-1/2 top-1/2 size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.35)]" />
-            <span className="pointer-events-none absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.2)]" />
-            <p className="relative text-[11px] leading-tight text-zinc-300">Consistency compounds.</p>
+          <div className="relative col-span-2 flex min-h-[5.8rem] items-center justify-center overflow-hidden rounded-xl border border-white/[0.09] bg-[linear-gradient(160deg,oklch(0.08_0.04_266/0.85),oklch(0.05_0.03_270/0.94))] text-center lg:col-span-1">
+            <span className="absolute left-1/2 top-1/2 size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.38)]" />
+            <span className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[oklch(0.58_0.12_250/0.22)]" />
+            <p className="relative text-[11px] text-zinc-300">Consistency target</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-2 grid shrink-0 grid-cols-1 items-center gap-2 border-t border-white/[0.06] pt-2.5 sm:grid-cols-[1fr_auto_auto] sm:gap-3">
+      <div className="mt-3 grid grid-cols-1 items-center gap-2 border-t border-white/[0.06] pt-3 sm:grid-cols-[1fr_auto]">
         <div className="flex items-center gap-2 text-[11px] text-zinc-400">
-          <span className="rounded-md border border-white/[0.1] bg-white/[0.03] px-1.5 py-1 text-[10px] text-zinc-300">Linked chart</span>
+          <span className="rounded-md border border-white/[0.1] bg-white/[0.04] px-1.5 py-1 text-[10px] text-zinc-300">
+            Linked chart
+          </span>
           <span className="size-1 rounded-full bg-emerald-400" />
           <span>Review ready</span>
         </div>
-        <div className="flex items-center gap-2 sm:justify-self-end">
-          <span className="rounded-full border border-white/[0.12] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300">Week</span>
-          <button type="button" className="rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200">
-            View notes
-          </button>
-        </div>
+        <Link
+          href="/signup"
+          className="inline-flex items-center rounded-lg border border-white/[0.1] px-3 py-1.5 text-[11px] text-zinc-200 transition hover:bg-white/[0.06]"
+        >
+          View notes
+        </Link>
       </div>
-    </div>
-  );
-}
-
-type BottomStripProps = { mode: ViewMode };
-
-function HeroProductBottomStrip({ mode }: BottomStripProps) {
-  const copy =
-    mode === "day"
-      ? { left: "Mood + discipline logged", right: "Calm / Focused / Hesitant / Tilted" }
-      : mode === "chart"
-        ? { left: "Linked chart review", right: "Saved chart attached" }
-        : { left: "Weekly quality", right: "Score + reflection ready" };
-
-  return (
-    <div className="flex min-h-[3.35rem] items-center justify-between gap-3 px-4 py-3.5 sm:min-h-[3.6rem] sm:px-6 sm:py-4">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <span className="size-1.5 shrink-0 rounded-full bg-[oklch(0.55_0.12_252/0.9)] shadow-[0_0_10px_oklch(0.55_0.12_252/0.45)]" aria-hidden />
-        <p className="truncate whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400 sm:text-[11px]">
-          {copy.left}
-        </p>
-      </div>
-      <p className="hidden max-w-[46%] truncate whitespace-nowrap text-right font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500 sm:block sm:text-[11px]">
-        {copy.right}
-      </p>
-      <Link
-        href="/login"
-        className="ml-3 inline-flex shrink-0 items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.72_0.12_252)] transition hover:text-zinc-200 sm:text-[11px]"
-      >
-        Sign in
-        <ArrowRight className="size-3.5" />
-      </Link>
     </div>
   );
 }
 
 export function HeroPremium() {
   const [mode, setMode] = useState<ViewMode>("week");
-  const [isHovering, setIsHovering] = useState(false);
   const reducedMotion = useReducedMotion();
-  const reduced = reducedMotion === true;
-  const rotateX = useSpring(0, { stiffness: 220, damping: 24, mass: 0.55 });
-  const rotateY = useSpring(0, { stiffness: 220, damping: 24, mass: 0.55 });
-  const scale = useSpring(1, { stiffness: 180, damping: 24, mass: 0.65 });
-  const tabId = useId();
-  const panelId = `${tabId}-panel`;
+  const heroMotionEnabled = !reducedMotion;
+  const frameRef = useRef<number | null>(null);
+  const rotateX = useSpring(0, { stiffness: 260, damping: 25, mass: 0.6 });
+  const rotateY = useSpring(0, { stiffness: 260, damping: 25, mass: 0.6 });
+  const scale = useSpring(1, { stiffness: 190, damping: 28, mass: 0.65 });
 
-  const slabStyle = useMemo(
-    () =>
-      ({
-        transformStyle: "preserve-3d",
-        "--bv-tilt-strength": isHovering ? "1" : "0",
-      }) as CSSProperties,
-    [isHovering],
-  );
+  const slabStyle = useMemo(() => ({ rotateX, rotateY, scale }), [rotateX, rotateY, scale]);
 
-  function onTabKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    const idx = MODES.findIndex((m) => m.id === mode);
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      e.preventDefault();
-      setMode(MODES[(idx + 1) % MODES.length].id);
-    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-      e.preventDefault();
-      setMode(MODES[(idx - 1 + MODES.length) % MODES.length].id);
-    }
-  }
-
-  function onPointerMove(e: PointerEvent<HTMLDivElement>) {
-    if (reduced || e.pointerType !== "mouse") return;
+  function onPanelPointerMove(e: PointerEvent<HTMLDivElement>) {
+    if (reducedMotion || e.pointerType !== "mouse") return;
     const rect = e.currentTarget.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width;
     const py = (e.clientY - rect.top) / rect.height;
-    rotateY.set((px - 0.5) * 10);
-    rotateX.set((0.5 - py) * 8);
-    scale.set(1.012);
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+    }
+    frameRef.current = requestAnimationFrame(() => {
+      rotateY.set((px - 0.5) * 8);
+      rotateX.set((0.5 - py) * 7);
+      scale.set(1.01);
+      frameRef.current = null;
+    });
   }
 
-  function onPointerEnter(e: PointerEvent<HTMLDivElement>) {
-    if (reduced || e.pointerType !== "mouse") return;
-    setIsHovering(true);
-  }
-
-  function onPointerLeave() {
-    setIsHovering(false);
+  function onPanelPointerLeave() {
+    if (frameRef.current !== null) {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
     rotateX.set(0);
     rotateY.set(0);
     scale.set(1);
   }
 
   return (
-    <section
-      id="hero"
-      className="relative overflow-x-clip border-b border-white/[0.08] pb-12 pt-[4.5rem] sm:pb-14 sm:pt-[5.25rem] lg:pb-14 lg:pt-24"
-      aria-labelledby="hero-heading"
-    >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[min(42vh,320px)] bg-[linear-gradient(180deg,oklch(0.1_0.06_262/0.35)_0%,transparent_72%)]"
-        aria-hidden
-      />
+    <section id="hero" className="relative overflow-hidden border-b border-white/[0.08] pb-16 pt-[6.4rem] lg:pb-20 lg:pt-28">
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,oklch(0.055_0.07_270),oklch(0.028_0.07_276)_58%,oklch(0.02_0.065_280)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,oklch(0.62_0.09_250/0.12)_1px,transparent_1px)] bg-[length:78px_100%] opacity-55" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,oklch(0.62_0.08_250/0.12)_1px,transparent_1px)] bg-[length:100%_54px] opacity-45" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,oklch(0.64_0.08_248/0.08)_45%,transparent_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.9]">
+        <HeroChartLayer
+          duration={198}
+          enabled={heroMotionEnabled}
+          className="opacity-52"
+          pathA="M0 198 C 120 190, 200 154, 286 162 C 390 172, 470 212, 560 202 C 675 188, 725 122, 826 130 C 932 138, 1012 192, 1116 184 C 1220 176, 1312 132, 1422 140 C 1516 146, 1570 186, 1600 180"
+          pathB="M0 214 C 96 208, 180 184, 290 190 C 392 196, 468 224, 572 218 C 650 214, 730 182, 824 186 C 922 192, 1014 224, 1126 216 C 1248 206, 1380 168, 1600 172"
+          glow="oklch(0.58 0.1 236)"
+          nodeColor="oklch(0.7 0.13 238)"
+        />
+        <HeroChartLayer
+          duration={152}
+          enabled={heroMotionEnabled}
+          reverse
+          className="hidden opacity-[0.78] sm:block"
+          pathA="M0 176 C 110 164, 192 118, 280 126 C 376 136, 438 194, 526 182 C 630 166, 696 98, 786 108 C 884 118, 950 176, 1048 164 C 1150 152, 1246 86, 1360 96 C 1478 106, 1546 170, 1600 160"
+          pathB="M0 164 C 102 150, 176 106, 254 114 C 360 124, 442 168, 536 154 C 632 140, 704 88, 792 98 C 896 110, 972 154, 1068 142 C 1186 128, 1280 78, 1408 88 C 1516 96, 1580 138, 1600 132"
+          glow="oklch(0.64 0.13 248)"
+          nodeColor="oklch(0.78 0.12 250)"
+        />
+        <HeroChartLayer
+          duration={124}
+          enabled={heroMotionEnabled}
+          className="hidden opacity-[0.66] lg:block"
+          pathA="M0 208 C 90 202, 170 168, 258 176 C 362 186, 438 224, 544 214 C 636 204, 712 154, 812 162 C 910 170, 1002 220, 1102 210 C 1206 198, 1298 132, 1410 144 C 1512 154, 1582 214, 1600 206"
+          pathB="M0 224 C 98 218, 184 196, 286 202 C 376 208, 474 234, 566 228 C 658 222, 760 186, 848 190 C 946 196, 1042 230, 1132 224 C 1248 214, 1346 166, 1600 174"
+          glow="oklch(0.58 0.1 168)"
+          nodeColor="oklch(0.72 0.11 168)"
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_25%_22%,oklch(0.48_0.14_248/0.32),transparent_62%),radial-gradient(ellipse_60%_40%_at_82%_20%,oklch(0.44_0.13_252/0.26),transparent_58%)]" />
 
       <div className="relative z-10 mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
-        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center lg:gap-7 xl:gap-9">
-          <div className="text-left">
-            <p className="font-mono text-[11px] uppercase tracking-[0.26em] text-[oklch(0.66_0.1_252)]">PREMIUM TRADING JOURNAL</p>
-            <h1
-              id="hero-heading"
-              className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(2.2rem,5vw,4.25rem)] font-semibold leading-[0.97] tracking-[-0.056em] text-zinc-50 sm:mt-5"
-            >
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-center lg:gap-8">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2.5">
+              <BluevenoLogoMark className="size-7" />
+              <span className="font-display text-[1.06rem] font-semibold tracking-[-0.03em] text-zinc-100">Blueveno</span>
+            </div>
+            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.26em] text-[oklch(0.68_0.11_252)]">PREMIUM TRADING JOURNAL</p>
+            <h1 className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(2.45rem,5.7vw,5.25rem)] font-semibold leading-[0.92] tracking-[-0.062em] text-zinc-50">
               Track the result.
               <br />
-              <span className="bg-gradient-to-r from-zinc-100 via-[oklch(0.9_0.05_250)] to-[oklch(0.62_0.15_252)] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-zinc-100 via-[oklch(0.92_0.04_252)] to-[oklch(0.66_0.15_252)] bg-clip-text text-transparent">
                 Review the behavior.
               </span>
             </h1>
-            <p className="mt-5 max-w-[26rem] text-[16px] leading-[1.52] tracking-[-0.016em] text-zinc-300">
+            <p className="mt-5 max-w-[29rem] text-[16px] leading-[1.56] text-zinc-300">
               Log the day. Save the chart.
               <br />
               See the week in one clear place.
             </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3 sm:gap-4">
+            <div className="mt-7 flex flex-wrap items-center gap-3.5">
               <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
-              <PremiumGhostLink href="/app">Open workspace</PremiumGhostLink>
+              <PremiumGhostLink href="/login">Open workspace</PremiumGhostLink>
             </div>
-            <div className="mt-8 grid grid-cols-3 gap-3 lg:mt-9">
-              {SUPPORT_CARDS.map(({ icon: Icon, title, subtitle }) => (
-                <div key={title} className="text-left">
+
+            <div className="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {FEATURE_ITEMS.map(({ icon: Icon, title, subtitle }) => (
+                <div key={title} className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3.5">
                   <div className="mb-2 inline-flex size-8 items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03]">
                     <Icon className="size-4 text-zinc-300" />
                   </div>
-                  <p className="text-xs font-medium text-zinc-300">{title}</p>
+                  <p className="text-[13px] font-medium text-zinc-200">{title}</p>
                   <p className="mt-1 text-[11px] text-zinc-500">{subtitle}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[860px] [perspective:1800px] lg:mx-0 lg:max-w-none">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-x-9 -inset-y-7 rounded-[2.35rem] bg-[conic-gradient(from_120deg_at_62%_24%,transparent_0deg,oklch(0.66_0.16_248/0.28)_62deg,transparent_122deg,oklch(0.62_0.14_252/0.22)_210deg,transparent_300deg)] blur-[30px]"
-            />
+          <div className="relative mx-auto w-full min-w-0 max-w-[1060px] [perspective:1700px] lg:mx-0">
+            <div className="pointer-events-none absolute -inset-11 rounded-[2.65rem] bg-[conic-gradient(from_120deg_at_58%_24%,transparent_0deg,oklch(0.66_0.16_248/0.4)_65deg,transparent_120deg,oklch(0.62_0.14_252/0.31)_210deg,transparent_300deg)] blur-[40px]" />
             <motion.div
-              className={cn(
-                "relative rounded-2xl p-[1px] sm:rounded-[1.85rem]",
-                "bg-[linear-gradient(145deg,oklch(0.55_0.14_252/0.65)_0%,oklch(0.2_0.06_268/0.42)_40%,oklch(0.52_0.15_252/0.58)_100%)]",
-                "shadow-[0_46px_128px_-52px_rgba(0,0,0,0.92),0_0_0_1px_oklch(0.46_0.11_252/0.24),0_0_90px_-48px_oklch(0.6_0.14_252/0.44),0_0_130px_-44px_oklch(0.66_0.16_252/0.42),inset_0_1px_0_0_oklch(0.7_0.1_252/0.13)]",
-              )}
-              style={{ ...slabStyle, rotateX, rotateY, scale }}
-              onPointerMove={onPointerMove}
-              onPointerEnter={onPointerEnter}
-              onPointerLeave={onPointerLeave}
+              onPointerMove={onPanelPointerMove}
+              onPointerLeave={onPanelPointerLeave}
+              style={slabStyle}
+              className="relative rounded-[2.2rem] p-[1px] bg-[linear-gradient(150deg,oklch(0.56_0.15_252/0.78),oklch(0.2_0.06_268/0.48)_42%,oklch(0.58_0.16_252/0.71))] shadow-[0_72px_190px_-72px_rgba(0,0,0,0.97),0_0_0_1px_oklch(0.46_0.12_252/0.28),0_0_120px_-35px_oklch(0.68_0.17_252/0.52)]"
             >
-              <motion.div
-                aria-hidden
-                className="pointer-events-none absolute -inset-7 rounded-[2.2rem] bg-[radial-gradient(ellipse_at_70%_20%,oklch(0.58_0.16_252/0.28),transparent_62%)]"
-                animate={reduced ? undefined : { opacity: [0.55, 0.92, 0.55] }}
-                transition={reduced ? undefined : { duration: 4.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              />
-              <div
-                className={cn(
-                  "relative overflow-hidden rounded-[calc(1rem-1px)] sm:rounded-[calc(1.75rem-1px)]",
-                  "bg-[linear-gradient(172deg,oklch(0.092_0.045_262/0.995),oklch(0.042_0.028_272/0.998))]",
-                  "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),inset_0_-36px_72px_-52px_oklch(0_0_0/0.62)]",
-                )}
-              >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_85%_at_88%_-12%,oklch(0.44_0.14_252/0.19),transparent_52%)]" />
-                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent,oklch(0_0_0/0.18)_95%)]" />
-                <div className="relative z-[1]">
-                  <div className="flex items-center justify-between gap-3 border-b border-white/[0.09] px-4 py-3.5 sm:px-6 sm:py-4">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex gap-1.5" aria-hidden>
-                        <span className="size-2 rounded-full bg-[oklch(0.45_0.14_25)] shadow-[0_0_8px_oklch(0.5_0.14_25/0.4)]" />
-                        <span className="size-2 rounded-full bg-[oklch(0.65_0.12_88)] shadow-[0_0_8px_oklch(0.65_0.12_88/0.35)]" />
-                        <span className="size-2 rounded-full bg-[oklch(0.5_0.12_152)] shadow-[0_0_8px_oklch(0.5_0.12_152/0.35)]" />
-                      </span>
-                      <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500 sm:text-[10px]">Blueveno workspace</span>
-                    </div>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="bv-live-dot size-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_14px_oklch(0.65_0.14_155/0.55)]" aria-hidden />
-                      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400/95 sm:text-[10px]">Live</span>
+              <div className="overflow-hidden rounded-[calc(2.2rem-1px)] bg-[linear-gradient(174deg,oklch(0.094_0.046_262/0.995),oklch(0.042_0.028_272/0.998))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.09),inset_0_-40px_78px_-58px_oklch(0_0_0/0.74)]">
+                <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] px-5 py-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex gap-1.5" aria-hidden>
+                      <span className="size-2 rounded-full bg-[oklch(0.45_0.14_25)] shadow-[0_0_8px_oklch(0.5_0.14_25/0.4)]" />
+                      <span className="size-2 rounded-full bg-[oklch(0.65_0.12_88)] shadow-[0_0_8px_oklch(0.65_0.12_88/0.35)]" />
+                      <span className="size-2 rounded-full bg-[oklch(0.5_0.12_152)] shadow-[0_0_8px_oklch(0.5_0.12_152/0.35)]" />
                     </span>
+                    <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500 sm:text-[10px]">Blueveno workspace</span>
                   </div>
-
-                  <div className="border-b border-white/[0.06] bg-[linear-gradient(180deg,oklch(0.07_0.04_268/0.55),transparent)] px-3 py-3 sm:px-5 sm:py-3.5">
-                    <LayoutGroup id={`${tabId}-hero-tabs`}>
-                      <div
-                        role="tablist"
-                        aria-label="Preview mode"
-                        onKeyDown={onTabKeyDown}
-                        className="relative grid w-full grid-cols-3 gap-1 rounded-2xl bg-black/65 p-1.5 ring-1 ring-[oklch(0.48_0.1_252/0.3)] sm:gap-1.5 sm:p-2"
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_14px_oklch(0.65_0.14_155/0.55)]" aria-hidden />
+                    <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400/95 sm:text-[10px]">Live</span>
+                  </span>
+                </div>
+                <div className="border-b border-white/[0.08] px-5 py-4">
+                  <div className="grid grid-cols-3 gap-1 rounded-2xl bg-black/55 p-1.5 ring-1 ring-[oklch(0.48_0.1_252/0.3)]">
+                    {MODES.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setMode(item.id)}
+                        className={cn(
+                          "min-h-[2.45rem] rounded-xl text-[13px] font-semibold tracking-[-0.02em] transition",
+                          mode === item.id
+                            ? "border border-white/[0.14] bg-[linear-gradient(180deg,oklch(0.32_0.1_262/0.95),oklch(0.16_0.06_268/0.98))] text-zinc-50 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.12)]"
+                            : "text-zinc-500 hover:text-zinc-300",
+                        )}
                       >
-                        {MODES.map(({ id, label }) => {
-                          const selected = mode === id;
-                          return (
-                            <button
-                              key={id}
-                              type="button"
-                              role="tab"
-                              id={`${tabId}-${id}`}
-                              aria-selected={selected}
-                              aria-controls={panelId}
-                              tabIndex={selected ? 0 : -1}
-                              onClick={() => setMode(id)}
-                              className={cn(
-                                "relative z-[1] flex min-h-[2.55rem] min-w-0 items-center justify-center rounded-xl px-2 py-2 text-center text-[13px] font-semibold leading-none tracking-[-0.02em] transition-colors duration-300 sm:min-h-[2.75rem] sm:text-[14px]",
-                                selected ? "text-zinc-50" : "text-zinc-500 hover:text-zinc-300",
-                              )}
-                            >
-                              {selected && !reduced ? (
-                                <motion.span
-                                  layoutId={`hero-product-tab-${tabId}`}
-                                  className="absolute inset-0 z-0 rounded-xl border border-white/[0.12] bg-[linear-gradient(180deg,oklch(0.32_0.1_262/0.95),oklch(0.16_0.06_268/0.98))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.12),0_12px_32px_-18px_oklch(0.35_0.12_252/0.45)]"
-                                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                                />
-                              ) : selected && reduced ? (
-                                <span className="absolute inset-0 z-0 rounded-xl border border-white/[0.12] bg-[linear-gradient(180deg,oklch(0.32_0.1_262/0.95),oklch(0.16_0.06_268/0.98))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.12)]" />
-                              ) : null}
-                              <span className="relative z-[1]">{label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </LayoutGroup>
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  <div className="border-b border-white/[0.05] px-4 py-4 sm:px-7 sm:py-5 lg:px-8 lg:py-5">
-                    {/* Fixed height so Day / Chart / Week never change the slab size when switching */}
-                    <div className="relative h-[25.6rem] sm:h-[27rem] lg:h-[28rem]">
-                      <AnimatePresence mode="wait" initial={false}>
-                        <motion.div
-                          id={panelId}
-                          key={mode}
-                          role="tabpanel"
-                          aria-labelledby={`${tabId}-${mode}`}
-                          className="absolute inset-0 flex min-h-0 flex-col"
-                          initial={reduced ? false : { opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={reduced ? undefined : { opacity: 0, y: -4 }}
-                          transition={reduced ? { duration: 0 } : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                        >
-                          {mode === "day" ? <DayPanel /> : null}
-                          {mode === "chart" ? <ChartPanel /> : null}
-                          {mode === "week" ? <WeekPanel /> : null}
-                        </motion.div>
-                      </AnimatePresence>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-white/[0.07] bg-[linear-gradient(0deg,oklch(0.055_0.03_268/0.85),transparent)]">
-                    <HeroProductBottomStrip mode={mode} />
+                <div className="px-5 pb-5 pt-4">
+                  <div className="h-[28rem] sm:h-[32rem] lg:h-[35.6rem]">
+                    <WeekPanel />
                   </div>
                 </div>
               </div>

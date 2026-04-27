@@ -415,6 +415,13 @@ body {
   }
 }
 
+@media (max-width: 640px) {
+  .bv-chart-ambient-track,
+  .bv-chart-ambient-track--reverse {
+    animation-duration: 220s !important;
+  }
+}
+
 /* App sidebar — soft “breathing” green glow on LIVE indicator */
 @keyframes bv-live-breathe {
   0%,
@@ -451,24 +458,24 @@ body {
   --grid: oklch(0.55 0.06 252 / 0.055);
   --grid-fine: oklch(0.62 0.05 252 / 0.045);
 
-  --background: oklch(0.108 0.028 264);
+  --background: oklch(0.09 0.038 266);
   --foreground: oklch(0.975 0.006 265);
-  --card: oklch(0.145 0.026 262);
+  --card: oklch(0.135 0.03 262);
   --card-foreground: oklch(0.975 0.006 265);
   --popover: oklch(0.128 0.026 262);
   --popover-foreground: oklch(0.975 0.006 265);
   --primary: oklch(0.64 0.125 252);
   --primary-foreground: oklch(0.085 0.038 268);
-  --secondary: oklch(0.195 0.028 262);
+  --secondary: oklch(0.21 0.032 262);
   --secondary-foreground: oklch(0.95 0.008 265);
-  --muted: oklch(0.195 0.025 262);
+  --muted: oklch(0.205 0.028 262);
   --muted-foreground: oklch(0.62 0.02 260);
   --accent: oklch(0.22 0.035 258);
   --accent-foreground: oklch(0.97 0.008 265);
   --destructive: oklch(0.577 0.215 25);
-  --border: oklch(1 0 0 / 9.5%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.58 0.12 252);
+  --border: oklch(1 0 0 / 11.5%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.63 0.13 252);
   --chart-1: oklch(0.66 0.13 252);
   --chart-2: oklch(0.58 0.1 252);
   --chart-3: oklch(0.5 0.08 260);
@@ -485,10 +492,10 @@ body {
 
   /* Blueveno semantic palette — see docs/DESIGN_SYSTEM.md */
   --bv-void: oklch(0.055 0.038 268);
-  --bv-base: oklch(0.082 0.032 266);
-  --bv-raised: oklch(0.108 0.03 264);
-  --bv-surface: oklch(0.125 0.028 262);
-  --bv-surface-high: oklch(0.148 0.026 260);
+  --bv-base: oklch(0.09 0.035 266);
+  --bv-raised: oklch(0.115 0.033 264);
+  --bv-surface: oklch(0.14 0.03 262);
+  --bv-surface-high: oklch(0.16 0.028 260);
   --bv-surface-inset: oklch(0.075 0.034 268);
   --bv-blue-deep: oklch(0.36 0.11 252);
   --bv-blue-accent: oklch(0.62 0.13 252);
@@ -499,27 +506,27 @@ body {
   --bv-border-accent: oklch(0.52 0.12 252 / 0.32);
 
   --bv-shadow-card:
-    0 0 0 1px oklch(1 0 0 / 0.08),
-    0 22px 56px -24px oklch(0 0 0 / 0.68),
-    0 0 0 1px oklch(0.52 0.11 252 / 0.08),
-    inset 0 1px 0 0 oklch(1 0 0 / 0.05);
+    0 0 0 1px oklch(1 0 0 / 0.1),
+    0 24px 62px -24px oklch(0 0 0 / 0.72),
+    0 0 0 1px oklch(0.52 0.11 252 / 0.1),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.06);
   --bv-shadow-float:
-    0 0 0 1px oklch(1 0 0 / 0.09),
-    0 28px 72px -28px oklch(0 0 0 / 0.72),
-    0 0 96px -36px oklch(0.52 0.14 252 / 0.13);
+    0 0 0 1px oklch(1 0 0 / 0.1),
+    0 30px 80px -28px oklch(0 0 0 / 0.75),
+    0 0 110px -36px oklch(0.52 0.14 252 / 0.17);
   --bv-shadow-glow:
-    0 0 0 1px oklch(1 0 0 / 0.07),
-    0 0 64px -16px oklch(0.48 0.14 252 / 0.22),
-    inset 0 1px 0 0 oklch(1 0 0 / 0.05);
+    0 0 0 1px oklch(1 0 0 / 0.09),
+    0 0 72px -16px oklch(0.48 0.14 252 / 0.28),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.06);
   --bv-shadow-lift:
     0 0 0 1px oklch(1 0 0 / 0.08),
     0 26px 72px -28px oklch(0 0 0 / 0.7),
     0 0 0 1px oklch(0.52 0.12 252 / 0.08),
     0 0 72px -28px oklch(0.48 0.12 252 / 0.12);
   --bv-shadow-primary:
-    0 0 0 1px oklch(1 0 0 / 0.1),
-    0 0 64px -18px oklch(0.48 0.14 252 / 0.32),
-    inset 0 1px 0 0 oklch(1 0 0 / 0.11);
+    0 0 0 1px oklch(1 0 0 / 0.11),
+    0 0 70px -18px oklch(0.48 0.14 252 / 0.36),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.12);
 
   --accent-glow: oklch(0.52 0.12 252 / 0.28);
 }

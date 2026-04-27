@@ -45,7 +45,6 @@ export default async function LoginPage({ searchParams }: Props) {
       alternatePrompt="New to Blueveno?"
       alternateHref="/signup"
       alternateLabel="Create an account"
-      showDevHint={process.env.NODE_ENV === "development"}
     >
       <LoginForm
         callbackUrl={callbackUrl}

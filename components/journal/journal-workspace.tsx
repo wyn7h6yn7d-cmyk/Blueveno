@@ -13,12 +13,13 @@ import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 import { EmptyState } from "@/components/app/empty-state";
 import { JournalDayList } from "@/components/journal/journal-day-list";
-import { chartUrlForSave, isValidChartUrl } from "@/lib/tradingview";
+import { chartUrlForSave, isValidChartUrl } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
 import { waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
 
 type Props = {
   userId: string;
@@ -50,19 +51,19 @@ function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefine
   const message = (error?.message ?? "").toLowerCase();
   const code = (error?.code ?? "").toUpperCase();
   if (message.includes("jwt") || message.includes("token") || message.includes("session")) {
-    return "Session not ready. Refresh the page and try again.";
+    return "Please refresh and try again.";
   }
   if (
     code === "PGRST205" ||
     (message.includes("weekly_reflections") &&
       (message.includes("does not exist") || message.includes("column") || message.includes("could not find the table")))
   ) {
-    return "Weekly reflection needs the latest database migration.";
+    return "Weekly reflection is unavailable right now.";
   }
   if (message.includes("row-level security") || message.includes("permission denied")) {
-    return "No permission to access weekly reflection for this account.";
+    return "You do not have access to this action.";
   }
-  const base = action === "load" ? "Could not load weekly reflection." : "Could not save weekly reflection.";
+  const base = action === "load" ? "Could not load week reflection." : "Could not save week reflection.";
   const rawCode = error?.code?.trim();
   const raw = error?.message?.trim();
   if (!rawCode && !raw) return base;
@@ -93,6 +94,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [resettingJournal, setResettingJournal] = useState(false);
   const [resetMsg, setResetMsg] = useState<string | null>(null);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState("");
   const weekStartKey = useMemo(() => {
     const base = new Date(`${weekAnchorDate}T12:00:00`);
     return toDayKey(startOfWeekMonday(base));
@@ -185,7 +188,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       return;
     }
     if (!isValidChartUrl(chartUrl)) {
-      setUrlError("Use a valid chart URL (e.g. https://linked-chart.com/session/...), or leave the field empty.");
+      setUrlError("Use a valid chart URL (e.g. https://chart.example/session/...), or leave the field empty.");
       return;
     }
     setUrlError(null);
@@ -199,7 +202,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       r: pnl.trim(),
       tag: "Journal",
       note: note.trim() || undefined,
-      tradingViewUrl: chartUrlForSave(chartUrl),
+      chartLinkUrl: chartUrlForSave(chartUrl),
       moodState,
       followedPlan,
       respectedStop,
@@ -274,12 +277,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
 
   const onResetJournal = async () => {
     if (resettingJournal) return;
-    const firstConfirm = window.confirm(
-      "Reset journal will permanently delete all your journal entries and weekly reflections. Continue?",
-    );
-    if (!firstConfirm) return;
-    const typed = window.prompt('Type "RESET JOURNAL" to confirm this permanent action.');
-    if ((typed ?? "").trim().toUpperCase() !== "RESET JOURNAL") {
+    if (resetConfirmText.trim().toUpperCase() !== "RESET JOURNAL") {
       setResetMsg("Reset cancelled. Confirmation text did not match.");
       return;
     }
@@ -291,6 +289,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       setResetMsg(result.error ?? "Could not reset journal.");
       return;
     }
+    setResetConfirmOpen(false);
+    setResetConfirmText("");
     setWeeklyWorked("");
     setWeeklySlipped("");
     setWeeklyFocus("");
@@ -303,27 +303,17 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       <PageHeader
         variant="signature"
         eyebrow="Journal"
-        title="Daily review"
-        description="Quick log below — your calendar shows the same P&amp;L when you open it."
+        title="Add trading day"
+        description="Log the day once. Calendar and stats update automatically."
         actions={
           <div className="flex flex-wrap gap-2">
             <Link href="/app/calendar" className={appSecondaryCta}>
               <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
               Calendar
             </Link>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => void onResetJournal()}
-              disabled={resettingJournal}
-              className="h-10 rounded-xl px-4"
-            >
-              <AlertTriangle className="mr-2 size-4" strokeWidth={1.9} />
-              {resettingJournal ? "Resetting…" : "Reset journal"}
-            </Button>
-            <a href="#add" className={appPrimaryCta}>
+            <a href="#add" className={cn(appPrimaryCta, "shadow-[0_18px_45px_-22px_oklch(0.52_0.14_252/0.62)]")}>
               <Plus className="mr-2 size-4" strokeWidth={2} />
-              New entry
+              Add trading day
             </a>
           </div>
         }
@@ -334,24 +324,23 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         </p>
       ) : null}
 
-      <section className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start lg:gap-8 xl:gap-10">
+      <section className="grid min-w-0 gap-6 lg:grid-cols-[1.18fr_0.82fr] lg:items-start lg:gap-8 xl:gap-10">
         <DashboardCard
-          eyebrow="Log day"
-          title="Quick entry"
+          eyebrow="Add trading day"
+          title="New journal entry"
           className="min-h-0 min-w-0"
           description={
             canWriteJournal
-              ? "P&amp;L uses your display currency from Settings. Linked chart is optional - paste when you want the chart next to the number. The calendar page picks up the same entries."
+              ? "Date, symbol, P&L, note, behavior, and optional linked chart."
               : "Read-only: your history stays here. Upgrade to log new days."
           }
         >
-          <form id="add" onSubmit={onQuickAdd} className="space-y-7">
-            <div className="space-y-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Session</p>
+          <form id="add" onSubmit={onQuickAdd} className="space-y-6">
+            <div className="space-y-3.5">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="jw-date" className={labelCls}>
-                    Session date
+                    Date
                   </Label>
                   <Input
                     id="jw-date"
@@ -403,13 +392,15 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             </div>
 
             <div className="space-y-2">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Note</p>
+              <Label htmlFor="jw-note" className={labelCls}>
+                Note
+              </Label>
               <textarea
                 id="jw-note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={4}
-                placeholder="What stood out — setup, execution, one line on mood."
+                placeholder="What stood out today?"
                 disabled={!canWriteJournal}
                 className={cn(
                   "w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600",
@@ -419,7 +410,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             </div>
 
             <div className="space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Behavior layer</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Behavior</p>
               <div className="space-y-2">
                 <Label htmlFor="jw-mood" className={labelCls}>
                   Mood / state
@@ -429,10 +420,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   value={moodState}
                   onChange={(e) => setMoodState(e.target.value as (typeof MOOD_OPTIONS)[number])}
                   disabled={!canWriteJournal}
-                  className={cn(
-                    inputCls,
-                    "w-full rounded-xl px-3.5 disabled:opacity-45",
-                  )}
+                  className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                 >
                   {MOOD_OPTIONS.map((m) => (
                     <option key={m} value={m}>
@@ -479,7 +467,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     type="url"
                     value={chartUrl}
                     onChange={(e) => setChartUrl(e.target.value)}
-                    placeholder="https://linked-chart.com/session/..."
+                    placeholder="https://chart.example/session/..."
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "disabled:opacity-45")}
                   />
@@ -493,12 +481,17 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               className={cn(
                 "h-12 w-full rounded-xl text-[15px] font-semibold tracking-tight",
                 "bg-[linear-gradient(180deg,oklch(0.74_0.14_250),oklch(0.66_0.15_252))] text-[oklch(0.1_0.04_265)]",
-                "shadow-[0_1px_0_0_oklch(1_0_0_/0.14)_inset,0_14px_44px_-14px_oklch(0.42_0.14_252/0.55)] hover:brightness-[1.04] disabled:opacity-40",
+                "shadow-[0_1px_0_0_oklch(1_0_0_/0.14)_inset,0_18px_46px_-15px_oklch(0.42_0.14_252/0.58)] hover:brightness-[1.04] disabled:opacity-40",
               )}
             >
               <Plus className="mr-2 size-4" strokeWidth={2} />
-              {saving ? "Saving…" : "Save day"}
+              {saving ? "Saving…" : "Save trading day"}
             </Button>
+            {!canWriteJournal ? (
+              <p className="text-[13px] text-zinc-400">
+                Read-only mode is active after trial. Upgrade to keep adding trading days.
+              </p>
+            ) : null}
             {urlError ? <p className="text-[13px] text-rose-300/95">{urlError}</p> : null}
             {saveError ? <p className="text-[13px] text-rose-300/95">{saveError}</p> : null}
           </form>
@@ -508,24 +501,24 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           eyebrow="Recent"
           title="Latest activity"
           className="min-h-0 min-w-0 lg:sticky lg:top-6"
-          description="Only today's calendar-day trades — plus any day you opened via a calendar link (?date=)."
+          description="Latest logged days with mood and discipline score."
         >
           {sortedRows.length === 0 ? (
             <EmptyState
               icon={NotebookPen}
-              title="No entries yet"
+              title="No trading days yet"
               description={
                 canWriteJournal
-                  ? "Use Quick entry beside this panel to save your first day."
-                  : "Your history remains below once you have entries — upgrade to add more."
+                  ? "Add your first day to start building the calendar."
+                  : "Your journal stays visible in read-only access."
               }
               className="border-none bg-transparent py-8 ring-0"
             />
           ) : rowsForLatestEntries.length === 0 ? (
             <EmptyState
               icon={NotebookPen}
-              title="No trades logged for today"
-              description="Open Calendar for the month grid, or Stats for the full picture."
+              title="No trading day for today"
+              description="Log the day to keep your week complete."
               className="border-none bg-transparent py-8 ring-0"
             />
           ) : (
@@ -604,6 +597,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             <Button type="submit" disabled={!canWriteJournal || weeklySaving || weeklyLoading} className="h-10 rounded-xl px-4">
               {weeklySaving ? "Saving…" : "Save weekly reflection"}
             </Button>
+            {!canWriteJournal ? (
+              <p className="text-[13px] text-zinc-500">Weekly reflection is visible in read-only mode during trial expiry.</p>
+            ) : null}
             {weeklyMsg ? (
               <p
                 className={cn(
@@ -619,10 +615,43 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       </DashboardCard>
 
       <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-5 py-4">
-        <p className="text-[14px] text-zinc-500">
-          Signed in as <span className="text-zinc-200">{email}</span>
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[14px] text-zinc-500">
+            Signed in as <span className="text-zinc-200">{email}</span>
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setResetConfirmOpen(true)}
+            disabled={resettingJournal}
+            className="h-9 rounded-xl border-white/[0.12] bg-white/[0.03] px-3.5 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
+          >
+            <AlertTriangle className="mr-1.5 size-3.5 opacity-80" strokeWidth={1.8} />
+            {resettingJournal ? "Resetting…" : "Reset journal"}
+          </Button>
+        </div>
       </section>
+      <ConfirmDialog
+        open={resetConfirmOpen}
+        onCancel={() => {
+          if (resettingJournal) return;
+          setResetConfirmOpen(false);
+          setResetConfirmText("");
+        }}
+        onConfirm={() => void onResetJournal()}
+        destructive
+        pending={resettingJournal}
+        title="Reset entire journal?"
+        description='This permanently deletes all journal entries and weekly reflections. Type "RESET JOURNAL" to confirm.'
+        confirmLabel="Reset permanently"
+      >
+        <Input
+          value={resetConfirmText}
+          onChange={(e) => setResetConfirmText(e.target.value)}
+          placeholder='Type "RESET JOURNAL"'
+          className="h-10 rounded-xl border-rose-500/30 bg-black/20 text-[13px] text-zinc-100 placeholder:text-zinc-500"
+        />
+      </ConfirmDialog>
     </div>
   );
 }

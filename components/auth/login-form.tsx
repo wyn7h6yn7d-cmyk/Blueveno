@@ -23,7 +23,7 @@ type LoginFormProps = {
 
 function messageForAuthError(code: string | null | undefined): string | null {
   if (!code) return null;
-  if (code === "config") return "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.";
+  if (code === "config") return "Sign-in is temporarily unavailable. Please try again shortly.";
   if (code === "auth") return "That sign-in link is invalid or expired. Try signing in again.";
   return null;
 }
@@ -41,7 +41,7 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
 
     if (!isSupabaseConfigured()) {
       setPending(false);
-      setError("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+      setError("Sign-in is temporarily unavailable. Please try again shortly.");
       return;
     }
 
@@ -71,8 +71,7 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
         {sessionWithoutProfile ? (
           <div className="mb-6 space-y-3 rounded-[0.65rem] border border-amber-500/25 bg-amber-500/[0.08] px-3.5 py-3 text-[13px] leading-relaxed text-amber-100">
             <p>
-              You&apos;re signed in, but your workspace profile didn&apos;t load. This usually means the database migration
-              isn&apos;t applied or Supabase can&apos;t run <span className="font-mono text-[12px]">ensure_user_profile</span>.
+              You&apos;re signed in, but your profile did not load yet. Please try again.
             </p>
             <SignOutButton />
           </div>
@@ -81,7 +80,7 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Credentials</p>
             <p className="mt-2 max-w-[22rem] text-[13px] leading-relaxed text-zinc-500">
-              Sign in with the email and password for your Supabase Auth account.
+              Sign in to continue your journal.
             </p>
           </div>
         </div>
@@ -112,10 +111,10 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
                   Password
                 </Label>
                 <span
-                  className="cursor-not-allowed font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600"
-                  title="Password recovery ships in a later release"
+                  className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600"
+                  aria-label="Password recovery unavailable"
                 >
-                  Forgot?
+                  Password recovery unavailable
                 </span>
               </div>
               <Input
@@ -144,7 +143,7 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
               aria-busy={pending}
               className={cn(
                 "h-12 w-full rounded-[0.65rem] text-[15px] font-medium tracking-wide shadow-bv-primary",
-                "transition-[opacity,transform,box-shadow] duration-1000 ease-out",
+                "transition-[opacity,transform,box-shadow] duration-200 ease-out",
                 pending && "pointer-events-none opacity-90",
               )}
             >

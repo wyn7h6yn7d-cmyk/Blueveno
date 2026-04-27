@@ -6,11 +6,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   CalendarDays,
-  Home,
-  LogOut,
   Menu,
   NotebookPen,
   Settings,
+  LogOut,
+  Home,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -88,7 +88,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   };
 
   return (
-    <header className="flex min-h-[3.25rem] shrink-0 items-center gap-2 border-b border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.13_0.03_262/0.98),oklch(0.105_0.028_264/0.96))] px-2 shadow-[0_1px_0_0_oklch(1_0_0_/0.05)] backdrop-blur-xl sm:gap-3 sm:px-3 md:h-16 md:gap-4 md:px-5">
+    <header className="flex min-h-[3.6rem] shrink-0 items-center gap-2 border-b border-white/[0.1] bg-[linear-gradient(180deg,oklch(0.155_0.045_262/0.98),oklch(0.118_0.034_264/0.97))] px-3 shadow-[0_1px_0_0_oklch(1_0_0_/0.07),0_20px_42px_-30px_oklch(0_0_0/0.84)] backdrop-blur-xl sm:gap-3 sm:px-4 md:min-h-[4.15rem] md:gap-4 md:px-6">
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger
           className={cn(
@@ -117,7 +117,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         <div className="min-w-0 flex-1 overflow-hidden pr-1">
           <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
           <div className="mt-0.5 flex min-w-0 flex-col items-start gap-1 sm:mt-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5">
-            <p className="font-display w-full min-w-0 truncate text-base font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.0625rem]">
+            <p className="font-display w-full min-w-0 truncate text-[1.03rem] font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.14rem]">
               {label}
             </p>
             <div className="min-w-0 max-w-full">
@@ -126,7 +126,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
           </div>
         </div>
         {helloName ? (
-          <div className="hidden min-w-0 flex-1 flex-col justify-center sm:flex">
+          <div className="hidden min-w-0 flex-1 flex-col justify-center lg:flex">
             <p
               className="truncate text-center text-[12px] leading-snug text-zinc-500 md:text-[13px]"
               title={helloName}
@@ -138,33 +138,12 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         ) : null}
       </div>
 
-      <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2">
-        <Link
-          href="/"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-2.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] sm:px-3.5",
-          )}
-          aria-label="Back to marketing home"
-        >
-          <Home className="size-4 opacity-90 sm:mr-1.5" strokeWidth={1.75} />
-          <span className="hidden sm:inline">Home</span>
-        </Link>
-        <Link
-          href="/app/calendar"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "hidden min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-3.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] md:inline-flex",
-          )}
-        >
-          <CalendarDays className="mr-1.5 size-4 opacity-90" />
-          Calendar
-        </Link>
+      <div className="relative z-10 flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
         <Link
           href="/app/journal#add"
           className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-2.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] sm:px-3.5",
+            buttonVariants({ variant: "default", size: "sm" }),
+            "min-h-10 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.67_0.15_252))] px-2.5 text-[13px] font-semibold text-[oklch(0.1_0.04_265)] shadow-[0_14px_36px_-16px_oklch(0.43_0.14_252/0.62)] hover:brightness-[1.04] sm:px-3.5",
             !canWriteJournal && "pointer-events-none opacity-40",
           )}
           aria-disabled={!canWriteJournal}
@@ -172,30 +151,17 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
           <NotebookPen className="size-4 opacity-90 sm:mr-1.5" />
           <span className="hidden sm:inline">New entry</span>
         </Link>
-        <button
-          type="button"
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "min-h-10 rounded-xl border-white/[0.11] bg-white/[0.035] px-2.5 text-[13px] text-zinc-200 hover:bg-white/[0.07] disabled:opacity-60 sm:px-3.5",
-          )}
-          aria-label="Sign out"
-        >
-          <LogOut className="size-4 opacity-90 sm:mr-1.5" strokeWidth={1.75} />
-          <span className="hidden sm:inline">{signingOut ? "Signing out…" : "Log out"}</span>
-        </button>
         <DropdownMenu>
           <DropdownMenuTrigger
             type="button"
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-sm" }),
-              "inline-flex shrink-0 items-center justify-center h-10 w-10 rounded-full border border-white/[0.1] bg-white/[0.04] p-0 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] hover:bg-white/[0.09] focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
+              "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.11] bg-white/[0.045] p-0 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)] hover:bg-white/[0.09] focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
             )}
             aria-label="Open account menu"
           >
             <span
-              className="flex size-8 shrink-0 select-none items-center justify-center rounded-full bg-[oklch(0.22_0.06_255)] text-xs font-semibold text-zinc-100"
+              className="flex size-8 shrink-0 select-none items-center justify-center rounded-full bg-[oklch(0.24_0.065_255)] text-xs font-semibold text-zinc-100"
               aria-hidden
             >
               {fallbackInitial}
@@ -214,10 +180,33 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
               <DropdownMenuSeparator className="bg-white/[0.06]" />
               <DropdownMenuItem
                 className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
+                onClick={() => router.push("/app/calendar")}
+              >
+                <CalendarDays className="size-4 text-zinc-400" />
+                Calendar
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
+                onClick={() => router.push("/")}
+              >
+                <Home className="size-4 text-zinc-400" />
+                Marketing home
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
                 onClick={() => router.push("/app/settings")}
               >
                 <Settings className="size-4 text-zinc-400" />
                 Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-white/[0.06]" />
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-rose-200 outline-none focus-visible:bg-rose-500/[0.2]"
+                onClick={() => void handleSignOut()}
+                disabled={signingOut}
+              >
+                <LogOut className="size-4 text-rose-300" />
+                {signingOut ? "Signing out…" : "Log out"}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

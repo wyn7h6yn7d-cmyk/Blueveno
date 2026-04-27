@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdminFullAccessEmail } from "@/lib/billing/workspace-access";
 
 function planFromEnv(): PlanTier | undefined {
+  if (process.env.NODE_ENV === "production") {
+    return undefined;
+  }
   const o = process.env.BILLING_PLAN_TIER_OVERRIDE;
   if (o === "free" || o === "pro" || o === "elite") {
     return o;
@@ -13,6 +16,9 @@ function planFromEnv(): PlanTier | undefined {
 
 /** Staging only: set `BILLING_TEST_FULL_ACCESS=true` to grant Elite to all signed-in users. */
 function openTestTier(): PlanTier | undefined {
+  if (process.env.NODE_ENV === "production") {
+    return undefined;
+  }
   return process.env.BILLING_TEST_FULL_ACCESS === "true" ? "elite" : undefined;
 }
 

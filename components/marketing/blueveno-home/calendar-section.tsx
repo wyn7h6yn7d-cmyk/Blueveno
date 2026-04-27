@@ -214,8 +214,8 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                                 </span>
                                 <span
                                   className={cn(
-                                    "block w-full min-w-0 break-words text-center font-display leading-[1.15] tabular-nums tracking-[-0.02em] [overflow-wrap:anywhere] [word-break:break-word] sm:text-left",
-                                    "text-[clamp(0.625rem,2.85vw,0.8125rem)] sm:text-[17px] lg:text-[18px]",
+                                    "block w-full min-w-0 truncate whitespace-nowrap text-center font-display leading-[1.15] tabular-nums tracking-[-0.02em] sm:text-left",
+                                    "text-[clamp(0.58rem,2.55vw,0.78rem)] sm:text-[17px] lg:text-[18px]",
                                     typeof pnl === "number"
                                       ? pnl > 0
                                         ? "text-emerald-100"
@@ -282,7 +282,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                       </span>
                       <span
                         className={cn(
-                          "block min-w-0 break-words font-display mt-2 text-[clamp(1.2rem,6.5vw,2.5rem)] font-semibold tabular-nums tracking-[-0.045em] [overflow-wrap:anywhere] lg:mt-3",
+                          "mt-2 block min-w-0 truncate whitespace-nowrap font-display text-[clamp(1.2rem,6.5vw,2.5rem)] font-semibold tabular-nums tracking-[-0.045em] lg:mt-3",
                           sum > 0 ? "text-emerald-200" : sum < 0 ? "text-rose-200" : "text-zinc-500",
                         )}
                       >

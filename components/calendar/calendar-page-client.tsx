@@ -59,22 +59,22 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   return (
     <div className="space-y-10 pt-2">
       {!ready ? (
-        <DashboardCard eyebrow="Loading" title="Syncing your journal" description="Pulling entries from your workspace.">
+        <DashboardCard eyebrow="Loading" title="Preparing your calendar" description="Loading your latest journal days.">
           <div className="h-48 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
         </DashboardCard>
       ) : data.journal.length === 0 ? (
         <DashboardCard
           eyebrow="Start here"
           title="No days logged yet"
-          description="Add your first trading day — this grid will light up with greens, reds, and week totals."
+          description="Your month will fill as you log trading days."
         >
           <EmptyState
             icon={CalendarDays}
-            title="The calendar is waiting"
-            description="One entry is enough to see your first week column and daily cell."
+            title="Ready for your first week"
+            description="Log the day. Save the chart. See the week."
             action={
               <Link href="/app/journal#add" className={appPrimaryCta}>
-                Log a day
+                Log the day
               </Link>
             }
             className="border-none bg-transparent py-8 ring-0"

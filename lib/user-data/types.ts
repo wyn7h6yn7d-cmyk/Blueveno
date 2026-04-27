@@ -12,7 +12,7 @@ export type JournalRow = {
   /** Optional — journal page detail */
   note?: string;
   /** Optional linked chart URL */
-  tradingViewUrl?: string;
+  chartLinkUrl?: string;
   /** Optional behavior tag for the day */
   moodState?: "Calm" | "Focused" | "Hesitant" | "Tilted";
   followedPlan?: boolean;

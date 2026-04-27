@@ -23,14 +23,13 @@ export function PaywallScreen() {
             <Sparkles className="size-6" strokeWidth={1.5} />
           </div>
           <h1 className="font-display mt-8 text-[clamp(1.5rem,4vw,2rem)] font-bold leading-tight tracking-[-0.04em] text-zinc-50">
-            Unlock your workspace
+            Read-only mode is active
           </h1>
           <p className="mx-auto mt-4 max-w-sm text-[15px] leading-relaxed text-zinc-500">
-            Blueveno is built for disciplined daily review—journal, calendar with weekly totals, and chart links in one
-            place.
+            Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep adding trading days.
           </p>
           <div className="mt-10 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.12_252)]">Blueveno Pro</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.12_252)]">Blueveno Premium</p>
             <div className="mt-4 flex items-baseline justify-center gap-1.5">
               <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50">
                 {formatEur(PRICING_EUR.monthly)}
@@ -61,10 +60,10 @@ export function PaywallScreen() {
                 "min-h-11 rounded-xl border-white/[0.12] bg-white/[0.03] px-6 text-[13px] text-zinc-200 hover:bg-white/[0.06]",
               )}
             >
-              Manage billing
+              Upgrade
             </Link>
           </div>
-          <p className="mt-8 font-mono text-[11px] text-zinc-600">Cancel anytime · Billed in EUR</p>
+          <p className="mt-8 font-mono text-[11px] text-zinc-600">Your data stays visible · Upgrade anytime</p>
         </div>
       </div>
     </div>

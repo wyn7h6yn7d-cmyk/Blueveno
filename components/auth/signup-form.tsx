@@ -42,7 +42,7 @@ export function SignupForm() {
     if (!isSupabaseConfigured()) {
       setPending(false);
       setIsError(true);
-      setMessage("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+      setMessage("Sign up is temporarily unavailable. Please try again in a moment.");
       return;
     }
 
@@ -88,8 +88,8 @@ export function SignupForm() {
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">New workspace</p>
             <p className="mt-2 max-w-[22rem] text-[13px] leading-relaxed text-zinc-500">
-              Creates a user in Supabase Auth. If email confirmation is on in your project, you&apos;ll confirm before
-              signing in.
+              Create your Blueveno account to start your trial. You may be asked to confirm your email before signing
+              in.
             </p>
           </div>
         </div>

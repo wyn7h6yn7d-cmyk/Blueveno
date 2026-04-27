@@ -14,6 +14,9 @@ export function getEffectivePlanTier(session: AuthSession | null): PlanTier {
   if (fromSession && isPlanTier(fromSession)) {
     return fromSession;
   }
+  if (process.env.NODE_ENV === "production") {
+    return "free";
+  }
   const envOverride = process.env.BILLING_PLAN_TIER_OVERRIDE;
   if (envOverride && isPlanTier(envOverride)) {
     return envOverride;

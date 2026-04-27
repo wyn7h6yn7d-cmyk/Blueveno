@@ -6,14 +6,12 @@ import { PricingComparison } from "@/components/marketing/pricing-comparison";
 import {
   COMPARISON_ROWS,
   PRICING_EUR,
-  effectiveMonthlyFromYearlyEur,
   formatEur,
-  yearlySavingsPercentApprox,
 } from "@/lib/marketing/pricing-copy";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `Blueveno — ${PRICING_EUR.trialDays}-day trial, then ${formatEur(PRICING_EUR.monthly)}/mo or ${formatEur(PRICING_EUR.yearly)}/yr. Journal, calendar, and stats for serious traders.`,
+  description: `Blueveno — ${PRICING_EUR.trialDays}-day free trial, then ${formatEur(PRICING_EUR.monthly)}/month. After trial, read-only until upgrade.`,
 };
 
 const premiumFeatures = [
@@ -24,9 +22,6 @@ const premiumFeatures = [
 ];
 
 export default function PricingPage() {
-  const effMo = effectiveMonthlyFromYearlyEur();
-  const savePct = yearlySavingsPercentApprox();
-
   return (
     <MarketingBackground>
       <Navbar />
@@ -34,7 +29,7 @@ export default function PricingPage() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.66_0.08_252)]">Pricing</p>
           <h1 className="font-display mt-5 text-[2.15rem] font-medium leading-[1.08] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.65rem]">
-            One premium. Trial first.
+            Start your {PRICING_EUR.trialDays}-day trial.
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-zinc-400 md:text-base">
             Every account starts with a <strong className="font-medium text-zinc-300">{PRICING_EUR.trialDays}-day trial</strong> with full
@@ -42,37 +37,19 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Monthly vs yearly */}
-        <div className="mx-auto mt-14 grid max-w-3xl gap-6 md:grid-cols-2">
+        <div className="mx-auto mt-14 max-w-3xl">
           <div className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.09] bg-[linear-gradient(165deg,oklch(0.13_0.04_262)_0%,oklch(0.078_0.032_266)_48%,oklch(0.058_0.035_268)_100%)] p-8 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Monthly</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Premium</p>
             <div className="mt-4 flex items-baseline gap-1.5">
               <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50 sm:text-5xl">{formatEur(PRICING_EUR.monthly)}</span>
               <span className="text-[15px] text-zinc-500">/ month</span>
             </div>
-            <p className="mt-4 text-[14px] leading-relaxed text-zinc-500">Billed monthly. Cancel anytime.</p>
-          </div>
-
-          <div className="relative overflow-hidden rounded-[1.25rem] border border-[oklch(0.55_0.12_252/0.35)] bg-[linear-gradient(165deg,oklch(0.14_0.045_262/0.55)_0%,oklch(0.09_0.038_266)_100%)] p-8 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.06)]">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[oklch(0.72_0.1_252)]">Yearly</p>
-              <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wide text-emerald-200">
-                Save ~{savePct}%
-              </span>
-            </div>
-            <div className="mt-4 flex items-baseline gap-1.5">
-              <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50 sm:text-5xl">{formatEur(PRICING_EUR.yearly)}</span>
-              <span className="text-[15px] text-zinc-500">/ year</span>
-            </div>
-            <p className="mt-2 text-[14px] text-zinc-400">
-              ≈ {formatEur(effMo)} / month <span className="text-zinc-500">when paid annually</span>
-            </p>
-            <p className="mt-4 text-[14px] leading-relaxed text-zinc-500">One invoice per year. Cancel before renewal if you prefer not to continue.</p>
+            <p className="mt-4 text-[14px] leading-relaxed text-zinc-500">One clear monthly plan for Blueveno Premium.</p>
           </div>
         </div>
 
         <p className="mx-auto mt-8 max-w-2xl text-center text-[13px] leading-relaxed text-zinc-500">
-          Checkout is rolling out; your trial and access stay the same. Prices in EUR. Stripe price IDs can be wired when billing goes live.
+          {PRICING_EUR.trialDays}-day free trial. After trial, your workspace is read-only until upgrade. Premium unlocks ongoing journaling.
         </p>
 
         {/* What premium includes */}
@@ -107,7 +84,7 @@ export default function PricingPage() {
         <div className="mx-auto mt-16 max-w-4xl">
           <h2 className="text-center font-display text-xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-2xl">Comparison</h2>
           <p className="mx-auto mt-3 max-w-lg text-center text-[14px] text-zinc-500">
-            Trial ({PRICING_EUR.trialDays} days) · Premium (monthly or yearly) · After trial without Premium
+            Trial ({PRICING_EUR.trialDays} days) · Premium ({formatEur(PRICING_EUR.monthly)}/month) · After trial without Premium
           </p>
           <div className="mt-8">
             <PricingComparison rows={COMPARISON_ROWS} />
@@ -119,17 +96,23 @@ export default function PricingPage() {
             href="/signup"
             className="inline-flex h-11 min-h-[44px] items-center justify-center rounded-full bg-[oklch(0.64_0.125_252)] px-6 text-sm font-semibold text-[oklch(0.09_0.04_268)] shadow-bv-primary transition hover:bg-[oklch(0.7_0.11_252)]"
           >
-            Create account
+            Start your 7-day trial
           </Link>
           <Link
             href="/login"
             className="inline-flex h-11 min-h-[44px] items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] px-6 text-sm font-medium text-zinc-200 transition hover:border-white/[0.18] hover:bg-white/[0.06]"
           >
-            Sign in
+            Open workspace
           </Link>
         </div>
 
-        <p className="mt-8 text-center font-mono text-[11px] text-zinc-500">Cancel anytime · Billed in EUR</p>
+        <p className="mt-8 text-center font-mono text-[11px] text-zinc-500">
+          Price shown in EUR · Billing and access state are managed from your workspace settings.
+        </p>
+        <p className="mt-2 text-center text-[12px] leading-relaxed text-zinc-600">
+          Blueveno is a journaling and review tool. It does not provide financial advice, trading signals, or investment
+          recommendations.
+        </p>
 
         <p className="mt-16 text-center">
           <Link

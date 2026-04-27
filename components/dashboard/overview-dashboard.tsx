@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowUpRight, BarChart3, BookOpen, CalendarDays } from "lucide-react";
+import { ArrowUpRight, BarChart3, CalendarDays, NotebookPen } from "lucide-react";
 import { useAccess } from "@/components/access/access-provider";
+import { DashboardCard } from "@/components/app/dashboard-card";
 import { PageHeader } from "@/components/app/page-header";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { buildDayAgg, computeJournalSummary, signedMoney } from "@/lib/user-data/journal-metrics";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
+import { parsePnlAmount } from "@/lib/user-data/kpi";
 
 type Props = {
   userId: string;
@@ -17,8 +19,10 @@ type Props = {
   initialWorkspace: UserWorkspaceSnapshot;
 };
 
-const surfaceTile =
-  "group relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[linear-gradient(148deg,oklch(0.125_0.038_262/0.94),oklch(0.088_0.032_266/0.96))] p-6 shadow-[0_20px_50px_-36px_rgba(0,0,0,0.75),inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.04] transition hover:border-white/[0.14]";
+function formatDayLabel(dayKey: string) {
+  const date = new Date(`${dayKey}T00:00:00`);
+  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date);
+}
 
 export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
   const { displayCurrency } = useAccess();
@@ -26,23 +30,75 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
 
   const dayAgg = useMemo(() => buildDayAgg(data.journal), [data.journal]);
   const summary = useMemo(() => computeJournalSummary(dayAgg), [dayAgg]);
+  const dayAggMap = useMemo(() => new Map(dayAgg.map((item) => [item.key, item.pnl])), [dayAgg]);
+
+  const weekDays = useMemo(() => {
+    const now = new Date();
+    const currentDay = (now.getDay() + 6) % 7;
+    const monday = new Date(now);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(now.getDate() - currentDay);
+    return Array.from({ length: 7 }).map((_, idx) => {
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + idx);
+      const key = day.toISOString().slice(0, 10);
+      return { key, label: day.toLocaleDateString("en-GB", { weekday: "short" }), day: day.getDate() };
+    });
+  }, []);
+
+  const weekTotal = useMemo(
+    () => weekDays.reduce((sum, day) => sum + (dayAggMap.get(day.key) ?? 0), 0),
+    [dayAggMap, weekDays],
+  );
+
+  const weekGreenRed = useMemo(() => {
+    let green = 0;
+    let red = 0;
+    for (const day of weekDays) {
+      const pnl = dayAggMap.get(day.key) ?? 0;
+      if (pnl > 0) green += 1;
+      if (pnl < 0) red += 1;
+    }
+    return `${green} green · ${red} red`;
+  }, [dayAggMap, weekDays]);
+
+  const recentActivity = useMemo(() => {
+    return [...data.journal]
+      .sort((a, b) => {
+        const aDate = a.entryDate ?? a.createdAt ?? "";
+        const bDate = b.entryDate ?? b.createdAt ?? "";
+        return bDate.localeCompare(aDate);
+      })
+      .slice(0, 6)
+      .map((row) => {
+        const checks = [row.followedPlan, row.respectedStop, row.noRevengeTrade];
+        const disciplineScore = checks.filter(Boolean).length;
+        return {
+          id: row.id,
+          dayLabel: formatDayLabel(row.entryDate ?? (row.createdAt ? new Date(row.createdAt).toISOString().slice(0, 10) : "1970-01-01")),
+          pnl: parsePnlAmount(row.r) ?? 0,
+          mood: row.moodState ?? "Calm",
+          discipline: `${disciplineScore}/3`,
+        };
+      });
+  }, [data.journal]);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         variant="signature"
         eyebrow="Blueveno"
         title="Overview"
-        description="Month snapshot — open the calendar or journal when you are ready."
+        description="Today and this week at a glance."
         actions={
-          <Link href="/app/calendar" className={appSecondaryCta}>
-            <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
-            Open calendar
+          <Link href="/app/journal#add" className={appSecondaryCta}>
+            <NotebookPen className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
+            Add trading day
           </Link>
         }
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Summary">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="This week snapshot">
         {!ready ? (
           <>
             {Array.from({ length: 4 }).map((_, i) => (
@@ -56,7 +112,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           [
             { label: "Week", value: signedMoney(summary.weekPnl, displayCurrency), tone: summary.weekPnl },
             { label: "Month", value: signedMoney(summary.monthPnl, displayCurrency), tone: summary.monthPnl },
-            { label: "Win · loss days", value: summary.winLoss, tone: 0 },
+            { label: "Green · red days", value: weekGreenRed, tone: 0 },
             { label: "Streak", value: summary.streak, tone: 0 },
           ].map((card) => (
             <div
@@ -79,80 +135,104 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         )}
       </section>
 
-      <section className="grid min-w-0 gap-4 md:grid-cols-2" aria-label="Workspace shortcuts">
-        <Link href="/app/calendar" className={cn(surfaceTile, "block min-w-0")}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Signature</p>
-              <p className="font-display mt-2 text-lg text-zinc-50">Calendar</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
-                Month grid, weekly totals, and color by outcome.
-              </p>
-            </div>
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-200 transition group-hover:border-white/[0.14]">
-              <CalendarDays className="size-5" strokeWidth={1.75} />
-            </span>
-          </div>
-          <span className="mt-6 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[oklch(0.78_0.1_250)]">
-            Open
-            <ArrowUpRight className="size-3.5" />
-          </span>
-        </Link>
-
-        <Link href="/app/stats" className={cn(surfaceTile, "block min-w-0")}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Rhythm</p>
-              <p className="font-display mt-2 text-lg text-zinc-50">Stats</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
-                Curves and streaks — calm, not a terminal.
-              </p>
-            </div>
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-200 transition group-hover:border-white/[0.14]">
-              <BarChart3 className="size-5" strokeWidth={1.75} />
-            </span>
-          </div>
-          <span className="mt-6 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[oklch(0.78_0.1_250)]">
-            Open
-            <ArrowUpRight className="size-3.5" />
-          </span>
-        </Link>
-
-        <Link
-          href="/app/journal"
-          className={cn(surfaceTile, "block min-w-0 md:col-span-2")}
+      <section className="grid gap-4 xl:grid-cols-[1.3fr_1fr]" aria-label="At a glance details">
+        <DashboardCard
+          eyebrow="Mini calendar preview"
+          title="Current week"
+          description="Outcome color and total in one line."
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Log</p>
-              <p className="font-display mt-2 text-lg text-zinc-50">Journal</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
-                Quick day entry — same data appears on the calendar automatically.
-              </p>
-            </div>
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-zinc-200 transition group-hover:border-white/[0.14]">
-              <BookOpen className="size-5" strokeWidth={1.75} />
-            </span>
+          <div className="grid grid-cols-7 gap-2">
+            {weekDays.map((day) => {
+              const pnl = dayAggMap.get(day.key) ?? 0;
+              const tone =
+                pnl > 0
+                  ? "border-emerald-400/30 bg-emerald-500/[0.14] text-emerald-100"
+                  : pnl < 0
+                    ? "border-rose-400/30 bg-rose-500/[0.13] text-rose-100"
+                    : "border-white/[0.1] bg-white/[0.03] text-zinc-300";
+              return (
+                <div key={day.key} className={cn("rounded-xl border p-2.5 text-center", tone)}>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-80">{day.label}</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums">{day.day}</p>
+                  <p className="mt-1 text-[11px] tabular-nums">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
+                </div>
+              );
+            })}
           </div>
-          <span className="mt-6 inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.14em] text-[oklch(0.78_0.1_250)]">
-            Open
-            <ArrowUpRight className="size-3.5" />
-          </span>
-        </Link>
+          <div className="mt-4 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Weekly total</p>
+            <p
+              className={cn(
+                "font-display text-lg tabular-nums tracking-[-0.02em]",
+                weekTotal > 0 && "text-emerald-200",
+                weekTotal < 0 && "text-rose-200",
+                weekTotal === 0 && "text-zinc-100",
+              )}
+            >
+              {signedMoney(weekTotal, displayCurrency)}
+            </p>
+          </div>
+        </DashboardCard>
+
+        <DashboardCard eyebrow="Recent activity" title="Latest journal days" contentClassName="p-0">
+          {recentActivity.length === 0 ? (
+            <div className="px-5 py-8 text-sm text-zinc-500 sm:px-6">
+              No trading days yet. Add your first day to start building the calendar.
+            </div>
+          ) : (
+            <div className="divide-y divide-white/[0.06]">
+              {recentActivity.map((item) => (
+                <div key={item.id} className="grid grid-cols-[1.2fr_auto_auto_auto] items-center gap-3 px-4 py-3.5 text-sm sm:px-5">
+                  <p className="truncate text-zinc-200">{item.dayLabel}</p>
+                  <p
+                    className={cn(
+                      "text-right tabular-nums",
+                      item.pnl > 0 && "text-emerald-200",
+                      item.pnl < 0 && "text-rose-200",
+                      item.pnl === 0 && "text-zinc-300",
+                    )}
+                  >
+                    {signedMoney(item.pnl, displayCurrency)}
+                  </p>
+                  <p className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[12px] text-zinc-300">
+                    {item.mood}
+                  </p>
+                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-400">{item.discipline}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </DashboardCard>
       </section>
 
-      <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-5 py-4">
-        <p className="text-[14px] text-zinc-500">
-          Signed in as <span className="text-zinc-200">{email}</span>
-        </p>
-        <div className="mt-3">
-          <Link
-            href="/app/settings/billing"
-            className="inline-flex text-[13px] font-medium text-[oklch(0.78_0.11_252)] underline-offset-4 hover:underline"
-          >
-            Plan & billing
-          </Link>
-        </div>
+      <section aria-label="Quick actions">
+        <DashboardCard title="Quick actions" description={`Signed in as ${email}`}>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { href: "/app/journal#add", label: "Add trading day", icon: NotebookPen },
+              { href: "/app/calendar", label: "Open calendar", icon: CalendarDays },
+              { href: "/app/stats", label: "View stats", icon: BarChart3 },
+            ].map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="group flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-zinc-200 transition hover:border-white/[0.16] hover:bg-white/[0.06]"
+              >
+                <span>{action.label}</span>
+                <action.icon className="size-4 text-zinc-400 transition group-hover:text-zinc-200" strokeWidth={1.75} />
+              </Link>
+            ))}
+          </div>
+          <div className="mt-4">
+            <Link
+              href="/app/settings/billing"
+              className="inline-flex items-center gap-1 text-[12px] font-medium uppercase tracking-[0.14em] text-[oklch(0.78_0.11_252)]"
+            >
+              Plan & billing
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+          </div>
+        </DashboardCard>
       </section>
     </div>
   );

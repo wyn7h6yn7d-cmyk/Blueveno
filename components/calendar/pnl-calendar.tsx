@@ -140,8 +140,31 @@ function weekReflectionLines(reflection?: WeeklyReflectionSummary): { label: str
   return rows;
 }
 
+function weekQualityScore(week: DayCell[], aggregates: Map<string, DayAggregate>): number {
+  let green = 0;
+  let red = 0;
+  let active = 0;
+  for (const day of week) {
+    const total = aggregates.get(day.key)?.total ?? 0;
+    if (total === 0) continue;
+    active += 1;
+    if (total > 0) green += 1;
+    if (total < 0) red += 1;
+  }
+  if (active === 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((green / active) * 100 - red * 4)));
+}
+
+function reflectionStatus(rows: { label: string; value: string }[]): { label: string; tone: string } {
+  if (rows.length >= 3) return { label: "Complete", tone: "text-emerald-200" };
+  if (rows.length > 0) return { label: "Partial", tone: "text-amber-200" };
+  return { label: "Empty", tone: "text-zinc-400" };
+}
+
 export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
+  const [selectedDayKey, setSelectedDayKey] = useState(() => keyFromDate(new Date()));
+  const todayKey = useMemo(() => keyFromDate(new Date()), []);
 
   const aggregates = useMemo(() => {
     const map = new Map<string, DayAggregate>();
@@ -190,14 +213,14 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
 
   /** Below sm: day cols + week rail wide enough for reflection text (scroll horizontally). sm+: fluid tracks. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(7,minmax(2.85rem,1fr))_minmax(11.75rem,13rem)]",
-    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12rem,16.5rem)]",
-    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(15rem,21rem)]",
-    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(16.5rem,23rem)]",
+    "[grid-template-columns:repeat(7,minmax(3.2rem,1fr))_minmax(12.4rem,14rem)]",
+    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(13.5rem,18rem)]",
+    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(17rem,23rem)]",
+    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(18.5rem,25rem)]",
   );
 
   const headerBox =
-    "flex min-h-[2.35rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.1rem] sm:rounded-xl sm:px-1 sm:py-2.5";
+    "flex min-h-[2.55rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.4rem] sm:rounded-xl sm:px-1 sm:py-2.5";
 
   return (
     <div className="min-w-0 space-y-6">
@@ -245,17 +268,17 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
               "w-full min-w-0 max-w-full sm:max-w-none",
               "rounded-xl border border-[oklch(0.52_0.12_252/0.32)] sm:rounded-[1.35rem]",
               "bg-[linear-gradient(168deg,oklch(0.12_0.036_262/0.98),oklch(0.065_0.03_264/0.97))]",
-              "p-2.5 shadow-[inset_0_1px_0_oklch(1_0_0_/0.06),0_36px_110px_-44px_rgba(0,0,0,0.74)] sm:p-4 lg:p-5.5",
+              "p-2.5 shadow-[inset_0_1px_0_oklch(1_0_0_/0.06),0_36px_110px_-44px_rgba(0,0,0,0.74)] sm:p-4.5 lg:p-6",
             )}
           >
             <div
               className={cn(
-                "rounded-lg border border-white/[0.08] bg-black/25 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)] sm:rounded-xl sm:p-2.5 lg:p-3",
+                "rounded-lg border border-white/[0.08] bg-black/25 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)] sm:rounded-xl sm:p-3 lg:p-3.5",
               )}
             >
               <div
                 className={cn(
-                  "grid min-w-0 gap-1 max-sm:w-max max-sm:min-w-full sm:w-full sm:gap-2.5 lg:gap-3",
+                  "grid min-w-0 gap-1.5 max-sm:w-max max-sm:min-w-full sm:w-full sm:gap-3 lg:gap-3.5",
                   calendarGridCols,
                 )}
               >
@@ -298,6 +321,8 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     const hasData = Boolean(agg && agg.count > 0);
                     const total = agg?.total ?? 0;
                     const cellClasses = dayCellClasses(total, hasData, day.inMonth);
+                    const isSelected = day.key === selectedDayKey;
+                    const isToday = day.key === todayKey;
 
                     const hrefForDay =
                       hasData && agg
@@ -309,24 +334,33 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     const content = (
                       <div
                         className={cn(
-                          "group relative box-border flex h-full min-h-[98px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 transition duration-200 sm:min-h-[170px] sm:rounded-xl sm:p-4 lg:min-h-[186px] lg:p-4.5",
+                          "group relative box-border flex h-full min-h-[112px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2.5 transition duration-200 sm:min-h-[188px] sm:rounded-xl sm:p-4.5 lg:min-h-[206px] lg:p-5",
                           cellClasses,
+                          isSelected &&
+                            "ring-2 ring-[oklch(0.72_0.14_252/0.72)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_0_0_1px_oklch(0.72_0.14_252/0.5)]",
                           hasData && "hover:brightness-[1.05] hover:ring-2 hover:ring-[oklch(0.58_0.12_252/0.5)]",
                         )}
                       >
                         <div className="flex min-w-0 flex-col items-stretch gap-0.5 self-stretch">
-                          <span
-                            className={cn(
-                              "font-mono text-[11px] tabular-nums sm:text-[12px]",
-                              hasData
-                                ? "text-white/90"
-                                : day.inMonth
-                                  ? "text-zinc-300"
-                                  : "text-zinc-500",
-                            )}
-                          >
-                            {day.date.getDate()}
-                          </span>
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span
+                              className={cn(
+                                "font-mono text-[11px] tabular-nums sm:text-[12px]",
+                                hasData
+                                  ? "text-white/90"
+                                  : day.inMonth
+                                    ? "text-zinc-300"
+                                    : "text-zinc-500",
+                              )}
+                            >
+                              {day.date.getDate()}
+                            </span>
+                            {isToday ? (
+                              <span className="rounded-full border border-[oklch(0.72_0.14_252/0.55)] bg-[oklch(0.72_0.14_252/0.18)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-[oklch(0.84_0.1_252)]">
+                                Today
+                              </span>
+                            ) : null}
+                          </div>
                           {hasData && agg!.count > 1 ? (
                             <span className="w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/85 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]">
                               {agg!.count}×
@@ -339,11 +373,11 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                               <div
                                 className={cn(
                                   "font-display font-semibold leading-[1.15] tabular-nums tracking-[-0.03em]",
-                                  "text-[11px] sm:text-[clamp(0.72rem,2vw,1.16rem)] lg:text-[clamp(0.86rem,1.85vw,1.28rem)] lg:tracking-[-0.04em]",
+                                  "text-[10px] sm:text-[clamp(0.82rem,1.95vw,1.22rem)] lg:text-[clamp(0.98rem,1.65vw,1.44rem)] lg:tracking-[-0.04em]",
                                 )}
                               >
                                 <span
-                                  className="block min-w-0 w-full truncate whitespace-nowrap"
+                                  className="block w-full truncate whitespace-nowrap text-right"
                                   title={formatSignedPnlAmount(agg!.total, displayCurrency)}
                                 >
                                   {formatSignedPnlAmount(agg!.total, displayCurrency)}
@@ -355,10 +389,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                             </>
                           ) : (
                             <>
-                              <div className="font-mono text-[11px] tabular-nums text-zinc-500 sm:text-[13px]">—</div>
-                              <div className="mt-0.5 line-clamp-2 text-center font-mono text-[8px] leading-snug text-zinc-400 sm:mt-1 sm:text-[9px] sm:leading-normal">
-                                No trades
-                              </div>
+                              <div className="font-mono text-[11px] tabular-nums text-zinc-500/85 sm:text-[13px]">—</div>
                             </>
                           )}
                         </div>
@@ -370,6 +401,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         <Link
                           key={day.key}
                           href={hrefForDay}
+                          onClick={() => setSelectedDayKey(day.key)}
                           className="block min-h-0 min-w-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]"
                         >
                           {content}
@@ -377,15 +409,25 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                       );
                     }
                     return (
-                      <div key={day.key} className="min-h-0 min-w-0 rounded-xl">
+                      <button
+                        key={day.key}
+                        type="button"
+                        onClick={() => setSelectedDayKey(day.key)}
+                        className="min-h-0 min-w-0 rounded-xl text-left"
+                        aria-label={`Select day ${day.key}`}
+                      >
                         {content}
-                      </div>
+                      </button>
                     );
                   })}
 
+                  {(() => {
+                    const quality = weekQualityScore(week, aggregates);
+                    const status = reflectionStatus(weeklyReflectionRows);
+                    return (
                   <div
                     className={cn(
-                      "relative box-border flex min-h-[128px] min-w-0 flex-col justify-between gap-2 overflow-hidden rounded-lg p-2 text-left sm:min-h-[170px] sm:gap-0 sm:rounded-xl sm:p-4.5 lg:min-h-[186px] lg:p-5",
+                      "relative box-border flex min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left sm:min-h-[188px] sm:gap-1 sm:rounded-xl sm:p-5 lg:min-h-[206px] lg:p-5.5",
                       weekRailClasses(weekly),
                     )}
                   >
@@ -398,29 +440,29 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         <p className="font-mono text-[8px] tabular-nums text-white/65 sm:mt-1 sm:text-[10px] sm:text-white/70">
                           {weekDateRangeLabel(week)}
                         </p>
+                        <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.14em] text-white/55 sm:text-[9px] sm:tracking-[0.18em]">
+                          Quality{" "}
+                          <span className="font-semibold text-white/85">{quality}%</span>
+                        </p>
                       </div>
                       <div
-                        className="min-w-0 w-full rounded-lg border border-white/[0.16] bg-black/35 px-2 py-1.5 sm:max-w-[78%] sm:rounded-xl sm:px-3 sm:py-2.5"
+                        className="min-w-0 w-full rounded-lg border border-white/[0.16] bg-black/35 px-2.5 py-2 sm:max-w-[80%] sm:rounded-xl sm:px-3.5 sm:py-2.5"
                         title={weeklySummary ?? "No weekly reflection"}
                       >
                         <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-white/60 sm:text-[9px] sm:tracking-[0.18em]">
                           Reflection
                         </p>
+                        <p className={cn("mt-1 font-mono text-[9px] uppercase tracking-[0.16em]", status.tone)}>
+                          {status.label}
+                        </p>
                         {weeklyReflectionRows.length === 0 ? (
-                          <p className="mt-1 line-clamp-3 text-[10px] leading-snug text-white/85 sm:text-[12px]">
-                            No weekly reflection
+                          <p className="mt-1 text-[11px] leading-snug text-white/55 sm:text-[12px]">
+                            —
                           </p>
                         ) : (
-                          <div className="mt-1 space-y-1 sm:space-y-1">
-                            {weeklyReflectionRows.map((row) => (
-                              <p
-                                key={row.label}
-                                className="break-words text-[10px] leading-snug text-white/85 [overflow-wrap:anywhere] sm:text-[12px] line-clamp-3 sm:line-clamp-2"
-                              >
-                                <span className="font-medium text-white/50">{row.label}:</span> {row.value}
-                              </p>
-                            ))}
-                          </div>
+                          <p className="mt-1 break-words text-[11px] leading-snug text-white/85 [overflow-wrap:anywhere] sm:text-[12px] line-clamp-2">
+                            {weeklySummary}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -428,7 +470,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                       <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
                         Σ
                       </p>
-                      <p className="font-display text-[0.76rem] font-semibold leading-[1.08] tabular-nums tracking-[-0.03em] sm:text-[clamp(0.95rem,3.2vw,1.48rem)] sm:leading-none md:text-[1.65rem] lg:text-[clamp(1.12rem,2.6vw,2rem)] lg:tracking-[-0.045em]">
+                      <p className="font-display text-[0.8rem] font-semibold leading-[1.08] tabular-nums tracking-[-0.03em] sm:text-[clamp(1.08rem,3vw,1.58rem)] sm:leading-none md:text-[1.74rem] lg:text-[clamp(1.24rem,2.4vw,2.08rem)] lg:tracking-[-0.045em]">
                         <span
                           className="block min-w-0 w-full truncate whitespace-nowrap"
                           title={formatSignedPnlAmount(weekly, displayCurrency)}
@@ -438,6 +480,8 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                       </p>
                     </div>
                   </div>
+                    );
+                  })()}
                 </Fragment>
               );
             })}

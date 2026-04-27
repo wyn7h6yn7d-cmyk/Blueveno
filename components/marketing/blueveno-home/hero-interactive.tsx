@@ -207,7 +207,7 @@ function HeroProductSlab({ mode, groupId, tabRefs, onTabKeyDown, go }: HeroProdu
                           <span className="text-emerald-500/90" aria-hidden>
                             ●
                           </span>
-                          <span className="truncate text-[oklch(0.78_0.09_250)]">linked-chart.com/session/xK9… · NQ1!</span>
+                          <span className="truncate text-[oklch(0.78_0.09_250)]">chart.example/session/xK9… · NQ1!</span>
                         </div>
                         <span className="shrink-0 rounded border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-emerald-300/90">
                           Linked

@@ -28,7 +28,7 @@ export interface JournalEntry {
   pnlR: number | null;
   setupTags: string[];
   notes: string | null;
-  tradingViewUrl: string | null;
+  chartLinkUrl: string | null;
 }
 
 export interface AnalyticsSnapshot {

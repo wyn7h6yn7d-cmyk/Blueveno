@@ -14,9 +14,6 @@ type UpgradeModalProps = {
   feature: FeatureKey;
 };
 
-/**
- * Placeholder modal — swap body for Stripe Checkout embed or Customer Portal CTA later.
- */
 export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps) {
   const copy = FEATURE_UPGRADE_COPY[feature];
 
@@ -68,8 +65,8 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
           {copy.title}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">{copy.description}</p>
-        <p className="mt-4 rounded-lg border border-dashed border-white/[0.1] bg-bv-surface-inset/50 px-3 py-2 font-mono text-[11px] text-zinc-500">
-          Stripe Checkout & Customer Portal will mount here — price IDs from env when wired.
+        <p className="mt-4 rounded-lg border border-white/[0.1] bg-bv-surface-inset/50 px-3 py-2 text-[12px] leading-relaxed text-zinc-400">
+          View plans to choose the right access level for your workflow.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link

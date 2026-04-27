@@ -25,17 +25,17 @@ export function PageHeader({
     <div
       className={cn(
         "flex flex-col gap-4 border-b border-white/[0.08] sm:flex-row sm:items-end sm:justify-between sm:gap-8",
-        isSig ? "pb-7 sm:pb-9" : "pb-6 sm:pb-8",
+        isSig ? "pb-8 sm:pb-10" : "pb-7 sm:pb-9",
         className,
       )}
     >
-      <div className="min-w-0 space-y-3">
+      <div className="min-w-0 space-y-3.5">
         {eyebrow ? (
           <>
             <p
               className={cn(
                 "font-mono uppercase tracking-[0.22em]",
-                isSig ? "text-[11px] text-[oklch(0.72_0.1_252)]" : "text-[10px] text-[oklch(0.58_0.1_252)]",
+                isSig ? "text-[11px] text-[oklch(0.74_0.11_252)]" : "text-[10px] text-[oklch(0.62_0.1_252)]",
               )}
             >
               {eyebrow}
@@ -46,7 +46,7 @@ export function PageHeader({
         <h1
           className={cn(
             "font-display font-semibold tracking-[-0.035em] text-zinc-50",
-            isSig ? "text-[1.75rem] leading-[1.15] md:text-[2rem]" : "text-[1.4rem] leading-tight md:text-[1.55rem]",
+            isSig ? "text-[1.86rem] leading-[1.12] md:text-[2.12rem]" : "text-[1.5rem] leading-tight md:text-[1.68rem]",
           )}
         >
           {title}

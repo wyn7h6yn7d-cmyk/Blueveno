@@ -4,7 +4,6 @@ import { JetBrains_Mono, Plus_Jakarta_Sans, Source_Sans_3 } from "next/font/goog
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
-import { CookieConsentModal } from "@/components/legal/cookie-consent";
 
 const sourceSans = Source_Sans_3({
   variable: "--font-source",
@@ -62,7 +61,6 @@ export default function RootLayout({
       <body className="min-h-full bg-background text-foreground">
         <AuthSessionProvider>
           {children}
-          <CookieConsentModal />
         </AuthSessionProvider>
       </body>
     </html>

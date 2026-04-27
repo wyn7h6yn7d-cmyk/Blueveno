@@ -12,7 +12,7 @@ export type JournalRowDb = {
   r_value: string;
   tag: string;
   note: string | null;
-  tradingview_url: string | null;
+  chart_link_url: string | null;
   mood_state?: "Calm" | "Focused" | "Hesitant" | "Tilted" | null;
   followed_plan?: boolean | null;
   respected_stop?: boolean | null;
@@ -30,7 +30,7 @@ export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
     r: r.r_value ?? "",
     tag: r.tag ?? "Manual",
     note: r.note ?? undefined,
-    tradingViewUrl: r.tradingview_url ?? undefined,
+    chartLinkUrl: r.chart_link_url ?? undefined,
     moodState: r.mood_state ?? undefined,
     followedPlan: r.followed_plan ?? false,
     respectedStop: r.respected_stop ?? false,

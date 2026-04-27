@@ -1,4 +1,5 @@
-import { PremiumPrimaryLink } from "./premium-button";
+import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
+import { PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 export function FinalCta() {
   return (
@@ -17,10 +18,14 @@ export function FinalCta() {
           id="cta-heading"
           className="font-display text-[clamp(1.5rem,3.5vw,2.35rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-zinc-50"
         >
-          Data makes you green.
+          Start your {PRICING_EUR.trialDays}-day trial.
         </h2>
-        <div className="mt-8 flex justify-center sm:mt-10">
+        <p className="mx-auto mt-4 max-w-[30rem] text-[14px] leading-relaxed text-zinc-400">
+          After trial, your workspace becomes read-only until upgrade. Premium unlocks ongoing journaling.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10">
           <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
+          <PremiumGhostLink href="/login">Open workspace</PremiumGhostLink>
         </div>
       </div>
     </section>

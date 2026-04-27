@@ -276,7 +276,7 @@ export function HeroCommandSurface() {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] pt-6">
                       <p className="min-w-0 flex-1 truncate font-mono text-[12px] text-[oklch(0.78_0.09_250)] sm:text-[13px]">
-                        linked-chart.com/session/…
+                        chart.example/session/…
                       </p>
                       <a
                         href="/signup"

@@ -13,8 +13,6 @@ type AuthSplitLayoutProps = {
   alternateHref: string;
   alternateLabel: string;
   variant?: "login" | "signup";
-  /** Shown under Terms in development only */
-  showDevHint?: boolean;
 };
 
 const specItems = ["Journal", "Analytics", "Review", "Accountability"];
@@ -28,7 +26,6 @@ export function AuthSplitLayout({
   alternateHref,
   alternateLabel,
   variant = "login",
-  showDevHint,
 }: AuthSplitLayoutProps) {
   return (
     <MarketingBackground>
@@ -64,12 +61,9 @@ export function AuthSplitLayout({
             </div>
 
             <div className="space-y-4 border-t border-white/[0.06] pt-12">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-600">
-                Data posture
-              </p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-600">Privacy</p>
               <p className="max-w-md text-sm leading-relaxed text-zinc-500">
-                Encrypted sessions. Your tape and journal entries are not sold or used to train
-                third-party models—this is operator software, not an audience product.
+                Encrypted sessions. Your journal data stays private to your account.
               </p>
             </div>
           </aside>
@@ -131,23 +125,6 @@ export function AuthSplitLayout({
                   .
                 </p>
 
-                {showDevHint ? (
-                  <p className="mt-5 text-center font-mono text-[10px] leading-relaxed text-zinc-600">
-                    Developer: set{" "}
-                    <code className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-zinc-400">
-                      NEXT_PUBLIC_SUPABASE_URL
-                    </code>{" "}
-                    and{" "}
-                    <code className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-zinc-400">
-                      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-                    </code>{" "}
-                    in{" "}
-                    <code className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 text-zinc-400">
-                      .env.local
-                    </code>
-                    ; create users in Supabase Auth.
-                  </p>
-                ) : null}
               </div>
             </div>
           </div>

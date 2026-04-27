@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
@@ -8,7 +9,6 @@ import { DashboardCard } from "@/components/app/dashboard-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { KeyRound, LogOut, Shield, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -179,18 +179,17 @@ export function SettingsProfileForm() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
         variant="signature"
         eyebrow="Settings"
-        title="Account"
-        description="Profile, currency, timezone, and security."
+        title="Account settings"
+        description="Profile, preferences, security, and sessions."
         actions={
           <Button
             type="submit"
             form="profile-form"
-            variant="outline"
-            className="h-10 rounded-xl border-white/[0.12] bg-white/[0.04] px-4 text-[13px] text-zinc-100 hover:bg-white/[0.08]"
+            className="h-10 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.67_0.15_252))] px-4 text-[13px] font-semibold text-[oklch(0.1_0.04_265)] shadow-[0_12px_32px_-16px_oklch(0.45_0.14_252/0.58)] hover:brightness-[1.03]"
             disabled={loading || saving}
           >
             {saving ? "Saving…" : "Save changes"}
@@ -199,11 +198,8 @@ export function SettingsProfileForm() {
       />
 
       <form id="profile-form" onSubmit={onSave}>
-        <DashboardCard
-          eyebrow="Profile"
-          title="Your details"
-          description="Name and preferences for the signed-in app."
-        >
+        <div className="grid gap-4 xl:grid-cols-2">
+          <DashboardCard eyebrow="Profile" title="Your profile" description="Your public name and account email.">
           {loading ? (
             <p className="text-[15px] text-zinc-500">Loading profile…</p>
           ) : (
@@ -216,7 +212,7 @@ export function SettingsProfileForm() {
                   id="display-name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Trader name"
+                  placeholder="Your name"
                   className={field}
                   autoComplete="name"
                 />
@@ -232,11 +228,24 @@ export function SettingsProfileForm() {
                   className={cn(field, "cursor-not-allowed opacity-80")}
                 />
               </div>
-              <div className="space-y-2 sm:col-span-2">
+            </div>
+          )}
+          </DashboardCard>
+
+          <DashboardCard
+            eyebrow="Preferences"
+            title="Workspace preferences"
+            description="Choose timezone and display currency."
+          >
+            {loading ? (
+              <p className="text-[15px] text-zinc-500">Loading preferences…</p>
+            ) : (
+              <div className="grid gap-5">
+                <div className="space-y-2">
                 <Label htmlFor="timezone" className="text-[13px] text-zinc-300">
                   Timezone
                 </Label>
-                <p className="text-[13px] text-zinc-600">Used for the session strip and local times in the app.</p>
+                <p className="text-[13px] text-zinc-500">Used for local times across journal, calendar, and stats.</p>
                 <select
                   id="timezone"
                   value={timezoneSelectValue}
@@ -266,19 +275,17 @@ export function SettingsProfileForm() {
                     id="timezone-custom"
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
-                    placeholder="e.g. Europe/Lisbon or America/Phoenix"
+                    placeholder="e.g. Europe/London"
                     className={field}
                     aria-label="Custom IANA timezone"
                   />
                 ) : null}
               </div>
-              <div className="space-y-2 sm:col-span-2">
+                <div className="space-y-2">
                 <Label htmlFor="display-currency" className="text-[13px] text-zinc-300">
                   Display currency
                 </Label>
-                <p className="text-[13px] text-zinc-600">
-                  {"Journal P&L, stats, and calendar use this for formatting."}
-                </p>
+                <p className="text-[13px] text-zinc-500">Applied to P&L formatting in journal, calendar, and stats.</p>
                 <select
                   id="display-currency"
                   value={displayCurrency}
@@ -293,17 +300,20 @@ export function SettingsProfileForm() {
                 </select>
               </div>
             </div>
-          )}
-          {message ? <p className="mt-4 text-sm text-zinc-400">{message}</p> : null}
-        </DashboardCard>
+            )}
+          </DashboardCard>
+        </div>
+        {message ? <p className="mt-4 text-sm text-zinc-400">{message}</p> : null}
       </form>
 
-        <DashboardCard
-          eyebrow="Security"
-          title="Password & sessions"
-          description="Change password, email, and where you are signed in."
-        >
+      <DashboardCard
+        eyebrow="Security"
+        title="Security"
+        description="Update sign-in details and keep your account secure."
+      >
+        <div className="grid gap-6 xl:grid-cols-2">
         <form onSubmit={onUpdatePassword} className="space-y-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Password</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="new-password" className="text-[13px] text-zinc-300">
@@ -337,18 +347,19 @@ export function SettingsProfileForm() {
           <Button
             type="submit"
             variant="outline"
-            className="h-9 rounded-xl border-white/[0.1] bg-transparent"
+            className="h-9 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
             disabled={accountBusy}
           >
             Update password
           </Button>
         </form>
 
-        <form onSubmit={onUpdateEmail} className="mt-6 border-t border-white/[0.06] pt-6">
-          <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+          <form onSubmit={onUpdateEmail} className="space-y-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Email</p>
+            <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
             <div className="space-y-2">
               <Label htmlFor="pending-email" className="text-[13px] text-zinc-300">
-                Change email
+                New email
               </Label>
               <Input
                 id="pending-email"
@@ -363,68 +374,115 @@ export function SettingsProfileForm() {
             <Button
               type="submit"
               variant="outline"
-              className="h-9 rounded-xl border-white/[0.1] bg-transparent"
+              className="h-9 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
               disabled={accountBusy}
             >
               Update email
             </Button>
-          </div>
-        </form>
-
-        <div className="mt-6 flex flex-col gap-4 border-t border-white/[0.06] pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <Shield className="mt-0.5 size-5 text-[oklch(0.65_0.12_250)]" strokeWidth={1.75} />
-            <div>
-              <p className="text-[15px] font-medium text-zinc-200">Current device session</p>
-              <p className="text-sm text-zinc-500">Sign out from this browser.</p>
             </div>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 shrink-0 rounded-xl border-white/[0.1] bg-transparent"
-            disabled={accountBusy}
-            onClick={() => signOut("local")}
-          >
-            <LogOut className="mr-2 size-4" />
-            Sign out
-          </Button>
+            <p className="text-[12px] text-zinc-500">We will ask you to confirm the new email from your inbox.</p>
+          </form>
         </div>
-        <div className="mt-6 flex flex-col gap-4 border-t border-white/[0.06] pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <KeyRound className="mt-0.5 size-5 text-zinc-500" strokeWidth={1.75} />
-            <div>
-              <p className="text-[15px] font-medium text-zinc-200">Other device sessions</p>
-              <p className="text-sm text-zinc-500">Revoke active sessions on other devices.</p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 shrink-0 rounded-xl border-white/[0.1] bg-transparent"
-            disabled={accountBusy}
-            onClick={() => signOut("others")}
-          >
-            Sign out others
-          </Button>
-        </div>
-        {accountMessage ? <p className="mt-5 text-sm text-zinc-400">{accountMessage}</p> : null}
       </DashboardCard>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-4">
-        <div className="flex items-center gap-3">
-          <User className="size-5 text-zinc-500" strokeWidth={1.75} />
-          <div>
-            <p className="text-[15px] text-zinc-200">Plan & billing</p>
-            <p className="text-sm text-zinc-500">Membership and receipts</p>
+      <DashboardCard
+        eyebrow="Sessions"
+        title="Active sessions"
+        description="Manage where your account stays signed in."
+      >
+        <div className="grid gap-4">
+          <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <Shield className="mt-0.5 size-5 text-[oklch(0.65_0.12_250)]" strokeWidth={1.75} />
+              <div>
+                <p className="text-[15px] font-medium text-zinc-200">This device</p>
+                <p className="text-sm text-zinc-500">Sign out from this browser session.</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 shrink-0 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
+              disabled={accountBusy}
+              onClick={() => signOut("local")}
+            >
+              <LogOut className="mr-2 size-4" />
+              Sign out
+            </Button>
+          </div>
+          <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <KeyRound className="mt-0.5 size-5 text-zinc-500" strokeWidth={1.75} />
+              <div>
+                <p className="text-[15px] font-medium text-zinc-200">Other devices</p>
+                <p className="text-sm text-zinc-500">End sessions on other signed-in devices.</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 shrink-0 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
+              disabled={accountBusy}
+              onClick={() => signOut("others")}
+            >
+              Sign out others
+            </Button>
           </div>
         </div>
-        <Link
-          href="/app/settings/billing"
-          className="font-mono text-[11px] uppercase tracking-[0.18em] text-[oklch(0.78_0.12_250)] hover:underline"
-        >
-          Open billing →
-        </Link>
+        {accountMessage ? <p className="mt-4 text-sm text-zinc-400">{accountMessage}</p> : null}
+      </DashboardCard>
+
+      <DashboardCard
+        eyebrow="Data & privacy"
+        title="Data rights"
+        description="Access policy information and contact us for export/deletion requests."
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/privacy"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
+          >
+            View privacy policy
+          </Link>
+          <a
+            href="mailto:hello@blueveno.com?subject=Blueveno%20Data%20Export%20Request"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
+          >
+            Request data export
+          </a>
+          <a
+            href="mailto:hello@blueveno.com?subject=Blueveno%20Account%20Deletion%20Request"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-400/30 bg-rose-500/[0.08] px-4 text-[13px] text-rose-200 transition hover:bg-rose-500/[0.14]"
+          >
+            Request account deletion
+          </a>
+          <a
+            href="mailto:hello@blueveno.com?subject=Blueveno%20Support%20Request"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
+          >
+            Contact support
+          </a>
+        </div>
+      </DashboardCard>
+
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
+        <div className="flex items-center gap-3">
+          <User className="size-5 text-zinc-500" strokeWidth={1.75} />
+          <p className="text-sm text-zinc-500">
+            Billing settings are available from the Billing section when active.
+          </p>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+          <Link href="/privacy" className="transition hover:text-zinc-300">
+            Privacy
+          </Link>
+          <Link href="/terms" className="transition hover:text-zinc-300">
+            Terms
+          </Link>
+          <Link href="/cookies" className="transition hover:text-zinc-300">
+            Cookies
+          </Link>
+        </div>
       </div>
     </div>
   );

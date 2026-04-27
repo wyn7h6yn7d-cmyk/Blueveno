@@ -17,7 +17,7 @@ import { useAccess } from "@/components/access/access-provider";
 function toUserDbError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
   if (normalized.includes("journal_entries") && normalized.includes("could not find")) {
-    return "Database is not initialized yet (journal_entries table missing). Run Supabase migrations and reload.";
+    return "Your workspace is temporarily unavailable. Please try again in a moment.";
   }
   return message ?? "Could not save entry.";
 }
@@ -269,7 +269,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         r_value: row.r,
         tag: row.tag,
         note: row.note ?? null,
-        tradingview_url: row.tradingViewUrl ?? null,
+        chart_link_url: row.chartLinkUrl ?? null,
       };
       const behaviorPayload = {
         mood_state: row.moodState ?? null,
@@ -312,7 +312,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         r: (inserted.r_value as string) ?? "",
         tag: (inserted.tag as string) ?? "Manual",
         note: (inserted.note as string | null) ?? undefined,
-        tradingViewUrl: (inserted.tradingview_url as string | null) ?? undefined,
+        chartLinkUrl: (inserted.chart_link_url as string | null) ?? undefined,
         moodState: (inserted.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
         followedPlan: (inserted.followed_plan as boolean | null) ?? false,
         respectedStop: (inserted.respected_stop as boolean | null) ?? false,
@@ -354,7 +354,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         r_value: row.r,
         tag: row.tag,
         note: row.note ?? null,
-        tradingview_url: row.tradingViewUrl ?? null,
+        chart_link_url: row.chartLinkUrl ?? null,
         mood_state: row.moodState ?? null,
         followed_plan: row.followedPlan ?? false,
         respected_stop: row.respectedStop ?? false,
@@ -380,7 +380,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
             r_value: row.r,
             tag: row.tag,
             note: row.note ?? null,
-            tradingview_url: row.tradingViewUrl ?? null,
+            chart_link_url: row.chartLinkUrl ?? null,
           })
           .eq("user_id", userId)
           .eq("id", id)
@@ -404,7 +404,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         r: (updated.r_value as string) ?? "",
         tag: (updated.tag as string) ?? "Manual",
         note: (updated.note as string | null) ?? undefined,
-        tradingViewUrl: (updated.tradingview_url as string | null) ?? undefined,
+        chartLinkUrl: (updated.chart_link_url as string | null) ?? undefined,
         moodState: (updated.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
         followedPlan: (updated.followed_plan as boolean | null) ?? false,
         respectedStop: (updated.respected_stop as boolean | null) ?? false,

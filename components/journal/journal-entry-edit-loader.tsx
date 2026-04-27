@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { fetchJournalEntryForUser } from "@/lib/user-data/fetch-journal-entry-client";
 import { mapJournalRowFromDb } from "@/lib/user-data/map-journal-db";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
@@ -79,7 +78,19 @@ export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Pr
   }
 
   if (phase === "missing" || !row) {
-    notFound();
+    return (
+      <div className="space-y-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-8">
+        <p className="text-[15px] leading-relaxed text-zinc-300">
+          This journal entry is no longer available.
+        </p>
+        <Link
+          href="/app/journal"
+          className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-[14px] text-zinc-400 transition hover:text-zinc-200"
+        >
+          Back to journal
+        </Link>
+      </div>
+    );
   }
 
   return (

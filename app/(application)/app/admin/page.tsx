@@ -1,20 +1,21 @@
-import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { loadAccessForUser } from "@/lib/access/load-access";
 import { PageHeader } from "@/components/app/page-header";
+import { AdminAccessDenied } from "@/components/admin/admin-access-denied";
 import { AdminServiceUnavailable } from "@/components/admin/admin-service-unavailable";
 import { AdminUsersTable } from "@/components/admin/admin-users-table";
 import { listUsersForAdmin } from "@/app/(application)/app/admin/list-users";
 import { isSupabaseServiceRoleConfigured } from "@/lib/supabase/admin";
+import { ADMIN_FULL_ACCESS_EMAIL } from "@/lib/billing/workspace-access";
 
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    notFound();
+    return <AdminAccessDenied />;
   }
   const access = await loadAccessForUser(session.user.id, session.user.email ?? null);
   if (!access?.isAdmin) {
-    notFound();
+    return <AdminAccessDenied />;
   }
 
   if (!isSupabaseServiceRoleConfigured()) {
@@ -29,7 +30,7 @@ export default async function AdminPage() {
         variant="signature"
         eyebrow="Admin"
         title="User Control Center"
-        description="Manage roles, premium access, trials, and account status in one place."
+        description={`Manage roles, access states, trials, and account status. ${ADMIN_FULL_ACCESS_EMAIL} remains permanent admin with full access.`}
       />
       <AdminUsersTable users={users} />
     </div>

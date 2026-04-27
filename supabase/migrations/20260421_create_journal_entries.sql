@@ -7,7 +7,7 @@ create table if not exists public.journal_entries (
   r_value text not null,
   tag text not null default 'Manual',
   note text,
-  tradingview_url text,
+  chart_link_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

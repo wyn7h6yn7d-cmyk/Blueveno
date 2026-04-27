@@ -11,10 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { chartUrlForSave, isValidChartUrl, normalizeChartUrlInput } from "@/lib/tradingview";
+import { chartUrlForSave, isValidChartUrl, normalizeChartUrlInput } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
+import { ConfirmDialog } from "@/components/app/confirm-dialog";
 
 const labelCls = "text-[12px] font-medium tracking-wide text-zinc-400";
 const inputCls =
@@ -41,7 +42,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
   const [symbol, setSymbol] = useState(initialRow.sym);
   const [pnl, setPnl] = useState(initialRow.r);
   const [note, setNote] = useState(initialRow.note ?? "");
-  const [chartUrl, setChartUrl] = useState(initialRow.tradingViewUrl ?? "");
+  const [chartUrl, setChartUrl] = useState(initialRow.chartLinkUrl ?? "");
   const [moodState, setMoodState] = useState<(typeof MOOD_OPTIONS)[number]>(initialRow.moodState ?? "Focused");
   const [followedPlan, setFollowedPlan] = useState(Boolean(initialRow.followedPlan));
   const [respectedStop, setRespectedStop] = useState(Boolean(initialRow.respectedStop));
@@ -51,6 +52,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +63,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       return;
     }
     if (!isValidChartUrl(chartUrl)) {
-      setUrlError("Use a valid chart URL (e.g. https://linked-chart.com/session/...), or leave the field empty.");
+      setUrlError("Use a valid chart URL (e.g. https://chart.example/session/...), or leave the field empty.");
       return;
     }
     setUrlError(null);
@@ -75,7 +77,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       r: pnl.trim(),
       tag: preserved.current.tag,
       note: note.trim() || undefined,
-      tradingViewUrl: chartUrlForSave(chartUrl),
+      chartLinkUrl: chartUrlForSave(chartUrl),
       moodState,
       followedPlan,
       respectedStop,
@@ -92,12 +94,12 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
 
   const onDelete = async () => {
     if (!canWriteJournal) return;
-    if (!window.confirm("Delete this journal entry? This cannot be undone.")) return;
     setDeleteError(null);
     setDeleting(true);
     const result = await removeRow(entryId);
     setDeleting(false);
     if (result.ok) {
+      setConfirmOpen(false);
       router.push("/app/journal");
       router.refresh();
       return;
@@ -287,7 +289,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                   const n = normalizeChartUrlInput(v);
                   if (n !== v) setChartUrl(n);
                 }}
-                placeholder="https://linked-chart.com/session/..."
+                placeholder="https://chart.example/session/..."
                 disabled={!canWriteJournal}
                 className={cn(inputCls, "disabled:opacity-45")}
               />
@@ -321,7 +323,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
               variant="destructive"
               disabled={deleting || saving}
               className="mt-4 h-10 rounded-xl px-4"
-              onClick={() => void onDelete()}
+              onClick={() => setConfirmOpen(true)}
             >
               <Trash2 className="mr-2 size-4" strokeWidth={2} aria-hidden />
               {deleting ? "Deleting…" : "Delete entry"}
@@ -334,6 +336,19 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
           </div>
         ) : null}
       </DashboardCard>
+      <ConfirmDialog
+        open={confirmOpen}
+        onCancel={() => {
+          if (deleting) return;
+          setConfirmOpen(false);
+        }}
+        onConfirm={() => void onDelete()}
+        destructive
+        pending={deleting}
+        title="Delete journal entry?"
+        description="This action is permanent and cannot be undone."
+        confirmLabel="Delete entry"
+      />
     </div>
   );
 }

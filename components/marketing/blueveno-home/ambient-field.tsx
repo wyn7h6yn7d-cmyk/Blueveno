@@ -175,10 +175,14 @@ export function AmbientField() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,oklch(0.62_0.08_250/0.08)_1px,transparent_1px)] bg-[length:84px_100%] opacity-60" />
 
       {/* Chart layers — back → front; different speeds + one reverse for parallax */}
-      <div className="absolute inset-0 opacity-[0.72] sm:opacity-[0.82]">
-        <ChartTrack layerIndex={2} durationSec={188} opacity={0.8} />
-        <ChartTrack layerIndex={1} durationSec={138} reverse opacity={0.96} />
-        <ChartTrack layerIndex={0} durationSec={112} opacity={1} />
+      <div className="absolute inset-0 opacity-[0.62] sm:opacity-[0.74]">
+        <div className="hidden lg:block">
+          <ChartTrack layerIndex={2} durationSec={188} opacity={0.7} />
+        </div>
+        <div className="hidden sm:block">
+          <ChartTrack layerIndex={1} durationSec={148} reverse opacity={0.84} />
+        </div>
+        <ChartTrack layerIndex={0} durationSec={126} opacity={0.9} />
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(118deg,transparent_0%,transparent_33%,oklch(0.7_0.16_248/0.28)_40%,transparent_46%,transparent_58%,oklch(0.64_0.14_242/0.2)_64%,transparent_70%)]" />
 

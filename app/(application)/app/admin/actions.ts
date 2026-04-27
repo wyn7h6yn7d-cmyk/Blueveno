@@ -25,6 +25,10 @@ function revalidateAdmin() {
   revalidatePath("/app/admin");
 }
 
+function isPrimaryAdminEmail(email: string): boolean {
+  return email.toLowerCase().trim() === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
+}
+
 export async function grantPremium(userId: string) {
   await requireAdmin();
   const admin = createAdminClient();
@@ -41,7 +45,7 @@ export async function revokePremium(userId: string) {
   const admin = createAdminClient();
   const { data: row } = await admin.from("user_profiles").select("email").eq("user_id", userId).maybeSingle();
   const email = String(row?.email ?? "").toLowerCase();
-  if (email === ADMIN_FULL_ACCESS_EMAIL.toLowerCase()) {
+  if (isPrimaryAdminEmail(email)) {
     throw new Error("Cannot revoke premium for the primary admin account.");
   }
   const { error } = await admin
@@ -87,7 +91,7 @@ export async function removeAdmin(userId: string) {
   const admin = createAdminClient();
   const { data: row } = await admin.from("user_profiles").select("email").eq("user_id", userId).maybeSingle();
   const email = String(row?.email ?? "").toLowerCase();
-  if (email === ADMIN_FULL_ACCESS_EMAIL.toLowerCase()) {
+  if (isPrimaryAdminEmail(email)) {
     throw new Error("Cannot remove primary admin.");
   }
   const { error } = await admin
@@ -103,7 +107,7 @@ export async function setAccountDisabled(userId: string, disabled: boolean) {
   const admin = createAdminClient();
   const { data: row } = await admin.from("user_profiles").select("email").eq("user_id", userId).maybeSingle();
   const email = String(row?.email ?? "").toLowerCase();
-  if (email === ADMIN_FULL_ACCESS_EMAIL.toLowerCase() && disabled) {
+  if (isPrimaryAdminEmail(email) && disabled) {
     throw new Error("Cannot disable primary admin.");
   }
   const { error } = await admin

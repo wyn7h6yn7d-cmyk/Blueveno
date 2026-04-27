@@ -20,22 +20,22 @@ export default async function ReviewsPage() {
       <PageHeader
         eyebrow="Reviews"
         title="Day review"
-        description="A place for chart-backed reviews once journal days include links and notes."
+        description="Review your saved days with notes and linked charts."
         actions={
           <Link href="/app/journal#add" className={outlineAction}>
-            New entry
+            Log the day
           </Link>
         }
       />
 
-      <DashboardCard eyebrow="Reviews" title="Nothing to review yet" description="Journal entries with charts drive this view.">
+      <DashboardCard eyebrow="Reviews" title="Nothing to review yet" description="Save the chart and note to build this view.">
         <EmptyState
           icon={Camera}
-          title="Save days with chart links"
-          description="Journal days that include a saved chart URL and notes will surface here in a future iteration."
+          title="Start with one reviewed day"
+          description="Log the day and add a linked chart to unlock review flow."
           action={
             <Link href="/app/journal#add" className={outlineAction}>
-              Open journal
+              Log the day
             </Link>
           }
         />
