@@ -69,45 +69,50 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
 
   return (
     <>
-      <div className="inline-flex min-w-0 max-w-[20.5rem] items-center gap-1.5 rounded-full border border-[oklch(0.58_0.11_252/0.36)] bg-[oklch(0.14_0.045_262/0.88)] px-2 py-1 text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)]">
-        <Wallet className="size-3.5 shrink-0 text-[oklch(0.74_0.11_252)]" />
-        <select
-          value={activeAccountId ?? ""}
-          onChange={async (e) => {
-            const selectedId = e.target.value;
-            if (!selectedId) return;
-            setAccountErrorDismissed(false);
-            setAccountActionError(null);
-            const result = await setActiveAccount(selectedId);
-            if (result.ok) {
-              router.refresh();
-              return;
-            }
-            setAccountActionError(result.error);
-          }}
-          className="h-6 min-w-[7rem] max-w-[11.5rem] truncate bg-transparent pr-1 text-[12px] text-zinc-100 outline-none"
-          aria-label="Select trading account"
+      <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1.5">
+        <div className="inline-flex min-w-0 items-center gap-1.5 overflow-hidden rounded-full border border-[oklch(0.58_0.11_252/0.36)] bg-[oklch(0.14_0.045_262/0.88)] py-1 pl-2 pr-2 text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:pr-2.5">
+          <Wallet className="size-3.5 shrink-0 text-[oklch(0.74_0.11_252)]" />
+          <select
+            value={activeAccountId ?? ""}
+            onChange={async (e) => {
+              const selectedId = e.target.value;
+              if (!selectedId) return;
+              setAccountErrorDismissed(false);
+              setAccountActionError(null);
+              const result = await setActiveAccount(selectedId);
+              if (result.ok) {
+                router.refresh();
+                return;
+              }
+              setAccountActionError(result.error);
+            }}
+            className="h-6 min-w-0 max-w-[9rem] shrink truncate bg-transparent text-[12px] text-zinc-100 outline-none sm:max-w-[11rem] md:max-w-[13rem]"
+            aria-label="Select trading account"
+          >
+            {accounts.length === 0 ? <option value="">No accounts</option> : null}
+            {accounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+          </select>
+          {activeAccount ? (
+            <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
+              Active
+            </span>
+          ) : null}
+          <button
+            type="button"
+            className="h-6 shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 text-[11px] text-zinc-200 transition hover:bg-white/[0.1]"
+            onClick={() => router.push("/app/settings?section=accounts#accounts")}
+          >
+            Manage
+          </button>
+        </div>
+        <span
+          className="inline-flex shrink-0 items-center rounded-full border border-white/[0.12] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-400"
+          title={`Trading accounts in use (${Math.min(accounts.length, maxAccounts)} of ${maxAccounts})`}
         >
-          {accounts.length === 0 ? <option value="">No accounts</option> : null}
-          {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.name}
-            </option>
-          ))}
-        </select>
-        {activeAccount ? (
-          <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
-            Active
-          </span>
-        ) : null}
-        <button
-          type="button"
-          className="h-6 shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 text-[11px] text-zinc-200 transition hover:bg-white/[0.1]"
-          onClick={() => router.push("/app/settings?section=accounts#accounts")}
-        >
-          Manage
-        </button>
-        <span className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-400">
           Accounts {Math.min(accounts.length, maxAccounts)}/{maxAccounts}
         </span>
       </div>
