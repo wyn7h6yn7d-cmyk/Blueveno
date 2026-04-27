@@ -8,9 +8,9 @@ import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
 import { cn } from "@/lib/utils";
 
 const FEATURE_ITEMS = [
-  { icon: LineChart, title: "Trade. Journal. Improve.", subtitle: "All in one calm workspace." },
-  { icon: Shield, title: "Private by design.", subtitle: "Your data stays yours." },
-  { icon: Target, title: "Built for consistency.", subtitle: "Better habits, clearer self-review." },
+  { icon: LineChart, title: "Log the trading day.", subtitle: "P&L, symbol, notes, and linked chart." },
+  { icon: Shield, title: "Behavior review.", subtitle: "Mood and discipline checks in one flow." },
+  { icon: Target, title: "Weekly reflections.", subtitle: "Review week quality with clear context." },
 ] as const;
 
 const WEEK_ROWS = [
@@ -322,10 +322,10 @@ export function HeroPremium() {
                 Review the behavior.
               </span>
             </h1>
-            <p className="mt-5 max-w-[29rem] text-[16px] leading-[1.56] text-zinc-300">
-              Log the day. Save the chart.
+            <p className="mt-5 max-w-[31rem] text-[16px] leading-[1.56] text-zinc-300">
+              Log your trading day with P&amp;L, symbol, notes, mood, discipline checks, and a linked chart.
               <br />
-              See the week in one clear place.
+              Review week quality, weekly reflections, and performance by trading account.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3.5">
               <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>

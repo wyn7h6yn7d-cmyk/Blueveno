@@ -238,7 +238,7 @@ export function TradingAccountsSection() {
       <DashboardCard
         eyebrow="Trading accounts"
         title="Trading accounts"
-        description="Create, edit, delete, and switch the active account."
+        description="Create, edit, delete, and switch your main trading account."
       >
       {loading ? <p className="text-[14px] text-zinc-500">Loading trading accounts…</p> : null}
 
@@ -342,9 +342,9 @@ export function TradingAccountsSection() {
             </div>
             {!canManage ? (
               <p className="text-[12px] text-zinc-500">
-                {isReadOnlyTrial ? "Read-only access after trial." : "Account management is disabled."}{" "}
+                {isReadOnlyTrial ? "Read-only access after trial. Keep your history visible." : "Account management is disabled."}{" "}
                 <Link href="/app/settings/billing" className="text-[oklch(0.78_0.11_252)] underline-offset-4 hover:underline">
-                  Upgrade to manage trading accounts
+                  Upgrade to keep journaling and manage accounts
                 </Link>
                 .
               </p>
@@ -360,7 +360,7 @@ export function TradingAccountsSection() {
 
           {accounts.length === 0 ? (
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-sm text-zinc-500">
-              No trading accounts yet. Create your first account to start journaling.
+              No trading accounts yet. Add your first account to start journaling.
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -440,7 +440,7 @@ export function TradingAccountsSection() {
       {!canManage && !loading ? (
         <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-zinc-500">
           <Lock className="size-3.5" />
-          You can switch accounts, but create/edit/delete are locked in read-only access.
+          You can switch accounts, but create/edit/delete are locked in read-only access after trial.
         </p>
       ) : null}
 

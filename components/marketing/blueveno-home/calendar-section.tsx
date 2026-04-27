@@ -79,7 +79,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
               </span>
             </h2>
             <p className="mt-4 max-w-md text-[14px] leading-[1.55] tracking-[-0.02em] text-zinc-500 sm:mt-5 sm:text-[15px]">
-              Green, red, flat - week totals with Week Quality on the rail.
+              Green, red, or flat days with week totals, Week quality, and weekly reflections.
             </p>
           </div>
 

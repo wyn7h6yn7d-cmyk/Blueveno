@@ -78,7 +78,7 @@ export function HeroCommandSurface() {
             Clarity at the close.
           </h1>
           <p className="mx-auto mt-5 max-w-[40ch] text-[15px] leading-relaxed tracking-[-0.02em] text-zinc-500">
-            One disciplined surface for the day, saved chart, and the numbers - calm review, no noise.
+            One disciplined surface for the day, linked chart, and the numbers - calm behavior review, no noise.
           </p>
         </div>
 

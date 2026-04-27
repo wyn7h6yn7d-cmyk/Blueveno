@@ -15,7 +15,7 @@ type AuthSplitLayoutProps = {
   variant?: "login" | "signup";
 };
 
-const specItems = ["Journal", "Analytics", "Review", "Accountability"];
+const specItems = ["Linked chart", "Behavior review", "Week quality", "Discipline score"];
 
 export function AuthSplitLayout({
   eyebrow,

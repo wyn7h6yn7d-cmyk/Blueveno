@@ -51,11 +51,11 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
   {
     feature: "Trading accounts",
     trial: "text",
-    trialNote: "1 account",
+    trialNote: "1 trading account during trial",
     premium: "text",
-    premiumNote: "Up to 5 accounts",
+    premiumNote: "Premium supports up to 5 accounts",
     expired: "text",
-    expiredNote: "View and switch existing",
+    expiredNote: "Read-only after trial",
   },
   {
     feature: "Log new trading days",
@@ -65,7 +65,7 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
     expiredNote: "Read-only",
   },
   {
-    feature: "Notes & linked chart per day",
+    feature: "Notes + linked chart",
     trial: "yes",
     premium: "yes",
     expired: "no",
@@ -78,14 +78,21 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
     expiredNote: "View existing data",
   },
   {
-    feature: "Weekly totals on calendar",
+    feature: "Week quality on calendar",
     trial: "yes",
     premium: "yes",
     expired: "yes",
     expiredNote: "View existing data",
   },
   {
-    feature: "Stats & overview",
+    feature: "Stats + discipline score",
+    trial: "yes",
+    premium: "yes",
+    expired: "yes",
+    expiredNote: "View existing data",
+  },
+  {
+    feature: "Weekly reflections",
     trial: "yes",
     premium: "yes",
     expired: "yes",

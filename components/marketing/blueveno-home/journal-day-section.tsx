@@ -23,8 +23,8 @@ export function JournalDaySection() {
             >
               Track the result. Review the behavior.
             </h2>
-            <p className="mt-5 max-w-[22rem] text-[14px] leading-[1.6] tracking-[-0.02em] text-zinc-500 sm:mt-6 sm:text-[15px]">
-              Log the day, save the chart, and see how you actually traded.
+            <p className="mt-5 max-w-[24rem] text-[14px] leading-[1.6] tracking-[-0.02em] text-zinc-500 sm:mt-6 sm:text-[15px]">
+              Log the day, add a linked chart, and run a clear behavior review before the next session.
             </p>
           </div>
 
@@ -74,7 +74,7 @@ export function JournalDaySection() {
 
                 <div className="flex flex-col justify-center rounded-2xl border border-[oklch(0.52_0.12_252/0.28)] bg-[oklch(0.06_0.04_268/0.65)] p-5 sm:p-6">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Saved chart</span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Linked chart</span>
                     <span className="rounded border border-emerald-500/20 bg-emerald-500/[0.08] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-emerald-200/90">
                       Linked
                     </span>

@@ -62,7 +62,7 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
         normalized.includes("relation") ||
         normalized.includes("does not exist"));
     if (missingTradingAccountsTable) {
-      return "Trading accounts are not set up in this environment yet. Run the latest Supabase migration and reload.";
+      return "Trading accounts are temporarily unavailable in this workspace.";
     }
     return raw;
   })();
@@ -112,7 +112,7 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
         </span>
       </div>
       {access.state === "trial_active" && maxAccounts === 1 && accounts.length >= 1 ? (
-        <p className="text-[11px] text-zinc-500 sm:text-[12px]">Upgrade to add more accounts.</p>
+        <p className="text-[11px] text-zinc-500 sm:text-[12px]">1 trading account during trial. Upgrade for up to 5.</p>
       ) : null}
 
       {accountErrorMessage ? (

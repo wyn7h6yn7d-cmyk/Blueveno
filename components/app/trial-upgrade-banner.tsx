@@ -54,8 +54,7 @@ export function TrialUpgradeBanner() {
           <p className="max-w-xl text-[13px] leading-relaxed text-zinc-500">
             {isExpired ? (
               <>
-                Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep journaling and add more
-                accounts.
+                Your trial has ended. Read-only access is now active. Keep your history visible and upgrade to keep journaling.
                 {end ? ` Trial ended ${end}.` : null}
               </>
             ) : isEndingSoon ? (

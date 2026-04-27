@@ -9,7 +9,7 @@ import { SignupForm } from "@/components/auth/signup-form";
 export const metadata: Metadata = {
   title: "Create account",
   description:
-    "Create a Blueveno workspace—structured journaling, analytics, and review for operators who treat performance as a system.",
+    "Create a Blueveno workspace. Start your 7-day free trial with 1 trading account and keep your history visible after trial.",
 };
 
 export default async function SignupPage() {
@@ -31,7 +31,7 @@ export default async function SignupPage() {
           Open your <span className="text-gradient-cobalt">workspace</span>
         </>
       }
-      subtitle="Turn raw execution into proof. Start with a 7-day trial, then keep full access on Premium."
+      subtitle="Start your 7-day free trial with 1 trading account. Read-only access after trial until upgrade."
       alternatePrompt="Already registered?"
       alternateHref="/login"
       alternateLabel="Sign in"

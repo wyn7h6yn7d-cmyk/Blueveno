@@ -16,10 +16,11 @@ export const metadata: Metadata = {
 
 const premiumFeatures = [
   "Unlimited new trading days & edits",
-  "Track up to 5 trading accounts",
-  "Notes and a saved chart link per day",
-  "Daily P&L and calendar with weekly totals",
-  "Stats and overview for your history",
+  "Premium supports up to 5 accounts",
+  "Notes and a linked chart for each day",
+  "Daily P&L, calendar, and Week quality",
+  "Stats for performance, mood, and discipline score",
+  "Weekly reflections and behavior review",
 ];
 
 export default function PricingPage() {
@@ -30,12 +31,13 @@ export default function PricingPage() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.66_0.08_252)]">Pricing</p>
           <h1 className="font-display mt-5 text-[2.15rem] font-medium leading-[1.08] tracking-[-0.03em] text-zinc-50 sm:text-4xl md:text-[2.65rem]">
-            Start your {PRICING_EUR.trialDays}-day trial.
+            Start your {PRICING_EUR.trialDays}-day free trial.
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-zinc-400 md:text-base">
-            Every account starts with a <strong className="font-medium text-zinc-300">{PRICING_EUR.trialDays}-day trial</strong>. Trial
-            includes 1 trading account with full access for your first account. After trial, your data stays available in
-            read-only mode.
+            Every account starts with a <strong className="font-medium text-zinc-300">{PRICING_EUR.trialDays}-day free trial</strong>.
+            You get <strong className="font-medium text-zinc-300">1 trading account during trial</strong> with full access for your first
+            account. After trial, your data stays available in <strong className="font-medium text-zinc-300">read-only mode</strong> until
+            upgrade.
           </p>
         </div>
 
@@ -47,14 +49,14 @@ export default function PricingPage() {
               <span className="text-[15px] text-zinc-500">/ month</span>
             </div>
             <p className="mt-4 text-[14px] leading-relaxed text-zinc-500">
-              Track up to 5 trading accounts. Keep adding journal days with full calendar and stats access.
+              Premium supports up to 5 accounts. Keep adding journal days with full calendar and stats access.
             </p>
           </div>
         </div>
 
         <p className="mx-auto mt-8 max-w-2xl text-center text-[13px] leading-relaxed text-zinc-500">
-          {PRICING_EUR.trialDays}-day trial includes 1 trading account. Premium unlocks up to 5 accounts and ongoing write
-          access after trial.
+          {PRICING_EUR.trialDays}-day free trial. 1 trading account during trial. Premium supports up to 5 accounts. Read-only
+          after trial without upgrade.
         </p>
 
         {/* What premium includes */}
@@ -80,8 +82,9 @@ export default function PricingPage() {
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
             Your workspace becomes <strong className="font-medium text-zinc-300">read-only</strong>. You can still open the app, browse your
-            calendar, and review past days and stats — but you <strong className="font-medium text-zinc-300">won&apos;t be able to add new days</strong>{" "}
-            or edit existing entries until you subscribe. Nothing is deleted; upgrading restores full logging.
+            calendar, and review past days, weekly reflections, and stats — but you{" "}
+            <strong className="font-medium text-zinc-300">won&apos;t be able to add new days</strong> or edit existing entries until you
+            subscribe. Nothing is deleted; upgrading restores full logging.
           </p>
         </div>
 
@@ -101,7 +104,7 @@ export default function PricingPage() {
             href="/signup"
             className="inline-flex h-11 min-h-[44px] items-center justify-center rounded-full bg-[oklch(0.64_0.125_252)] px-6 text-sm font-semibold text-[oklch(0.09_0.04_268)] shadow-bv-primary transition hover:bg-[oklch(0.7_0.11_252)]"
           >
-            Start your 7-day trial
+            Start your 7-day free trial
           </Link>
           <Link
             href="/login"
@@ -112,7 +115,7 @@ export default function PricingPage() {
         </div>
 
         <p className="mt-8 text-center font-mono text-[11px] text-zinc-500">
-          Price shown in EUR · Billing and access state are managed from your workspace settings.
+          Price shown in EUR · Premium access is managed manually during early access.
         </p>
         <p className="mt-2 text-center text-[12px] leading-relaxed text-zinc-600">
           Blueveno is a journaling and review tool. It does not provide financial advice, trading signals, or investment

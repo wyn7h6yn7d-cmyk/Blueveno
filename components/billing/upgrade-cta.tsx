@@ -26,6 +26,7 @@ export function UpgradeCta({ feature, className, variant = "card" }: UpgradeCtaP
         </p>
         <p className="font-display mt-1 text-sm font-medium text-zinc-100">{copy.title}</p>
         <p className="mt-1 max-w-xl text-xs leading-relaxed text-zinc-500">{copy.description}</p>
+        <p className="mt-1 text-[11px] text-zinc-600">Premium access is managed manually during early access.</p>
       </div>
       <Link
         href="/pricing"

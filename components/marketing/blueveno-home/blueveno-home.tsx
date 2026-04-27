@@ -6,6 +6,7 @@ import { HomeFooter } from "./home-footer";
 import { HomeNavigation } from "./home-navigation";
 import { HomePricingSection } from "./home-pricing-section";
 import { JournalDaySection } from "./journal-day-section";
+import { ProductEducationSections } from "./product-education-sections";
 import { ValueStrip } from "./value-strip";
 
 export function BluevenoHomePage() {
@@ -32,6 +33,7 @@ export function BluevenoHomePage() {
         <ValueStrip />
         <CalendarSection />
         <JournalDaySection />
+        <ProductEducationSections />
         <HomePricingSection />
         <FinalCta />
       </main>

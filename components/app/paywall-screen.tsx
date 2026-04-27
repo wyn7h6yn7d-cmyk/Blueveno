@@ -26,8 +26,7 @@ export function PaywallScreen() {
             Read-only mode is active
           </h1>
           <p className="mx-auto mt-4 max-w-sm text-[15px] leading-relaxed text-zinc-500">
-            Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep journaling and add more
-            accounts.
+            Your trial has ended. Read-only access is active and your history stays visible. Upgrade to keep journaling.
           </p>
           <div className="mt-10 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.12_252)]">Blueveno Premium</p>
@@ -40,11 +39,11 @@ export function PaywallScreen() {
             <ul className="mx-auto mt-6 max-w-xs space-y-2.5 text-left text-[14px] text-zinc-400">
               <li className="flex gap-2">
                 <CalendarDays className="mt-0.5 size-4 shrink-0 text-[oklch(0.65_0.11_252)]" strokeWidth={1.75} />
-                Calendar + weekly totals
+                Calendar, week quality, and weekly reflections
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
-                Daily P&amp;L and notes
+                Daily P&amp;L, notes, and behavior review
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
@@ -52,7 +51,7 @@ export function PaywallScreen() {
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
-                Linked chart per day
+                Linked chart + discipline score tracking
               </li>
             </ul>
           </div>
@@ -68,7 +67,7 @@ export function PaywallScreen() {
               Upgrade
             </Link>
           </div>
-          <p className="mt-8 font-mono text-[11px] text-zinc-600">Your data stays visible · Upgrade anytime</p>
+          <p className="mt-8 font-mono text-[11px] text-zinc-600">Read-only access after trial · Keep your history visible</p>
         </div>
       </div>
     </div>

@@ -19,11 +19,11 @@ export function HomePricingSection() {
           id="home-pricing-heading"
           className="font-display mt-5 text-center text-[clamp(2rem,4.5vw,2.85rem)] font-semibold leading-[1.05] tracking-[-0.05em] text-zinc-50"
         >
-          Start your {PRICING_EUR.trialDays}-day trial.
+          Start your {PRICING_EUR.trialDays}-day free trial.
         </h2>
         <p className="mx-auto mt-5 max-w-[34rem] text-center text-[14px] leading-[1.65] tracking-[-0.018em] text-zinc-400">
-          {PRICING_EUR.trialDays}-day trial includes 1 trading account. After trial, your data stays available in read-only
-          mode until upgrade.
+          {PRICING_EUR.trialDays}-day free trial with 1 trading account during trial and full access for your first account.
+          Read-only after trial until upgrade.
         </p>
 
         <div className="relative mx-auto mt-12 max-w-[760px] overflow-hidden rounded-[1.75rem] border border-[oklch(0.5_0.13_252/0.42)] bg-[linear-gradient(168deg,oklch(0.11_0.045_262/0.96)_0%,oklch(0.048_0.04_272/0.99)_100%)] px-7 py-12 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_48px_120px_-56px_rgba(0,0,0,0.88)] sm:px-11 sm:py-14">
@@ -39,12 +39,12 @@ export function HomePricingSection() {
                 <span className="text-[15px] text-zinc-500">/ month</span>
               </div>
               <p className="mt-3 text-[14px] leading-relaxed text-zinc-500">
-                Premium — {formatEur(PRICING_EUR.monthly)}/month. Track up to 5 trading accounts.
+                Premium — {formatEur(PRICING_EUR.monthly)}/month. Premium supports up to 5 accounts.
               </p>
             </div>
 
             <p className="mx-auto mt-10 max-w-sm border-t border-white/[0.06] pt-10 font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">
-              Journal · P&amp;L · Calendar · Linked chart
+              Linked chart · Week quality · Discipline score
             </p>
 
             <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
@@ -52,7 +52,7 @@ export function HomePricingSection() {
               <PremiumGhostLink href="#calendar">See the calendar</PremiumGhostLink>
             </div>
             <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">
-              7-day free trial · then read-only until upgrade
+              7-day free trial · 1 trading account during trial · Read-only after trial
             </p>
           </div>
         </div>

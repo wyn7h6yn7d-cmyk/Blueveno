@@ -11,10 +11,10 @@ import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 const PREMIUM_LABEL = "Blueveno Premium";
 
 const PREMIUM_INCLUDES = [
-  "Journal — day P&L, notes, optional linked chart",
-  "Track up to 5 trading accounts",
-  "Calendar with colour-coded days and week totals",
-  "Stats & overview for your trading history",
+  "Journal — day P&L, notes, and linked chart",
+  "Premium supports up to 5 trading accounts",
+  "Calendar with week quality and weekly reflections",
+  "Stats with performance, behavior review, and discipline score",
 ] as const;
 
 export default async function BillingSettingsPage() {
@@ -50,7 +50,7 @@ export default async function BillingSettingsPage() {
         variant="signature"
         eyebrow="Billing"
         title="Plan"
-        description="Blueveno Premium with a clear monthly plan."
+        description="Clear access state for trial, read-only, and Premium."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
@@ -103,8 +103,7 @@ export default async function BillingSettingsPage() {
                 </>
               ) : isReadOnly ? (
                 <>
-                  Your trial has ended. Your journal stays available in read-only mode. Upgrade to keep journaling and add
-                  more accounts.
+                  Your trial has ended. Read-only access is active. Keep your history visible and upgrade to keep journaling.
                   {trialEndLabel ? (
                     <>
                       {" "}
@@ -131,7 +130,7 @@ export default async function BillingSettingsPage() {
 
             {!isAdminUser ? (
               <div className="mt-6 rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3 text-[14px] text-zinc-300">
-                Your access is managed here while payments are being enabled.
+                Premium access is managed manually during early access. Checkout is coming soon.
               </div>
             ) : null}
 
