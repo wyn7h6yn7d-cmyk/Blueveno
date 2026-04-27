@@ -125,18 +125,19 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
             </div>
           </div>
         </div>
-        {helloName ? (
-          <div className="hidden min-w-0 flex-1 items-center justify-center self-stretch lg:flex">
-            <p
-              className="truncate text-center text-[12px] leading-snug text-zinc-500 md:text-[13px]"
-              title={helloName}
-            >
-              Hello,{" "}
-              <span className="font-medium text-zinc-200">{helloName}</span>
-            </p>
-          </div>
-        ) : null}
       </div>
+
+      {helloName ? (
+        <div className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 lg:flex">
+          <p
+            className="max-w-[34vw] truncate text-center text-[12px] leading-snug text-zinc-500 md:text-[13px]"
+            title={helloName}
+          >
+            Hello,{" "}
+            <span className="font-medium text-zinc-200">{helloName}</span>
+          </p>
+        </div>
+      ) : null}
 
       <div className="relative z-10 flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
         <Link

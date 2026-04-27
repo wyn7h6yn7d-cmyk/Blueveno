@@ -61,22 +61,6 @@ function monthLabel(d: Date): string {
   return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
-function formatCompactSignedPnlAmount(value: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency,
-      notation: "compact",
-      compactDisplay: "short",
-      maximumFractionDigits: 1,
-      signDisplay: "always",
-      currencyDisplay: "narrowSymbol",
-    }).format(value);
-  } catch {
-    return formatSignedPnlAmount(value, currency);
-  }
-}
-
 /** Day cell: green / red / neutral — strong, readable states */
 function dayCellClasses(total: number, hasData: boolean, inMonth: boolean): string {
   if (!hasData) {
@@ -229,10 +213,10 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
 
   /** Below sm: day cols + week rail wide enough for reflection text (scroll horizontally). sm+: fluid tracks. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(7,minmax(3.6rem,1fr))_minmax(11rem,12.5rem)]",
-    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12rem,15.5rem)]",
-    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(14rem,18.5rem)]",
-    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(15rem,20rem)]",
+    "[grid-template-columns:repeat(7,minmax(3.9rem,1fr))_minmax(10rem,11.5rem)]",
+    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(11rem,14rem)]",
+    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
+    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(13.5rem,18rem)]",
   );
 
   const headerBox =
@@ -389,14 +373,14 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                               <div
                                 className={cn(
                                   "font-display font-semibold leading-[1.15] tabular-nums tracking-[-0.03em]",
-                                  "text-[10px] sm:text-[clamp(0.82rem,1.95vw,1.22rem)] lg:text-[clamp(0.98rem,1.65vw,1.44rem)] lg:tracking-[-0.04em]",
+                                  "text-[10px] sm:text-[clamp(0.76rem,1.45vw,1.06rem)] lg:text-[clamp(0.9rem,1.25vw,1.24rem)] lg:tracking-[-0.045em]",
                                 )}
                               >
                                 <span
                                   className="block w-full whitespace-nowrap text-right text-white"
                                   title={formatSignedPnlAmount(agg!.total, displayCurrency)}
                                 >
-                                  {formatCompactSignedPnlAmount(agg!.total, displayCurrency)}
+                                  {formatSignedPnlAmount(agg!.total, displayCurrency)}
                                 </span>
                               </div>
                               <div className="mt-1 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
