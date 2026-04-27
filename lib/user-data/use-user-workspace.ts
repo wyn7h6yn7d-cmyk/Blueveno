@@ -58,6 +58,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const userIdRef = useRef(userId);
   const activeAccountIdRef = useRef<string | null>(null);
+  const lastFetchedAccountIdRef = useRef<string | null>(null);
   const didTokenRefreshRefetch = useRef(false);
   /** Used to avoid accepting a transient empty client read right after load */
   const mountTimeRef = useRef(0);
@@ -192,9 +193,15 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         const next = mapJournalRowsFromDb(resolved);
         const sinceMount = Date.now() - mountTimeRef.current;
         // Transient empty client read (RLS/JWT): ignore for a short window, then trust server
-        if (prev.journal.length > 0 && next.journal.length === 0 && sinceMount < 45_000) {
+        if (
+          prev.journal.length > 0 &&
+          next.journal.length === 0 &&
+          sinceMount < 45_000 &&
+          lastFetchedAccountIdRef.current === accountId
+        ) {
           return prev;
         }
+        lastFetchedAccountIdRef.current = accountId;
         if (uid) writeJournalCache(uid, next);
         return next;
       });
@@ -241,8 +248,12 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         return;
       }
       const activeId = (profileRow?.active_trading_account_id as string | null) ?? null;
+      const previousActiveId = activeAccountIdRef.current;
       setActiveAccountId(activeId);
       activeAccountIdRef.current = activeId;
+      if (previousActiveId !== activeId) {
+        setData(EMPTY_WORKSPACE);
+      }
 
       if (!activeId) {
         setData(EMPTY_WORKSPACE);
