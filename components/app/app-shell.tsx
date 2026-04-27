@@ -26,7 +26,7 @@ export function AppShell({ children, user, access }: AppShellProps) {
             >
               <BluevenoWordmark className="text-[1.12rem]" />
               <span className="rounded border border-white/[0.1] bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500">
-                app
+                beta
               </span>
             </Link>
           </div>

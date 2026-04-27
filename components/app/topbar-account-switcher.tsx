@@ -99,13 +99,6 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
         <button
           type="button"
           className="h-6 shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 text-[11px] text-zinc-200 transition hover:bg-white/[0.1]"
-          onClick={() => router.push("/app/settings?section=accounts&new=1#accounts")}
-        >
-          Create
-        </button>
-        <button
-          type="button"
-          className="h-6 shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 text-[11px] text-zinc-200 transition hover:bg-white/[0.1]"
           onClick={() => router.push("/app/settings?section=accounts#accounts")}
         >
           Manage
