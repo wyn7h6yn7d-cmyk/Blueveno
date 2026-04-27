@@ -202,7 +202,12 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
                     </DropdownMenuItem>
                   ))
                 ) : (
-                  <div className="px-2.5 py-2 text-[12px] text-zinc-500">No accounts yet.</div>
+                  <DropdownMenuItem
+                    disabled
+                    className="rounded-lg px-2.5 py-2 text-[12px] text-zinc-500 data-disabled:opacity-100"
+                  >
+                    No accounts yet.
+                  </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator className="bg-white/[0.06]" />
                 <DropdownMenuItem
