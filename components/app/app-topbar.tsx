@@ -13,6 +13,7 @@ import {
   LogOut,
   Home,
   Wallet,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -64,9 +65,28 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   const {
     accounts,
     activeAccountId,
+    error: accountLoadError,
     setActiveAccount,
   } = useTradingAccounts(user.id);
   const activeAccount = accounts.find((a) => a.id === activeAccountId) ?? null;
+  const [accountActionError, setAccountActionError] = useState<string | null>(null);
+  const [accountErrorDismissed, setAccountErrorDismissed] = useState(false);
+
+  const accountErrorMessage = (() => {
+    if (accountErrorDismissed) return null;
+    const raw = accountActionError ?? accountLoadError;
+    if (!raw) return null;
+    const normalized = raw.toLowerCase();
+    const missingTradingAccountsTable =
+      normalized.includes("trading_accounts") &&
+      (normalized.includes("could not find the table") ||
+        normalized.includes("relation") ||
+        normalized.includes("does not exist"));
+    if (missingTradingAccountsTable) {
+      return "Trading accounts are not set up in this environment yet. Run the latest Supabase migration and reload.";
+    }
+    return raw;
+  })();
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -161,8 +181,14 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
                         activeAccountId === account.id && "bg-white/[0.06]",
                       )}
                       onClick={async () => {
+                        setAccountErrorDismissed(false);
+                        setAccountActionError(null);
                         const result = await setActiveAccount(account.id);
-                        if (result.ok) router.refresh();
+                        if (result.ok) {
+                          router.refresh();
+                          return;
+                        }
+                        setAccountActionError(result.error);
                       }}
                     >
                       <div className="flex min-w-0 items-center justify-between gap-2">
@@ -196,6 +222,19 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
             <div className="min-w-0 max-w-full">
               <WorkspaceSessionClock serverTimeZone={user.timezone} />
             </div>
+            {accountErrorMessage ? (
+              <div className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/[0.14] px-2.5 py-1 text-[11px] text-rose-100 sm:max-w-[30rem] sm:text-[12px]">
+                <span className="truncate">{accountErrorMessage}</span>
+                <button
+                  type="button"
+                  className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-rose-200/90 transition hover:bg-rose-500/25 hover:text-rose-100"
+                  onClick={() => setAccountErrorDismissed(true)}
+                  aria-label="Dismiss account error"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
