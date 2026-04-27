@@ -35,6 +35,7 @@ const EMPTY_FORM: FormState = {
   startingBalance: "",
   notes: "",
 };
+const MAX_TRADING_ACCOUNTS = 5;
 
 export function TradingAccountsSection() {
   const { canWriteJournal, isAdmin, isReadOnlyTrial } = useAccess();
@@ -54,6 +55,7 @@ export function TradingAccountsSection() {
   const sectionParam = searchParams.get("section");
   const shouldShow = sectionParam === null || sectionParam === "accounts";
   const canManage = isAdmin || canWriteJournal;
+  const atAccountLimit = accounts.length >= MAX_TRADING_ACCOUNTS;
 
   async function load() {
     try {
@@ -126,6 +128,10 @@ export function TradingAccountsSection() {
   async function onSaveAccount(e: React.FormEvent) {
     e.preventDefault();
     if (!userId || !canManage) return;
+    if (!editingId && atAccountLimit) {
+      setMessage(`You can create up to ${MAX_TRADING_ACCOUNTS} trading accounts.`);
+      return;
+    }
     if (!form.name.trim()) {
       setMessage("Account name is required.");
       return;
@@ -189,20 +195,14 @@ export function TradingAccountsSection() {
     setDeleting(true);
     setMessage(null);
     const supabase = createClient();
-    const { count, error: countError } = await supabase
+    const { error: journalDeleteError } = await supabase
       .from("journal_entries")
-      .select("id", { count: "exact", head: true })
+      .delete()
       .eq("user_id", userId)
       .eq("account_id", deleteId);
-    if (countError) {
+    if (journalDeleteError) {
       setDeleting(false);
-      setMessage(countError.message);
-      return;
-    }
-    if ((count ?? 0) > 0) {
-      setDeleting(false);
-      setDeleteId(null);
-      setMessage("This account has journal entries. Move or delete those entries before deleting the account.");
+      setMessage(journalDeleteError.message);
       return;
     }
     const { error } = await supabase.from("trading_accounts").delete().eq("id", deleteId).eq("user_id", userId);
@@ -314,7 +314,11 @@ export function TradingAccountsSection() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={!canManage || saving} className="h-9 rounded-xl px-3.5">
+              <Button
+                type="submit"
+                disabled={!canManage || saving || (!editingId && atAccountLimit)}
+                className="h-9 rounded-xl px-3.5"
+              >
                 <Plus className="mr-1.5 size-4" />
                 {editingId ? "Save account" : "Create account"}
               </Button>
@@ -337,6 +341,11 @@ export function TradingAccountsSection() {
                   Upgrade to manage trading accounts
                 </Link>
                 .
+              </p>
+            ) : null}
+            {canManage && atAccountLimit && !editingId ? (
+              <p className="text-[12px] text-zinc-500">
+                Account limit reached ({MAX_TRADING_ACCOUNTS}). Delete an account to create a new one.
               </p>
             ) : null}
           </form>
@@ -437,7 +446,7 @@ export function TradingAccountsSection() {
           destructive
           pending={deleting}
           title="Delete trading account?"
-          description="This cannot be undone. Deletion is blocked when journal entries are still linked to this account."
+          description="This cannot be undone. All journal entries linked to this account will be deleted."
           confirmLabel="Delete account"
         />
       </DashboardCard>

@@ -32,35 +32,49 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
   const summary = useMemo(() => computeJournalSummary(dayAgg), [dayAgg]);
   const dayAggMap = useMemo(() => new Map(dayAgg.map((item) => [item.key, item.pnl])), [dayAgg]);
 
-  const weekDays = useMemo(() => {
+  const weekCells = useMemo(() => {
     const now = new Date();
     const currentDay = (now.getDay() + 6) % 7;
     const monday = new Date(now);
     monday.setHours(0, 0, 0, 0);
     monday.setDate(now.getDate() - currentDay);
-    return Array.from({ length: 7 }).map((_, idx) => {
+    const days = Array.from({ length: 7 }).map((_, idx) => {
       const day = new Date(monday);
       day.setDate(monday.getDate() + idx);
       const key = day.toISOString().slice(0, 10);
       return { key, label: day.toLocaleDateString("en-GB", { weekday: "short" }), day: day.getDate() };
     });
+    return [
+      ...days.slice(0, 5).map((d) => ({
+        key: d.key,
+        label: d.label,
+        day: String(d.day),
+        keys: [d.key],
+      })),
+      {
+        key: `weekend-${days[5]!.key}`,
+        label: "Weekend",
+        day: `${days[5]!.day}/${days[6]!.day}`,
+        keys: [days[5]!.key, days[6]!.key],
+      },
+    ];
   }, []);
 
   const weekTotal = useMemo(
-    () => weekDays.reduce((sum, day) => sum + (dayAggMap.get(day.key) ?? 0), 0),
-    [dayAggMap, weekDays],
+    () => weekCells.reduce((sum, cell) => sum + cell.keys.reduce((acc, key) => acc + (dayAggMap.get(key) ?? 0), 0), 0),
+    [dayAggMap, weekCells],
   );
 
   const weekGreenRed = useMemo(() => {
     let green = 0;
     let red = 0;
-    for (const day of weekDays) {
-      const pnl = dayAggMap.get(day.key) ?? 0;
+    for (const cell of weekCells) {
+      const pnl = cell.keys.reduce((acc, key) => acc + (dayAggMap.get(key) ?? 0), 0);
       if (pnl > 0) green += 1;
       if (pnl < 0) red += 1;
     }
     return `${green} green · ${red} red`;
-  }, [dayAggMap, weekDays]);
+  }, [dayAggMap, weekCells]);
 
   const recentActivity = useMemo(() => {
     return [...data.journal]
@@ -141,9 +155,9 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           title="Current week"
           description="Outcome color and total in one line."
         >
-          <div className="grid grid-cols-7 gap-2">
-            {weekDays.map((day) => {
-              const pnl = dayAggMap.get(day.key) ?? 0;
+          <div className="grid grid-cols-6 gap-2">
+            {weekCells.map((cell) => {
+              const pnl = cell.keys.reduce((acc, key) => acc + (dayAggMap.get(key) ?? 0), 0);
               const tone =
                 pnl > 0
                   ? "border-emerald-400/30 bg-emerald-500/[0.14] text-emerald-100"
@@ -151,9 +165,9 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                     ? "border-rose-400/30 bg-rose-500/[0.13] text-rose-100"
                     : "border-white/[0.1] bg-white/[0.03] text-zinc-300";
               return (
-                <div key={day.key} className={cn("rounded-xl border p-2.5 text-center", tone)}>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-80">{day.label}</p>
-                  <p className="mt-1 text-sm font-semibold tabular-nums">{day.day}</p>
+                <div key={cell.key} className={cn("rounded-xl border p-2.5 text-center", tone)}>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-80">{cell.label}</p>
+                  <p className="mt-1 text-sm font-semibold tabular-nums">{cell.day}</p>
                   <p className="mt-1 text-[11px] tabular-nums">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
                 </div>
               );
