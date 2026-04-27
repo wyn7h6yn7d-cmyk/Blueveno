@@ -1,5 +1,4 @@
 import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
-import { PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 export function FinalCta() {
   return (
@@ -18,13 +17,13 @@ export function FinalCta() {
           id="cta-heading"
           className="font-display text-[clamp(1.5rem,3.5vw,2.35rem)] font-semibold leading-[1.08] tracking-[-0.045em] text-zinc-50"
         >
-          Start your {PRICING_EUR.trialDays}-day free trial.
+          See the week. Improve the next one.
         </h2>
         <p className="mx-auto mt-4 max-w-[34rem] text-[14px] leading-relaxed text-zinc-400">
-          1 trading account during trial. Premium supports up to 5 accounts. Read-only after trial until upgrade.
+          Start with one account, log your first trading day, and keep your review history clear from the beginning.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10">
-          <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
+          <PremiumPrimaryLink href="/signup">Start 7-day trial</PremiumPrimaryLink>
           <PremiumGhostLink href="/login">Open workspace</PremiumGhostLink>
         </div>
       </div>

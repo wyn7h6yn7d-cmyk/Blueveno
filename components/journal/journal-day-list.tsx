@@ -161,7 +161,7 @@ function JournalDayCard({
               prefetch
               className="inline-flex h-8 items-center rounded-lg px-2.5 font-mono text-[11px] text-zinc-400 underline-offset-4 transition hover:text-zinc-200 hover:underline"
             >
-              Details
+              Open entry
             </Link>
           </div>
 

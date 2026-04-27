@@ -36,7 +36,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
               "inline-flex h-10 items-center gap-1.5 rounded-xl px-4",
             )}
           >
-            View plans
+            View pricing
             <ArrowUpRight className="size-4" strokeWidth={1.75} />
           </Link>
           <Link
@@ -46,7 +46,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
               "inline-flex h-10 items-center rounded-xl border-white/[0.12] bg-transparent px-4 hover:bg-white/[0.05]",
             )}
           >
-            Billing
+            Keep journaling
           </Link>
         </div>
       </div>

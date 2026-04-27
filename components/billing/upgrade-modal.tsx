@@ -66,10 +66,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">{copy.description}</p>
         <p className="mt-4 rounded-lg border border-white/[0.1] bg-bv-surface-inset/50 px-3 py-2 text-[12px] leading-relaxed text-zinc-400">
-          View plans to choose the right access level for your workflow. Premium supports up to 5 trading accounts.
-        </p>
-        <p className="mt-2 text-[12px] leading-relaxed text-zinc-500">
-          Premium access is managed manually during early access.
+          Premium supports up to 5 trading accounts. Compare benefits on pricing.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link
@@ -80,7 +77,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
               "h-10 rounded-xl px-4",
             )}
           >
-            View plans
+            View pricing
           </Link>
           <Link
             href="/app/settings/billing"
@@ -90,7 +87,7 @@ export function UpgradeModal({ open, onOpenChange, feature }: UpgradeModalProps)
               "h-10 rounded-xl border-white/[0.12] bg-transparent",
             )}
           >
-            Billing settings
+            Keep journaling
           </Link>
         </div>
       </div>

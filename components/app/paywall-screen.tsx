@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PremiumPrimaryLink } from "@/components/marketing/blueveno-home/premium-button";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
 export function PaywallScreen() {
@@ -26,37 +26,46 @@ export function PaywallScreen() {
             Read-only mode is active
           </h1>
           <p className="mx-auto mt-4 max-w-sm text-[15px] leading-relaxed text-zinc-500">
-            Your trial has ended. Read-only access is active and your history stays visible. Upgrade to keep journaling.
+            After trial, your data stays read-only until upgrade. Premium unlocks ongoing journaling. Your history stays visible.
           </p>
           <div className="mt-10 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-6">
             <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.12_252)]">Blueveno Premium</p>
-            <div className="mt-4 flex items-baseline justify-center gap-1.5">
-              <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50">
-                {formatEur(PRICING_EUR.monthly)}
-              </span>
-              <span className="text-[15px] text-zinc-500">/ month</span>
+            <div className="mt-4 flex flex-wrap items-baseline justify-center gap-x-5 gap-y-2">
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50">{formatEur(PRICING_EUR.monthly)}</span>
+                <span className="text-[15px] text-zinc-500">/ month</span>
+              </div>
+              <span className="text-zinc-600">or</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display text-3xl tabular-nums tracking-[-0.03em] text-zinc-50">{formatEur(PRICING_EUR.yearly)}</span>
+                <span className="text-[15px] text-zinc-500">/ year</span>
+              </div>
             </div>
             <ul className="mx-auto mt-6 max-w-xs space-y-2.5 text-left text-[14px] text-zinc-400">
               <li className="flex gap-2">
-                <CalendarDays className="mt-0.5 size-4 shrink-0 text-[oklch(0.65_0.11_252)]" strokeWidth={1.75} />
-                Calendar, week quality, and weekly reflections
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
+                Ongoing journaling after trial
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
-                Daily P&amp;L, notes, and behavior review
+                Up to 5 trading accounts
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
-                Track up to 5 trading accounts
+                Calendar with weekly totals
               </li>
               <li className="flex gap-2">
                 <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
-                Linked chart + discipline score tracking
+                Stats, behavior review, and discipline score
+              </li>
+              <li className="flex gap-2">
+                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[oklch(0.58_0.12_252/0.9)]" aria-hidden />
+                Linked chart on every entry
               </li>
             </ul>
           </div>
           <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <PremiumPrimaryLink href="/pricing">View plans</PremiumPrimaryLink>
+            <PremiumPrimaryLink href="/pricing">View pricing</PremiumPrimaryLink>
             <Link
               href="/app/settings/billing"
               className={cn(
@@ -64,10 +73,10 @@ export function PaywallScreen() {
                 "min-h-11 rounded-xl border-white/[0.12] bg-white/[0.03] px-6 text-[13px] text-zinc-200 hover:bg-white/[0.06]",
               )}
             >
-              Upgrade
+              Keep journaling
             </Link>
           </div>
-          <p className="mt-8 font-mono text-[11px] text-zinc-600">Read-only access after trial · Keep your history visible</p>
+          <p className="mt-8 font-mono text-[11px] text-zinc-600">Read-only after trial · History stays visible</p>
         </div>
       </div>
     </div>

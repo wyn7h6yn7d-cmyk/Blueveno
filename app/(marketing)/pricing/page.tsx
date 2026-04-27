@@ -11,16 +11,15 @@ import {
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `Blueveno — ${PRICING_EUR.trialDays}-day free trial, then ${formatEur(PRICING_EUR.monthly)}/month. After trial, read-only until upgrade.`,
+  description: `Blueveno — ${PRICING_EUR.trialDays}-day free trial. Trial includes 1 trading account. After trial, read-only until upgrade. Premium unlocks ongoing journaling.`,
 };
 
 const premiumFeatures = [
-  "Unlimited new trading days & edits",
-  "Premium supports up to 5 accounts",
-  "Notes and a linked chart for each day",
-  "Daily P&L, calendar, and Week quality",
-  "Stats for performance, mood, and discipline score",
-  "Weekly reflections and behavior review",
+  "Ongoing journaling after trial",
+  "Up to 5 trading accounts",
+  "Calendar with weekly totals",
+  "Stats, behavior review, and discipline score",
+  "Linked chart on every entry",
 ];
 
 export default function PricingPage() {
@@ -34,34 +33,42 @@ export default function PricingPage() {
             Start your {PRICING_EUR.trialDays}-day free trial.
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-zinc-400 md:text-base">
-            Every account starts with a <strong className="font-medium text-zinc-300">{PRICING_EUR.trialDays}-day free trial</strong>.
-            You get <strong className="font-medium text-zinc-300">1 trading account during trial</strong> with full access for your first
-            account. After trial, your data stays available in <strong className="font-medium text-zinc-300">read-only mode</strong> until
-            upgrade.
+            <strong className="font-medium text-zinc-300">7-day free trial</strong>. Trial includes{" "}
+            <strong className="font-medium text-zinc-300">1 trading account</strong>. After trial, data stays{" "}
+            <strong className="font-medium text-zinc-300">read-only until upgrade</strong>.{" "}
+            <strong className="font-medium text-zinc-300">Premium unlocks ongoing journaling.</strong>
           </p>
         </div>
 
         <div className="mx-auto mt-14 max-w-3xl">
           <div className="relative overflow-hidden rounded-[1.25rem] border border-white/[0.09] bg-[linear-gradient(165deg,oklch(0.13_0.04_262)_0%,oklch(0.078_0.032_266)_48%,oklch(0.058_0.035_268)_100%)] p-8 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Premium — {formatEur(PRICING_EUR.monthly)}/month</p>
-            <div className="mt-4 flex items-baseline gap-1.5">
-              <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50 sm:text-5xl">{formatEur(PRICING_EUR.monthly)}</span>
-              <span className="text-[15px] text-zinc-500">/ month</span>
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400">Blueveno Premium</p>
+            <div className="mt-4 flex flex-wrap items-end justify-center gap-x-4 gap-y-3 sm:justify-start">
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50 sm:text-5xl">{formatEur(PRICING_EUR.monthly)}</span>
+                <span className="text-[15px] text-zinc-500">/ month</span>
+              </div>
+              <span className="hidden text-zinc-600 sm:inline" aria-hidden>
+                ·
+              </span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-display text-3xl tabular-nums tracking-[-0.03em] text-zinc-50 sm:text-4xl">{formatEur(PRICING_EUR.yearly)}</span>
+                <span className="text-[15px] text-zinc-500">/ year</span>
+              </div>
             </div>
             <p className="mt-4 text-[14px] leading-relaxed text-zinc-500">
-              Premium supports up to 5 accounts. Keep adding journal days with full calendar and stats access.
+              Premium supports up to 5 trading accounts.
             </p>
           </div>
         </div>
 
         <p className="mx-auto mt-8 max-w-2xl text-center text-[13px] leading-relaxed text-zinc-500">
-          {PRICING_EUR.trialDays}-day free trial. 1 trading account during trial. Premium supports up to 5 accounts. Read-only
-          after trial without upgrade.
+          {PRICING_EUR.trialDays}-day free trial · 1 trading account · Read-only after trial until upgrade · Premium unlocks ongoing journaling
         </p>
 
         {/* What premium includes */}
         <div className="mx-auto mt-16 max-w-xl">
-          <h2 className="text-center font-display text-xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-2xl">What Premium includes</h2>
+          <h2 className="text-center font-display text-xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-2xl">Benefits</h2>
           <ul className="relative mt-8 space-y-3.5 border-t border-white/[0.07] pt-8 text-left">
             {premiumFeatures.map((item) => (
               <li key={item} className="flex gap-3 text-[15px] leading-snug text-zinc-300">
@@ -78,21 +85,18 @@ export default function PricingPage() {
         {/* If you don&apos;t upgrade */}
         <div className="mx-auto mt-16 max-w-2xl rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 sm:p-8">
           <h2 className="font-display text-lg font-medium tracking-[-0.02em] text-zinc-100 sm:text-xl">
-            If you don&apos;t upgrade after the trial
+            After trial without Premium
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
-            Your workspace becomes <strong className="font-medium text-zinc-300">read-only</strong>. You can still open the app, browse your
-            calendar, and review past days, weekly reflections, and stats — but you{" "}
-            <strong className="font-medium text-zinc-300">won&apos;t be able to add new days</strong> or edit existing entries until you
-            subscribe. Nothing is deleted; upgrading restores full logging.
+            Your workspace stays <strong className="font-medium text-zinc-300">read-only</strong>. Your history remains visible — you can browse the calendar and stats — but new days and edits stay locked until you upgrade. Nothing is deleted.
           </p>
         </div>
 
         {/* Comparison table */}
-        <div className="mx-auto mt-16 max-w-4xl">
+        <div id="compare" className="mx-auto mt-16 max-w-4xl scroll-mt-28">
           <h2 className="text-center font-display text-xl font-medium tracking-[-0.02em] text-zinc-50 sm:text-2xl">Comparison</h2>
           <p className="mx-auto mt-3 max-w-lg text-center text-[14px] text-zinc-500">
-            Trial ({PRICING_EUR.trialDays} days) · Premium ({formatEur(PRICING_EUR.monthly)}/month) · After trial without Premium
+            Trial ({PRICING_EUR.trialDays} days) · Premium ({formatEur(PRICING_EUR.monthly)}/mo or {formatEur(PRICING_EUR.yearly)}/yr) · Read-only after trial
           </p>
           <div className="mt-8">
             <PricingComparison rows={COMPARISON_ROWS} />
@@ -104,7 +108,7 @@ export default function PricingPage() {
             href="/signup"
             className="inline-flex h-11 min-h-[44px] items-center justify-center rounded-full bg-[oklch(0.64_0.125_252)] px-6 text-sm font-semibold text-[oklch(0.09_0.04_268)] shadow-bv-primary transition hover:bg-[oklch(0.7_0.11_252)]"
           >
-            Start your 7-day free trial
+            Start 7-day trial
           </Link>
           <Link
             href="/login"
@@ -114,9 +118,7 @@ export default function PricingPage() {
           </Link>
         </div>
 
-        <p className="mt-8 text-center font-mono text-[11px] text-zinc-500">
-          Price shown in EUR · Premium access is managed manually during early access.
-        </p>
+        <p className="mt-8 text-center font-mono text-[11px] text-zinc-500">Prices in EUR.</p>
         <p className="mt-2 text-center text-[12px] leading-relaxed text-zinc-600">
           Blueveno is a journaling and review tool. It does not provide financial advice, trading signals, or investment
           recommendations.

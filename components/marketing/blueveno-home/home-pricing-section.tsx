@@ -22,37 +22,43 @@ export function HomePricingSection() {
           Start your {PRICING_EUR.trialDays}-day free trial.
         </h2>
         <p className="mx-auto mt-5 max-w-[34rem] text-center text-[14px] leading-[1.65] tracking-[-0.018em] text-zinc-400">
-          {PRICING_EUR.trialDays}-day free trial with 1 trading account during trial and full access for your first account.
-          Read-only after trial until upgrade.
+          7-day free trial. Trial includes 1 trading account. After trial, data stays read-only until upgrade. Premium unlocks ongoing journaling
+          and supports up to 5 trading accounts.
         </p>
 
         <div className="relative mx-auto mt-12 max-w-[760px] overflow-hidden rounded-[1.75rem] border border-[oklch(0.5_0.13_252/0.42)] bg-[linear-gradient(168deg,oklch(0.11_0.045_262/0.96)_0%,oklch(0.048_0.04_272/0.99)_100%)] px-7 py-12 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_48px_120px_-56px_rgba(0,0,0,0.88)] sm:px-11 sm:py-14">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[oklch(0.55_0.12_252/0.25)] to-transparent" aria-hidden />
 
           <div className="relative text-center">
-            <div className="mx-auto max-w-md">
-              <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-600">Premium</p>
-              <div className="mt-2 flex items-baseline justify-center gap-1.5">
-                <span className="font-display text-[clamp(2.5rem,6.2vw,3.3rem)] tabular-nums tracking-[-0.05em] text-zinc-50">
-                  {formatEur(PRICING_EUR.monthly)}
-                </span>
-                <span className="text-[15px] text-zinc-500">/ month</span>
+            <div className="mx-auto max-w-lg">
+              <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">Blueveno Premium</p>
+              <div className="mt-3 flex flex-wrap items-end justify-center gap-x-6 gap-y-4">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-display text-[clamp(2.25rem,5.5vw,3.1rem)] tabular-nums tracking-[-0.05em] text-zinc-50">
+                    {formatEur(PRICING_EUR.monthly)}
+                  </span>
+                  <span className="text-[15px] text-zinc-500">/ month</span>
+                </div>
+                <div className="font-mono text-[12px] text-zinc-600">or</div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-display text-[clamp(1.85rem,4.5vw,2.6rem)] tabular-nums tracking-[-0.05em] text-zinc-50">
+                    {formatEur(PRICING_EUR.yearly)}
+                  </span>
+                  <span className="text-[15px] text-zinc-500">/ year</span>
+                </div>
               </div>
-              <p className="mt-3 text-[14px] leading-relaxed text-zinc-500">
-                Premium — {formatEur(PRICING_EUR.monthly)}/month. Premium supports up to 5 accounts.
-              </p>
             </div>
 
             <p className="mx-auto mt-10 max-w-sm border-t border-white/[0.06] pt-10 font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">
-              Linked chart · Week quality · Discipline score
+              Ongoing journaling · Up to 5 accounts · Weekly totals · Linked chart
             </p>
 
             <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
-              <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
-              <PremiumGhostLink href="#calendar">See the calendar</PremiumGhostLink>
+              <PremiumPrimaryLink href="/signup">Start 7-day trial</PremiumPrimaryLink>
+              <PremiumGhostLink href="/pricing">View pricing</PremiumGhostLink>
             </div>
             <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">
-              7-day free trial · 1 trading account during trial · Read-only after trial
+              7-day free trial · 1 trading account · Read-only after trial
             </p>
           </div>
         </div>

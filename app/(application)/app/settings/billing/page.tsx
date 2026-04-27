@@ -11,10 +11,11 @@ import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 const PREMIUM_LABEL = "Blueveno Premium";
 
 const PREMIUM_INCLUDES = [
-  "Journal — day P&L, notes, and linked chart",
-  "Premium supports up to 5 trading accounts",
-  "Calendar with week quality and weekly reflections",
-  "Stats with performance, behavior review, and discipline score",
+  "Ongoing journaling after trial",
+  "Up to 5 trading accounts",
+  "Calendar with weekly totals",
+  "Stats, behavior review, and discipline score",
+  "Linked chart on every entry",
 ] as const;
 
 export default async function BillingSettingsPage() {
@@ -50,7 +51,7 @@ export default async function BillingSettingsPage() {
         variant="signature"
         eyebrow="Billing"
         title="Plan"
-        description="Clear access state for trial, read-only, and Premium."
+        description="Trial, read-only, and Premium — same prices as marketing."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
@@ -91,19 +92,26 @@ export default async function BillingSettingsPage() {
               ) : null}
             </div>
 
-            <h2 className="font-display mt-6 text-3xl tracking-[-0.03em] text-zinc-50 md:text-4xl">
-              {formatEur(PRICING_EUR.monthly)}
-              <span className="ml-2 text-lg font-normal text-zinc-500">/ month</span>
-            </h2>
+            <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-2">
+              <h2 className="font-display text-3xl tracking-[-0.03em] text-zinc-50 md:text-4xl">
+                {formatEur(PRICING_EUR.monthly)}
+                <span className="ml-2 text-lg font-normal text-zinc-500">/ month</span>
+              </h2>
+              <span className="text-zinc-600">or</span>
+              <p className="font-display text-2xl tracking-[-0.03em] text-zinc-50 md:text-3xl">
+                {formatEur(PRICING_EUR.yearly)}
+                <span className="ml-2 text-base font-normal text-zinc-500">/ year</span>
+              </p>
+            </div>
             <div className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-400">
               {isAdminUser ? (
                 <>
                   <p>Admin access includes full Blueveno functionality without a subscription.</p>
-                  <p className="mt-3 text-zinc-500">Your workspace remains fully enabled while admin access is active.</p>
+                  <p className="mt-3 text-zinc-500">Your workspace stays fully enabled while admin access is active.</p>
                 </>
               ) : isReadOnly ? (
                 <>
-                  Your trial has ended. Read-only access is active. Keep your history visible and upgrade to keep journaling.
+                  After trial, your data stays read-only until upgrade. Premium unlocks ongoing journaling.
                   {trialEndLabel ? (
                     <>
                       {" "}
@@ -113,7 +121,7 @@ export default async function BillingSettingsPage() {
                 </>
               ) : isTrial ? (
                 <>
-                  7-day trial includes 1 trading account with full access for your first account.
+                  7-day free trial. Trial includes 1 trading account.
                   {trialEndLabel ? (
                     <>
                       {" "}
@@ -122,45 +130,63 @@ export default async function BillingSettingsPage() {
                   ) : null}
                 </>
               ) : isPremium ? (
-                "Premium access is active. Track up to 5 trading accounts with ongoing write access."
+                "Premium unlocks ongoing journaling. Premium supports up to 5 trading accounts."
               ) : (
-                "Blueveno Premium keeps journaling active with full calendar and stats access."
+                "Premium unlocks ongoing journaling after trial."
               )}
             </div>
 
-            {!isAdminUser ? (
-              <div className="mt-6 rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3 text-[14px] text-zinc-300">
-                Premium access is managed manually during early access. Checkout is coming soon.
-              </div>
-            ) : null}
-
             <div className="mt-8 flex flex-wrap gap-3">
               {(isReadOnly || isTrial) && !isAdminUser ? (
+                <>
+                  <Link
+                    href="/pricing"
+                    className={cn(
+                      buttonVariants({ variant: "default" }),
+                      "h-11 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.68_0.15_252))] px-6 text-[oklch(0.12_0.04_265)] shadow-[0_12px_40px_-12px_oklch(0.45_0.14_252/0.55)] hover:brightness-[1.03]",
+                    )}
+                  >
+                    View pricing
+                  </Link>
+                  <Link
+                    href="/app"
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "h-11 rounded-xl border-white/[0.14] bg-white/[0.04] px-5 text-zinc-100 hover:bg-white/[0.08]",
+                    )}
+                  >
+                    Open workspace
+                  </Link>
+                </>
+              ) : null}
+              {isPremium && !isAdminUser ? (
                 <Link
                   href="/pricing"
                   className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "h-11 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.68_0.15_252))] px-6 text-[oklch(0.12_0.04_265)] shadow-[0_12px_40px_-12px_oklch(0.45_0.14_252/0.55)] hover:brightness-[1.03]",
+                    buttonVariants({ variant: "outline" }),
+                    "h-11 rounded-xl border-white/[0.14] bg-white/[0.04] px-5 text-zinc-100 hover:bg-white/[0.08]",
                   )}
                 >
-                  {isReadOnly ? "Upgrade to Premium" : "View plan details"}
+                  View pricing
                 </Link>
               ) : null}
-              <Link
-                href="/pricing"
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "h-11 rounded-xl border-white/[0.14] bg-white/[0.04] px-5 text-zinc-100 hover:bg-white/[0.08]",
-                )}
-              >
-                Pricing
-              </Link>
+              {isAdminUser ? (
+                <Link
+                  href="/pricing"
+                  className={cn(
+                    buttonVariants({ variant: "outline" }),
+                    "h-11 rounded-xl border-white/[0.14] bg-white/[0.04] px-5 text-zinc-100 hover:bg-white/[0.08]",
+                  )}
+                >
+                  View pricing
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
 
         <aside className="space-y-4 rounded-2xl border border-white/[0.08] bg-black/20 p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Plan includes</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Premium includes</p>
           <ul className="space-y-3 text-[13px] text-zinc-400">
             {PREMIUM_INCLUDES.map((line) => (
               <li key={line} className="flex gap-2">

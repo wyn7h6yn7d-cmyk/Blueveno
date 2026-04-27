@@ -9,7 +9,7 @@ const cols = [
       { label: "Calendar", href: "/#calendar" },
       { label: "Journal", href: "/#day" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Start free", href: "/signup" },
+      { label: "Start 7-day trial", href: "/signup" },
     ],
   },
   {

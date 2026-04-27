@@ -299,7 +299,7 @@ export function HeroPremium() {
               Review week quality, weekly reflections, and performance by trading account.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3.5">
-              <PremiumPrimaryLink href="/signup">Start free</PremiumPrimaryLink>
+              <PremiumPrimaryLink href="/signup">Start 7-day trial</PremiumPrimaryLink>
               <PremiumGhostLink href="/login">Open workspace</PremiumGhostLink>
             </div>
 

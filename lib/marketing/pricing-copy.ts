@@ -1,5 +1,5 @@
 /**
- * Marketing + product copy for pricing (EUR). Keep in sync with billing UI / Stripe when live.
+ * Marketing + product pricing (EUR). Single source of truth for display amounts.
  */
 export const PRICING_EUR = {
   trialDays: 7,
@@ -51,9 +51,9 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
   {
     feature: "Trading accounts",
     trial: "text",
-    trialNote: "1 trading account during trial",
+    trialNote: "Trial includes 1 trading account",
     premium: "text",
-    premiumNote: "Premium supports up to 5 accounts",
+    premiumNote: "Premium supports up to 5 trading accounts",
     expired: "text",
     expiredNote: "Read-only after trial",
   },

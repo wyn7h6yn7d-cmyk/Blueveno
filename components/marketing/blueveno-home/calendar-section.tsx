@@ -21,6 +21,13 @@ function formatDay(pnl: number | undefined) {
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 const WEEKDAYS_MOBILE = ["M", "T", "W", "T", "F", "S", "S"] as const;
 
+function dayAriaLabel(day: string, pnl: number | undefined) {
+  if (!day) return "Empty day";
+  if (pnl === undefined || pnl === 0) return `Day ${day}, flat`;
+  if (pnl > 0) return `Day ${day}, plus ${Math.abs(pnl)} dollars`;
+  return `Day ${day}, minus ${Math.abs(pnl)} dollars`;
+}
+
 function toneStyles(tone: ReturnType<typeof dayCellTone>, weekend: boolean) {
   if (tone === "empty") {
     return weekend
@@ -192,7 +199,12 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                   </div>
 
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-4">
-                    <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 sm:gap-2 lg:gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="grid grid-cols-7 gap-1.5 sm:gap-2.5 lg:gap-3"
+                        role="grid"
+                        aria-label={`${weekLabel} day-by-day P&L`}
+                      >
                       {row.map((day, di) => {
                         const tone = dayCellTone(day);
                         const pnl = day ? pnlMap[day] : undefined;
@@ -200,40 +212,8 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                         const isSelectable = Boolean(day);
                         const isSelected = Boolean(day) && selectedDay === day;
 
-                        const content = (
-                          <>
-                            {day ? (
-                              <>
-                                <span
-                                  className={cn(
-                                    "shrink-0 font-mono text-[10px] tabular-nums sm:text-[12px]",
-                                    tone === "empty" ? "text-zinc-600" : "text-zinc-400/90",
-                                  )}
-                                >
-                                  {day}
-                                </span>
-                                <span
-                                  className={cn(
-                                    "block w-full min-w-0 truncate whitespace-nowrap text-center font-display leading-[1.15] tabular-nums tracking-[-0.02em] sm:text-left",
-                                    "text-[clamp(0.58rem,2.55vw,0.78rem)] sm:text-[17px] lg:text-[18px]",
-                                    typeof pnl === "number"
-                                      ? pnl > 0
-                                        ? "text-emerald-100"
-                                        : pnl < 0
-                                          ? "text-rose-100"
-                                          : "text-zinc-400"
-                                      : "text-zinc-500",
-                                  )}
-                                >
-                                  {formatDay(pnl)}
-                                </span>
-                              </>
-                            ) : null}
-                          </>
-                        );
-
                         const baseTile = cn(
-                          "relative flex min-h-[3.65rem] min-w-0 flex-col justify-between overflow-hidden rounded-xl border p-1.5 transition-[transform,box-shadow,border-color] duration-200 sm:min-h-[4.75rem] sm:rounded-2xl sm:p-2.5 lg:min-h-[5.5rem] lg:p-3",
+                          "relative flex min-h-[4.2rem] min-w-0 flex-col justify-between overflow-hidden rounded-xl border px-2 py-2 transition-[transform,box-shadow,border-color] duration-200 sm:min-h-[5.1rem] sm:rounded-2xl sm:px-2.5 sm:py-2.5 lg:min-h-[5.8rem] lg:px-3 lg:py-3",
                           toneStyles(tone, weekend),
                           isSelectable &&
                             "cursor-pointer hover:z-[1] hover:brightness-[1.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.14_252/0.85)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.07_0.04_268)]",
@@ -247,50 +227,82 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                               key={`${ri}-${di}-${day}`}
                               type="button"
                               aria-pressed={isSelected}
-                              aria-label={`April ${day}, ${formatDay(pnl)}`}
+                              aria-label={dayAriaLabel(day as string, pnl)}
+                              role="gridcell"
                               className={baseTile}
                               onClick={() => setSelectedDay((s) => (s === day ? null : (day as string)))}
                               whileTap={reducedMotion ? undefined : { scale: 0.988 }}
                               transition={{ type: "spring", stiffness: 520, damping: 28 }}
                             >
-                              <span className="relative z-[1] flex h-full min-w-0 flex-col justify-between gap-0.5 text-left">
-                                {content}
+                              <span className="relative z-[1] flex h-full min-w-0 flex-col justify-between gap-1 text-left">
+                                <span
+                                  className={cn(
+                                    "font-mono text-[10px] tabular-nums sm:text-[12px]",
+                                    tone === "empty" ? "text-zinc-600" : "text-zinc-400/90",
+                                  )}
+                                >
+                                  {day}
+                                </span>
+                                <span
+                                  className={cn(
+                                    "block w-full font-display tabular-nums leading-none tracking-[-0.02em] text-center sm:text-left",
+                                    "text-[11px] sm:text-[14px] lg:text-[16px]",
+                                    typeof pnl === "number"
+                                      ? pnl > 0
+                                        ? "text-emerald-100"
+                                        : pnl < 0
+                                          ? "text-rose-100"
+                                          : "text-zinc-300"
+                                      : "text-zinc-500",
+                                  )}
+                                >
+                                  {formatDay(pnl)}
+                                </span>
                               </span>
                             </motion.button>
                           );
                         }
 
                         return (
-                          <div key={`${ri}-${di}-empty`} className={baseTile}>
-                            {content}
+                          <div
+                            key={`${ri}-${di}-empty`}
+                            className={baseTile}
+                            role="gridcell"
+                            aria-label="Empty day"
+                          >
+                            <span className="sr-only">Empty day</span>
                           </div>
                         );
                       })}
+                      </div>
                     </div>
 
                     <div
                       className={cn(
-                        "relative flex w-full min-h-[3.5rem] flex-col justify-center overflow-hidden rounded-xl border px-4 py-3.5 sm:min-h-0 sm:w-[min(9rem,28%)] sm:shrink-0 sm:rounded-2xl sm:px-4 sm:py-4 lg:w-[10rem] lg:px-5 lg:py-5",
+                        "relative w-full overflow-hidden rounded-xl border px-4 py-4 sm:w-[min(10.5rem,30%)] sm:shrink-0 sm:rounded-2xl sm:px-4 sm:py-4 lg:w-[11.5rem] lg:px-5 lg:py-5",
                         "border-[oklch(0.55_0.14_252/0.42)]",
                         "bg-[linear-gradient(158deg,oklch(0.18_0.07_262/0.82)_0%,oklch(0.09_0.045_268/0.9)_100%)]",
                         "shadow-[inset_0_1px_0_0_oklch(0.55_0.12_252/0.22),0_18px_52px_-34px_oklch(0.38_0.12_252/0.45)]",
                       )}
                     >
                       <span className="pointer-events-none absolute -right-8 -top-7 h-20 w-20 rounded-full bg-[radial-gradient(circle,oklch(0.58_0.14_252/0.25),transparent_70%)]" />
-                      <span className="font-mono text-[9px] uppercase tracking-[0.26em] text-zinc-500 lg:text-[10px]">
-                        Week total
-                      </span>
-                      <span
-                        className={cn(
-                          "mt-2 block min-w-0 truncate whitespace-nowrap font-display text-[clamp(1.2rem,6.5vw,2.5rem)] font-semibold tabular-nums tracking-[-0.045em] lg:mt-3",
-                          sum > 0 ? "text-emerald-200" : sum < 0 ? "text-rose-200" : "text-zinc-500",
-                        )}
-                      >
-                        {formatWeekTotal(sum)}
-                      </span>
-                      <span className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-[oklch(0.72_0.11_252)]">
-                        Week Quality {quality}%
-                      </span>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="font-mono text-[9px] uppercase tracking-[0.24em] text-zinc-500 lg:text-[10px]">Week total</p>
+                          <p
+                            className={cn(
+                              "mt-1 font-display text-[clamp(1.25rem,6vw,2rem)] font-semibold tabular-nums leading-none tracking-[-0.04em]",
+                              sum > 0 ? "text-emerald-200" : sum < 0 ? "text-rose-200" : "text-zinc-400",
+                            )}
+                          >
+                            {formatWeekTotal(sum)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-white/[0.1] bg-white/[0.03] px-2.5 py-2">
+                          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">Week quality</p>
+                          <p className="mt-1 text-[13px] font-medium text-[oklch(0.72_0.11_252)]">{quality}%</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

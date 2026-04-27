@@ -8,7 +8,7 @@
 export const marketingCtas = {
   hero: {
     /** Primary — conversion */
-    primary: { label: "Start free", href: "/signup" as const },
+    primary: { label: "Start 7-day trial", href: "/signup" as const },
     /** Secondary — product preview on the main marketing page */
     secondary: { label: "Preview the workspace", href: "/#calendar" as const },
     tertiary: { label: "Sign in", href: "/login" as const },
@@ -20,37 +20,37 @@ export const marketingCtas = {
   productShowcase: {
     intro: { label: "Preview the workspace", href: "/#day" as const },
     rows: [
-      { label: "Start free", href: "/signup" as const },
+      { label: "Start 7-day trial", href: "/signup" as const },
       { label: "Explore analytics", href: "/app/analytics" as const },
       { label: "See how review works", href: "/app/reviews" as const },
       { label: "Preview the workspace", href: "/#calendar" as const },
-      { label: "Start free", href: "/signup" as const },
-      { label: "View plans", href: "/pricing" as const },
-      { label: "See plans", href: "/pricing" as const },
+      { label: "Start 7-day trial", href: "/signup" as const },
+      { label: "View pricing", href: "/pricing" as const },
+      { label: "View pricing", href: "/pricing" as const },
       { label: "See session recaps", href: "/app" as const },
     ],
-    pricing: { label: "Compare plans", href: "/pricing" as const },
+    pricing: { label: "View pricing", href: "/pricing" as const },
   },
   outcomes: {
     loop: { label: "See the operating loop", href: "/#core" as const },
   },
   workflow: {
     explore: { label: "Explore analytics", href: "/app/analytics" as const },
-    plans: { label: "Plans & pricing", href: "/pricing" as const },
+    plans: { label: "View pricing", href: "/pricing" as const },
   },
   traderTypes: {
     review: { label: "See how review works", href: "/app/reviews" as const },
   },
   testimonials: {
-    next: { label: "Start free", href: "/signup" as const },
+    next: { label: "Start 7-day trial", href: "/signup" as const },
   },
   faq: {
-    close: { label: "Start free", href: "/signup" as const },
+    close: { label: "Start 7-day trial", href: "/signup" as const },
   },
   finalCta: {
     eyebrow: "Get started",
-    primary: { label: "Start free", href: "/signup" as const },
-    secondary: { label: "View plans", href: "/pricing" as const },
+    primary: { label: "Start 7-day trial", href: "/signup" as const },
+    secondary: { label: "View pricing", href: "/pricing" as const },
     tertiary: { label: "Sign in", href: "/login" as const },
   },
 } as const;

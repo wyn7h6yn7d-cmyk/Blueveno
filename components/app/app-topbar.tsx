@@ -122,9 +122,6 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
               {label}
             </p>
             <TopbarAccountSwitcher userId={user.id} />
-            <div className="min-w-0 max-w-full">
-              <WorkspaceSessionClock serverTimeZone={user.timezone} />
-            </div>
           </div>
         </div>
       </div>
@@ -141,7 +138,10 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         </div>
       ) : null}
 
-      <div className="relative z-10 flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+      <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
+        <div className="shrink-0">
+          <WorkspaceSessionClock serverTimeZone={user.timezone} />
+        </div>
         <Link
           href="/app/journal#add"
           className={cn(

@@ -6,9 +6,8 @@ import { LockOpen } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAccess } from "@/components/access/access-provider";
-import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
 
-/** Read-only after trial — calm, trustworthy, single path to billing */
+/** Read-only after trial — calm, trustworthy path to billing */
 export function TrialUpgradeBanner() {
   const { state, canWriteJournal, trialEndsAt } = useAccess();
   const [nowTs] = useState(() => Date.now());
@@ -49,23 +48,23 @@ export function TrialUpgradeBanner() {
               ? "Your trial has ended."
               : isEndingSoon
                 ? "Your trial ends soon."
-                : "Your 7-day trial is active."}
+                : "Your 7-day free trial is active."}
           </p>
           <p className="max-w-xl text-[13px] leading-relaxed text-zinc-500">
             {isExpired ? (
               <>
-                Your trial has ended. Read-only access is now active. Keep your history visible and upgrade to keep journaling.
+                After trial, your data stays read-only until upgrade. Premium unlocks ongoing journaling. Your history stays visible.
                 {end ? ` Trial ended ${end}.` : null}
               </>
             ) : isEndingSoon ? (
               <>
-                7-day trial includes 1 trading account. Full access is active for your first account. Upgrade before{" "}
+                Trial includes 1 trading account. Keep journaling before{" "}
                 <span className="text-zinc-300">{end ?? "it ends"}</span>.
               </>
             ) : (
               <>
-                7-day trial includes 1 trading account. Full access is active for your first account.
-                {end ? ` Trial ends ${end}.` : null}
+                7-day free trial. Trial includes 1 trading account.
+                {end ? ` Ends ${end}.` : null}
               </>
             )}
           </p>
@@ -78,7 +77,7 @@ export function TrialUpgradeBanner() {
           "h-11 shrink-0 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.68_0.15_252))] px-6 text-[13px] font-medium text-[oklch(0.12_0.04_265)] shadow-[0_12px_36px_-12px_oklch(0.45_0.14_252/0.45)] hover:brightness-[1.03]",
         )}
       >
-        Upgrade to Premium ({formatEur(PRICING_EUR.monthly)}/month)
+        Keep journaling
       </Link>
     </div>
   );
