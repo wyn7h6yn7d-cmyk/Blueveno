@@ -120,7 +120,7 @@ export function TradingAccountsSection() {
       return;
     }
     setActiveAccountId(id);
-    setMessage("Active account updated.");
+    setMessage("Main account updated.");
   }
 
   async function onSaveAccount(e: React.FormEvent) {
@@ -368,7 +368,7 @@ export function TradingAccountsSection() {
                     </div>
                     {activeAccountId === account.id ? (
                       <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1 text-[11px] font-medium text-emerald-100">
-                        Active
+                        Main
                       </span>
                     ) : null}
                   </div>
@@ -380,7 +380,7 @@ export function TradingAccountsSection() {
                       onClick={() => void setActive(account.id)}
                       disabled={activeAccountId === account.id}
                     >
-                      Set active
+                      Set as main
                     </Button>
                     <Button
                       type="button"
