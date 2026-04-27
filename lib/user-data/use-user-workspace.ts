@@ -57,6 +57,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   const [lastError, setLastError] = useState<string | null>(null);
   const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const userIdRef = useRef(userId);
+  const activeAccountIdRef = useRef<string | null>(null);
   const didTokenRefreshRefetch = useRef(false);
   /** Used to avoid accepting a transient empty client read right after load */
   const mountTimeRef = useRef(0);
@@ -64,6 +65,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   useEffect(() => {
     userIdRef.current = userId;
   }, [userId]);
+
+  useEffect(() => {
+    activeAccountIdRef.current = activeAccountId;
+  }, [activeAccountId]);
 
   useEffect(() => {
     mountTimeRef.current = Date.now();
@@ -110,10 +115,11 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       /* eslint-enable react-hooks/set-state-in-effect */
     }
 
-    async function fetchJournalRows(): Promise<void> {
+    async function fetchJournalRows(targetAccountId?: string | null): Promise<void> {
       const uid = userIdRef.current;
       if (!uid) return;
-      if (!activeAccountId) {
+      const accountId = targetAccountId ?? activeAccountIdRef.current;
+      if (!accountId) {
         setData(EMPTY_WORKSPACE);
         setLastError(null);
         setReady(true);
@@ -128,7 +134,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
           .from("journal_entries")
           .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
           .eq("user_id", uid)
-          .eq("account_id", activeAccountId)
+          .eq("account_id", accountId)
           .order("created_at", { ascending: false });
 
         let batch: JournalRowDb[] | null = null;
@@ -139,7 +145,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
             .from("journal_entries")
             .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
             .eq("user_id", uid)
-            .eq("account_id", activeAccountId)
+            .eq("account_id", accountId)
             .order("created_at", { ascending: false });
           batch = second.data as JournalRowDb[] | null;
           error = second.error;
@@ -223,14 +229,20 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         }
       }
 
-      const { data: profileRow } = await supabase
+      const { data: profileRow, error: profileError } = await supabase
         .from("user_profiles")
         .select("active_trading_account_id")
         .eq("user_id", userId)
         .maybeSingle();
       if (cancelled) return;
+      if (profileError) {
+        setLastError(toUserDbError(profileError.message));
+        setReady(true);
+        return;
+      }
       const activeId = (profileRow?.active_trading_account_id as string | null) ?? null;
       setActiveAccountId(activeId);
+      activeAccountIdRef.current = activeId;
 
       if (!activeId) {
         setData(EMPTY_WORKSPACE);
@@ -239,7 +251,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         return;
       }
 
-      await fetchJournalRows();
+      await fetchJournalRows(activeId);
     }
 
     void load();
