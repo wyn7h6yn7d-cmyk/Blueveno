@@ -10,6 +10,17 @@ import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
 
+function normalizeSignupError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("error sending confirmation email")) {
+    return "Could not send confirmation email right now. Please try again shortly. If it continues, contact support.";
+  }
+  if (m.includes("email rate limit")) {
+    return "Too many attempts. Please wait a moment before trying again.";
+  }
+  return message;
+}
+
 export function SignupForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -60,7 +71,7 @@ export function SignupForm() {
 
     if (error) {
       setIsError(true);
-      setMessage(error.message);
+      setMessage(normalizeSignupError(error.message));
       return;
     }
 
