@@ -60,6 +60,15 @@ function CumulativeChart({ points, currency }: { points: { i: number; t: string;
 
   const xTickIndexes = [0, Math.floor((n - 1) / 2), n - 1];
   const xTickLabels = xTickIndexes.map((i) => ({ i, date: points[i]?.t ?? "" }));
+  const tipPoint =
+    tipIndex !== null
+      ? {
+          x: toX(tipIndex),
+          y: toY(points[tipIndex]?.y ?? 0),
+          value: points[tipIndex]?.y ?? 0,
+          date: points[tipIndex]?.t ?? "",
+        }
+      : null;
 
   return (
     <div className="relative space-y-3" onPointerLeave={() => setTipIndex(null)}>
@@ -167,15 +176,22 @@ function CumulativeChart({ points, currency }: { points: { i: number; t: string;
           {formatSignedPnlAmount(minY, currency)}
         </text>
       </svg>
-      {tipIndex !== null ? (
+      {tipPoint ? (
         <div
           role="tooltip"
-          className="pointer-events-none absolute left-3 top-3 z-[20] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]"
+          className={cn(
+            "pointer-events-none absolute z-[20] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]",
+            tipPoint.x > w - 120 ? "-translate-x-full -translate-y-[115%]" : "-translate-x-1/2 -translate-y-[115%]",
+          )}
+          style={{
+            left: `${(tipPoint.x / w) * 100}%`,
+            top: `${(tipPoint.y / h) * 100}%`,
+          }}
         >
           <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
-            {formatSignedPnlAmount(points[tipIndex]?.y ?? 0, currency)}
+            {formatSignedPnlAmount(tipPoint.value, currency)}
           </p>
-          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{points[tipIndex]?.t ?? ""}</p>
+          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{tipPoint.date}</p>
         </div>
       ) : null}
     </div>
@@ -184,17 +200,19 @@ function CumulativeChart({ points, currency }: { points: { i: number; t: string;
 
 function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; currency: string }) {
   const [tipIndex, setTipIndex] = useState<number | null>(null);
+  const visibleBars = bars.slice(-7);
   const w = 860;
   const h = 240;
   const pad = 24;
-  if (bars.length === 0) {
+  if (visibleBars.length === 0) {
     return null;
   }
-  const maxAbs = Math.max(...bars.map((b) => Math.abs(b.pnl)), 1e-6);
+  const maxAbs = Math.max(...visibleBars.map((b) => Math.abs(b.pnl)), 1e-6);
   const inner = w - pad * 2;
-  const barW = Math.max(8, Math.min(22, inner / Math.max(bars.length, 1) - 2));
-  const step = inner / Math.max(bars.length, 1);
-  const midY = h / 2;
+  const barW = Math.max(8, Math.min(22, inner / Math.max(visibleBars.length, 1) - 2));
+  const step = inner / Math.max(visibleBars.length, 1);
+  const labelBand = 26;
+  const midY = (h - labelBand) / 2;
   const maxH = midY - pad;
 
   const showTip = (i: number) => () => {
@@ -213,7 +231,7 @@ function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; 
           strokeOpacity="0.35"
           strokeWidth="1"
         />
-        {bars.map((b, i) => {
+        {visibleBars.map((b, i) => {
           const x = pad + i * step + (step - barW) / 2;
           const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
           const fill = b.pnl >= 0 ? "oklch(0.58 0.14 155)" : "oklch(0.55 0.17 18)";
@@ -235,7 +253,7 @@ function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; 
             <rect key={b.date} x={x} y={midY} width={barW} height={Math.max(bh, 1)} rx={4} fill={fill} opacity={0.92} />
           );
         })}
-        {bars.map((b, i) => (
+        {visibleBars.map((b, i) => (
           <rect
             key={`hit-${b.date}`}
             x={pad + i * step}
@@ -248,6 +266,17 @@ function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; 
             onPointerMove={showTip(i)}
           />
         ))}
+        {visibleBars.map((b, i) => (
+          <text
+            key={`label-${b.date}`}
+            x={pad + i * step + step / 2}
+            y={h - 7}
+            textAnchor="middle"
+            className="fill-zinc-500 font-mono text-[10px]"
+          >
+            {b.date.slice(5)}
+          </text>
+        ))}
       </svg>
       {tipIndex !== null ? (
         <div
@@ -255,9 +284,9 @@ function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; 
           className="pointer-events-none absolute left-3 top-3 z-[20] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]"
         >
           <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
-            {formatSignedPnlAmount(bars[tipIndex].pnl, currency)}
+            {formatSignedPnlAmount(visibleBars[tipIndex].pnl, currency)}
           </p>
-          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{bars[tipIndex].date}</p>
+          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{visibleBars[tipIndex].date}</p>
         </div>
       ) : null}
     </div>

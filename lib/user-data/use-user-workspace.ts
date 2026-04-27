@@ -16,8 +16,11 @@ import { useAccess } from "@/components/access/access-provider";
 
 function toUserDbError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
-  if (normalized.includes("journal_entries") && normalized.includes("could not find")) {
-    return "Your workspace is temporarily unavailable. Please try again in a moment.";
+  const missingJournalTable =
+    normalized.includes("journal_entries") &&
+    (normalized.includes("could not find") || normalized.includes("does not exist") || normalized.includes("relation"));
+  if (missingJournalTable) {
+    return "Journal database setup is incomplete in this environment. Run the latest Supabase migrations and reload.";
   }
   return message ?? "Could not save entry.";
 }

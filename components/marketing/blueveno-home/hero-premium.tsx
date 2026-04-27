@@ -1,20 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState, type PointerEvent } from "react";
+import { useMemo, useRef, type PointerEvent } from "react";
 import { motion, useReducedMotion, useSpring } from "framer-motion";
 import { CheckCircle2, LineChart, Shield, Target } from "lucide-react";
-import { BluevenoLogoMark } from "@/components/brand/blueveno-logo-mark";
 import { PremiumGhostLink, PremiumPrimaryLink } from "./premium-button";
 import { cn } from "@/lib/utils";
-
-type ViewMode = "day" | "chart" | "week";
-
-const MODES: { id: ViewMode; label: string }[] = [
-  { id: "day", label: "Day" },
-  { id: "chart", label: "Chart" },
-  { id: "week", label: "Week" },
-];
 
 const FEATURE_ITEMS = [
   { icon: LineChart, title: "Trade. Journal. Improve.", subtitle: "All in one calm workspace." },
@@ -124,17 +115,6 @@ function HeroChartLayer({
       {[160, 320, 480, 640, 800, 960, 1120, 1280, 1440].map((x) => (
         <line key={`v-${duration}-${x}`} x1={x} y1="0" x2={x} y2="300" stroke={glow} strokeOpacity="0.08" strokeWidth="0.9" />
       ))}
-      <rect
-        x="0"
-        y="0"
-        width="1600"
-        height="300"
-        fill="none"
-        stroke={glow}
-        strokeOpacity="0.06"
-        strokeWidth="1"
-        strokeDasharray="3 7"
-      />
     </svg>
   );
 
@@ -259,7 +239,6 @@ function WeekPanel() {
 }
 
 export function HeroPremium() {
-  const [mode, setMode] = useState<ViewMode>("week");
   const reducedMotion = useReducedMotion();
   const heroMotionEnabled = !reducedMotion;
   const frameRef = useRef<number | null>(null);
@@ -306,8 +285,8 @@ export function HeroPremium() {
           duration={198}
           enabled={heroMotionEnabled}
           className="opacity-52"
-          pathA="M0 198 C 120 190, 200 154, 286 162 C 390 172, 470 212, 560 202 C 675 188, 725 122, 826 130 C 932 138, 1012 192, 1116 184 C 1220 176, 1312 132, 1422 140 C 1516 146, 1570 186, 1600 180"
-          pathB="M0 214 C 96 208, 180 184, 290 190 C 392 196, 468 224, 572 218 C 650 214, 730 182, 824 186 C 922 192, 1014 224, 1126 216 C 1248 206, 1380 168, 1600 172"
+          pathA="M0 178 L74 170 L136 182 L210 158 L286 144 L360 162 L436 152 L512 176 L586 198 L662 186 L736 162 L812 172 L888 152 L964 136 L1038 148 L1112 172 L1188 166 L1262 152 L1336 140 L1410 154 L1486 168 L1560 176 L1600 178"
+          pathB="M0 206 L86 198 L160 214 L236 192 L312 180 L388 188 L466 204 L542 214 L616 202 L692 190 L768 176 L844 184 L920 170 L996 160 L1072 166 L1148 180 L1222 174 L1298 164 L1374 158 L1450 168 L1524 182 L1600 206"
           glow="oklch(0.58 0.1 236)"
           nodeColor="oklch(0.7 0.13 238)"
         />
@@ -316,8 +295,8 @@ export function HeroPremium() {
           enabled={heroMotionEnabled}
           reverse
           className="hidden opacity-[0.78] sm:block"
-          pathA="M0 176 C 110 164, 192 118, 280 126 C 376 136, 438 194, 526 182 C 630 166, 696 98, 786 108 C 884 118, 950 176, 1048 164 C 1150 152, 1246 86, 1360 96 C 1478 106, 1546 170, 1600 160"
-          pathB="M0 164 C 102 150, 176 106, 254 114 C 360 124, 442 168, 536 154 C 632 140, 704 88, 792 98 C 896 110, 972 154, 1068 142 C 1186 128, 1280 78, 1408 88 C 1516 96, 1580 138, 1600 132"
+          pathA="M0 160 L68 152 L140 168 L214 142 L290 126 L364 134 L438 150 L514 138 L588 116 L664 126 L738 144 L814 132 L888 110 L964 96 L1040 108 L1116 124 L1190 116 L1266 98 L1340 84 L1416 96 L1492 124 L1568 150 L1600 160"
+          pathB="M0 132 L76 124 L150 138 L226 120 L302 106 L378 112 L454 124 L530 116 L606 98 L680 104 L756 120 L832 112 L908 98 L984 88 L1060 96 L1136 110 L1212 104 L1288 90 L1362 80 L1438 92 L1512 112 L1600 132"
           glow="oklch(0.64 0.13 248)"
           nodeColor="oklch(0.78 0.12 250)"
         />
@@ -325,8 +304,8 @@ export function HeroPremium() {
           duration={124}
           enabled={heroMotionEnabled}
           className="hidden opacity-[0.66] lg:block"
-          pathA="M0 208 C 90 202, 170 168, 258 176 C 362 186, 438 224, 544 214 C 636 204, 712 154, 812 162 C 910 170, 1002 220, 1102 210 C 1206 198, 1298 132, 1410 144 C 1512 154, 1582 214, 1600 206"
-          pathB="M0 224 C 98 218, 184 196, 286 202 C 376 208, 474 234, 566 228 C 658 222, 760 186, 848 190 C 946 196, 1042 230, 1132 224 C 1248 214, 1346 166, 1600 174"
+          pathA="M0 206 L72 198 L146 212 L220 188 L296 174 L370 184 L444 202 L520 196 L594 178 L668 164 L744 172 L818 190 L894 182 L968 166 L1042 150 L1118 158 L1192 176 L1266 170 L1342 156 L1416 146 L1490 162 L1566 188 L1600 206"
+          pathB="M0 224 L82 216 L156 226 L232 212 L308 198 L384 204 L460 218 L536 212 L612 196 L688 184 L764 190 L840 202 L916 198 L992 188 L1068 176 L1144 182 L1220 196 L1296 194 L1370 184 L1446 178 L1520 190 L1600 224"
           glow="oklch(0.58 0.1 168)"
           nodeColor="oklch(0.72 0.11 168)"
         />
@@ -336,8 +315,7 @@ export function HeroPremium() {
       <div className="relative z-10 mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-center lg:gap-8">
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2.5">
-              <BluevenoLogoMark className="size-7" />
+            <div className="inline-flex items-center">
               <span className="font-display text-[1.06rem] font-semibold tracking-[-0.03em] text-zinc-100">Blueveno</span>
             </div>
             <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.26em] text-[oklch(0.68_0.11_252)]">PREMIUM TRADING JOURNAL</p>
@@ -394,27 +372,7 @@ export function HeroPremium() {
                     <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-400/95 sm:text-[10px]">Live</span>
                   </span>
                 </div>
-                <div className="border-b border-white/[0.08] px-5 py-4">
-                  <div className="grid grid-cols-3 gap-1 rounded-2xl bg-black/55 p-1.5 ring-1 ring-[oklch(0.48_0.1_252/0.3)]">
-                    {MODES.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setMode(item.id)}
-                        className={cn(
-                          "min-h-[2.45rem] rounded-xl text-[13px] font-semibold tracking-[-0.02em] transition",
-                          mode === item.id
-                            ? "border border-white/[0.14] bg-[linear-gradient(180deg,oklch(0.32_0.1_262/0.95),oklch(0.16_0.06_268/0.98))] text-zinc-50 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.12)]"
-                            : "text-zinc-500 hover:text-zinc-300",
-                        )}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="px-5 pb-5 pt-4">
+                <div className="px-5 pb-5 pt-4 sm:pt-5">
                   <div className="h-[28rem] sm:h-[32rem] lg:h-[35.6rem]">
                     <WeekPanel />
                   </div>

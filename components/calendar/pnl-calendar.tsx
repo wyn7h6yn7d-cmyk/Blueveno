@@ -61,6 +61,22 @@ function monthLabel(d: Date): string {
   return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
+function formatCompactSignedPnlAmount(value: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      notation: "compact",
+      compactDisplay: "short",
+      maximumFractionDigits: 1,
+      signDisplay: "always",
+      currencyDisplay: "narrowSymbol",
+    }).format(value);
+  } catch {
+    return formatSignedPnlAmount(value, currency);
+  }
+}
+
 /** Day cell: green / red / neutral — strong, readable states */
 function dayCellClasses(total: number, hasData: boolean, inMonth: boolean): string {
   if (!hasData) {
@@ -377,10 +393,10 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                                 )}
                               >
                                 <span
-                                  className="block w-full truncate whitespace-nowrap text-right"
+                                  className="block w-full whitespace-nowrap text-right text-white"
                                   title={formatSignedPnlAmount(agg!.total, displayCurrency)}
                                 >
-                                  {formatSignedPnlAmount(agg!.total, displayCurrency)}
+                                  {formatCompactSignedPnlAmount(agg!.total, displayCurrency)}
                                 </span>
                               </div>
                               <div className="mt-1 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
