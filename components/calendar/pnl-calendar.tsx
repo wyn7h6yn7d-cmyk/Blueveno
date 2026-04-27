@@ -13,6 +13,8 @@ import { buttonVariants } from "@/components/ui/button";
 type Props = {
   entries: JournalRow[];
   displayCurrency: string;
+  /** When set, day/week cell tint uses P&amp;L ÷ balance (approx. % return on starting balance). */
+  referenceBalance?: number | null;
   weeklyReflections?: WeeklyReflectionSummary[];
 };
 
@@ -36,7 +38,17 @@ type WeeklyReflectionSummary = {
   nextWeekFocus: string | null;
 };
 
-const WEEKDAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Weekend"] as const;
+const WEEKDAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+type PerformanceBand =
+  | "major_loss"
+  | "moderate_loss"
+  | "minor_loss"
+  | "flat"
+  | "minor_gain"
+  | "moderate_gain"
+  | "major_gain"
+  | "none";
 
 type DisplayCell = {
   key: string;
@@ -44,11 +56,12 @@ type DisplayCell = {
   label: string;
   sourceKeys: string[];
   dateKeyForLink: string | null;
-  isWeekend: boolean;
 };
 
-function monthStartMonday(d: Date): Date {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
+function monthStartSundayGrid(month: Date): Date {
+  const first = new Date(month.getFullYear(), month.getMonth(), 1);
+  const dow = first.getDay();
+  return addDays(first, -dow);
 }
 
 function addDays(d: Date, n: number): Date {
@@ -65,48 +78,95 @@ function keyFromDate(d: Date): string {
 }
 
 function startOfGridMonth(month: Date): Date {
-  const first = monthStartMonday(month);
-  const day = (first.getDay() + 6) % 7;
-  return addDays(first, -day);
+  return monthStartSundayGrid(month);
 }
 
 function monthLabel(d: Date): string {
   return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
-/** Day cell: green / red / neutral — strong, readable states */
-function dayCellClasses(total: number, hasData: boolean, inMonth: boolean): string {
-  if (!hasData) {
+function pctReturnOnBalance(pnl: number, balance: number | null | undefined): number | null {
+  if (balance === null || balance === undefined || balance <= 0 || !Number.isFinite(balance)) return null;
+  return (pnl / balance) * 100;
+}
+
+/** Buckets tuned to match common journal heatmaps; requires reference balance for % bands. */
+function bandFromPct(pct: number | null, total: number, hasData: boolean): PerformanceBand {
+  if (!hasData) return "none";
+  if (pct !== null && Number.isFinite(pct)) {
+    if (pct <= -42.4) return "major_loss";
+    if (pct <= -7) return "moderate_loss";
+    if (pct < 0) return "minor_loss";
+    if (pct === 0) return "flat";
+    if (pct < 7) return "minor_gain";
+    if (pct < 42.4) return "moderate_gain";
+    return "major_gain";
+  }
+  if (total > 0) return "moderate_gain";
+  if (total < 0) return "moderate_loss";
+  return "flat";
+}
+
+function dayCellClasses(band: PerformanceBand, hasData: boolean, inMonth: boolean): string {
+  if (!hasData || band === "none") {
     return cn(
       "border border-white/[0.14] bg-[linear-gradient(165deg,oklch(0.12_0.032_264/0.76),oklch(0.075_0.026_268/0.66))] text-zinc-500",
       !inMonth && "opacity-38",
     );
   }
-  if (total > 0) {
-    return cn(
-      "border border-emerald-400/58 bg-[linear-gradient(155deg,oklch(0.29_0.11_155/0.62),oklch(0.13_0.06_160/0.5))] text-emerald-50",
-      "shadow-[inset_0_1px_0_0_oklch(0.9_0.08_155/0.24),0_0_0_1px_oklch(0.5_0.14_155/0.16)]",
-      !inMonth && "opacity-58",
-    );
+  switch (band) {
+    case "major_loss":
+      return cn(
+        "border border-rose-500/52 bg-[linear-gradient(155deg,oklch(0.34_0.14_18/0.62),oklch(0.13_0.06_22/0.52))] text-rose-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.92_0.06_15/0.14),0_0_0_1px_oklch(0.52_0.18_15/0.14)]",
+        !inMonth && "opacity-58",
+      );
+    case "moderate_loss":
+      return cn(
+        "border border-rose-400/56 bg-[linear-gradient(155deg,oklch(0.31_0.11_18/0.6),oklch(0.13_0.06_22/0.5))] text-rose-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.92_0.07_15/0.16),0_0_0_1px_oklch(0.5_0.15_15/0.14)]",
+        !inMonth && "opacity-58",
+      );
+    case "minor_loss":
+      return cn(
+        "border border-rose-400/42 bg-[linear-gradient(155deg,oklch(0.22_0.07_22/0.48),oklch(0.11_0.04_22/0.42))] text-rose-100",
+        !inMonth && "opacity-58",
+      );
+    case "flat":
+      return cn("border border-white/[0.14] bg-white/[0.06] text-zinc-300", !inMonth && "opacity-48");
+    case "minor_gain":
+      return cn(
+        "border border-emerald-400/44 bg-[linear-gradient(155deg,oklch(0.2_0.07_155/0.46),oklch(0.11_0.05_160/0.42))] text-emerald-100",
+        !inMonth && "opacity-58",
+      );
+    case "moderate_gain":
+      return cn(
+        "border border-emerald-400/58 bg-[linear-gradient(155deg,oklch(0.29_0.11_155/0.62),oklch(0.13_0.06_160/0.5))] text-emerald-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.9_0.08_155/0.24),0_0_0_1px_oklch(0.5_0.14_155/0.16)]",
+        !inMonth && "opacity-58",
+      );
+    case "major_gain":
+      return cn(
+        "border border-emerald-400/62 bg-[linear-gradient(155deg,oklch(0.34_0.13_155/0.66),oklch(0.14_0.06_160/0.54))] text-emerald-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.92_0.09_155/0.26),0_0_0_1px_oklch(0.52_0.16_155/0.18)]",
+        !inMonth && "opacity-58",
+      );
+    default:
+      return cn("border border-white/[0.14] bg-white/[0.06] text-zinc-300", !inMonth && "opacity-48");
   }
-  if (total < 0) {
-    return cn(
-      "border border-rose-400/56 bg-[linear-gradient(155deg,oklch(0.31_0.11_18/0.6),oklch(0.13_0.06_22/0.5))] text-rose-50",
-      "shadow-[inset_0_1px_0_0_oklch(0.92_0.07_15/0.16),0_0_0_1px_oklch(0.5_0.15_15/0.14)]",
-      !inMonth && "opacity-58",
-    );
-  }
-  return cn("border border-white/[0.14] bg-white/[0.06] text-zinc-300", !inMonth && "opacity-48");
 }
 
-function weekRailClasses(total: number): string {
-  if (total > 0) {
+function weekRailClasses(band: PerformanceBand, weeklyTotal: number): string {
+  if (band !== "none") {
+    return dayCellClasses(band, true, true);
+  }
+  if (weeklyTotal > 0) {
     return cn(
       "border border-emerald-400/45 bg-[linear-gradient(160deg,oklch(0.24_0.09_155/0.55),oklch(0.1_0.04_160/0.48))] text-emerald-50",
       "shadow-[inset_0_1px_0_0_oklch(0.88_0.08_155/0.18),0_0_0_1px_oklch(0.42_0.14_155/0.15)]",
     );
   }
-  if (total < 0) {
+  if (weeklyTotal < 0) {
     return cn(
       "border border-rose-400/42 bg-[linear-gradient(160deg,oklch(0.26_0.08_15/0.5),oklch(0.11_0.04_18/0.42))] text-rose-50",
       "shadow-[inset_0_1px_0_0_oklch(0.9_0.05_15/0.12),0_0_0_1px_oklch(0.42_0.14_15/0.12)]",
@@ -115,9 +175,25 @@ function weekRailClasses(total: number): string {
   return "border border-white/[0.14] bg-[linear-gradient(165deg,oklch(0.14_0.04_262/0.65),oklch(0.09_0.03_266/0.58))] text-zinc-300";
 }
 
-function weekAccent(total: number): string {
-  if (total > 0) return "bg-emerald-400/80";
-  if (total < 0) return "bg-rose-400/80";
+function weekAccentFromBand(band: PerformanceBand, weeklyTotal: number): string {
+  if (band !== "none") {
+    switch (band) {
+      case "major_loss":
+      case "moderate_loss":
+      case "minor_loss":
+        return "bg-rose-400/80";
+      case "major_gain":
+      case "moderate_gain":
+      case "minor_gain":
+        return "bg-emerald-400/80";
+      case "flat":
+        return "bg-zinc-500/55";
+      default:
+        return "bg-zinc-500/50";
+    }
+  }
+  if (weeklyTotal > 0) return "bg-emerald-400/80";
+  if (weeklyTotal < 0) return "bg-rose-400/80";
   return "bg-zinc-500/50";
 }
 
@@ -174,7 +250,7 @@ function reflectionStatus(rows: { label: string; value: string }[]): { label: st
   return { label: "Empty", tone: "text-zinc-400" };
 }
 
-export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }: Props) {
+export function PnlCalendar({ entries, displayCurrency, referenceBalance = null, weeklyReflections = [] }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
   const [selectedDayKey, setSelectedDayKey] = useState(() => keyFromDate(new Date()));
   const todayKey = useMemo(() => keyFromDate(new Date()), []);
@@ -226,12 +302,12 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
     return map;
   }, [weeklyReflections]);
 
-  /** Below sm: day cols + week rail wide enough for reflection text (scroll horizontally). sm+: fluid tracks. */
+  /** Below sm: 7 weekday cols + week rail (scroll horizontally). sm+: fluid tracks. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(6,minmax(4.8rem,1fr))_minmax(10rem,11.5rem)]",
-    "sm:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(11rem,14rem)]",
-    "lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
-    "xl:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(13.5rem,18rem)]",
+    "[grid-template-columns:repeat(7,minmax(3.35rem,1fr))_minmax(9.25rem,11rem)]",
+    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(10.5rem,13.5rem)]",
+    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12rem,15.5rem)]",
+    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(13rem,17rem)]",
   );
 
   const headerBox =
@@ -276,6 +352,61 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
         </div>
       </div>
 
+      <div className="rounded-xl border border-white/[0.08] bg-black/30 px-3 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-4 sm:py-3.5">
+        <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">Legend</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 sm:text-[12px]">
+          Cell tint is driven by{" "}
+          <span className="text-zinc-400">
+            day P&amp;L as % of your active account starting balance
+          </span>
+          {referenceBalance != null && referenceBalance > 0 ? (
+            <>
+              {" "}
+              ({formatSignedPnlAmount(referenceBalance, displayCurrency)} baseline in Settings → Trading accounts).
+            </>
+          ) : (
+            <> — add a starting balance there to unlock the full heatmap.</>
+          )}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-2">
+          {(
+            [
+              ["Major loss", "≤−42.4%", "major_loss"],
+              ["Moderate loss", "−42.4% to −7%", "moderate_loss"],
+              ["Minor loss", "−7% to 0%", "minor_loss"],
+              ["Flat", "0%", "flat"],
+              ["Minor gain", "0–7%", "minor_gain"],
+              ["Moderate gain", "7–42.4%", "moderate_gain"],
+              ["Major gain", "≥42.4%", "major_gain"],
+            ] as const
+          ).map(([label, range, band]) => (
+            <div key={band} className="flex min-w-0 items-center gap-2">
+              <span
+                className={cn(
+                  "size-6 shrink-0 rounded-md border sm:size-7",
+                  dayCellClasses(band as PerformanceBand, true, true),
+                )}
+                aria-hidden
+              />
+              <span className="min-w-0 font-mono text-[9px] leading-tight text-zinc-400 sm:text-[10px]">
+                <span className="block text-zinc-300">{label}</span>
+                <span className="block text-zinc-500">{range}</span>
+              </span>
+            </div>
+          ))}
+          <div className="flex min-w-0 items-center gap-2">
+            <span
+              className={cn("size-6 shrink-0 rounded-md border sm:size-7", dayCellClasses("none", false, true))}
+              aria-hidden
+            />
+            <span className="min-w-0 font-mono text-[9px] leading-tight text-zinc-400 sm:text-[10px]">
+              <span className="block text-zinc-300">No trades</span>
+              <span className="block text-zinc-500">No journal day</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="w-full min-w-0 overflow-x-auto overflow-y-visible pb-1 [-webkit-overflow-scrolling:touch]">
         <div className="flex w-full min-w-0 justify-center sm:justify-center xl:justify-start">
           <div
@@ -305,7 +436,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                   "min-w-0 font-mono text-[8px] uppercase tracking-[0.1em] text-zinc-400 sm:text-[10px] sm:tracking-[0.18em]",
                 )}
               >
-                <span className="sm:hidden">{d === "Weekend" ? "WE" : d.slice(0, 1)}</span>
+                <span className="sm:hidden">{d.slice(0, 2)}</span>
                 <span className="hidden sm:inline">{d}</span>
               </div>
             ))}
@@ -324,24 +455,16 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                 const agg = aggregates.get(day.key);
                 return acc + (agg?.total ?? 0);
               }, 0);
-              const displayCells: DisplayCell[] = [
-                ...week.slice(0, 5).map((day) => ({
-                  key: day.key,
-                  inMonth: day.inMonth,
-                  label: String(day.date.getDate()),
-                  sourceKeys: [day.key],
-                  dateKeyForLink: day.key,
-                  isWeekend: false,
-                })),
-                {
-                  key: `weekend-${week[5]!.key}`,
-                  inMonth: week[5]!.inMonth || week[6]!.inMonth,
-                  label: "Weekend",
-                  sourceKeys: [week[5]!.key, week[6]!.key],
-                  dateKeyForLink: null,
-                  isWeekend: true,
-                },
-              ];
+              const weeklyPct = pctReturnOnBalance(weekly, referenceBalance);
+              const weeklyBand = bandFromPct(weeklyPct, weekly, week.some((d) => (aggregates.get(d.key)?.count ?? 0) > 0));
+              const weekTradeCount = week.reduce((acc, d) => acc + (aggregates.get(d.key)?.count ?? 0), 0);
+              const displayCells: DisplayCell[] = week.map((day) => ({
+                key: day.key,
+                inMonth: day.inMonth,
+                label: String(day.date.getDate()),
+                sourceKeys: [day.key],
+                dateKeyForLink: day.key,
+              }));
               const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
               const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
               const weeklySummary = weekSummaryFromReflection(weeklyReflection);
@@ -356,16 +479,16 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     const latestEntryId = aggregateRows[aggregateRows.length - 1]?.latestEntryId ?? null;
                     const notePreview = aggregateRows.find((row) => row.latestNote)?.latestNote ?? null;
                     const hasData = count > 0;
-                    const cellClasses = dayCellClasses(total, hasData, cell.inMonth);
+                    const dayPct = pctReturnOnBalance(total, referenceBalance);
+                    const dayBand = bandFromPct(dayPct, total, hasData);
+                    const cellClasses = dayCellClasses(dayBand, hasData, cell.inMonth);
                     const isSelected = cell.key === selectedDayKey;
                     const isToday = cell.sourceKeys.includes(todayKey);
 
                     const hrefForDay = hasData
                       ? count === 1 && latestEntryId
                         ? `/app/journal/${latestEntryId}`
-                        : cell.isWeekend
-                          ? "/app/journal"
-                          : `/app/journal?date=${encodeURIComponent(cell.dateKeyForLink ?? "")}`
+                        : `/app/journal?date=${encodeURIComponent(cell.dateKeyForLink ?? "")}`
                       : null;
 
                     const content = (
@@ -428,8 +551,14 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                                   {formatSignedPnlAmount(total, displayCurrency)}
                                 </span>
                               </div>
-                              <div className="mt-1 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
-                                Day
+                              <div className="mt-1 flex flex-col items-end gap-0.5 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
+                                <span>Day</span>
+                                {dayPct !== null ? (
+                                  <span className="normal-case tracking-normal text-white/55">
+                                    {dayPct >= 0 ? "+" : ""}
+                                    {dayPct.toFixed(1)}% vs balance
+                                  </span>
+                                ) : null}
                               </div>
                             </>
                           ) : (
@@ -473,10 +602,15 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                   <div
                     className={cn(
                       "relative box-border flex min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left sm:min-h-[188px] sm:gap-1 sm:rounded-xl sm:p-5 lg:min-h-[206px] lg:p-5.5",
-                      weekRailClasses(weekly),
+                      weekRailClasses(weeklyBand, weekly),
                     )}
                   >
-                    <div className={cn("absolute left-0 top-2 bottom-2 w-[2px] rounded-full sm:top-3 sm:bottom-3 sm:w-[3px] lg:w-1", weekAccent(weekly))} />
+                    <div
+                      className={cn(
+                        "absolute left-0 top-2 bottom-2 w-[2px] rounded-full sm:top-3 sm:bottom-3 sm:w-[3px] lg:w-1",
+                        weekAccentFromBand(weeklyBand, weekly),
+                      )}
+                    />
                     <div className="flex min-w-0 flex-col gap-2 pl-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:pl-3">
                       <div className="flex shrink-0 items-baseline gap-2 sm:flex-col sm:items-start sm:gap-0">
                         <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-white/55 sm:text-[9px] sm:tracking-[0.2em]">
@@ -522,6 +656,16 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         >
                           {formatSignedPnlAmount(weekly, displayCurrency)}
                         </span>
+                      </p>
+                      <p className="mt-1 font-mono text-[9px] tabular-nums text-white/55 sm:text-[10px]">
+                        {weekTradeCount} {weekTradeCount === 1 ? "trade" : "trades"}
+                        {weeklyPct !== null ? (
+                          <>
+                            {" "}
+                            · {weeklyPct >= 0 ? "+" : ""}
+                            {weeklyPct.toFixed(1)}% vs balance
+                          </>
+                        ) : null}
                       </p>
                     </div>
                   </div>

@@ -11,6 +11,7 @@ import { useAccess } from "@/components/access/access-provider";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { appPrimaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
+import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 
 type WeeklyReflectionSummary = {
   weekStart: string;
@@ -26,8 +27,14 @@ type Props = {
 
 export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const { displayCurrency } = useAccess();
+  const { accounts, activeAccountId } = useTradingAccountsWorkspace();
   const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
   const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionSummary[]>([]);
+
+  const referenceBalance =
+    accounts.find((a) => a.id === activeAccountId)?.startingBalance ??
+    accounts[0]?.startingBalance ??
+    null;
 
   useEffect(() => {
     let cancelled = false;
@@ -87,7 +94,12 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             aria-hidden
           />
           <div className="relative px-1 md:px-4 lg:px-6">
-            <PnlCalendar entries={data.journal} displayCurrency={displayCurrency} weeklyReflections={weeklyReflections} />
+            <PnlCalendar
+              entries={data.journal}
+              displayCurrency={displayCurrency}
+              referenceBalance={referenceBalance}
+              weeklyReflections={weeklyReflections}
+            />
           </div>
         </div>
       )}
