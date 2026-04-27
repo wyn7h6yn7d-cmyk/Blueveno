@@ -285,18 +285,17 @@ export function HeroPremium() {
           duration={198}
           enabled={heroMotionEnabled}
           className="opacity-52"
-          pathA="M0 178 L74 170 L136 182 L210 158 L286 144 L360 162 L436 152 L512 176 L586 198 L662 186 L736 162 L812 172 L888 152 L964 136 L1038 148 L1112 172 L1188 166 L1262 152 L1336 140 L1410 154 L1486 168 L1560 176 L1600 178"
-          pathB="M0 206 L86 198 L160 214 L236 192 L312 180 L388 188 L466 204 L542 214 L616 202 L692 190 L768 176 L844 184 L920 170 L996 160 L1072 166 L1148 180 L1222 174 L1298 164 L1374 158 L1450 168 L1524 182 L1600 206"
+          pathA="M0 194 C 120 188, 200 160, 286 166 C 390 174, 470 206, 560 198 C 675 186, 725 132, 826 138 C 932 144, 1012 188, 1116 182 C 1220 176, 1312 140, 1422 146 C 1516 152, 1570 184, 1600 194"
+          pathB="M0 206 C 96 202, 180 186, 290 190 C 392 194, 468 214, 572 210 C 650 206, 730 184, 824 186 C 922 190, 1014 212, 1126 208 C 1248 200, 1380 174, 1600 206"
           glow="oklch(0.58 0.1 236)"
           nodeColor="oklch(0.7 0.13 238)"
         />
         <HeroChartLayer
           duration={152}
           enabled={heroMotionEnabled}
-          reverse
           className="hidden opacity-[0.78] sm:block"
-          pathA="M0 160 L68 152 L140 168 L214 142 L290 126 L364 134 L438 150 L514 138 L588 116 L664 126 L738 144 L814 132 L888 110 L964 96 L1040 108 L1116 124 L1190 116 L1266 98 L1340 84 L1416 96 L1492 124 L1568 150 L1600 160"
-          pathB="M0 132 L76 124 L150 138 L226 120 L302 106 L378 112 L454 124 L530 116 L606 98 L680 104 L756 120 L832 112 L908 98 L984 88 L1060 96 L1136 110 L1212 104 L1288 90 L1362 80 L1438 92 L1512 112 L1600 132"
+          pathA="M0 178 C 110 168, 192 132, 280 138 C 376 146, 438 190, 526 180 C 630 166, 696 116, 786 122 C 884 130, 950 176, 1048 166 C 1150 154, 1246 108, 1360 114 C 1478 122, 1546 170, 1600 178"
+          pathB="M0 170 C 102 158, 176 126, 254 132 C 360 140, 442 174, 536 164 C 632 152, 704 112, 792 118 C 896 126, 972 160, 1068 150 C 1186 136, 1280 100, 1408 106 C 1516 114, 1580 144, 1600 170"
           glow="oklch(0.64 0.13 248)"
           nodeColor="oklch(0.78 0.12 250)"
         />
@@ -304,8 +303,8 @@ export function HeroPremium() {
           duration={124}
           enabled={heroMotionEnabled}
           className="hidden opacity-[0.66] lg:block"
-          pathA="M0 206 L72 198 L146 212 L220 188 L296 174 L370 184 L444 202 L520 196 L594 178 L668 164 L744 172 L818 190 L894 182 L968 166 L1042 150 L1118 158 L1192 176 L1266 170 L1342 156 L1416 146 L1490 162 L1566 188 L1600 206"
-          pathB="M0 224 L82 216 L156 226 L232 212 L308 198 L384 204 L460 218 L536 212 L612 196 L688 184 L764 190 L840 202 L916 198 L992 188 L1068 176 L1144 182 L1220 196 L1296 194 L1370 184 L1446 178 L1520 190 L1600 224"
+          pathA="M0 210 C 90 204, 170 176, 258 182 C 362 188, 438 214, 544 206 C 636 198, 712 164, 812 170 C 910 176, 1002 212, 1102 204 C 1206 194, 1298 146, 1410 154 C 1512 162, 1582 202, 1600 210"
+          pathB="M0 220 C 98 214, 184 198, 286 202 C 376 206, 474 222, 566 218 C 658 212, 760 188, 848 190 C 946 194, 1042 218, 1132 214 C 1248 206, 1346 178, 1600 220"
           glow="oklch(0.58 0.1 168)"
           nodeColor="oklch(0.72 0.11 168)"
         />
@@ -315,9 +314,6 @@ export function HeroPremium() {
       <div className="relative z-10 mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-center lg:gap-8">
           <div className="min-w-0">
-            <div className="inline-flex items-center">
-              <span className="font-display text-[1.06rem] font-semibold tracking-[-0.03em] text-zinc-100">Blueveno</span>
-            </div>
             <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.26em] text-[oklch(0.68_0.11_252)]">PREMIUM TRADING JOURNAL</p>
             <h1 className="mt-4 [font-family:var(--font-heading),Georgia,serif] text-[clamp(2.45rem,5.7vw,5.25rem)] font-semibold leading-[0.92] tracking-[-0.062em] text-zinc-50">
               Track the result.

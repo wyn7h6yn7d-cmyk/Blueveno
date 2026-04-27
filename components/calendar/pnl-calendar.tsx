@@ -229,10 +229,10 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
 
   /** Below sm: day cols + week rail wide enough for reflection text (scroll horizontally). sm+: fluid tracks. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(7,minmax(3.2rem,1fr))_minmax(12.4rem,14rem)]",
-    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(13.5rem,18rem)]",
-    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(17rem,23rem)]",
-    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(18.5rem,25rem)]",
+    "[grid-template-columns:repeat(7,minmax(3.6rem,1fr))_minmax(11rem,12.5rem)]",
+    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12rem,15.5rem)]",
+    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(14rem,18.5rem)]",
+    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(15rem,20rem)]",
   );
 
   const headerBox =

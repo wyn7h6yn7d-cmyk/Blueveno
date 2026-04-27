@@ -126,7 +126,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
           </div>
         </div>
         {helloName ? (
-          <div className="hidden min-w-0 flex-1 flex-col justify-center lg:flex">
+          <div className="hidden min-w-0 flex-1 items-center justify-center self-stretch lg:flex">
             <p
               className="truncate text-center text-[12px] leading-snug text-zinc-500 md:text-[13px]"
               title={helloName}
