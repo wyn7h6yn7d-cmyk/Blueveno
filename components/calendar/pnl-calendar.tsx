@@ -26,6 +26,7 @@ type DayAggregate = {
   total: number;
   latestEntryId: string | null;
   count: number;
+  latestNote: string | null;
 };
 
 type WeeklyReflectionSummary = {
@@ -35,7 +36,16 @@ type WeeklyReflectionSummary = {
   nextWeekFocus: string | null;
 };
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+const WEEKDAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Weekend"] as const;
+
+type DisplayCell = {
+  key: string;
+  inMonth: boolean;
+  label: string;
+  sourceKeys: string[];
+  dateKeyForLink: string | null;
+  isWeekend: boolean;
+};
 
 function monthStartMonday(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -48,7 +58,10 @@ function addDays(d: Date, n: number): Date {
 }
 
 function keyFromDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function startOfGridMonth(month: Date): Date {
@@ -171,15 +184,17 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
     for (const row of entries) {
       const key = row.entryDate ?? keyFromDate(row.createdAt ? new Date(row.createdAt) : new Date());
       const val = parsePnlAmount(row.r) ?? 0;
+      const rowNote = row.note?.trim() ? row.note.trim() : null;
       const prev = map.get(key);
       if (!prev) {
-        map.set(key, { total: val, latestEntryId: row.id, count: 1 });
+        map.set(key, { total: val, latestEntryId: row.id, count: 1, latestNote: rowNote });
         continue;
       }
       map.set(key, {
         total: prev.total + val,
         latestEntryId: prev.latestEntryId ?? row.id,
         count: prev.count + 1,
+        latestNote: prev.latestNote ?? rowNote,
       });
     }
     return map;
@@ -213,10 +228,10 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
 
   /** Below sm: day cols + week rail wide enough for reflection text (scroll horizontally). sm+: fluid tracks. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(7,minmax(3.9rem,1fr))_minmax(10rem,11.5rem)]",
-    "sm:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(11rem,14rem)]",
-    "lg:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
-    "xl:[grid-template-columns:repeat(7,minmax(0,1fr))_minmax(13.5rem,18rem)]",
+    "[grid-template-columns:repeat(6,minmax(4.8rem,1fr))_minmax(10rem,11.5rem)]",
+    "sm:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(11rem,14rem)]",
+    "lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
+    "xl:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(13.5rem,18rem)]",
   );
 
   const headerBox =
@@ -282,7 +297,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                   calendarGridCols,
                 )}
               >
-            {WEEKDAYS.map((d) => (
+            {WEEKDAY_HEADERS.map((d) => (
               <div
                 key={d}
                 className={cn(
@@ -290,7 +305,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                   "min-w-0 font-mono text-[8px] uppercase tracking-[0.1em] text-zinc-400 sm:text-[10px] sm:tracking-[0.18em]",
                 )}
               >
-                <span className="sm:hidden">{d.slice(0, 1)}</span>
+                <span className="sm:hidden">{d === "Weekend" ? "WE" : d.slice(0, 1)}</span>
                 <span className="hidden sm:inline">{d}</span>
               </div>
             ))}
@@ -309,6 +324,24 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                 const agg = aggregates.get(day.key);
                 return acc + (agg?.total ?? 0);
               }, 0);
+              const displayCells: DisplayCell[] = [
+                ...week.slice(0, 5).map((day) => ({
+                  key: day.key,
+                  inMonth: day.inMonth,
+                  label: String(day.date.getDate()),
+                  sourceKeys: [day.key],
+                  dateKeyForLink: day.key,
+                  isWeekend: false,
+                })),
+                {
+                  key: `weekend-${week[5]!.key}`,
+                  inMonth: week[5]!.inMonth || week[6]!.inMonth,
+                  label: "Weekend",
+                  sourceKeys: [week[5]!.key, week[6]!.key],
+                  dateKeyForLink: null,
+                  isWeekend: true,
+                },
+              ];
               const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
               const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
               const weeklySummary = weekSummaryFromReflection(weeklyReflection);
@@ -316,20 +349,24 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
 
               return (
                 <Fragment key={`week-row-${i}`}>
-                  {week.map((day) => {
-                    const agg = aggregates.get(day.key);
-                    const hasData = Boolean(agg && agg.count > 0);
-                    const total = agg?.total ?? 0;
-                    const cellClasses = dayCellClasses(total, hasData, day.inMonth);
-                    const isSelected = day.key === selectedDayKey;
-                    const isToday = day.key === todayKey;
+                  {displayCells.map((cell) => {
+                    const aggregateRows = cell.sourceKeys.map((k) => aggregates.get(k)).filter(Boolean) as DayAggregate[];
+                    const total = aggregateRows.reduce((sum, row) => sum + row.total, 0);
+                    const count = aggregateRows.reduce((sum, row) => sum + row.count, 0);
+                    const latestEntryId = aggregateRows[aggregateRows.length - 1]?.latestEntryId ?? null;
+                    const notePreview = aggregateRows.find((row) => row.latestNote)?.latestNote ?? null;
+                    const hasData = count > 0;
+                    const cellClasses = dayCellClasses(total, hasData, cell.inMonth);
+                    const isSelected = cell.key === selectedDayKey;
+                    const isToday = cell.sourceKeys.includes(todayKey);
 
-                    const hrefForDay =
-                      hasData && agg
-                        ? agg.count === 1 && agg.latestEntryId
-                          ? `/app/journal/${agg.latestEntryId}`
-                          : `/app/journal?date=${encodeURIComponent(day.key)}`
-                        : null;
+                    const hrefForDay = hasData
+                      ? count === 1 && latestEntryId
+                        ? `/app/journal/${latestEntryId}`
+                        : cell.isWeekend
+                          ? "/app/journal"
+                          : `/app/journal?date=${encodeURIComponent(cell.dateKeyForLink ?? "")}`
+                      : null;
 
                     const content = (
                       <div
@@ -348,12 +385,12 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                                 "font-mono text-[11px] tabular-nums sm:text-[12px]",
                                 hasData
                                   ? "text-white/90"
-                                  : day.inMonth
+                                  : cell.inMonth
                                     ? "text-zinc-300"
                                     : "text-zinc-500",
                               )}
                             >
-                              {day.date.getDate()}
+                              {cell.label}
                             </span>
                             {isToday ? (
                               <span className="rounded-full border border-[oklch(0.72_0.14_252/0.55)] bg-[oklch(0.72_0.14_252/0.18)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-[oklch(0.84_0.1_252)]">
@@ -361,9 +398,17 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                               </span>
                             ) : null}
                           </div>
-                          {hasData && agg!.count > 1 ? (
+                          {hasData && count > 1 ? (
                             <span className="w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/85 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]">
-                              {agg!.count}×
+                              {count}×
+                            </span>
+                          ) : null}
+                          {hasData && notePreview ? (
+                            <span
+                              className="mt-0.5 block w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/80 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]"
+                              title={notePreview}
+                            >
+                              {notePreview}
                             </span>
                           ) : null}
                         </div>
@@ -378,9 +423,9 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                               >
                                 <span
                                   className="block w-full whitespace-nowrap text-right text-white"
-                                  title={formatSignedPnlAmount(agg!.total, displayCurrency)}
+                                  title={formatSignedPnlAmount(total, displayCurrency)}
                                 >
-                                  {formatSignedPnlAmount(agg!.total, displayCurrency)}
+                                  {formatSignedPnlAmount(total, displayCurrency)}
                                 </span>
                               </div>
                               <div className="mt-1 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
@@ -399,9 +444,9 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     if (hasData && hrefForDay) {
                       return (
                         <Link
-                          key={day.key}
+                          key={cell.key}
                           href={hrefForDay}
-                          onClick={() => setSelectedDayKey(day.key)}
+                          onClick={() => setSelectedDayKey(cell.key)}
                           className="block min-h-0 min-w-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]"
                         >
                           {content}
@@ -410,11 +455,11 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     }
                     return (
                       <button
-                        key={day.key}
+                        key={cell.key}
                         type="button"
-                        onClick={() => setSelectedDayKey(day.key)}
+                        onClick={() => setSelectedDayKey(cell.key)}
                         className="min-h-0 min-w-0 rounded-xl text-left"
-                        aria-label={`Select day ${day.key}`}
+                        aria-label={`Select day ${cell.key}`}
                       >
                         {content}
                       </button>
