@@ -2,17 +2,8 @@
 
 import { Component, type ErrorInfo, type ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Wallet, X } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Wallet, X } from "lucide-react";
 import { useTradingAccounts } from "@/lib/trading-accounts/use-trading-accounts";
-import { cn } from "@/lib/utils";
 
 type Props = {
   userId: string;
@@ -74,81 +65,52 @@ function TopbarAccountSwitcherInner({ userId }: Props) {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
+      <div className="inline-flex min-w-0 max-w-[20.5rem] items-center gap-1.5 rounded-full border border-[oklch(0.58_0.11_252/0.36)] bg-[oklch(0.14_0.045_262/0.88)] px-2 py-1 text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)]">
+        <Wallet className="size-3.5 shrink-0 text-[oklch(0.74_0.11_252)]" />
+        <select
+          value={activeAccountId ?? ""}
+          onChange={async (e) => {
+            const selectedId = e.target.value;
+            if (!selectedId) return;
+            setAccountErrorDismissed(false);
+            setAccountActionError(null);
+            const result = await setActiveAccount(selectedId);
+            if (result.ok) {
+              router.refresh();
+              return;
+            }
+            setAccountActionError(result.error);
+          }}
+          className="h-6 min-w-[7rem] max-w-[11.5rem] truncate bg-transparent pr-1 text-[12px] text-zinc-100 outline-none"
+          aria-label="Select trading account"
+        >
+          {accounts.length === 0 ? <option value="">No accounts</option> : null}
+          {accounts.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.name}
+            </option>
+          ))}
+        </select>
+        {activeAccount ? (
+          <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
+            Active
+          </span>
+        ) : null}
+        <button
           type="button"
-          className="inline-flex h-8 min-w-0 max-w-[18.5rem] items-center gap-1.5 rounded-full border border-[oklch(0.58_0.11_252/0.36)] bg-[oklch(0.14_0.045_262/0.88)] px-3 text-[12px] text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)]"
+          className="h-6 shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 text-[11px] text-zinc-200 transition hover:bg-white/[0.1]"
+          onClick={() => router.push("/app/settings?section=accounts&new=1#accounts")}
         >
-          <Wallet className="size-3.5 shrink-0 text-[oklch(0.74_0.11_252)]" />
-          <span className="truncate">{activeAccount?.name ?? "Select account"}</span>
-          {activeAccount ? (
-            <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
-              Active
-            </span>
-          ) : null}
-          <ChevronDown className="size-3.5 shrink-0 text-zinc-400" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          sideOffset={8}
-          className="min-w-[15rem] rounded-xl border border-white/[0.09] bg-[oklch(0.125_0.028_262)] p-1.5 text-zinc-100 shadow-bv-float ring-1 ring-white/[0.04]"
+          Create
+        </button>
+        <button
+          type="button"
+          className="h-6 shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 text-[11px] text-zinc-200 transition hover:bg-white/[0.1]"
+          onClick={() => router.push("/app/settings?section=accounts#accounts")}
         >
-          <DropdownMenuLabel className="px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">
-            Trading accounts
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator className="bg-white/[0.06]" />
-          {accounts.length > 0 ? (
-            accounts.map((account) => (
-              <DropdownMenuItem
-                key={account.id}
-                className={cn(
-                  "cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]",
-                  activeAccountId === account.id && "bg-white/[0.06]",
-                )}
-                onClick={async () => {
-                  setAccountErrorDismissed(false);
-                  setAccountActionError(null);
-                  const result = await setActiveAccount(account.id);
-                  if (result.ok) {
-                    router.refresh();
-                    return;
-                  }
-                  setAccountActionError(result.error);
-                }}
-              >
-                <div className="flex min-w-0 items-center justify-between gap-2">
-                  <span className="truncate">{account.name}</span>
-                  {activeAccountId === account.id ? (
-                    <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
-                      Active
-                    </span>
-                  ) : null}
-                </div>
-              </DropdownMenuItem>
-            ))
-          ) : (
-            <DropdownMenuItem
-              disabled
-              className="rounded-lg px-2.5 py-2 text-[12px] text-zinc-500 data-disabled:opacity-100"
-            >
-              No accounts yet.
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator className="bg-white/[0.06]" />
-          <DropdownMenuItem
-            className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
-            onClick={() => router.push("/app/settings?section=accounts&new=1#accounts")}
-          >
-            Create account
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
-            onClick={() => router.push("/app/settings?section=accounts#accounts")}
-          >
-            Manage accounts
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          Manage
+        </button>
+      </div>
 
       {accountErrorMessage ? (
         <div className="inline-flex min-h-8 max-w-full items-center gap-2 rounded-full border border-rose-400/40 bg-rose-500/[0.14] px-2.5 py-1 text-[11px] text-rose-100 sm:max-w-[30rem] sm:text-[12px]">
