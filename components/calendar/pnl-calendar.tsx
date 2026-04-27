@@ -110,45 +110,48 @@ function bandFromPct(pct: number | null, total: number, hasData: boolean): Perfo
 function dayCellClasses(band: PerformanceBand, hasData: boolean, inMonth: boolean): string {
   if (!hasData || band === "none") {
     return cn(
-      "border border-white/[0.14] bg-[linear-gradient(165deg,oklch(0.12_0.032_264/0.76),oklch(0.075_0.026_268/0.66))] text-zinc-500",
+      "border border-dashed border-zinc-500/35 bg-[linear-gradient(165deg,oklch(0.11_0.028_268/0.92),oklch(0.065_0.022_272/0.88))] text-zinc-500",
       !inMonth && "opacity-38",
     );
   }
   switch (band) {
     case "major_loss":
       return cn(
-        "border border-rose-500/52 bg-[linear-gradient(155deg,oklch(0.34_0.14_18/0.62),oklch(0.13_0.06_22/0.52))] text-rose-50",
-        "shadow-[inset_0_1px_0_0_oklch(0.92_0.06_15/0.14),0_0_0_1px_oklch(0.52_0.18_15/0.14)]",
+        "border border-rose-400/75 bg-[linear-gradient(155deg,oklch(0.42_0.22_25/0.92),oklch(0.22_0.14_22/0.85))] text-rose-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.95_0.05_18/0.35),0_0_0_1px_oklch(0.55_0.22_22/0.35)]",
         !inMonth && "opacity-58",
       );
     case "moderate_loss":
       return cn(
-        "border border-rose-400/56 bg-[linear-gradient(155deg,oklch(0.31_0.11_18/0.6),oklch(0.13_0.06_22/0.5))] text-rose-50",
-        "shadow-[inset_0_1px_0_0_oklch(0.92_0.07_15/0.16),0_0_0_1px_oklch(0.5_0.15_15/0.14)]",
+        "border border-rose-400/65 bg-[linear-gradient(155deg,oklch(0.34_0.15_22/0.85),oklch(0.17_0.09_24/0.78))] text-rose-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.93_0.06_18/0.22)]",
         !inMonth && "opacity-58",
       );
     case "minor_loss":
       return cn(
-        "border border-rose-400/42 bg-[linear-gradient(155deg,oklch(0.22_0.07_22/0.48),oklch(0.11_0.04_22/0.42))] text-rose-100",
+        "border border-[oklch(0.62_0.14_22/0.45)] bg-[linear-gradient(155deg,oklch(0.26_0.09_28/0.72),oklch(0.14_0.055_26/0.68))] text-rose-100",
         !inMonth && "opacity-58",
       );
     case "flat":
-      return cn("border border-white/[0.14] bg-white/[0.06] text-zinc-300", !inMonth && "opacity-48");
+      return cn(
+        "border border-[oklch(0.55_0.06_252/0.35)] bg-[linear-gradient(165deg,oklch(0.18_0.035_252/0.78),oklch(0.12_0.025_265/0.72))] text-zinc-200",
+        !inMonth && "opacity-48",
+      );
     case "minor_gain":
       return cn(
-        "border border-emerald-400/44 bg-[linear-gradient(155deg,oklch(0.2_0.07_155/0.46),oklch(0.11_0.05_160/0.42))] text-emerald-100",
+        "border border-[oklch(0.58_0.11_155/0.42)] bg-[linear-gradient(155deg,oklch(0.26_0.095_155/0.72),oklch(0.14_0.055_158/0.66))] text-emerald-100",
         !inMonth && "opacity-58",
       );
     case "moderate_gain":
       return cn(
-        "border border-emerald-400/58 bg-[linear-gradient(155deg,oklch(0.29_0.11_155/0.62),oklch(0.13_0.06_160/0.5))] text-emerald-50",
-        "shadow-[inset_0_1px_0_0_oklch(0.9_0.08_155/0.24),0_0_0_1px_oklch(0.5_0.14_155/0.16)]",
+        "border border-emerald-400/60 bg-[linear-gradient(155deg,oklch(0.34_0.14_152/0.82),oklch(0.17_0.085_158/0.74))] text-emerald-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.92_0.07_155/0.28)]",
         !inMonth && "opacity-58",
       );
     case "major_gain":
       return cn(
-        "border border-emerald-400/62 bg-[linear-gradient(155deg,oklch(0.34_0.13_155/0.66),oklch(0.14_0.06_160/0.54))] text-emerald-50",
-        "shadow-[inset_0_1px_0_0_oklch(0.92_0.09_155/0.26),0_0_0_1px_oklch(0.52_0.16_155/0.18)]",
+        "border border-emerald-400/78 bg-[linear-gradient(155deg,oklch(0.44_0.18_148/0.9),oklch(0.22_0.11_155/0.82))] text-emerald-50",
+        "shadow-[inset_0_1px_0_0_oklch(0.94_0.09_155/0.42),0_0_0_1px_oklch(0.52_0.18_155/0.38)]",
         !inMonth && "opacity-58",
       );
     default:
@@ -179,21 +182,25 @@ function weekAccentFromBand(band: PerformanceBand, weeklyTotal: number): string 
   if (band !== "none") {
     switch (band) {
       case "major_loss":
+        return "bg-rose-500";
       case "moderate_loss":
+        return "bg-rose-400";
       case "minor_loss":
-        return "bg-rose-400/80";
+        return "bg-[oklch(0.72_0.14_28)]";
       case "major_gain":
+        return "bg-emerald-400";
       case "moderate_gain":
+        return "bg-emerald-500/90";
       case "minor_gain":
-        return "bg-emerald-400/80";
+        return "bg-[oklch(0.62_0.13_155)]";
       case "flat":
-        return "bg-zinc-500/55";
+        return "bg-zinc-400/70";
       default:
         return "bg-zinc-500/50";
     }
   }
-  if (weeklyTotal > 0) return "bg-emerald-400/80";
-  if (weeklyTotal < 0) return "bg-rose-400/80";
+  if (weeklyTotal > 0) return "bg-emerald-400/90";
+  if (weeklyTotal < 0) return "bg-rose-400/90";
   return "bg-zinc-500/50";
 }
 
@@ -352,56 +359,66 @@ export function PnlCalendar({ entries, displayCurrency, referenceBalance = null,
         </div>
       </div>
 
-      <div className="rounded-xl border border-white/[0.08] bg-black/30 px-3 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-4 sm:py-3.5">
-        <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">Legend</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 sm:text-[12px]">
-          Cell tint is driven by{" "}
-          <span className="text-zinc-400">
-            day P&amp;L as % of your active account starting balance
-          </span>
-          {referenceBalance != null && referenceBalance > 0 ? (
-            <>
-              {" "}
-              ({formatSignedPnlAmount(referenceBalance, displayCurrency)} baseline in Settings → Trading accounts).
-            </>
-          ) : (
-            <> — add a starting balance there to unlock the full heatmap.</>
-          )}
-        </p>
-        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-2">
+      <div className="rounded-2xl border border-white/[0.09] bg-[linear-gradient(168deg,oklch(0.1_0.035_262/0.55),oklch(0.055_0.028_268/0.5))] px-4 py-4 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:px-5 sm:py-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <div className="min-w-0">
+            <p className="font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-500">Legend</p>
+            <p className="mt-1 max-w-xl text-[12px] leading-snug text-zinc-400 sm:text-[13px]">
+              Day tint ={" "}
+              <span className="font-medium text-zinc-300">
+                P&amp;L ÷ starting balance
+              </span>
+              {referenceBalance != null && referenceBalance > 0 ? (
+                <>
+                  {" "}
+                  · baseline{" "}
+                  <span className="tabular-nums text-zinc-300">{formatSignedPnlAmount(referenceBalance, displayCurrency)}</span>
+                  {" "}
+                  <span className="text-zinc-500">(Settings → Trading accounts)</span>
+                </>
+              ) : (
+                <span className="text-zinc-500"> · set starting balance for full % scale.</span>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           {(
             [
-              ["Major loss", "≤−42.4%", "major_loss"],
-              ["Moderate loss", "−42.4% to −7%", "moderate_loss"],
-              ["Minor loss", "−7% to 0%", "minor_loss"],
+              ["Major loss", "≤ −42.4%", "major_loss"],
+              ["Moderate loss", "−42.4% → −7%", "moderate_loss"],
+              ["Minor loss", "−7% → 0%", "minor_loss"],
               ["Flat", "0%", "flat"],
-              ["Minor gain", "0–7%", "minor_gain"],
-              ["Moderate gain", "7–42.4%", "moderate_gain"],
-              ["Major gain", "≥42.4%", "major_gain"],
+              ["Minor gain", "0% → 7%", "minor_gain"],
+              ["Moderate gain", "7% → 42.4%", "moderate_gain"],
+              ["Major gain", "≥ 42.4%", "major_gain"],
             ] as const
           ).map(([label, range, band]) => (
-            <div key={band} className="flex min-w-0 items-center gap-2">
+            <div key={band} className="flex min-w-0 items-start gap-2.5">
               <span
                 className={cn(
-                  "size-6 shrink-0 rounded-md border sm:size-7",
+                  "mt-0.5 size-7 shrink-0 rounded-lg shadow-[0_2px_8px_-2px_rgba(0,0,0,0.65)] ring-1 ring-black/50",
                   dayCellClasses(band as PerformanceBand, true, true),
                 )}
                 aria-hidden
               />
-              <span className="min-w-0 font-mono text-[9px] leading-tight text-zinc-400 sm:text-[10px]">
-                <span className="block text-zinc-300">{label}</span>
-                <span className="block text-zinc-500">{range}</span>
+              <span className="min-w-0 leading-tight">
+                <span className="block text-[12px] font-medium tracking-tight text-zinc-200">{label}</span>
+                <span className="mt-0.5 block font-mono text-[10px] tabular-nums text-zinc-500">{range}</span>
               </span>
             </div>
           ))}
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 items-start gap-2.5">
             <span
-              className={cn("size-6 shrink-0 rounded-md border sm:size-7", dayCellClasses("none", false, true))}
+              className={cn(
+                "mt-0.5 size-7 shrink-0 rounded-lg shadow-[0_2px_8px_-2px_rgba(0,0,0,0.65)] ring-1 ring-black/50",
+                dayCellClasses("none", false, true),
+              )}
               aria-hidden
             />
-            <span className="min-w-0 font-mono text-[9px] leading-tight text-zinc-400 sm:text-[10px]">
-              <span className="block text-zinc-300">No trades</span>
-              <span className="block text-zinc-500">No journal day</span>
+            <span className="min-w-0 leading-tight">
+              <span className="block text-[12px] font-medium tracking-tight text-zinc-200">Empty</span>
+              <span className="mt-0.5 block font-mono text-[10px] text-zinc-500">No journal day</span>
             </span>
           </div>
         </div>
