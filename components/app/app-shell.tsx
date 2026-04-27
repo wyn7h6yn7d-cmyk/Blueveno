@@ -10,7 +10,7 @@ import type { AccessContextClient } from "@/lib/access/types";
 
 type AppShellProps = {
   children: React.ReactNode;
-  user: { name?: string | null; email?: string | null; timezone?: string | null };
+  user: { id: string; name?: string | null; email?: string | null; timezone?: string | null };
   access: AccessContextClient;
 };
 

@@ -72,7 +72,7 @@ function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefine
 
 export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate }: Props) {
   const { canWriteJournal, displayCurrency } = useAccess();
-  const { data, ready, addRow, lastError, removeRow, resetJournal } = useUserWorkspace(userId, { initialWorkspace });
+  const { data, ready, activeAccountId, addRow, lastError, removeRow, resetJournal } = useUserWorkspace(userId, { initialWorkspace });
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");
@@ -477,7 +477,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
 
             <Button
               type="submit"
-              disabled={saving || !canWriteJournal}
+              disabled={saving || !canWriteJournal || !activeAccountId}
               className={cn(
                 "h-12 w-full rounded-xl text-[15px] font-semibold tracking-tight",
                 "bg-[linear-gradient(180deg,oklch(0.74_0.14_250),oklch(0.66_0.15_252))] text-[oklch(0.1_0.04_265)]",
@@ -490,6 +490,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             {!canWriteJournal ? (
               <p className="text-[13px] text-zinc-400">
                 Read-only mode is active after trial. Upgrade to keep adding trading days.
+              </p>
+            ) : null}
+            {canWriteJournal && !activeAccountId ? (
+              <p className="text-[13px] text-zinc-400">
+                Select an active trading account first (topbar account selector or Settings → Trading accounts).
               </p>
             ) : null}
             {urlError ? <p className="text-[13px] text-rose-300/95">{urlError}</p> : null}

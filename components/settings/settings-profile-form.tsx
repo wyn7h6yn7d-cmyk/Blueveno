@@ -17,6 +17,7 @@ import {
   normalizeDisplayCurrency,
 } from "@/lib/format-pnl";
 import { allTimezoneOptionValues, TIMEZONE_GROUPS } from "@/lib/timezone-options";
+import { TradingAccountsSection } from "@/components/settings/trading-accounts-section";
 
 /** Visible control surface — reads as a box on dark cards (border + lift + top edge). */
 const field =
@@ -305,6 +306,8 @@ export function SettingsProfileForm() {
         </div>
         {message ? <p className="mt-4 text-sm text-zinc-400">{message}</p> : null}
       </form>
+
+      <TradingAccountsSection />
 
       <DashboardCard
         eyebrow="Security"

@@ -55,6 +55,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   const [data, setData] = useState<UserWorkspaceSnapshot>(() => initialWorkspace ?? EMPTY_WORKSPACE);
   const [ready, setReady] = useState(() => initialWorkspace !== undefined);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [activeAccountId, setActiveAccountId] = useState<string | null>(null);
   const userIdRef = useRef(userId);
   const didTokenRefreshRefetch = useRef(false);
   /** Used to avoid accepting a transient empty client read right after load */
@@ -112,6 +113,12 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     async function fetchJournalRows(): Promise<void> {
       const uid = userIdRef.current;
       if (!uid) return;
+      if (!activeAccountId) {
+        setData(EMPTY_WORKSPACE);
+        setLastError(null);
+        setReady(true);
+        return;
+      }
 
       let resolved: JournalRowDb[] = [];
       let queryError: string | undefined;
@@ -121,6 +128,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
           .from("journal_entries")
           .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
           .eq("user_id", uid)
+          .eq("account_id", activeAccountId)
           .order("created_at", { ascending: false });
 
         let batch: JournalRowDb[] | null = null;
@@ -131,6 +139,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
             .from("journal_entries")
             .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
             .eq("user_id", uid)
+            .eq("account_id", activeAccountId)
             .order("created_at", { ascending: false });
           batch = second.data as JournalRowDb[] | null;
           error = second.error;
@@ -191,6 +200,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       if (!userId) {
         setData(EMPTY_WORKSPACE);
         setLastError(null);
+        setActiveAccountId(null);
         setReady(true);
         return;
       }
@@ -211,6 +221,22 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         if (user?.id !== userId) {
           setLastError("Session not ready. Refresh the page or sign in again.");
         }
+      }
+
+      const { data: profileRow } = await supabase
+        .from("user_profiles")
+        .select("active_trading_account_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (cancelled) return;
+      const activeId = (profileRow?.active_trading_account_id as string | null) ?? null;
+      setActiveAccountId(activeId);
+
+      if (!activeId) {
+        setData(EMPTY_WORKSPACE);
+        setReady(true);
+        setLastError(null);
+        return;
       }
 
       await fetchJournalRows();
@@ -243,11 +269,14 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- workspaceBootstrapKey encodes initialWorkspace + userId
-  }, [userId, workspaceBootstrapKey]);
+  }, [userId, workspaceBootstrapKey, activeAccountId]);
 
   const addRow = useCallback(
     async (row: Omit<JournalRow, "id">) => {
       if (!userId) return { ok: false as const, error: "Not signed in." };
+      if (!activeAccountId) {
+        return { ok: false as const, error: "Select an active trading account before adding entries." };
+      }
       if (!canWriteJournal) {
         return {
           ok: false as const,
@@ -266,6 +295,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
 
       const basePayload = {
         user_id: userId,
+        account_id: activeAccountId,
         entry_time: row.time,
         symbol: row.sym,
         setup: row.setup,
@@ -328,12 +358,15 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       });
       return { ok: true as const };
     },
-    [userId, canWriteJournal],
+    [userId, canWriteJournal, activeAccountId],
   );
 
   const updateRow = useCallback(
     async (id: string, row: Omit<JournalRow, "id" | "createdAt">) => {
       if (!userId) return { ok: false as const, error: "Not signed in." };
+      if (!activeAccountId) {
+        return { ok: false as const, error: "Select an active trading account before editing entries." };
+      }
       if (!canWriteJournal) {
         return {
           ok: false as const,
@@ -369,6 +402,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         .from("journal_entries")
         .update(basePayload)
         .eq("user_id", userId)
+        .eq("account_id", activeAccountId)
         .eq("id", id)
         .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
         .single();
@@ -386,6 +420,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
             chart_link_url: row.chartLinkUrl ?? null,
           })
           .eq("user_id", userId)
+          .eq("account_id", activeAccountId)
           .eq("id", id)
           .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
           .single();
@@ -423,12 +458,15 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       });
       return { ok: true as const };
     },
-    [userId, canWriteJournal],
+    [userId, canWriteJournal, activeAccountId],
   );
 
   const removeRow = useCallback(
     async (id: string) => {
       if (!userId) return { ok: false as const, error: "Not signed in." };
+      if (!activeAccountId) {
+        return { ok: false as const, error: "Select an active trading account before deleting entries." };
+      }
       if (!canWriteJournal) {
         const msg =
           "Your trial has ended. Upgrade to Blueveno Premium to modify journal entries.";
@@ -437,7 +475,12 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       }
       setLastError(null);
       const supabase = createClient();
-      const { error } = await supabase.from("journal_entries").delete().eq("user_id", userId).eq("id", id);
+      const { error } = await supabase
+        .from("journal_entries")
+        .delete()
+        .eq("user_id", userId)
+        .eq("account_id", activeAccountId)
+        .eq("id", id);
       if (error) {
         const msg = toUserDbError(error.message);
         setLastError(msg);
@@ -450,11 +493,12 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       });
       return { ok: true as const };
     },
-    [userId, canWriteJournal],
+    [userId, canWriteJournal, activeAccountId],
   );
 
   const resetJournal = useCallback(async () => {
     if (!userId) return { ok: false as const, error: "Not signed in." };
+    if (!activeAccountId) return { ok: false as const, error: "Select an active trading account first." };
     setLastError(null);
     const supabase = createClient();
 
@@ -472,7 +516,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       return { ok: false as const, error: msg };
     }
 
-    const { error } = await supabase.from("journal_entries").delete().eq("user_id", userId);
+    const { error } = await supabase.from("journal_entries").delete().eq("user_id", userId).eq("account_id", activeAccountId);
     if (error) {
       const msg = toUserDbError(error.message);
       setLastError(msg);
@@ -482,12 +526,12 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     setData(EMPTY_WORKSPACE);
     clearJournalCache(userId);
     return { ok: true as const };
-  }, [userId]);
+  }, [userId, activeAccountId]);
 
   const replaceAll = useCallback((next: UserWorkspaceSnapshot) => {
     setData(next);
     if (userId) writeJournalCache(userId, next);
   }, [userId]);
 
-  return { data, ready, lastError, addRow, updateRow, removeRow, resetJournal, replaceAll };
+  return { data, ready, lastError, activeAccountId, addRow, updateRow, removeRow, resetJournal, replaceAll };
 }

@@ -22,6 +22,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
       user={{
+        id: session.user.id,
         name: session.user.name,
         email: session.user.email,
         timezone: session.user.timezone,

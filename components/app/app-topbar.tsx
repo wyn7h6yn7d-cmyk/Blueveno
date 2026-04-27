@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   CalendarDays,
+  ChevronDown,
   Menu,
   NotebookPen,
   Settings,
   LogOut,
   Home,
+  Wallet,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -27,9 +29,10 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
 import { WorkspaceSessionClock } from "@/components/app/workspace-session-clock";
+import { useTradingAccounts } from "@/lib/trading-accounts/use-trading-accounts";
 
 type AppTopbarProps = {
-  user: { name?: string | null; email?: string | null; timezone?: string | null };
+  user: { id: string; name?: string | null; email?: string | null; timezone?: string | null };
   canWriteJournal?: boolean;
   isAdmin?: boolean;
 };
@@ -58,6 +61,12 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   const label = sectionLabel(pathname);
   /** Greeting: profile display name when set, otherwise email (same source as Settings). */
   const helloName = user.name?.trim() || user.email?.trim() || "";
+  const {
+    accounts,
+    activeAccountId,
+    setActiveAccount,
+  } = useTradingAccounts(user.id);
+  const activeAccount = accounts.find((a) => a.id === activeAccountId) ?? null;
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -120,6 +129,76 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
             <p className="font-display w-full min-w-0 truncate text-[1.03rem] font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.14rem]">
               {label}
             </p>
+            {accounts.length === 0 ? (
+              <Link
+                href="/app/settings?section=accounts&new=1#accounts"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.04] px-3 text-[12px] text-zinc-200 transition hover:bg-white/[0.08]"
+              >
+                <Wallet className="size-3.5 text-zinc-400" />
+                Create account
+              </Link>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  type="button"
+                  className="inline-flex h-8 min-w-0 max-w-[18.5rem] items-center gap-1.5 rounded-full border border-[oklch(0.58_0.11_252/0.36)] bg-[oklch(0.14_0.045_262/0.88)] px-3 text-[12px] text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)]"
+                >
+                  <Wallet className="size-3.5 shrink-0 text-[oklch(0.74_0.11_252)]" />
+                  <span className="truncate">{activeAccount?.name ?? "Select account"}</span>
+                  {activeAccount ? (
+                    <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
+                      Active
+                    </span>
+                  ) : null}
+                  <ChevronDown className="size-3.5 shrink-0 text-zinc-400" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="start"
+                  sideOffset={8}
+                  className="min-w-[15rem] rounded-xl border border-white/[0.09] bg-[oklch(0.125_0.028_262)] p-1.5 text-zinc-100 shadow-bv-float ring-1 ring-white/[0.04]"
+                >
+                  <DropdownMenuLabel className="px-2.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">
+                    Trading accounts
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  {accounts.map((account) => (
+                    <DropdownMenuItem
+                      key={account.id}
+                      className={cn(
+                        "cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]",
+                        activeAccountId === account.id && "bg-white/[0.06]",
+                      )}
+                      onClick={async () => {
+                        const result = await setActiveAccount(account.id);
+                        if (result.ok) router.refresh();
+                      }}
+                    >
+                      <div className="flex min-w-0 items-center justify-between gap-2">
+                        <span className="truncate">{account.name}</span>
+                        {activeAccountId === account.id ? (
+                          <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
+                            Active
+                          </span>
+                        ) : null}
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator className="bg-white/[0.06]" />
+                  <DropdownMenuItem
+                    className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
+                    onClick={() => router.push("/app/settings?section=accounts&new=1#accounts")}
+                  >
+                    New account
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px] text-zinc-200 outline-none focus-visible:bg-white/[0.06]"
+                    onClick={() => router.push("/app/settings?section=accounts#accounts")}
+                  >
+                    Manage accounts
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <div className="min-w-0 max-w-full">
               <WorkspaceSessionClock serverTimeZone={user.timezone} />
             </div>

@@ -16,10 +16,20 @@ import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
  */
 export async function getUserWorkspaceSnapshotForUser(userId: string): Promise<UserWorkspaceSnapshot> {
   const supabase = await createClient();
+  const { data: profileRow } = await supabase
+    .from("user_profiles")
+    .select("active_trading_account_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const activeAccountId = (profileRow?.active_trading_account_id as string | null) ?? null;
+  if (!activeAccountId) {
+    return EMPTY_WORKSPACE;
+  }
   const first = await supabase
     .from("journal_entries")
     .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
     .eq("user_id", userId)
+    .eq("account_id", activeAccountId)
     .order("created_at", { ascending: false });
 
   let rows: JournalRowDb[] | null = null;
@@ -30,6 +40,7 @@ export async function getUserWorkspaceSnapshotForUser(userId: string): Promise<U
       .from("journal_entries")
       .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
       .eq("user_id", userId)
+      .eq("account_id", activeAccountId)
       .order("created_at", { ascending: false });
     rows = second.data as JournalRowDb[] | null;
     error = second.error;
