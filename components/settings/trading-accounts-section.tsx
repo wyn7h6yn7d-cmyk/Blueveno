@@ -56,27 +56,44 @@ export function TradingAccountsSection() {
   const canManage = isAdmin || canWriteJournal;
 
   async function load() {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user?.id) {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      setUserId(user.id);
+      const [{ data: profile, error: profileError }, { data: accountRows, error: accountError }] = await Promise.all([
+        supabase
+          .from("user_profiles")
+          .select("active_trading_account_id")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase.from("trading_accounts").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
+      ]);
+      if (profileError || accountError) {
+        setAccounts([]);
+        setActiveAccountId(null);
+        setMessage(profileError?.message ?? accountError?.message ?? "Could not load trading accounts.");
+        setLoading(false);
+        return;
+      }
+
+      const safeRows = Array.isArray(accountRows) ? accountRows : [];
+      const mapped = safeRows.map((row) => mapTradingAccountRow(row as unknown as Record<string, unknown>));
+      setAccounts(mapped);
+      setActiveAccountId((profile?.active_trading_account_id as string | null) ?? null);
       setLoading(false);
-      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not load trading accounts.";
+      setAccounts([]);
+      setActiveAccountId(null);
+      setMessage(message);
+      setLoading(false);
     }
-    setUserId(user.id);
-    const [{ data: profile }, { data: accountRows }] = await Promise.all([
-      supabase
-        .from("user_profiles")
-        .select("active_trading_account_id")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase.from("trading_accounts").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
-    ]);
-    const mapped = (accountRows ?? []).map((row) => mapTradingAccountRow(row as unknown as Record<string, unknown>));
-    setAccounts(mapped);
-    setActiveAccountId((profile?.active_trading_account_id as string | null) ?? null);
-    setLoading(false);
   }
 
   useEffect(() => {
