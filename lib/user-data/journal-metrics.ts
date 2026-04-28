@@ -65,6 +65,19 @@ export type JournalSummary = {
   streak: string;
 };
 
+export type OverviewKpis = {
+  tradedDays: number;
+  winningDays: number;
+  losingDays: number;
+  winRatePct: number | null;
+  disciplineScorePct: number | null;
+  averageDay: number | null;
+  bestDay: number | null;
+  worstDay: number | null;
+  avgGreenDay: number | null;
+  avgRedDay: number | null;
+};
+
 export function computeJournalSummary(dayAgg: DayAgg[]): JournalSummary {
   const now = new Date();
   const weekStart = startOfWeekMonday(now);
@@ -90,4 +103,46 @@ export function computeJournalSummary(dayAgg: DayAgg[]): JournalSummary {
 
 export function signedMoney(value: number, currency: string) {
   return formatSignedPnlAmount(value, currency);
+}
+
+function safeAvg(total: number, count: number): number | null {
+  if (count <= 0) return null;
+  const v = total / count;
+  return Number.isFinite(v) ? v : null;
+}
+
+export function computeOverviewKpis(journal: JournalRow[]): OverviewKpis {
+  const dayAgg = buildDayAgg(journal);
+  const tradedDays = dayAgg.length;
+  const winningDays = dayAgg.filter((d) => d.pnl > 0).length;
+  const losingDays = dayAgg.filter((d) => d.pnl < 0).length;
+  const totalPnl = dayAgg.reduce((sum, d) => sum + d.pnl, 0);
+
+  const greenTotals = dayAgg.filter((d) => d.pnl > 0).map((d) => d.pnl);
+  const redTotals = dayAgg.filter((d) => d.pnl < 0).map((d) => d.pnl);
+
+  let completedChecks = 0;
+  let totalChecks = 0;
+  for (const row of journal) {
+    totalChecks += 3;
+    if (row.followedPlan) completedChecks += 1;
+    if (row.respectedStop) completedChecks += 1;
+    if (row.noRevengeTrade) completedChecks += 1;
+  }
+
+  const winRateRaw = tradedDays > 0 ? (winningDays / tradedDays) * 100 : null;
+  const disciplineRaw = totalChecks > 0 ? (completedChecks / totalChecks) * 100 : null;
+
+  return {
+    tradedDays,
+    winningDays,
+    losingDays,
+    winRatePct: winRateRaw !== null && Number.isFinite(winRateRaw) ? Math.round(winRateRaw) : null,
+    disciplineScorePct: disciplineRaw !== null && Number.isFinite(disciplineRaw) ? Math.round(disciplineRaw) : null,
+    averageDay: safeAvg(totalPnl, tradedDays),
+    bestDay: tradedDays > 0 ? Math.max(...dayAgg.map((d) => d.pnl)) : null,
+    worstDay: tradedDays > 0 ? Math.min(...dayAgg.map((d) => d.pnl)) : null,
+    avgGreenDay: safeAvg(greenTotals.reduce((s, n) => s + n, 0), greenTotals.length),
+    avgRedDay: safeAvg(redTotals.reduce((s, n) => s + n, 0), redTotals.length),
+  };
 }

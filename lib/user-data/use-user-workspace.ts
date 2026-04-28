@@ -13,6 +13,7 @@ import {
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { clearJournalCache, readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
 import { useAccess } from "@/components/access/access-provider";
+import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 
 function toUserDbError(message: string | undefined) {
   const normalized = (message ?? "").toLowerCase();
@@ -41,6 +42,7 @@ type UseUserWorkspaceOptions = {
 
 export function useUserWorkspace(userId: string | undefined, options?: UseUserWorkspaceOptions) {
   const { canWriteJournal } = useAccess();
+  const { activeAccountId: topbarActiveAccountId } = useTradingAccountsWorkspace();
   const initialWorkspace = options?.initialWorkspace;
 
   /** Object identity from RSC is unstable; stringify lets us detect real server payload changes */
@@ -247,7 +249,36 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         setReady(true);
         return;
       }
-      const activeId = (profileRow?.active_trading_account_id as string | null) ?? null;
+      const profileActiveId = (profileRow?.active_trading_account_id as string | null) ?? null;
+      let activeId = topbarActiveAccountId ?? profileActiveId;
+      if (!activeId) {
+        const { data: fallbackAccountRow, error: fallbackAccountError } = await supabase
+          .from("trading_accounts")
+          .select("id")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (cancelled) return;
+        if (fallbackAccountError) {
+          setLastError(toUserDbError(fallbackAccountError.message));
+          setReady(true);
+          return;
+        }
+        activeId = (fallbackAccountRow?.id as string | null) ?? null;
+        if (activeId && activeId !== profileActiveId) {
+          const { error: persistError } = await supabase
+            .from("user_profiles")
+            .update({ active_trading_account_id: activeId, updated_at: new Date().toISOString() })
+            .eq("user_id", userId);
+          if (cancelled) return;
+          if (persistError) {
+            setLastError(toUserDbError(persistError.message));
+            setReady(true);
+            return;
+          }
+        }
+      }
       const previousActiveId = activeAccountIdRef.current;
       setActiveAccountId(activeId);
       activeAccountIdRef.current = activeId;
@@ -292,7 +323,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- workspaceBootstrapKey encodes initialWorkspace + userId
-  }, [userId, workspaceBootstrapKey, activeAccountId]);
+  }, [userId, workspaceBootstrapKey, activeAccountId, topbarActiveAccountId]);
 
   const addRow = useCallback(
     async (row: Omit<JournalRow, "id">) => {

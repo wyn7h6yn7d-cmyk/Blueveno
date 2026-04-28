@@ -1,0 +1,289 @@
+"use client";
+
+import type { JournalRow } from "@/lib/user-data/types";
+import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { formatSignedPnlAmount } from "@/lib/format-pnl";
+
+type BehaviorInsight = { label: string; value: string };
+
+type OverviewStats = {
+  weekPnl: number;
+  monthPnl: number;
+  tradedDays: number;
+  winningDays: number;
+  losingDays: number;
+  winRate: number | null;
+  averageDay: number | null;
+  bestDay: number | null;
+  worstDay: number | null;
+  avgGreenDay: number | null;
+  avgRedDay: number | null;
+  streak: string;
+  disciplineScore: number | null;
+  greenRedSummary: string;
+};
+
+type GetOverviewStatsParams = {
+  entries: JournalRow[];
+  activeAccountId?: string | null;
+  timezone?: string | null;
+  currency: string;
+};
+
+type GetBehaviorInsightsParams = {
+  entries: JournalRow[];
+  activeAccountId?: string | null;
+  timezone?: string | null;
+  currency: string;
+  maxItems?: number;
+};
+
+type DailyAgg = { key: string; pnl: number };
+
+function dayKeyFromDate(date: Date, timezone?: string | null): string {
+  if (!timezone) return date.toISOString().slice(0, 10);
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date);
+  } catch {
+    return date.toISOString().slice(0, 10);
+  }
+}
+
+function rowDayKey(row: JournalRow, timezone?: string | null): string {
+  if (row.entryDate && /^\d{4}-\d{2}-\d{2}$/.test(row.entryDate)) return row.entryDate;
+  if (row.createdAt) return dayKeyFromDate(new Date(row.createdAt), timezone);
+  return dayKeyFromDate(new Date(), timezone);
+}
+
+function startOfWeekMonday(base: Date): Date {
+  const d = new Date(base);
+  const dow = (d.getDay() + 6) % 7;
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - dow);
+  return d;
+}
+
+function monthKey(date: Date, timezone?: string | null): string {
+  return dayKeyFromDate(date, timezone).slice(0, 7);
+}
+
+function aggregateDaily(entries: JournalRow[], timezone?: string | null): DailyAgg[] {
+  const map = new Map<string, number>();
+  for (const row of entries) {
+    const key = rowDayKey(row, timezone);
+    const pnl = parsePnlAmount(row.r) ?? 0;
+    map.set(key, (map.get(key) ?? 0) + pnl);
+  }
+  return [...map.entries()].map(([key, pnl]) => ({ key, pnl }));
+}
+
+function avg(total: number, count: number): number | null {
+  if (count <= 0) return null;
+  const v = total / count;
+  return Number.isFinite(v) ? v : null;
+}
+
+function streakFromDaily(daily: DailyAgg[]): string {
+  if (daily.length === 0) return "No streak";
+  const ordered = [...daily].sort((a, b) => b.key.localeCompare(a.key));
+  const first = ordered[0];
+  if (!first || first.pnl === 0) return "Flat day";
+  const positive = first.pnl > 0;
+  let count = 0;
+  for (const day of ordered) {
+    if (positive && day.pnl > 0) {
+      count += 1;
+      continue;
+    }
+    if (!positive && day.pnl < 0) {
+      count += 1;
+      continue;
+    }
+    break;
+  }
+  return `${count} ${positive ? "green" : "red"} day${count === 1 ? "" : "s"}`;
+}
+
+export function getOverviewStats({
+  entries,
+  activeAccountId,
+  timezone,
+  currency,
+}: GetOverviewStatsParams): OverviewStats {
+  // `entries` are already account-scoped by workspace state.
+  void activeAccountId;
+  void currency;
+  const daily = aggregateDaily(entries, timezone);
+  const tradedDays = daily.length;
+  const now = new Date();
+  const weekStart = dayKeyFromDate(startOfWeekMonday(now), timezone);
+  const month = monthKey(now, timezone);
+
+  let weekPnl = 0;
+  let monthPnl = 0;
+  let winningDays = 0;
+  let losingDays = 0;
+  let totalPnl = 0;
+  const positives: number[] = [];
+  const negatives: number[] = [];
+
+  for (const d of daily) {
+    totalPnl += d.pnl;
+    if (d.key >= weekStart) weekPnl += d.pnl;
+    if (d.key.startsWith(month)) monthPnl += d.pnl;
+    if (d.pnl > 0) {
+      winningDays += 1;
+      positives.push(d.pnl);
+    } else if (d.pnl < 0) {
+      losingDays += 1;
+      negatives.push(d.pnl);
+    }
+  }
+
+  let completedChecks = 0;
+  let totalChecks = 0;
+  for (const row of entries) {
+    totalChecks += 3;
+    if (row.followedPlan) completedChecks += 1;
+    if (row.respectedStop) completedChecks += 1;
+    if (row.noRevengeTrade) completedChecks += 1;
+  }
+
+  return {
+    weekPnl,
+    monthPnl,
+    tradedDays,
+    winningDays,
+    losingDays,
+    winRate: tradedDays > 0 ? Math.round((winningDays / tradedDays) * 100) : null,
+    averageDay: avg(totalPnl, tradedDays),
+    bestDay: tradedDays > 0 ? Math.max(...daily.map((d) => d.pnl)) : null,
+    worstDay: tradedDays > 0 ? Math.min(...daily.map((d) => d.pnl)) : null,
+    avgGreenDay: avg(positives.reduce((s, n) => s + n, 0), positives.length),
+    avgRedDay: avg(negatives.reduce((s, n) => s + n, 0), negatives.length),
+    streak: streakFromDaily(daily),
+    disciplineScore: totalChecks > 0 ? Math.round((completedChecks / totalChecks) * 100) : null,
+    greenRedSummary: `${winningDays} / ${losingDays}`,
+  };
+}
+
+export function getBehaviorInsights({
+  entries,
+  activeAccountId,
+  timezone,
+  currency,
+  maxItems = 5,
+}: GetBehaviorInsightsParams): BehaviorInsight[] {
+  // `entries` are already account-scoped by workspace state.
+  void activeAccountId;
+  const insights: BehaviorInsight[] = [];
+  if (entries.length === 0) return insights;
+
+  const daily = aggregateDaily(entries, timezone);
+
+  const moodBuckets = new Map<string, { total: number; count: number }>();
+  for (const row of entries) {
+    const pnl = parsePnlAmount(row.r);
+    if (pnl === null) continue;
+    const mood = row.moodState ?? "Unknown";
+    const prev = moodBuckets.get(mood) ?? { total: 0, count: 0 };
+    moodBuckets.set(mood, { total: prev.total + pnl, count: prev.count + 1 });
+  }
+
+  const bestMood = [...moodBuckets.entries()]
+    .filter(([, v]) => v.count >= 2)
+    .map(([mood, v]) => ({ mood, avg: v.total / v.count }))
+    .sort((a, b) => b.avg - a.avg)[0];
+  if (bestMood) {
+    insights.push({
+      label: "Best mood",
+      value: `${bestMood.mood} · avg ${formatSignedPnlAmount(bestMood.avg, currency)}`,
+    });
+  }
+
+  const commonMood = [...moodBuckets.entries()].sort((a, b) => b[1].count - a[1].count)[0];
+  if (commonMood && commonMood[1].count >= 2) {
+    insights.push({
+      label: "Most common mood",
+      value: `${commonMood[0]} · ${commonMood[1].count} entries`,
+    });
+  }
+
+  const compare = (
+    title: string,
+    yesLabel: string,
+    noLabel: string,
+    pick: (row: JournalRow) => boolean | undefined,
+  ) => {
+    let yesTotal = 0;
+    let yesCount = 0;
+    let noTotal = 0;
+    let noCount = 0;
+    for (const row of entries) {
+      const pnl = parsePnlAmount(row.r);
+      if (pnl === null) continue;
+      if (pick(row)) {
+        yesTotal += pnl;
+        yesCount += 1;
+      } else {
+        noTotal += pnl;
+        noCount += 1;
+      }
+    }
+    if (yesCount >= 2 && noCount >= 2) {
+      insights.push({
+        label: title,
+        value: `${yesLabel} ${formatSignedPnlAmount(yesTotal / yesCount, currency)} vs ${noLabel} ${formatSignedPnlAmount(noTotal / noCount, currency)}`,
+      });
+    }
+  };
+
+  compare("Plan follow-through", "Followed", "not followed", (r) => r.followedPlan);
+  compare("Stop discipline", "Respected", "not respected", (r) => r.respectedStop);
+  compare("Revenge control", "No revenge", "revenge", (r) => r.noRevengeTrade);
+
+  const byDay = new Map<string, { allNoRevenge: boolean }>();
+  for (const row of entries) {
+    const key = rowDayKey(row, timezone);
+    const prev = byDay.get(key);
+    const noRevenge = Boolean(row.noRevengeTrade);
+    byDay.set(key, { allNoRevenge: prev ? prev.allNoRevenge && noRevenge : noRevenge });
+  }
+  const orderedKeys = [...byDay.keys()].sort((a, b) => b.localeCompare(a));
+  let revengeFreeStreak = 0;
+  for (const key of orderedKeys) {
+    if (byDay.get(key)?.allNoRevenge) revengeFreeStreak += 1;
+    else break;
+  }
+  if (orderedKeys.length > 0) {
+    insights.push({
+      label: "Revenge-trade-free streak",
+      value: `${revengeFreeStreak} day${revengeFreeStreak === 1 ? "" : "s"}`,
+    });
+  }
+
+  const weekdayBuckets = new Map<string, { total: number; count: number }>();
+  for (const d of daily) {
+    const weekday = new Date(`${d.key}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short" });
+    const prev = weekdayBuckets.get(weekday) ?? { total: 0, count: 0 };
+    weekdayBuckets.set(weekday, { total: prev.total + d.pnl, count: prev.count + 1 });
+  }
+  const bestWeekday = [...weekdayBuckets.entries()]
+    .filter(([, v]) => v.count >= 2)
+    .map(([day, v]) => ({ day, avg: v.total / v.count }))
+    .sort((a, b) => b.avg - a.avg)[0];
+  if (bestWeekday) {
+    insights.push({
+      label: "Best weekday",
+      value: `${bestWeekday.day} · avg ${formatSignedPnlAmount(bestWeekday.avg, currency)}`,
+    });
+  }
+
+  return insights.slice(0, maxItems);
+}
+

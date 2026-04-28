@@ -8,7 +8,8 @@ import { DashboardCard } from "@/components/app/dashboard-card";
 import { PageHeader } from "@/components/app/page-header";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { buildDayAgg, computeJournalSummary, signedMoney } from "@/lib/user-data/journal-metrics";
+import { buildDayAgg, signedMoney } from "@/lib/user-data/journal-metrics";
+import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
@@ -24,12 +25,28 @@ function formatDayLabel(dayKey: string) {
   return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date);
 }
 
+function moneyOrDash(value: number | null, currency: string): string {
+  return value === null || !Number.isFinite(value) ? "—" : signedMoney(value, currency);
+}
+
+function percentOrDash(value: number | null): string {
+  return value === null || !Number.isFinite(value) ? "—" : `${Math.round(value)}%`;
+}
+
 export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
   const { displayCurrency } = useAccess();
-  const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
+  const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
 
   const dayAgg = useMemo(() => buildDayAgg(data.journal), [data.journal]);
-  const summary = useMemo(() => computeJournalSummary(dayAgg), [dayAgg]);
+  const overviewStats = useMemo(
+    () =>
+      getOverviewStats({
+        entries: data.journal,
+        activeAccountId,
+        currency: displayCurrency,
+      }),
+    [data.journal, activeAccountId, displayCurrency],
+  );
   const dayAggMap = useMemo(() => new Map(dayAgg.map((item) => [item.key, item.pnl])), [dayAgg]);
 
   const weekCells = useMemo(() => {
@@ -65,17 +82,6 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
     [dayAggMap, weekCells],
   );
 
-  const weekGreenRed = useMemo(() => {
-    let green = 0;
-    let red = 0;
-    for (const cell of weekCells) {
-      const pnl = cell.keys.reduce((acc, key) => acc + (dayAggMap.get(key) ?? 0), 0);
-      if (pnl > 0) green += 1;
-      if (pnl < 0) red += 1;
-    }
-    return `${green} green · ${red} red`;
-  }, [dayAggMap, weekCells]);
-
   const recentActivity = useMemo(() => {
     return [...data.journal]
       .sort((a, b) => {
@@ -97,6 +103,18 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
       });
   }, [data.journal]);
 
+  const behaviorInsights = useMemo(
+    () =>
+      getBehaviorInsights({
+        entries: data.journal,
+        activeAccountId,
+        currency: displayCurrency,
+      }),
+    [data.journal, activeAccountId, displayCurrency],
+  );
+
+  const hasEntries = data.journal.length > 0;
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -112,40 +130,80 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         }
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="This week snapshot">
+      <section className="space-y-4" aria-label="Overview KPIs">
         {!ready ? (
-          <>
-            {Array.from({ length: 4 }).map((_, i) => (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
                 className="h-[7.25rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]"
               />
             ))}
-          </>
+          </div>
         ) : (
-          [
-            { label: "Week", value: signedMoney(summary.weekPnl, displayCurrency), tone: summary.weekPnl },
-            { label: "Month", value: signedMoney(summary.monthPnl, displayCurrency), tone: summary.monthPnl },
-            { label: "Green · red days", value: weekGreenRed, tone: 0 },
-            { label: "Streak", value: summary.streak, tone: 0 },
-          ].map((card) => (
-            <div
-              key={card.label}
-              className="rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.03_262/0.96),oklch(0.095_0.028_264/0.95))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.035]"
-            >
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
-              <p
-                className={cn(
-                  "font-display mt-3 text-[1.5rem] tabular-nums leading-none tracking-[-0.03em] sm:text-[1.65rem]",
-                  card.tone > 0 && "text-emerald-200",
-                  card.tone < 0 && "text-rose-200",
-                  card.tone === 0 && "text-zinc-50",
-                )}
-              >
-                {card.value}
-              </p>
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {[
+                {
+                  label: "Week P&L",
+                  value: hasEntries ? signedMoney(overviewStats.weekPnl, displayCurrency) : "—",
+                  tone: hasEntries ? overviewStats.weekPnl : 0,
+                },
+                {
+                  label: "Month P&L",
+                  value: hasEntries ? signedMoney(overviewStats.monthPnl, displayCurrency) : "—",
+                  tone: hasEntries ? overviewStats.monthPnl : 0,
+                },
+                { label: "Win rate", value: hasEntries ? percentOrDash(overviewStats.winRate) : "—", tone: 0 },
+                { label: "Discipline score", value: hasEntries ? percentOrDash(overviewStats.disciplineScore) : "—", tone: 0 },
+                { label: "Traded days", value: hasEntries ? String(overviewStats.tradedDays) : "—", tone: 0 },
+                {
+                  label: "Average day",
+                  value: hasEntries ? moneyOrDash(overviewStats.averageDay, displayCurrency) : "—",
+                  tone: hasEntries ? (overviewStats.averageDay ?? 0) : 0,
+                },
+                {
+                  label: "Best day",
+                  value: hasEntries ? moneyOrDash(overviewStats.bestDay, displayCurrency) : "—",
+                  tone: hasEntries ? (overviewStats.bestDay ?? 0) : 0,
+                },
+                {
+                  label: "Worst day",
+                  value: hasEntries ? moneyOrDash(overviewStats.worstDay, displayCurrency) : "—",
+                  tone: hasEntries ? (overviewStats.worstDay ?? 0) : 0,
+                },
+                {
+                  label: "Avg green day",
+                  value: hasEntries ? moneyOrDash(overviewStats.avgGreenDay, displayCurrency) : "—",
+                  tone: hasEntries ? (overviewStats.avgGreenDay ?? 0) : 0,
+                },
+                {
+                  label: "Avg red day",
+                  value: hasEntries ? moneyOrDash(overviewStats.avgRedDay, displayCurrency) : "—",
+                  tone: hasEntries ? (overviewStats.avgRedDay ?? 0) : 0,
+                },
+                { label: "Green / red days", value: hasEntries ? overviewStats.greenRedSummary : "—", tone: 0 },
+                { label: "Streak", value: hasEntries ? overviewStats.streak : "—", tone: 0 },
+              ].map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.03_262/0.96),oklch(0.095_0.028_264/0.95))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.035]"
+                >
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
+                  <p
+                    className={cn(
+                      "font-display mt-2 text-[1.25rem] tabular-nums leading-none tracking-[-0.03em] sm:text-[1.4rem]",
+                      card.tone > 0 && "text-emerald-200",
+                      card.tone < 0 && "text-rose-200",
+                      card.tone === 0 && "text-zinc-50",
+                    )}
+                  >
+                    {card.value}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))
+          </>
         )}
       </section>
 
@@ -155,7 +213,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           title="Current week"
           description="Outcome color and total in one line."
         >
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {weekCells.map((cell) => {
               const pnl = cell.keys.reduce((acc, key) => acc + (dayAggMap.get(key) ?? 0), 0);
               const tone =
@@ -165,10 +223,10 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                     ? "border-rose-400/30 bg-rose-500/[0.13] text-rose-100"
                     : "border-white/[0.1] bg-white/[0.03] text-zinc-300";
               return (
-                <div key={cell.key} className={cn("rounded-xl border p-2.5 text-center", tone)}>
+                <div key={cell.key} className={cn("rounded-xl border p-2 text-center sm:p-2.5", tone)}>
                   <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-80">{cell.label}</p>
-                  <p className="mt-1 text-sm font-semibold tabular-nums">{cell.day}</p>
-                  <p className="mt-1 text-[11px] tabular-nums">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
+                  <p className="mt-1 text-[12px] font-semibold tabular-nums sm:text-sm">{cell.day}</p>
+                  <p className="mt-1 text-[10px] tabular-nums sm:text-[11px]">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
                 </div>
               );
             })}
@@ -178,12 +236,13 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
             <p
               className={cn(
                 "font-display text-lg tabular-nums tracking-[-0.02em]",
-                weekTotal > 0 && "text-emerald-200",
-                weekTotal < 0 && "text-rose-200",
-                weekTotal === 0 && "text-zinc-100",
+                !hasEntries && "text-zinc-300",
+                hasEntries && weekTotal > 0 && "text-emerald-200",
+                hasEntries && weekTotal < 0 && "text-rose-200",
+                hasEntries && weekTotal === 0 && "text-zinc-100",
               )}
             >
-              {signedMoney(weekTotal, displayCurrency)}
+              {hasEntries ? signedMoney(weekTotal, displayCurrency) : "—"}
             </p>
           </div>
         </DashboardCard>
@@ -196,11 +255,12 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           ) : (
             <div className="divide-y divide-white/[0.06]">
               {recentActivity.map((item) => (
-                <div key={item.id} className="grid grid-cols-[1.2fr_auto_auto_auto] items-center gap-3 px-4 py-3.5 text-sm sm:px-5">
-                  <p className="truncate text-zinc-200">{item.dayLabel}</p>
+                <div key={item.id} className="grid gap-2 px-4 py-3.5 text-sm sm:grid-cols-[1.2fr_auto_auto_auto] sm:items-center sm:gap-3 sm:px-5">
+                  <div className="flex items-center justify-between gap-2 sm:contents">
+                    <p className="truncate text-zinc-200">{item.dayLabel}</p>
                   <p
                     className={cn(
-                      "text-right tabular-nums",
+                      "text-right tabular-nums sm:text-right",
                       item.pnl > 0 && "text-emerald-200",
                       item.pnl < 0 && "text-rose-200",
                       item.pnl === 0 && "text-zinc-300",
@@ -208,10 +268,39 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                   >
                     {signedMoney(item.pnl, displayCurrency)}
                   </p>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 sm:contents">
                   <p className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[12px] text-zinc-300">
                     {item.mood}
                   </p>
                   <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-400">{item.discipline}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </DashboardCard>
+      </section>
+
+      <section aria-label="Behavior insights">
+        <DashboardCard
+          eyebrow="Behavior insights"
+          title="Execution patterns"
+          description="Short, account-aware readouts based on your logged behavior checks."
+        >
+          {behaviorInsights.length === 0 ? (
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-6 text-sm text-zinc-500">
+              Log a few more days to unlock insights.
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {behaviorInsights.map((insight) => (
+                <div
+                  key={insight.label}
+                  className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5"
+                >
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">{insight.label}</p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-200">{insight.value}</p>
                 </div>
               ))}
             </div>

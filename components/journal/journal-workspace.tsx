@@ -15,7 +15,7 @@ import { EmptyState } from "@/components/app/empty-state";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 import { chartUrlForSave, isValidChartUrl } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
-import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
+import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
 import { waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
@@ -115,20 +115,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   }, [sortedRows]);
 
   const rowsForLatestEntries = useMemo(() => {
-    const byId = new Map<string, JournalRow>();
-    for (const r of latestEntriesToday) byId.set(r.id, r);
     if (highlightDate) {
-      for (const r of sortedRows) {
-        if (dayKeyFromRow(r.entryDate, r.createdAt) === highlightDate) {
-          byId.set(r.id, r);
-        }
-      }
+      return sortedRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === highlightDate);
     }
-    return [...byId.values()].sort((a, b) => {
-      const ak = dayKeyFromRow(a.entryDate, a.createdAt);
-      const bk = dayKeyFromRow(b.entryDate, b.createdAt);
-      return bk.localeCompare(ak);
-    });
+    return latestEntriesToday;
   }, [sortedRows, latestEntriesToday, highlightDate]);
 
   useEffect(() => {
@@ -503,10 +493,14 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         </DashboardCard>
 
         <DashboardCard
-          eyebrow="Recent"
-          title="Latest activity"
+          eyebrow={highlightDate ? "Selected day" : "Recent"}
+          title={highlightDate ? `Entries for ${highlightDate}` : "Latest activity"}
           className="min-h-0 min-w-0 lg:sticky lg:top-6"
-          description="Latest logged days with mood and discipline score."
+          description={
+            highlightDate
+              ? "All trades logged for this calendar day, including full notes."
+              : "Latest logged days with mood and discipline score."
+          }
         >
           {sortedRows.length === 0 ? (
             <EmptyState
@@ -531,6 +525,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               rows={rowsForLatestEntries}
               highlightDate={highlightDate}
               displayCurrency={displayCurrency}
+              expandNotes={Boolean(highlightDate)}
               canWriteJournal={canWriteJournal}
               onDeleteRow={canWriteJournal ? removeRow : undefined}
             />

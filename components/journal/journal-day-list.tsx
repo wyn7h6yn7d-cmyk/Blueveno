@@ -20,6 +20,7 @@ type Props = {
   rows: JournalRow[];
   highlightDate?: string;
   displayCurrency: string;
+  expandNotes?: boolean;
   /** When false, edit form is read-only — link still opens the edit page with upgrade copy. */
   canWriteJournal?: boolean;
   /** Deletes the row in Supabase and updates local workspace state. */
@@ -49,6 +50,7 @@ export function JournalDayList({
   rows,
   highlightDate,
   displayCurrency,
+  expandNotes = false,
   canWriteJournal = true,
   onDeleteRow,
 }: Props) {
@@ -60,6 +62,7 @@ export function JournalDayList({
           row={row}
           highlightDate={highlightDate}
           displayCurrency={displayCurrency}
+          expandNotes={expandNotes}
           canWriteJournal={canWriteJournal}
           onDeleteRow={onDeleteRow}
         />
@@ -72,12 +75,14 @@ function JournalDayCard({
   row,
   highlightDate,
   displayCurrency,
+  expandNotes,
   canWriteJournal,
   onDeleteRow,
 }: {
   row: JournalRow;
   highlightDate?: string;
   displayCurrency: string;
+  expandNotes: boolean;
   canWriteJournal: boolean;
   onDeleteRow?: (id: string) => Promise<{ ok: boolean; error?: string }>;
 }) {
@@ -140,7 +145,16 @@ function JournalDayCard({
           ) : null}
         </div>
 
-        {row.note ? <p className="mt-3 line-clamp-2 text-[13px] leading-relaxed text-zinc-400">{row.note}</p> : null}
+        {row.note ? (
+          <p
+            className={cn(
+              "mt-3 text-[13px] leading-relaxed text-zinc-400",
+              expandNotes ? "whitespace-pre-wrap break-words" : "line-clamp-2",
+            )}
+          >
+            {row.note}
+          </p>
+        ) : null}
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.05] pt-3">
           <div className="flex flex-wrap items-center gap-2">
