@@ -33,6 +33,16 @@ function percentOrDash(value: number | null): string {
   return value === null || !Number.isFinite(value) ? "—" : `${Math.round(value)}%`;
 }
 
+function formatStreakLabel(raw: string): string {
+  if (raw.includes("green")) {
+    return raw.replace(/(\d+)\s+green\s+day(s?)/i, "Green streak · $1 day$2");
+  }
+  if (raw.includes("red")) {
+    return raw.replace(/(\d+)\s+red\s+day(s?)/i, "Red streak · $1 day$2");
+  }
+  return raw;
+}
+
 export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
   const { displayCurrency } = useAccess();
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
@@ -183,14 +193,28 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                   tone: hasEntries ? (overviewStats.avgRedDay ?? 0) : 0,
                 },
                 { label: "Green / red days", value: hasEntries ? overviewStats.greenRedSummary : "—", tone: 0 },
-                { label: "Streak", value: hasEntries ? overviewStats.streak : "—", tone: 0 },
+                {
+                  label: "Streak",
+                  value: hasEntries ? formatStreakLabel(overviewStats.streak) : "—",
+                  tone: hasEntries
+                    ? overviewStats.streak.includes("green")
+                      ? 1
+                      : overviewStats.streak.includes("red")
+                        ? -1
+                        : 0
+                    : 0,
+                },
               ].map((card) => (
                 <div
                   key={card.label}
                   className={cn(
                     "rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.03_262/0.96),oklch(0.095_0.028_264/0.95))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.035]",
                     card.label === "Streak" &&
-                      "border-[oklch(0.62_0.12_252/0.45)] bg-[linear-gradient(150deg,oklch(0.24_0.08_252/0.9),oklch(0.1_0.04_262/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.58_0.14_252/0.6)] ring-[oklch(0.62_0.12_252/0.2)]",
+                      (card.tone > 0
+                        ? "border-emerald-400/45 bg-[linear-gradient(150deg,oklch(0.24_0.09_155/0.9),oklch(0.1_0.04_160/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.45_0.14_155/0.6)] ring-emerald-300/20"
+                        : card.tone < 0
+                          ? "border-rose-400/45 bg-[linear-gradient(150deg,oklch(0.24_0.09_18/0.9),oklch(0.1_0.04_22/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.48_0.14_18/0.6)] ring-rose-300/20"
+                          : "border-[oklch(0.62_0.12_252/0.45)] bg-[linear-gradient(150deg,oklch(0.24_0.08_252/0.9),oklch(0.1_0.04_262/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.58_0.14_252/0.6)] ring-[oklch(0.62_0.12_252/0.2)]"),
                   )}
                 >
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
