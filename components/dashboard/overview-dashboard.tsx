@@ -187,7 +187,11 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
               ].map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.03_262/0.96),oklch(0.095_0.028_264/0.95))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.035]"
+                  className={cn(
+                    "rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.03_262/0.96),oklch(0.095_0.028_264/0.95))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.035]",
+                    card.label === "Streak" &&
+                      "border-[oklch(0.62_0.12_252/0.45)] bg-[linear-gradient(150deg,oklch(0.24_0.08_252/0.9),oklch(0.1_0.04_262/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.58_0.14_252/0.6)] ring-[oklch(0.62_0.12_252/0.2)]",
+                  )}
                 >
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
                   <p

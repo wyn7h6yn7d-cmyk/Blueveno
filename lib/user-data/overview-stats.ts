@@ -147,12 +147,21 @@ export function getOverviewStats({
 
   let completedChecks = 0;
   let totalChecks = 0;
+  let winningTrades = 0;
+  let losingTrades = 0;
   for (const row of entries) {
+    const tradePnl = parsePnlAmount(row.r);
+    if (tradePnl !== null) {
+      if (tradePnl > 0) winningTrades += 1;
+      if (tradePnl < 0) losingTrades += 1;
+    }
     totalChecks += 3;
     if (row.followedPlan) completedChecks += 1;
     if (row.respectedStop) completedChecks += 1;
     if (row.noRevengeTrade) completedChecks += 1;
   }
+
+  const directionalTrades = winningTrades + losingTrades;
 
   return {
     weekPnl,
@@ -160,7 +169,8 @@ export function getOverviewStats({
     tradedDays,
     winningDays,
     losingDays,
-    winRate: tradedDays > 0 ? Math.round((winningDays / tradedDays) * 100) : null,
+    // Win rate is trade-based (+ / - entries), not day-based.
+    winRate: directionalTrades > 0 ? Math.round((winningTrades / directionalTrades) * 100) : null,
     averageDay: avg(totalPnl, tradedDays),
     bestDay: tradedDays > 0 ? Math.max(...daily.map((d) => d.pnl)) : null,
     worstDay: tradedDays > 0 ? Math.min(...daily.map((d) => d.pnl)) : null,
