@@ -226,9 +226,9 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
     return map;
   }, [weeklyReflections]);
 
-  /** Below sm: day cols + week rail wide enough for reflection text (scroll horizontally). sm+: fluid tracks. */
+  /** Mobile: 6 day columns only. Week rail appears from sm+. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(6,minmax(4.8rem,1fr))_minmax(10rem,11.5rem)]",
+    "[grid-template-columns:repeat(6,minmax(0,1fr))]",
     "sm:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(11rem,14rem)]",
     "lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
     "xl:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(13.5rem,18rem)]",
@@ -293,7 +293,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
             >
               <div
                 className={cn(
-                  "grid min-w-0 gap-1.5 max-sm:w-max max-sm:min-w-full sm:w-full sm:gap-3 lg:gap-3.5",
+                  "grid min-w-0 w-full gap-1.5 sm:gap-3 lg:gap-3.5",
                   calendarGridCols,
                 )}
               >
@@ -312,7 +312,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
             <div
               className={cn(
                 headerBox,
-                "min-w-0 font-mono text-[8px] uppercase tracking-[0.12em] text-[oklch(0.78_0.12_252)] sm:text-[10px] sm:tracking-[0.18em] lg:text-[11px]",
+                "hidden min-w-0 font-mono text-[8px] uppercase tracking-[0.12em] text-[oklch(0.78_0.12_252)] sm:flex sm:text-[10px] sm:tracking-[0.18em] lg:text-[11px]",
               )}
             >
               <span className="sm:hidden">Σ</span>
@@ -371,7 +371,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     const content = (
                       <div
                         className={cn(
-                          "group relative box-border flex h-full min-h-[112px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2.5 transition duration-200 sm:min-h-[188px] sm:rounded-xl sm:p-4.5 lg:min-h-[206px] lg:p-5",
+                          "group relative box-border flex h-full min-h-[82px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 transition duration-200 sm:min-h-[188px] sm:rounded-xl sm:p-4.5 lg:min-h-[206px] lg:p-5",
                           cellClasses,
                           isSelected &&
                             "ring-2 ring-[oklch(0.72_0.14_252/0.72)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_0_0_1px_oklch(0.72_0.14_252/0.5)]",
@@ -382,7 +382,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                           <div className="flex items-center justify-between gap-1.5">
                             <span
                               className={cn(
-                                "font-mono text-[11px] tabular-nums sm:text-[12px]",
+                                "font-mono text-[10px] tabular-nums sm:text-[12px]",
                                 hasData
                                   ? "text-white/90"
                                   : cell.inMonth
@@ -405,7 +405,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                           ) : null}
                           {hasData && notePreview ? (
                             <span
-                              className="mt-0.5 block w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/80 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]"
+                              className="mt-0.5 hidden w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/80 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:block sm:px-1.5 sm:text-[9px]"
                               title={notePreview}
                             >
                               {notePreview}
@@ -418,7 +418,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                               <div
                                 className={cn(
                                   "font-display font-semibold leading-[1.15] tabular-nums tracking-[-0.03em]",
-                                  "text-[10px] sm:text-[clamp(0.76rem,1.45vw,1.06rem)] lg:text-[clamp(0.9rem,1.25vw,1.24rem)] lg:tracking-[-0.045em]",
+                                  "text-[9px] sm:text-[clamp(0.76rem,1.45vw,1.06rem)] lg:text-[clamp(0.9rem,1.25vw,1.24rem)] lg:tracking-[-0.045em]",
                                 )}
                               >
                                 <span
@@ -472,7 +472,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     return (
                   <div
                     className={cn(
-                      "relative box-border flex min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left sm:min-h-[188px] sm:gap-1 sm:rounded-xl sm:p-5 lg:min-h-[206px] lg:p-5.5",
+                      "relative hidden box-border min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left sm:flex sm:min-h-[188px] sm:gap-1 sm:rounded-xl sm:p-5 lg:min-h-[206px] lg:p-5.5",
                       weekRailClasses(weekly),
                     )}
                   >

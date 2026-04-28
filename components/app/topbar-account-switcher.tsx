@@ -112,7 +112,9 @@ function TopbarAccountSwitcherInner() {
         </span>
       </div>
       {access.state === "trial_active" && maxAccounts === 1 && accounts.length >= 1 ? (
-        <p className="text-[11px] text-zinc-500 sm:text-[12px]">1 trading account during trial. Upgrade for up to 5.</p>
+        <p className="hidden text-[11px] text-zinc-500 sm:block sm:text-[12px]">
+          1 trading account during trial. Upgrade for up to 5.
+        </p>
       ) : null}
 
       {accountErrorMessage ? (

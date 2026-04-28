@@ -89,7 +89,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   };
 
   return (
-    <header className="flex min-h-[3.6rem] shrink-0 items-center gap-2 border-b border-white/[0.1] bg-[linear-gradient(180deg,oklch(0.155_0.045_262/0.98),oklch(0.118_0.034_264/0.97))] px-3 shadow-[0_1px_0_0_oklch(1_0_0_/0.07),0_20px_42px_-30px_oklch(0_0_0/0.84)] backdrop-blur-xl sm:gap-3 sm:px-4 md:min-h-[4.15rem] md:gap-4 md:px-6">
+    <header className="flex min-h-[3.6rem] shrink-0 flex-wrap items-center gap-2 border-b border-white/[0.1] bg-[linear-gradient(180deg,oklch(0.155_0.045_262/0.98),oklch(0.118_0.034_264/0.97))] px-3 py-2 shadow-[0_1px_0_0_oklch(1_0_0_/0.07),0_20px_42px_-30px_oklch(0_0_0/0.84)] backdrop-blur-xl sm:gap-3 sm:px-4 md:min-h-[4.15rem] md:flex-nowrap md:py-0 md:gap-4 md:px-6">
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger
           className={cn(
@@ -114,11 +114,11 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-4">
+      <div className="order-2 flex w-full min-w-0 items-center gap-2 overflow-hidden sm:gap-4 md:order-none md:w-auto md:flex-1">
         <div className="min-w-0 flex-1 overflow-hidden pr-1">
           <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
           <div className="mt-0.5 flex min-w-0 flex-col items-start gap-1 sm:mt-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5">
-            <p className="font-display w-full min-w-0 truncate text-[1.03rem] font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.14rem]">
+            <p className="font-display w-full min-w-0 truncate text-[1rem] font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.14rem]">
               {label}
             </p>
             <TopbarAccountSwitcher />
@@ -138,8 +138,8 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
         </div>
       ) : null}
 
-      <div className="relative z-10 flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3">
-        <div className="shrink-0">
+      <div className="relative z-10 order-1 ml-auto flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-2 sm:gap-x-3 md:order-none md:ml-0">
+        <div className="hidden shrink-0 sm:block">
           <WorkspaceSessionClock serverTimeZone={user.timezone} />
         </div>
         <Link
