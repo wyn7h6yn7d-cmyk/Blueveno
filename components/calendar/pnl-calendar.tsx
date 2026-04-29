@@ -584,7 +584,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               </div>
             </div>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:hidden">
             {weeks.map((week, i) => {
               const weekly = week.reduce((acc, day) => {
                 const agg = aggregates.get(day.key);
