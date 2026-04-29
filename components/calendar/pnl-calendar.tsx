@@ -13,6 +13,7 @@ import { buttonVariants } from "@/components/ui/button";
 type Props = {
   entries: JournalRow[];
   summaryEntries?: JournalRow[];
+  summaryWinRate?: number | null;
   displayCurrency: string;
   weeklyReflections?: WeeklyReflectionSummary[];
   filterControls?: ReactNode;
@@ -188,7 +189,7 @@ function reflectionStatus(rows: { label: string; value: string }[]): { label: st
   return { label: "Review ready", tone: "text-zinc-400" };
 }
 
-export function PnlCalendar({ entries, summaryEntries, displayCurrency, weeklyReflections = [], filterControls = null }: Props) {
+export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCurrency, weeklyReflections = [], filterControls = null }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
   const [selectedDayKey, setSelectedDayKey] = useState(() => keyFromDate(new Date()));
   const todayKey = useMemo(() => keyFromDate(new Date()), []);
@@ -276,6 +277,9 @@ export function PnlCalendar({ entries, summaryEntries, displayCurrency, weeklyRe
   }, [cursor, entries]);
 
   const scopeSummary = useMemo(() => {
+    if (summaryWinRate !== undefined) {
+      return { winRate: summaryWinRate };
+    }
     const source = summaryEntries ?? entries;
     const dayTotals = new Map<string, number>();
     for (const row of source) {
@@ -288,8 +292,8 @@ export function PnlCalendar({ entries, summaryEntries, displayCurrency, weeklyRe
     const tradedDays = dayTotals.size;
     const winDays = [...dayTotals.values()].filter((value) => value > 0).length;
     const winRate = tradedDays > 0 ? Math.round((winDays / tradedDays) * 100) : null;
-    return { tradedDays, winRate };
-  }, [entries, summaryEntries]);
+    return { winRate };
+  }, [entries, summaryEntries, summaryWinRate]);
 
   const weeklyReflectionsByWeekStart = useMemo(() => {
     const map = new Map<string, WeeklyReflectionSummary>();

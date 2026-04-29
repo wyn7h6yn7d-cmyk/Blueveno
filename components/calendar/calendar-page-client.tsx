@@ -23,6 +23,7 @@ import {
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
 import { Input } from "@/components/ui/input";
+import { computeTradingStats } from "@/lib/user-data/trading-stats";
 
 type WeeklyReflectionSummary = {
   weekStart: string;
@@ -167,6 +168,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const moodOptions = useMemo(() => uniqueValues(baseEntries, (row) => row.moodState), [baseEntries]);
   const setupOptions = useMemo(() => uniqueValues(baseEntries, (row) => String(row.setup)), [baseEntries]);
   const filteredEntries = useMemo(() => applyEntryFilters(baseEntries, filters), [baseEntries, filters]);
+  const scopeStats = useMemo(() => computeTradingStats(baseEntries, []), [baseEntries]);
 
   const filterControls = (
     <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
@@ -267,6 +269,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             <PnlCalendar
               entries={filteredEntries}
               summaryEntries={baseEntries}
+              summaryWinRate={scopeStats.winRateDays}
               displayCurrency={displayCurrency}
               weeklyReflections={weeklyReflections}
               filterControls={filterControls}
