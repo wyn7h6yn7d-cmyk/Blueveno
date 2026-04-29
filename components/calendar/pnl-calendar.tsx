@@ -304,7 +304,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
   }, [weeklyReflections]);
 
   /** Keep a strict 6-column day grid across breakpoints. */
-  const calendarGridCols = "[grid-template-columns:repeat(6,minmax(4.25rem,1fr))] sm:[grid-template-columns:repeat(6,minmax(0,1fr))]";
+  const calendarGridCols = "[grid-template-columns:repeat(6,minmax(0,1fr))]";
 
   const headerBox =
     "flex min-h-[2.55rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.4rem] sm:rounded-xl sm:px-1 sm:py-2.5";
@@ -372,12 +372,9 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         ].map((item) => (
           <div
             key={item.label}
-            className={cn(
-              "flex h-full min-h-[82px] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-2.5 py-1.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3",
-              !item.currencyOnly && "hidden sm:flex",
-            )}
+            className="flex h-full min-h-[82px] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-2.5 py-1.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3"
           >
-            <p className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500 sm:block">{item.label}</p>
+            <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px] sm:tracking-[0.16em]">{item.label}</p>
             <p
               className={cn(
                 "font-display text-[0.92rem] tabular-nums tracking-[-0.02em] sm:mt-1.5 sm:text-[1rem]",
@@ -398,7 +395,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         </div>
       ) : null}
 
-      <div className="w-full min-w-0 overflow-x-auto overflow-y-visible pb-1 [-webkit-overflow-scrolling:touch]">
+      <div className="w-full min-w-0 overflow-x-hidden overflow-y-visible pb-1">
         <div className="flex w-full min-w-0 justify-center sm:justify-center xl:justify-start">
           <div
             className={cn(
@@ -413,12 +410,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                 "rounded-lg border border-white/[0.08] bg-black/25 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)] sm:rounded-xl sm:p-3 lg:p-3.5",
               )}
             >
-              <div
-                className={cn(
-                  "grid w-full min-w-[27rem] gap-1.5 sm:min-w-0 sm:gap-3 lg:gap-3.5",
-                  calendarGridCols,
-                )}
-              >
+              <div className={cn("grid w-full min-w-0 gap-1.5 sm:gap-3 lg:gap-3.5", calendarGridCols)}>
             {WEEKDAY_HEADERS.map((d) => (
               <div
                 key={d}
