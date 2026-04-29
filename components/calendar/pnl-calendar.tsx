@@ -378,7 +378,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
           <div
             key={item.label}
             className={cn(
-              "flex h-full min-h-[2.7rem] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-2.5 py-1.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3",
+              "flex h-full min-h-[82px] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-2.5 py-1.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3",
               !item.currencyOnly && "hidden sm:flex",
             )}
           >
@@ -680,7 +680,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     "rounded-lg border px-2.5 py-1.5",
                     "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.88),oklch(0.08_0.02_266/0.88))]",
                     "border-white/[0.1]",
-                    "min-h-[2.7rem]",
+                    "min-h-[82px]",
                   )}
                   title={weekDateRangeLabel(week)}
                 >
