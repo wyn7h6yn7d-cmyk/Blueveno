@@ -356,31 +356,36 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         </div>
       </div>
 
-      <div className="grid grid-cols-2 auto-rows-fr gap-2.5 sm:gap-3 xl:grid-cols-6" aria-label="Month summary">
+      <div className="grid grid-cols-2 auto-rows-fr gap-2 sm:gap-3 xl:grid-cols-6" aria-label="Month summary">
         {[
-          { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl },
-          { label: "Win rate", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0 },
-          { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0 },
+          { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl, currencyOnly: true },
+          { label: "Win rate", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0, currencyOnly: false },
+          { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0, currencyOnly: false },
           {
             label: "Best week",
             value: monthSummary.bestWeek ? formatSignedPnlAmount(monthSummary.bestWeek.total, displayCurrency) : "—",
             tone: monthSummary.bestWeek?.total ?? 0,
+            currencyOnly: true,
           },
           {
             label: "Weakest week",
             value: monthSummary.weakestWeek ? formatSignedPnlAmount(monthSummary.weakestWeek.total, displayCurrency) : "—",
             tone: monthSummary.weakestWeek?.total ?? 0,
+            currencyOnly: true,
           },
-          { label: "Discipline score", value: monthSummary.disciplineScore !== null ? `${monthSummary.disciplineScore}%` : "—", tone: 0 },
+          { label: "Discipline score", value: monthSummary.disciplineScore !== null ? `${monthSummary.disciplineScore}%` : "—", tone: 0, currencyOnly: false },
         ].map((item) => (
           <div
             key={item.label}
-            className="flex h-full min-h-[4.1rem] flex-col justify-between rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3 py-2.5 sm:min-h-[5rem] sm:px-3.5 sm:py-3"
+            className={cn(
+              "flex h-full min-h-[2.7rem] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-2.5 py-1.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3",
+              !item.currencyOnly && "hidden sm:flex",
+            )}
           >
-            <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px] sm:tracking-[0.16em]">{item.label}</p>
+            <p className="hidden font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500 sm:block">{item.label}</p>
             <p
               className={cn(
-                "mt-1 font-display text-[0.95rem] tabular-nums tracking-[-0.02em] sm:mt-1.5 sm:text-[1rem]",
+                "font-display text-[0.92rem] tabular-nums tracking-[-0.02em] sm:mt-1.5 sm:text-[1rem]",
                 item.tone > 0 && "text-emerald-200",
                 item.tone < 0 && "text-rose-200",
                 item.tone === 0 && "text-zinc-100",
@@ -660,45 +665,28 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
             </div>
           </div>
           <div className="mt-3 grid gap-2.5 sm:hidden">
-            <p className="px-1 font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Weekly summary</p>
             {weeks.map((week, i) => {
               const weekly = week.reduce((acc, day) => {
                 const agg = aggregates.get(day.key);
                 return acc + (agg?.total ?? 0);
               }, 0);
               const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
-              const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
-              const weeklySummary = weekSummaryFromReflection(weeklyReflection);
-              const weeklyReflectionRows = weekReflectionLines(weeklyReflection);
-              const quality = weekQualityScore(week, aggregates);
-              const status = reflectionStatus(weeklyReflectionRows);
-              const nextFocusPreview = weeklyReflection?.nextWeekFocus?.trim() || "Not set";
-              const weekNum = weekNumber(new Date(`${weekStartKey}T12:00:00`));
 
               return (
                 <Link
                   key={`mobile-week-${i}`}
                   href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
                   className={cn(
-                    "rounded-lg border px-3 py-2.5",
+                    "rounded-lg border px-2.5 py-1.5",
                     "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.88),oklch(0.08_0.02_266/0.88))]",
                     "border-white/[0.1]",
-                    "min-h-[7.25rem]",
+                    "min-h-[2.7rem]",
                   )}
-                  title={weeklySummary ?? "No weekly reflection"}
+                  title={weekDateRangeLabel(week)}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-400">Wk {weekNum}</p>
-                      <p className="mt-0.5 font-mono text-[10px] text-zinc-500">{weekDateRangeLabel(week)}</p>
-                    </div>
-                    <p className={cn("font-display text-[1rem] tabular-nums", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
-                      {formatSignedPnlAmount(weekly, displayCurrency)}
-                    </p>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-zinc-300">Quality: <span className="text-zinc-100">{quality}%</span></p>
-                  <p className={cn("mt-1 font-mono text-[9px] uppercase tracking-[0.12em]", status.tone)}>{status.label}</p>
-                  <p className="mt-1 text-[11px] text-zinc-300 line-clamp-2">Next focus: {nextFocusPreview}</p>
+                  <p className={cn("font-display text-[0.92rem] tabular-nums", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
+                    {formatSignedPnlAmount(weekly, displayCurrency)}
+                  </p>
                 </Link>
               );
             })}
