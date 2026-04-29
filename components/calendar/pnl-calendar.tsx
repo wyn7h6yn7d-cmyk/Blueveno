@@ -396,7 +396,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
       ) : null}
 
       <div className="w-full min-w-0 overflow-x-hidden overflow-y-visible pb-1">
-        <div className="flex w-full min-w-0 justify-center sm:justify-center xl:justify-start">
+        <div className="flex w-full min-w-0 flex-col justify-center">
           <div
             className={cn(
               "w-full min-w-0 max-w-full sm:max-w-none",
