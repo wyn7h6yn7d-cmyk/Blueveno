@@ -611,7 +611,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               );
             })}
           </div>
-          <section className="mt-3 hidden w-[16.5rem] shrink-0 gap-2 lg:grid" aria-label="Weekly summary">
+          <section className="mt-3 hidden w-[16.5rem] shrink-0 gap-2 lg:mt-0 lg:grid" aria-label="Weekly summary">
             {weeks.map((week, i) => {
               const weekly = week.reduce((acc, day) => {
                 const agg = aggregates.get(day.key);
