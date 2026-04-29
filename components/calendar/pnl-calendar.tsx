@@ -356,7 +356,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         </div>
       </div>
 
-      <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-6" aria-label="Month summary">
+      <div className="grid grid-cols-2 auto-rows-fr gap-2.5 sm:gap-3 xl:grid-cols-6" aria-label="Month summary">
         {[
           { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl },
           { label: "Win rate", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0 },
@@ -375,12 +375,12 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         ].map((item) => (
           <div
             key={item.label}
-            className="flex h-full min-h-[5rem] flex-col justify-between rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3"
+            className="flex h-full min-h-[4.1rem] flex-col justify-between rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3 py-2.5 sm:min-h-[5rem] sm:px-3.5 sm:py-3"
           >
-            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
+            <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px] sm:tracking-[0.16em]">{item.label}</p>
             <p
               className={cn(
-                "mt-1.5 font-display text-[1rem] tabular-nums tracking-[-0.02em]",
+                "mt-1 font-display text-[0.95rem] tabular-nums tracking-[-0.02em] sm:mt-1.5 sm:text-[1rem]",
                 item.tone > 0 && "text-emerald-200",
                 item.tone < 0 && "text-rose-200",
                 item.tone === 0 && "text-zinc-100",
