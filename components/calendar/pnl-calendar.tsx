@@ -305,7 +305,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
 
   /** Mobile: 6 day columns only. Week rail appears from sm+. */
   const calendarGridCols = cn(
-    "[grid-template-columns:repeat(6,minmax(0,1fr))]",
+    "[grid-template-columns:repeat(6,minmax(4.25rem,1fr))]",
     "sm:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(11rem,14rem)]",
     "lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
     "xl:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(13.5rem,18rem)]",
@@ -420,7 +420,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
             >
               <div
                 className={cn(
-                  "grid min-w-0 w-full gap-1.5 sm:gap-3 lg:gap-3.5",
+                  "grid w-full min-w-[27rem] gap-1.5 sm:min-w-0 sm:gap-3 lg:gap-3.5",
                   calendarGridCols,
                 )}
               >
