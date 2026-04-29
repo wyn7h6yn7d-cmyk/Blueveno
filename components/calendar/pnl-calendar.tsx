@@ -354,7 +354,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [], 
         ].map((item) => (
           <div
             key={item.label}
-            className="rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3"
+            className="flex min-h-[5rem] flex-col justify-between rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3"
           >
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
             <p
@@ -662,6 +662,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [], 
                     "rounded-lg border px-3 py-2.5",
                     "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.88),oklch(0.08_0.02_266/0.88))]",
                     "border-white/[0.1]",
+                    "min-h-[7.25rem]",
                   )}
                   title={weeklySummary ?? "No weekly reflection"}
                 >

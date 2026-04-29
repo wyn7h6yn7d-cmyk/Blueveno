@@ -7,7 +7,7 @@ import { CalendarDays } from "lucide-react";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
+import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { useAccess } from "@/components/access/access-provider";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
 import { appPrimaryCta } from "@/lib/ui/app-surface";
@@ -48,6 +48,10 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionSummary[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
+  const [accountScope, setAccountScope] = useState<"active" | "all">(
+    searchParams.get("accountScope") === "active" ? "active" : "all",
+  );
+  const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -55,16 +59,19 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
 
     const supabase = createClient();
     void (async () => {
-      if (!activeAccountId) {
+      if (accountScope === "active" && !activeAccountId) {
         setWeeklyReflections([]);
         return;
       }
-      const { data: rows, error } = await supabase
+      let query = supabase
         .from("weekly_reflections")
         .select("week_start, account_id, what_worked, what_slipped, next_week_focus, next_week_rule, confidence_score")
         .eq("user_id", userId)
-        .eq("account_id", activeAccountId)
         .order("week_start", { ascending: false });
+      if (accountScope === "active") {
+        query = query.eq("account_id", activeAccountId);
+      }
+      const { data: rows, error } = await query;
       if (cancelled || error) return;
       setWeeklyReflections(
         (rows ?? []).map((row) => ({
@@ -82,24 +89,87 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [userId, activeAccountId]);
+  }, [userId, activeAccountId, accountScope]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId || accountScope !== "all") return;
+    const supabase = createClient();
+    void (async () => {
+      const fullSelect =
+        "id,created_at,entry_date,entry_time,symbol,setup,r_value,tag,note,chart_link_url,mood_state,followed_plan,respected_stop,no_revenge_trade,session_tag,market_condition,lesson_learned,rule_checks";
+      const fallbackSelect =
+        "id,created_at,entry_date,entry_time,symbol,setup,r_value,tag,note,chart_link_url,mood_state,followed_plan,respected_stop,no_revenge_trade";
+
+      const primary = await supabase
+        .from("journal_entries")
+        .select(fullSelect)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      const secondary =
+        primary.error && /column|schema cache|rule_checks|session_tag|market_condition|lesson_learned/i.test(primary.error.message ?? "")
+          ? await supabase
+              .from("journal_entries")
+              .select(fallbackSelect)
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false })
+          : null;
+
+      const rows = (secondary?.data ?? primary.data ?? []) as Array<Record<string, unknown>>;
+      if (cancelled) return;
+      const mapped: JournalRow[] = rows.map((r) => ({
+        id: String(r.id),
+        createdAt: (r.created_at as string | null) ?? undefined,
+        entryDate: (r.entry_date as string | null) ?? undefined,
+        time: String(r.entry_time ?? ""),
+        sym: String(r.symbol ?? ""),
+        setup: String(r.setup ?? "Other"),
+        r: String(r.r_value ?? ""),
+        tag: String(r.tag ?? "None"),
+        note: (r.note as string | null) ?? undefined,
+        chartLinkUrl: (r.chart_link_url as string | null) ?? undefined,
+        moodState: (r.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
+        followedPlan: Boolean(r.followed_plan),
+        respectedStop: Boolean(r.respected_stop),
+        noRevengeTrade: Boolean(r.no_revenge_trade),
+        sessionTag: (r.session_tag as string | null) ?? undefined,
+        marketCondition: (r.market_condition as string | null) ?? undefined,
+        lessonLearned: (r.lesson_learned as string | null) ?? undefined,
+        ruleChecks: r.rule_checks
+          ? Object.fromEntries(
+              Object.entries(r.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
+            )
+          : undefined,
+      }));
+      setAllAccountEntries(mapped);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, accountScope]);
 
   useEffect(() => {
     setFilters(parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
+    setAccountScope(searchParams.get("accountScope") === "active" ? "active" : "all");
   }, [searchParams]);
 
   useEffect(() => {
-    const next = writeFiltersToParams(new URLSearchParams(searchParams.toString()), filters);
+    const base = new URLSearchParams(searchParams.toString());
+    if (accountScope === "active") base.set("accountScope", "active");
+    else base.delete("accountScope");
+    const next = writeFiltersToParams(base, filters);
     const nextQuery = next.toString();
     const current = searchParams.toString();
     if (nextQuery === current) return;
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
-  }, [filters, pathname, router, searchParams]);
+  }, [accountScope, filters, pathname, router, searchParams]);
 
-  const symbolOptions = useMemo(() => uniqueValues(data.journal, (row) => row.sym), [data.journal]);
-  const moodOptions = useMemo(() => uniqueValues(data.journal, (row) => row.moodState), [data.journal]);
-  const setupOptions = useMemo(() => uniqueValues(data.journal, (row) => String(row.setup)), [data.journal]);
-  const filteredEntries = useMemo(() => applyEntryFilters(data.journal, filters), [data.journal, filters]);
+  const baseEntries = accountScope === "all" ? allAccountEntries : data.journal;
+  const symbolOptions = useMemo(() => uniqueValues(baseEntries, (row) => row.sym), [baseEntries]);
+  const moodOptions = useMemo(() => uniqueValues(baseEntries, (row) => row.moodState), [baseEntries]);
+  const setupOptions = useMemo(() => uniqueValues(baseEntries, (row) => String(row.setup)), [baseEntries]);
+  const filteredEntries = useMemo(() => applyEntryFilters(baseEntries, filters), [baseEntries, filters]);
 
   const filterControls = (
     <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
@@ -116,6 +186,16 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             Clear
           </button>
         ) : null}
+      </div>
+      <div className="mt-2">
+        <select
+          value={accountScope}
+          onChange={(e) => setAccountScope(e.target.value as "active" | "all")}
+          className="h-9 w-full rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300 sm:w-[11rem]"
+        >
+          <option value="all">All accounts</option>
+          <option value="active">Active account</option>
+        </select>
       </div>
       {filtersOpen ? (
         <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -161,7 +241,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
         <DashboardCard eyebrow="Loading" title="Preparing your calendar" description="Loading your latest journal days.">
           <div className="h-48 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
         </DashboardCard>
-      ) : data.journal.length === 0 ? (
+      ) : baseEntries.length === 0 ? (
         <DashboardCard
           eyebrow="Calendar"
           title="No days logged yet"
