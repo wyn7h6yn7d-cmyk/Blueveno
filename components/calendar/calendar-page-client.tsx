@@ -264,7 +264,13 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             aria-hidden
           />
           <div className="relative px-1 md:px-4 lg:px-6">
-            <PnlCalendar entries={filteredEntries} displayCurrency={displayCurrency} weeklyReflections={weeklyReflections} filterControls={filterControls} />
+            <PnlCalendar
+              entries={filteredEntries}
+              summaryEntries={baseEntries}
+              displayCurrency={displayCurrency}
+              weeklyReflections={weeklyReflections}
+              filterControls={filterControls}
+            />
           </div>
         </div>
         </div>
