@@ -72,11 +72,13 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
       subscriptionIds.map(async (subscriptionId) => {
         try {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const itemPeriodEnds = subscription.items.data
+            .map((item) => item.current_period_end)
+            .filter((value): value is number => Number.isFinite(value));
+          const latestItemPeriodEnd = itemPeriodEnds.length > 0 ? Math.max(...itemPeriodEnds) : null;
           premiumEndsBySubscription.set(
             subscriptionId,
-            subscription.current_period_end
-              ? new Date(subscription.current_period_end * 1000).toISOString()
-              : null,
+            latestItemPeriodEnd ? new Date(latestItemPeriodEnd * 1000).toISOString() : null,
           );
         } catch (error) {
           console.error("[listUsersForAdmin] failed to retrieve Stripe subscription", subscriptionId, error);
