@@ -75,17 +75,6 @@ function CumulativeChart({ points, currency }: { points: { i: number; t: string;
     setTipIndex((prev) => (prev === i ? prev : i));
   };
 
-  const tipPoint =
-    tipIndex !== null
-      ? (() => {
-          const b = visibleBars[tipIndex];
-          const x = pad + tipIndex * step + step / 2;
-          const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
-          const y = b.pnl >= 0 ? midY - bh : midY + bh;
-          return { x, y, pnl: b.pnl, date: b.date };
-        })()
-      : null;
-
   const xTickIndexes = [0, Math.floor((n - 1) / 2), n - 1];
   const xTickLabels = xTickIndexes.map((i) => ({ i, date: points[i]?.t ?? "" }));
   const tipPoint =
@@ -246,6 +235,17 @@ function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; 
   const showTip = (i: number) => () => {
     setTipIndex((prev) => (prev === i ? prev : i));
   };
+
+  const tipPoint =
+    tipIndex !== null
+      ? (() => {
+          const b = visibleBars[tipIndex];
+          const x = pad + tipIndex * step + step / 2;
+          const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
+          const y = b.pnl >= 0 ? midY - bh : midY + bh;
+          return { x, y, pnl: b.pnl, date: b.date };
+        })()
+      : null;
 
   return (
     <div className="relative" onPointerLeave={() => setTipIndex(null)}>
