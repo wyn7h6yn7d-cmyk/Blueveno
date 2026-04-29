@@ -303,8 +303,8 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     return map;
   }, [weeklyReflections]);
 
-  /** Keep a strict 6-column day grid across breakpoints. */
-  const calendarGridCols = "[grid-template-columns:repeat(6,minmax(0,1fr))]";
+  /** Mobile: weekdays only (5 cols). sm+: include weekend (6 cols). */
+  const calendarGridCols = "[grid-template-columns:repeat(5,minmax(0,1fr))] sm:[grid-template-columns:repeat(6,minmax(0,1fr))]";
 
   const headerBox =
     "flex min-h-[2.55rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.4rem] sm:rounded-xl sm:px-1 sm:py-2.5";
@@ -417,6 +417,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                 className={cn(
                   headerBox,
                   "min-w-0 font-mono text-[8px] uppercase tracking-[0.1em] text-zinc-400 sm:text-[10px] sm:tracking-[0.18em]",
+                  d === "Weekend" && "hidden sm:flex",
                 )}
               >
                 <span className="sm:hidden">{d === "Weekend" ? "WE" : d.slice(0, 1)}</span>
@@ -555,7 +556,10 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                           key={cell.key}
                           href={hrefForDay}
                           onClick={() => setSelectedDayKey(cell.key)}
-                          className="block min-h-0 min-w-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]"
+                          className={cn(
+                            "block min-h-0 min-w-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
+                            cell.isWeekend && "hidden sm:block",
+                          )}
                         >
                           {content}
                         </Link>
@@ -566,7 +570,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                         key={cell.key}
                         type="button"
                         onClick={() => setSelectedDayKey(cell.key)}
-                        className="min-h-0 min-w-0 rounded-xl text-left"
+                        className={cn("min-h-0 min-w-0 rounded-xl text-left", cell.isWeekend && "hidden sm:block")}
                         aria-label={`Select day ${cell.key}`}
                       >
                         {content}
@@ -580,7 +584,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               </div>
             </div>
           </div>
-          <div className="mt-3 hidden gap-2 md:grid md:grid-cols-2">
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">
             {weeks.map((week, i) => {
               const weekly = week.reduce((acc, day) => {
                 const agg = aggregates.get(day.key);
