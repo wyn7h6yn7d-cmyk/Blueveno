@@ -303,8 +303,9 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     return map;
   }, [weeklyReflections]);
 
-  /** Mobile: weekdays + week summary (6 cols). sm+: weekdays + weekend (6 cols). */
-  const calendarGridCols = "[grid-template-columns:repeat(6,minmax(0,1fr))] sm:[grid-template-columns:repeat(6,minmax(0,1fr))]";
+  /** Mobile: weekdays + week summary (6 cols). sm+: weekdays + weekend (6 cols). lg+: add week summary column (7 cols). */
+  const calendarGridCols =
+    "[grid-template-columns:repeat(6,minmax(0,1fr))] sm:[grid-template-columns:repeat(6,minmax(0,1fr))] lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(16.5rem,16.5rem)]";
 
   const headerBox =
     "flex min-h-[2.55rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.4rem] sm:rounded-xl sm:px-1 sm:py-2.5";
@@ -400,10 +401,10 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
       ) : null}
 
       <div className="w-full min-w-0 overflow-x-hidden overflow-y-visible pb-1">
-        <div className="flex w-full min-w-0 flex-col justify-center lg:flex-row lg:items-start lg:gap-3">
+        <div className="w-full min-w-0">
           <div
             className={cn(
-              "w-full min-w-0 max-w-full sm:max-w-none lg:flex-1",
+              "w-full min-w-0 max-w-full sm:max-w-none",
               "rounded-xl border border-[oklch(0.52_0.12_252/0.32)] sm:rounded-[1.35rem]",
               "bg-[linear-gradient(168deg,oklch(0.12_0.036_262/0.98),oklch(0.065_0.03_264/0.97))]",
               "p-2.5 shadow-[inset_0_1px_0_oklch(1_0_0_/0.06),0_36px_110px_-44px_rgba(0,0,0,0.74)] sm:p-4.5 lg:p-6",
@@ -435,6 +436,14 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               )}
             >
               Wk
+            </div>
+            <div
+              className={cn(
+                headerBox,
+                "hidden min-w-0 font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.78_0.12_252)] lg:flex",
+              )}
+            >
+              Week
             </div>
 
             {weeks.map((week, i) => {
@@ -609,6 +618,24 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                       <p className={cn("font-mono text-[8px] uppercase tracking-[0.08em]", weeklyStatus.tone)}>{weeklyStatus.label}</p>
                     </div>
                   </Link>
+                  <Link
+                    href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
+                    className="relative hidden min-h-[188px] rounded-xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3.5 text-left lg:flex lg:min-h-[206px] lg:flex-col lg:justify-between"
+                    title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">{weekDateRangeLabel(week)}</p>
+                      <p className={cn("font-display text-[1.2rem] tabular-nums tracking-[-0.03em]", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
+                        {formatSignedPnlAmount(weekly, displayCurrency)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[12px] text-zinc-300">
+                        Quality: <span className="text-zinc-100">{weeklyQuality}%</span>
+                      </p>
+                      <p className={cn("mt-1 font-mono text-[10px] uppercase tracking-[0.14em]", weeklyStatus.tone)}>{weeklyStatus.label}</p>
+                    </div>
+                  </Link>
 
                 </Fragment>
               );
@@ -616,52 +643,6 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               </div>
             </div>
           </div>
-          <section
-            className="mt-3 hidden w-[16.5rem] shrink-0 gap-3 lg:mt-0 lg:grid lg:grid-rows-[3.4rem_repeat(6,minmax(188px,1fr))]"
-            aria-label="Weekly summary"
-          >
-            <div className="flex items-center justify-center rounded-xl border border-white/[0.12] bg-black/40 px-2 py-2 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)]">
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.78_0.12_252)]">Week</span>
-            </div>
-            {weeks.map((week, i) => {
-              const weekly = week.reduce((acc, day) => {
-                const agg = aggregates.get(day.key);
-                return acc + (agg?.total ?? 0);
-              }, 0);
-              const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
-              const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
-              const weeklySummary = weekSummaryFromReflection(weeklyReflection);
-              const weeklyReflectionRows = weekReflectionLines(weeklyReflection);
-              const quality = weekQualityScore(week, aggregates);
-              const status = reflectionStatus(weeklyReflectionRows);
-
-              return (
-                <Link
-                  key={`desktop-week-${i}`}
-                  href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
-                  className={cn(
-                    "rounded-xl border px-3.5 py-3.5",
-                    "min-h-[188px] lg:min-h-[206px] h-full",
-                    "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))]",
-                    "border-white/[0.1]",
-                    "flex flex-col justify-between",
-                  )}
-                  title={weeklySummary ?? "No weekly reflection"}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-400">{weekDateRangeLabel(week)}</p>
-                    <p className={cn("font-display text-[1.2rem] tabular-nums tracking-[-0.03em]", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
-                      {formatSignedPnlAmount(weekly, displayCurrency)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-zinc-300">Quality: <span className="text-zinc-100">{quality}%</span></p>
-                    <p className={cn("mt-1 font-mono text-[10px] uppercase tracking-[0.14em]", status.tone)}>{status.label}</p>
-                  </div>
-                </Link>
-              );
-            })}
-          </section>
         </div>
       </div>
     </div>
