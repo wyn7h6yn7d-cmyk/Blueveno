@@ -274,6 +274,21 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [], 
     return { tradedDays, monthPnl, winRate, bestWeek, weakestWeek, disciplineScore };
   }, [cursor, entries]);
 
+  const scopeSummary = useMemo(() => {
+    const dayTotals = new Map<string, number>();
+    for (const row of entries) {
+      const key = row.entryDate ?? (row.createdAt ? keyFromDate(new Date(row.createdAt)) : null);
+      if (!key) continue;
+      const pnl = parsePnlAmount(row.r);
+      if (pnl === null) continue;
+      dayTotals.set(key, (dayTotals.get(key) ?? 0) + pnl);
+    }
+    const tradedDays = dayTotals.size;
+    const winDays = [...dayTotals.values()].filter((value) => value > 0).length;
+    const winRate = tradedDays > 0 ? Math.round((winDays / tradedDays) * 100) : null;
+    return { tradedDays, winRate };
+  }, [entries]);
+
   const weeklyReflectionsByWeekStart = useMemo(() => {
     const map = new Map<string, WeeklyReflectionSummary>();
     for (const reflection of weeklyReflections) {
@@ -335,10 +350,10 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [], 
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6" aria-label="Month summary">
+      <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 xl:grid-cols-6" aria-label="Month summary">
         {[
           { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl },
-          { label: "Win rate", value: monthSummary.winRate !== null ? `${monthSummary.winRate}%` : "—", tone: 0 },
+          { label: "Win rate", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0 },
           { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0 },
           {
             label: "Best week",
@@ -354,7 +369,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [], 
         ].map((item) => (
           <div
             key={item.label}
-            className="flex min-h-[5rem] flex-col justify-between rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3"
+            className="flex h-full min-h-[5rem] flex-col justify-between rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3"
           >
             <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
             <p
