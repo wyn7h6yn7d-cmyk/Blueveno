@@ -611,7 +611,13 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               );
             })}
           </div>
-          <section className="mt-3 hidden w-[16.5rem] shrink-0 gap-2 lg:mt-0 lg:grid" aria-label="Weekly summary">
+          <section
+            className="mt-3 hidden w-[16.5rem] shrink-0 gap-3 lg:mt-0 lg:grid lg:grid-rows-[3.4rem_repeat(6,minmax(188px,1fr))]"
+            aria-label="Weekly summary"
+          >
+            <div className="flex items-center justify-center rounded-xl border border-white/[0.12] bg-black/40 px-2 py-2 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)]">
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.78_0.12_252)]">Week</span>
+            </div>
             {weeks.map((week, i) => {
               const weekly = week.reduce((acc, day) => {
                 const agg = aggregates.get(day.key);
@@ -630,7 +636,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                   href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
                   className={cn(
                     "rounded-xl border px-3.5 py-3.5",
-                    "min-h-[188px] lg:min-h-[206px]",
+                    "min-h-[188px] lg:min-h-[206px] h-full",
                     "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))]",
                     "border-white/[0.1]",
                     "flex flex-col justify-between",
