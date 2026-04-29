@@ -53,30 +53,30 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
   );
   const [symbol, setSymbol] = useState(initialRow.sym);
   const [pnl, setPnl] = useState(initialRow.r);
-  const [setupTag, setSetupTag] = useState<(typeof SETUP_TAG_OPTIONS)[number]>(
+  const [setupTag, setSetupTag] = useState<"" | (typeof SETUP_TAG_OPTIONS)[number]>(
     SETUP_TAG_OPTIONS.includes(initialRow.setup as (typeof SETUP_TAG_OPTIONS)[number])
       ? (initialRow.setup as (typeof SETUP_TAG_OPTIONS)[number])
-      : "Other",
+      : "",
   );
-  const [mistakeTag, setMistakeTag] = useState<(typeof MISTAKE_TAG_OPTIONS)[number]>(
+  const [mistakeTag, setMistakeTag] = useState<"" | (typeof MISTAKE_TAG_OPTIONS)[number]>(
     MISTAKE_TAG_OPTIONS.includes(initialRow.tag as (typeof MISTAKE_TAG_OPTIONS)[number])
       ? (initialRow.tag as (typeof MISTAKE_TAG_OPTIONS)[number])
-      : "Other",
+      : "",
   );
-  const [sessionTag, setSessionTag] = useState<(typeof SESSION_TAG_OPTIONS)[number]>(
+  const [sessionTag, setSessionTag] = useState<"" | (typeof SESSION_TAG_OPTIONS)[number]>(
     SESSION_TAG_OPTIONS.includes(initialRow.sessionTag as (typeof SESSION_TAG_OPTIONS)[number])
       ? (initialRow.sessionTag as (typeof SESSION_TAG_OPTIONS)[number])
-      : "Other",
+      : "",
   );
-  const [marketCondition, setMarketCondition] = useState<(typeof MARKET_CONDITION_OPTIONS)[number]>(
+  const [marketCondition, setMarketCondition] = useState<"" | (typeof MARKET_CONDITION_OPTIONS)[number]>(
     MARKET_CONDITION_OPTIONS.includes(initialRow.marketCondition as (typeof MARKET_CONDITION_OPTIONS)[number])
       ? (initialRow.marketCondition as (typeof MARKET_CONDITION_OPTIONS)[number])
-      : "Other",
+      : "",
   );
   const [note, setNote] = useState(initialRow.note ?? "");
   const [lessonLearned, setLessonLearned] = useState(initialRow.lessonLearned ?? "");
   const [chartUrl, setChartUrl] = useState(initialRow.chartLinkUrl ?? "");
-  const [moodState, setMoodState] = useState<(typeof MOOD_OPTIONS)[number]>(initialRow.moodState ?? "Focused");
+  const [moodState, setMoodState] = useState<"" | (typeof MOOD_OPTIONS)[number]>(initialRow.moodState ?? "");
   const [followedPlan, setFollowedPlan] = useState(Boolean(initialRow.followedPlan));
   const [respectedStop, setRespectedStop] = useState(Boolean(initialRow.respectedStop));
   const [noRevengeTrade, setNoRevengeTrade] = useState(Boolean(initialRow.noRevengeTrade));
@@ -153,17 +153,17 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       entryDate,
       time: initialRow.time,
       sym: symbol.trim().toUpperCase(),
-      setup: setupTag,
+      setup: setupTag || "Other",
       r: pnl.trim(),
-      tag: mistakeTag,
+      tag: mistakeTag || "None",
       note: note.trim() || undefined,
       chartLinkUrl: chartUrlForSave(chartUrl),
-      moodState,
+      moodState: moodState || undefined,
       followedPlan,
       respectedStop,
       noRevengeTrade,
-      sessionTag,
-      marketCondition,
+      sessionTag: sessionTag || undefined,
+      marketCondition: marketCondition || undefined,
       lessonLearned: lessonLearned.trim() || undefined,
       ruleChecks,
     });
@@ -297,20 +297,24 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
             </div>
           </div>
 
-          <div className="space-y-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">2. Context</p>
-            <div className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+            <details>
+              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                2. Context (optional)
+              </summary>
+              <div className="mt-3.5 grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="je-setup" className={labelCls}>
-                  Setup tag
+                  Setup tag <span className="text-zinc-500">Optional</span>
                 </Label>
                 <select
                   id="je-setup"
                   value={setupTag}
-                  onChange={(e) => setSetupTag(e.target.value as (typeof SETUP_TAG_OPTIONS)[number])}
+                  onChange={(e) => setSetupTag(e.target.value as "" | (typeof SETUP_TAG_OPTIONS)[number])}
                   disabled={!canWriteJournal}
                   className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                 >
+                  <option value="">Choose setup (optional)</option>
                   {SETUP_TAG_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -320,15 +324,16 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
               </div>
               <div className="space-y-2">
                 <Label htmlFor="je-mistake" className={labelCls}>
-                  Mistake tag
+                  Mistake tag <span className="text-zinc-500">Optional</span>
                 </Label>
                 <select
                   id="je-mistake"
                   value={mistakeTag}
-                  onChange={(e) => setMistakeTag(e.target.value as (typeof MISTAKE_TAG_OPTIONS)[number])}
+                  onChange={(e) => setMistakeTag(e.target.value as "" | (typeof MISTAKE_TAG_OPTIONS)[number])}
                   disabled={!canWriteJournal}
                   className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                 >
+                  <option value="">Choose mistake (optional)</option>
                   {MISTAKE_TAG_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -338,15 +343,16 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
               </div>
               <div className="space-y-2">
                 <Label htmlFor="je-session" className={labelCls}>
-                  Session tag
+                  Session tag <span className="text-zinc-500">Optional</span>
                 </Label>
                 <select
                   id="je-session"
                   value={sessionTag}
-                  onChange={(e) => setSessionTag(e.target.value as (typeof SESSION_TAG_OPTIONS)[number])}
+                  onChange={(e) => setSessionTag(e.target.value as "" | (typeof SESSION_TAG_OPTIONS)[number])}
                   disabled={!canWriteJournal}
                   className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                 >
+                  <option value="">Choose session (optional)</option>
                   {SESSION_TAG_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -356,15 +362,16 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
               </div>
               <div className="space-y-2">
                 <Label htmlFor="je-market-condition" className={labelCls}>
-                  Market condition
+                  Market condition <span className="text-zinc-500">Optional</span>
                 </Label>
                 <select
                   id="je-market-condition"
                   value={marketCondition}
-                  onChange={(e) => setMarketCondition(e.target.value as (typeof MARKET_CONDITION_OPTIONS)[number])}
+                  onChange={(e) => setMarketCondition(e.target.value as "" | (typeof MARKET_CONDITION_OPTIONS)[number])}
                   disabled={!canWriteJournal}
                   className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                 >
+                  <option value="">Choose market condition (optional)</option>
                   {MARKET_CONDITION_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -372,22 +379,27 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                   ))}
                 </select>
               </div>
-            </div>
+              </div>
+            </details>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">3. Behavior</p>
-            <div className="space-y-2">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+            <details>
+              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                3. Behavior (optional)
+              </summary>
+              <div className="mt-3 space-y-2">
               <Label htmlFor="je-mood" className={labelCls}>
-                Mood / state
+                Mood
               </Label>
               <select
                 id="je-mood"
                 value={moodState}
-                onChange={(e) => setMoodState(e.target.value as (typeof MOOD_OPTIONS)[number])}
+                onChange={(e) => setMoodState(e.target.value as "" | (typeof MOOD_OPTIONS)[number])}
                 disabled={!canWriteJournal}
                 className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
               >
+                <option value="">Choose mood (optional)</option>
                 {MOOD_OPTIONS.map((m) => (
                   <option key={m} value={m}>
                     {m}
@@ -438,11 +450,15 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                 </div>
               </div>
             ) : null}
+            </details>
           </div>
 
-          <div className="space-y-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">4. Review</p>
-            <div className="space-y-2">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+            <details>
+              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                4. Review (optional)
+              </summary>
+              <div className="mt-3.5 space-y-2">
               <Label htmlFor="je-note" className={labelCls}>
                 Note
               </Label>
@@ -476,11 +492,15 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                 )}
               />
             </div>
+            </details>
           </div>
 
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-            <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">5. Chart link</p>
-            <div className="space-y-2">
+            <details>
+              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                5. Chart link (optional)
+              </summary>
+              <div className="mt-3 space-y-2">
               <Label htmlFor="je-chart-link" className={cn(labelCls, "text-zinc-300")}>
                 Linked chart
                 <span className="ml-2 font-normal text-zinc-600">Optional</span>
@@ -501,7 +521,8 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                 disabled={!canWriteJournal}
                 className={cn(inputCls, "disabled:opacity-45")}
               />
-            </div>
+              </div>
+            </details>
           </div>
 
           <Button

@@ -203,10 +203,12 @@ export function getBehaviorInsights({
   if (pnlEntries.length < 4) return insights;
 
   const moodBuckets = new Map<string, { total: number; count: number }>();
+  const validMoods = new Set(["Calm", "Focused", "Hesitant", "Tilted"]);
   for (const row of entries) {
     const pnl = parsePnlAmount(row.r);
     if (pnl === null) continue;
-    const mood = row.moodState ?? "Unknown";
+    const mood = row.moodState;
+    if (!mood || !validMoods.has(mood)) continue;
     const prev = moodBuckets.get(mood) ?? { total: 0, count: 0 };
     moodBuckets.set(mood, { total: prev.total + pnl, count: prev.count + 1 });
   }

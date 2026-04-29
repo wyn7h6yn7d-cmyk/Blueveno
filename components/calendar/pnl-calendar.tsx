@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Fragment } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -14,6 +14,7 @@ type Props = {
   entries: JournalRow[];
   displayCurrency: string;
   weeklyReflections?: WeeklyReflectionSummary[];
+  filterControls?: ReactNode;
 };
 
 type DayCell = {
@@ -186,7 +187,7 @@ function reflectionStatus(rows: { label: string; value: string }[]): { label: st
   return { label: "Review ready", tone: "text-zinc-400" };
 }
 
-export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }: Props) {
+export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [], filterControls = null }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
   const [selectedDayKey, setSelectedDayKey] = useState(() => keyFromDate(new Date()));
   const todayKey = useMemo(() => keyFromDate(new Date()), []);
@@ -305,29 +306,32 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
             {monthLabel(cursor)}
           </p>
         </div>
-        <div className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-black/40 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]">
-          <button
-            type="button"
-            onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "icon-sm" }),
-              "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
-            )}
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "icon-sm" }),
-              "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
-            )}
-            aria-label="Next month"
-          >
-            <ChevronRight className="size-4" />
-          </button>
+        <div className="w-full max-w-full space-y-2 sm:w-auto sm:min-w-[18rem]">
+          <div className="flex items-center justify-end gap-1.5 rounded-xl border border-white/[0.1] bg-black/40 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]">
+            <button
+              type="button"
+              onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "icon-sm" }),
+                "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
+              )}
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
+              className={cn(
+                buttonVariants({ variant: "outline", size: "icon-sm" }),
+                "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
+              )}
+              aria-label="Next month"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+          {filterControls}
         </div>
       </div>
 

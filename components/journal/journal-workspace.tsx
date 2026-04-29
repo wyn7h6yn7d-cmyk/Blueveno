@@ -112,14 +112,14 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");
-  const [setupTag, setSetupTag] = useState<(typeof SETUP_TAG_OPTIONS)[number]>("Pullback");
-  const [mistakeTag, setMistakeTag] = useState<(typeof MISTAKE_TAG_OPTIONS)[number]>("None");
-  const [sessionTag, setSessionTag] = useState<(typeof SESSION_TAG_OPTIONS)[number]>("New York");
-  const [marketCondition, setMarketCondition] = useState<(typeof MARKET_CONDITION_OPTIONS)[number]>("Trending");
+  const [setupTag, setSetupTag] = useState<"" | (typeof SETUP_TAG_OPTIONS)[number]>("");
+  const [mistakeTag, setMistakeTag] = useState<"" | (typeof MISTAKE_TAG_OPTIONS)[number]>("");
+  const [sessionTag, setSessionTag] = useState<"" | (typeof SESSION_TAG_OPTIONS)[number]>("");
+  const [marketCondition, setMarketCondition] = useState<"" | (typeof MARKET_CONDITION_OPTIONS)[number]>("");
   const [note, setNote] = useState("");
   const [lessonLearned, setLessonLearned] = useState("");
   const [chartUrl, setChartUrl] = useState("");
-  const [moodState, setMoodState] = useState<(typeof MOOD_OPTIONS)[number]>("Focused");
+  const [moodState, setMoodState] = useState<"" | (typeof MOOD_OPTIONS)[number]>("");
   const [followedPlan, setFollowedPlan] = useState(false);
   const [respectedStop, setRespectedStop] = useState(false);
   const [noRevengeTrade, setNoRevengeTrade] = useState(false);
@@ -136,6 +136,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [weeklyMsg, setWeeklyMsg] = useState<string | null>(null);
   const [weeklySaving, setWeeklySaving] = useState(false);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
+  const [weeklyUnavailable, setWeeklyUnavailable] = useState(false);
   const [resettingJournal, setResettingJournal] = useState(false);
   const [resetMsg, setResetMsg] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
@@ -287,9 +288,12 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         setWeeklyConfidence(row?.confidence_score ?? null);
         setWeeklyNote(row?.weekly_note ?? "");
         setWeeklyMsg(null);
+        setWeeklyUnavailable(false);
       } catch (error) {
         if (cancelled) return;
-        setWeeklyMsg(weeklyReflectionErrorMessage(error as SupabaseErrorLike, "load"));
+        const msg = weeklyReflectionErrorMessage(error as SupabaseErrorLike, "load");
+        setWeeklyMsg(msg);
+        setWeeklyUnavailable(msg.toLowerCase().includes("unavailable"));
       } finally {
         if (cancelled) return;
         setWeeklyLoading(false);
@@ -319,17 +323,17 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       entryDate,
       time: "Day close",
       sym: symbol.trim().toUpperCase(),
-      setup: setupTag,
+      setup: setupTag || "Other",
       r: pnl.trim(),
-      tag: mistakeTag,
+      tag: mistakeTag || "None",
       note: note.trim() || undefined,
       chartLinkUrl: chartUrlForSave(chartUrl),
-      moodState,
+      moodState: moodState || undefined,
       followedPlan,
       respectedStop,
       noRevengeTrade,
-      sessionTag,
-      marketCondition,
+      sessionTag: sessionTag || undefined,
+      marketCondition: marketCondition || undefined,
       lessonLearned: lessonLearned.trim() || undefined,
       ruleChecks,
     });
@@ -411,7 +415,13 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     }
 
     setWeeklySaving(false);
-    setWeeklyMsg(error ? weeklyReflectionErrorMessage(error, "save") : "Weekly reflection saved.");
+    const msg = error ? weeklyReflectionErrorMessage(error, "save") : "Weekly reflection saved.";
+    setWeeklyMsg(msg);
+    if (!error) {
+      setWeeklyUnavailable(false);
+    } else {
+      setWeeklyUnavailable(msg.toLowerCase().includes("unavailable"));
+    }
   };
 
   const onResetJournal = async () => {
@@ -601,20 +611,24 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </div>
             </div>
 
-            <div className="space-y-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">2. Context</p>
-              <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+              <details>
+                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                  2. Context (optional)
+                </summary>
+                <div className="mt-3.5 grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="jw-setup" className={labelCls}>
-                    Setup tag
+                    Setup tag <span className="text-zinc-500">Optional</span>
                   </Label>
                   <select
                     id="jw-setup"
                     value={setupTag}
-                    onChange={(e) => setSetupTag(e.target.value as (typeof SETUP_TAG_OPTIONS)[number])}
+                    onChange={(e) => setSetupTag(e.target.value as "" | (typeof SETUP_TAG_OPTIONS)[number])}
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
+                    <option value="">Choose setup (optional)</option>
                     {SETUP_TAG_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -624,15 +638,16 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jw-mistake" className={labelCls}>
-                    Mistake tag
+                    Mistake tag <span className="text-zinc-500">Optional</span>
                   </Label>
                   <select
                     id="jw-mistake"
                     value={mistakeTag}
-                    onChange={(e) => setMistakeTag(e.target.value as (typeof MISTAKE_TAG_OPTIONS)[number])}
+                    onChange={(e) => setMistakeTag(e.target.value as "" | (typeof MISTAKE_TAG_OPTIONS)[number])}
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
+                    <option value="">Choose mistake (optional)</option>
                     {MISTAKE_TAG_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -642,15 +657,16 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jw-session" className={labelCls}>
-                    Session tag
+                    Session tag <span className="text-zinc-500">Optional</span>
                   </Label>
                   <select
                     id="jw-session"
                     value={sessionTag}
-                    onChange={(e) => setSessionTag(e.target.value as (typeof SESSION_TAG_OPTIONS)[number])}
+                    onChange={(e) => setSessionTag(e.target.value as "" | (typeof SESSION_TAG_OPTIONS)[number])}
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
+                    <option value="">Choose session (optional)</option>
                     {SESSION_TAG_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -660,15 +676,16 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jw-market-condition" className={labelCls}>
-                    Market condition
+                    Market condition <span className="text-zinc-500">Optional</span>
                   </Label>
                   <select
                     id="jw-market-condition"
                     value={marketCondition}
-                    onChange={(e) => setMarketCondition(e.target.value as (typeof MARKET_CONDITION_OPTIONS)[number])}
+                    onChange={(e) => setMarketCondition(e.target.value as "" | (typeof MARKET_CONDITION_OPTIONS)[number])}
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
+                    <option value="">Choose market condition (optional)</option>
                     {MARKET_CONDITION_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -676,22 +693,27 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     ))}
                   </select>
                 </div>
-              </div>
+                </div>
+              </details>
             </div>
 
-            <div className="space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">3. Behavior</p>
-              <div className="space-y-2">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+              <details>
+                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                  3. Behavior (optional)
+                </summary>
+                <div className="mt-3 space-y-2">
                 <Label htmlFor="jw-mood" className={labelCls}>
                   Mood
                 </Label>
                 <select
                   id="jw-mood"
                   value={moodState}
-                  onChange={(e) => setMoodState(e.target.value as (typeof MOOD_OPTIONS)[number])}
+                  onChange={(e) => setMoodState(e.target.value as "" | (typeof MOOD_OPTIONS)[number])}
                   disabled={!canWriteJournal}
                   className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                 >
+                  <option value="">Choose mood (optional)</option>
                   {MOOD_OPTIONS.map((m) => (
                     <option key={m} value={m}>
                       {m}
@@ -742,11 +764,15 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   </div>
                 </div>
               ) : null}
+              </details>
             </div>
 
-            <div className="space-y-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">4. Review</p>
-              <div className="space-y-2">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+              <details>
+                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                  4. Review (optional)
+                </summary>
+                <div className="mt-3.5 space-y-2">
                 <Label htmlFor="jw-note" className={labelCls}>
                   Note
                 </Label>
@@ -780,11 +806,15 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   )}
                 />
               </div>
+              </details>
             </div>
 
             <div className="rounded-xl border border-[oklch(0.52_0.12_252/0.2)] bg-[linear-gradient(168deg,oklch(0.1_0.04_264/0.5),oklch(0.06_0.03_268/0.45))] p-4 sm:p-5">
-              <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400">5. Chart link</p>
-              <div className="flex items-start gap-3">
+              <details>
+                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400">
+                  5. Chart link (optional)
+                </summary>
+                <div className="mt-3 flex items-start gap-3">
                 <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] text-[oklch(0.74_0.11_252)]">
                   <LineChart className="size-4" strokeWidth={1.75} />
                 </span>
@@ -804,7 +834,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     className={cn(inputCls, "disabled:opacity-45")}
                   />
                 </div>
-              </div>
+                </div>
+              </details>
             </div>
 
             <Button
@@ -986,7 +1017,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               type="date"
               value={weekAnchorDate}
               onChange={(e) => setWeekAnchorDate(e.target.value)}
-              disabled={!canWriteJournal || weeklyLoading}
+              disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
               className={cn(inputCls, "disabled:opacity-45")}
             />
           </div>
@@ -1000,7 +1031,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 value={weeklyWorked}
                 onChange={(e) => setWeeklyWorked(e.target.value)}
                 rows={4}
-                disabled={!canWriteJournal || weeklyLoading}
+                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                 className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
               />
             </div>
@@ -1013,7 +1044,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 value={weeklySlipped}
                 onChange={(e) => setWeeklySlipped(e.target.value)}
                 rows={4}
-                disabled={!canWriteJournal || weeklyLoading}
+                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                 className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
               />
             </div>
@@ -1026,7 +1057,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 value={weeklyFocus}
                 onChange={(e) => setWeeklyFocus(e.target.value)}
                 rows={4}
-                disabled={!canWriteJournal || weeklyLoading}
+                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                 className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
               />
             </div>
@@ -1042,7 +1073,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 onChange={(e) => setWeeklyRule(e.target.value)}
                 rows={2}
                 placeholder="One non-negotiable rule for next week."
-                disabled={!canWriteJournal || weeklyLoading}
+                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                 className="w-full resize-none rounded-xl border border-[oklch(0.58_0.12_252/0.28)] bg-[oklch(0.11_0.03_266/0.6)] px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-500 disabled:opacity-45"
               />
             </div>
@@ -1054,7 +1085,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     key={score}
                     type="button"
                     onClick={() => setWeeklyConfidence(score)}
-                    disabled={!canWriteJournal || weeklyLoading}
+                    disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                     className={cn(
                       "inline-flex h-9 w-9 items-center justify-center rounded-full border text-[13px] font-semibold transition",
                       weeklyConfidence === score
@@ -1080,16 +1111,19 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               onChange={(e) => setWeeklyNote(e.target.value)}
               rows={2}
               placeholder="Anything else worth carrying into next week."
-              disabled={!canWriteJournal || weeklyLoading}
+              disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
               className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[14px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={!canWriteJournal || weeklySaving || weeklyLoading} className="h-10 rounded-xl px-4">
-              {weeklySaving ? "Saving…" : "Save weekly review"}
+            <Button type="submit" disabled={!canWriteJournal || weeklySaving || weeklyLoading || weeklyUnavailable} className="h-10 rounded-xl px-4">
+              {weeklySaving ? "Saving…" : weeklyUnavailable ? "Weekly review unavailable" : "Save weekly review"}
             </Button>
             {!canWriteJournal ? (
               <p className="text-[13px] text-zinc-500">Weekly reflection is visible in read-only mode during trial expiry.</p>
+            ) : null}
+            {canWriteJournal && weeklyUnavailable ? (
+              <p className="text-[13px] text-zinc-500">This workspace is missing weekly reflection support. Run the latest Supabase migrations.</p>
             ) : null}
             {canWriteJournal && !activeAccountId ? (
               <p className="text-[13px] text-zinc-500">Select an active account to save weekly review.</p>
@@ -1098,7 +1132,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <p
                 className={cn(
                   "text-[13px]",
-                  weeklyMsg.includes("saved") ? "text-zinc-400" : "text-rose-300/95",
+                  weeklyMsg.includes("saved") || weeklyMsg.toLowerCase().includes("unavailable") ? "text-zinc-400" : "text-rose-300/95",
                 )}
               >
                 {weeklyMsg}

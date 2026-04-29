@@ -162,7 +162,7 @@ export function computeTradingStats(
   const noRevengeTrue: number[] = [];
   const noRevengeFalse: number[] = [];
   const setupMap = new Map<string, { sum: number; count: number }>();
-  const mistakeMap = new Map<string, { count: number; sum: number }>();
+  const mistakeMap = new Map<string, { count: number; sum: number; lossSum: number }>();
   const symbolMap = new Map<string, { sum: number; count: number }>();
 
   for (const row of journal) {
@@ -197,8 +197,12 @@ export function computeTradingStats(
     symbolMap.set(symbolKey, { sum: symbolPrev.sum + p, count: symbolPrev.count + 1 });
 
     const mistakeKey = String(row.tag ?? "None").trim() || "None";
-    const mistakePrev = mistakeMap.get(mistakeKey) ?? { count: 0, sum: 0 };
-    mistakeMap.set(mistakeKey, { count: mistakePrev.count + 1, sum: mistakePrev.sum + p });
+    const mistakePrev = mistakeMap.get(mistakeKey) ?? { count: 0, sum: 0, lossSum: 0 };
+    mistakeMap.set(mistakeKey, {
+      count: mistakePrev.count + 1,
+      sum: mistakePrev.sum + p,
+      lossSum: mistakePrev.lossSum + (p < 0 ? p : 0),
+    });
   }
 
   const dates = [...dayMap.keys()].sort((a, b) => a.localeCompare(b));
@@ -429,7 +433,7 @@ export function computeTradingStats(
     ? mistakeRows.reduce((a, b) => (b[1].count > a[1].count ? b : a))[0]
     : null;
   const mistakeCost = mistakeRows.length > 0
-    ? mistakeRows.reduce((sum, [, value]) => sum + value.sum, 0)
+    ? mistakeRows.reduce((sum, [, value]) => sum + value.lossSum, 0)
     : null;
 
   const avgOrNull = (arr: number[]) => (arr.length > 0 ? arr.reduce((s, n) => s + n, 0) / arr.length : null);
