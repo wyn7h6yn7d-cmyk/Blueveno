@@ -453,7 +453,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           account_type: account?.accountType ?? "—",
           symbol: row.symbol ?? "",
           pnl: row.pnl ?? "",
-          currency: row.currency ?? "",
+          currency: account?.currency ?? "",
           mood: row.mood_score ?? "",
           followed_plan: row.followed_plan == null ? "" : row.followed_plan ? "Yes" : "No",
           respected_stop: row.respected_stop == null ? "" : row.respected_stop ? "Yes" : "No",
