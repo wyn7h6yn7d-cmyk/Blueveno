@@ -303,13 +303,8 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     return map;
   }, [weeklyReflections]);
 
-  /** Mobile/tablet: 6 day columns only. Week rail appears from md+. */
-  const calendarGridCols = cn(
-    "[grid-template-columns:repeat(6,minmax(4.25rem,1fr))]",
-    "md:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(11rem,14rem)]",
-    "lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
-    "xl:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(13.5rem,18rem)]",
-  );
+  /** Keep a strict 6-column day grid across breakpoints. */
+  const calendarGridCols = "[grid-template-columns:repeat(6,minmax(4.25rem,1fr))] sm:[grid-template-columns:repeat(6,minmax(0,1fr))]";
 
   const headerBox =
     "flex min-h-[2.55rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.4rem] sm:rounded-xl sm:px-1 sm:py-2.5";
@@ -436,15 +431,6 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                 <span className="hidden sm:inline">{d}</span>
               </div>
             ))}
-            <div
-              className={cn(
-                headerBox,
-                "hidden min-w-0 font-mono text-[8px] uppercase tracking-[0.12em] text-[oklch(0.78_0.12_252)] md:flex md:text-[10px] md:tracking-[0.18em] lg:text-[11px]",
-              )}
-            >
-              <span className="md:hidden">Σ</span>
-              <span className="hidden md:inline">Week</span>
-            </div>
 
             {weeks.map((week, i) => {
               const weekly = week.reduce((acc, day) => {
@@ -470,10 +456,6 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                 },
               ];
               const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
-              const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
-              const weeklySummary = weekSummaryFromReflection(weeklyReflection);
-              const weeklyReflectionRows = weekReflectionLines(weeklyReflection);
-
               return (
                 <Fragment key={`week-row-${i}`}>
                   {displayCells.map((cell) => {
@@ -600,71 +582,13 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     );
                   })}
 
-                  {(() => {
-                    const quality = weekQualityScore(week, aggregates);
-                    const status = reflectionStatus(weeklyReflectionRows);
-                    const nextFocusPreview = weeklyReflection?.nextWeekFocus?.trim() || "Not set";
-                    const weekNum = weekNumber(new Date(`${weekStartKey}T12:00:00`));
-                    return (
-                  <Link
-                    href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
-                    className={cn(
-                      "relative hidden box-border min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left outline-none transition hover:brightness-[1.04] focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.12_252/0.55)] md:flex md:min-h-[188px] md:gap-1 md:rounded-xl md:p-5 lg:min-h-[206px] lg:p-5.5",
-                      weekRailClasses(weekly),
-                    )}
-                  >
-                    <div className={cn("absolute left-0 top-2 bottom-2 w-[2px] rounded-full sm:top-3 sm:bottom-3 sm:w-[3px] lg:w-1", weekAccent(weekly))} />
-                    <div className="flex min-w-0 flex-col gap-2 pl-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:pl-3">
-                      <div className="flex shrink-0 items-baseline gap-2 sm:flex-col sm:items-start sm:gap-0">
-                        <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-white/55 sm:text-[9px] sm:tracking-[0.2em]">
-                          Wk {weekNum}
-                        </p>
-                        <p className="font-mono text-[8px] tabular-nums text-white/65 sm:mt-1 sm:text-[10px] sm:text-white/70">
-                          {weekDateRangeLabel(week)}
-                        </p>
-                        <p className="mt-1 font-mono text-[8px] uppercase tracking-[0.14em] text-white/55 sm:text-[9px] sm:tracking-[0.18em]">
-                          Quality{" "}
-                          <span className="font-semibold text-white/85">{quality}%</span>
-                        </p>
-                      </div>
-                      <div
-                        className="min-w-0 w-full rounded-lg border border-white/[0.16] bg-black/35 px-2.5 py-2 sm:max-w-[80%] sm:rounded-xl sm:px-3.5 sm:py-2.5"
-                        title={weeklySummary ?? "No weekly reflection"}
-                      >
-                        <p className="font-mono text-[8px] uppercase tracking-[0.1em] text-white/60 sm:text-[9px] sm:tracking-[0.18em]">
-                          Reflection
-                        </p>
-                        <p className={cn("mt-1 font-mono text-[9px] uppercase tracking-[0.16em]", status.tone)}>
-                          {status.label}
-                        </p>
-                        <p className="mt-1 break-words text-[11px] leading-snug text-white/85 [overflow-wrap:anywhere] sm:text-[12px] line-clamp-2">
-                          Next focus: {nextFocusPreview}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="min-w-0 overflow-hidden pl-2 sm:pl-3">
-                      <p className="font-mono text-[7px] uppercase tracking-[0.12em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">
-                        Σ
-                      </p>
-                      <p className="font-display text-[0.8rem] font-semibold leading-[1.08] tabular-nums tracking-[-0.03em] sm:text-[clamp(1.08rem,3vw,1.58rem)] sm:leading-none md:text-[1.74rem] lg:text-[clamp(1.24rem,2.4vw,2.08rem)] lg:tracking-[-0.045em]">
-                        <span
-                          className="block min-w-0 w-full truncate whitespace-nowrap"
-                          title={formatSignedPnlAmount(weekly, displayCurrency)}
-                        >
-                          {formatSignedPnlAmount(weekly, displayCurrency)}
-                        </span>
-                      </p>
-                    </div>
-                  </Link>
-                    );
-                  })()}
                 </Fragment>
               );
             })}
               </div>
             </div>
           </div>
-          <div className="mt-3 grid gap-2.5 sm:hidden">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {weeks.map((week, i) => {
               const weekly = week.reduce((acc, day) => {
                 const agg = aggregates.get(day.key);
