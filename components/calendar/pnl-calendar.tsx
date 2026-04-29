@@ -395,6 +395,43 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         </div>
       ) : null}
 
+      <section className="hidden gap-2 sm:grid sm:grid-cols-2 xl:grid-cols-3" aria-label="Weekly summary">
+        {weeks.map((week, i) => {
+          const weekly = week.reduce((acc, day) => {
+            const agg = aggregates.get(day.key);
+            return acc + (agg?.total ?? 0);
+          }, 0);
+          const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
+          const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
+          const weeklySummary = weekSummaryFromReflection(weeklyReflection);
+          const weeklyReflectionRows = weekReflectionLines(weeklyReflection);
+          const quality = weekQualityScore(week, aggregates);
+          const status = reflectionStatus(weeklyReflectionRows);
+
+          return (
+            <Link
+              key={`desktop-week-${i}`}
+              href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
+              className={cn(
+                "rounded-lg border px-3 py-2.5",
+                "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.88),oklch(0.08_0.02_266/0.88))]",
+                "border-white/[0.1]",
+              )}
+              title={weeklySummary ?? "No weekly reflection"}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">{weekDateRangeLabel(week)}</p>
+                <p className={cn("font-display text-[1rem] tabular-nums", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
+                  {formatSignedPnlAmount(weekly, displayCurrency)}
+                </p>
+              </div>
+              <p className="mt-1.5 text-[11px] text-zinc-300">Quality: <span className="text-zinc-100">{quality}%</span></p>
+              <p className={cn("mt-1 font-mono text-[9px] uppercase tracking-[0.12em]", status.tone)}>{status.label}</p>
+            </Link>
+          );
+        })}
+      </section>
+
       <div className="w-full min-w-0 overflow-x-hidden overflow-y-visible pb-1">
         <div className="flex w-full min-w-0 flex-col justify-center">
           <div
@@ -607,42 +644,6 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                   <p className={cn("font-display text-[0.7rem] tabular-nums", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
                     {formatSignedPnlAmount(weekly, displayCurrency)}
                   </p>
-                </Link>
-              );
-            })}
-          </div>
-          <div className="mt-3 hidden gap-2 sm:grid sm:grid-cols-2 xl:grid-cols-3">
-            {weeks.map((week, i) => {
-              const weekly = week.reduce((acc, day) => {
-                const agg = aggregates.get(day.key);
-                return acc + (agg?.total ?? 0);
-              }, 0);
-              const weekStartKey = keyFromDate(startOfWeekMonday(week[0].date));
-              const weeklyReflection = weeklyReflectionsByWeekStart.get(weekStartKey);
-              const weeklySummary = weekSummaryFromReflection(weeklyReflection);
-              const weeklyReflectionRows = weekReflectionLines(weeklyReflection);
-              const quality = weekQualityScore(week, aggregates);
-              const status = reflectionStatus(weeklyReflectionRows);
-
-              return (
-                <Link
-                  key={`desktop-week-${i}`}
-                  href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
-                  className={cn(
-                    "rounded-lg border px-3 py-2.5",
-                    "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.88),oklch(0.08_0.02_266/0.88))]",
-                    "border-white/[0.1]",
-                  )}
-                  title={weeklySummary ?? "No weekly reflection"}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">{weekDateRangeLabel(week)}</p>
-                    <p className={cn("font-display text-[1rem] tabular-nums", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
-                      {formatSignedPnlAmount(weekly, displayCurrency)}
-                    </p>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-zinc-300">Quality: <span className="text-zinc-100">{quality}%</span></p>
-                  <p className={cn("mt-1 font-mono text-[9px] uppercase tracking-[0.12em]", status.tone)}>{status.label}</p>
                 </Link>
               );
             })}
