@@ -313,41 +313,45 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     <div className="min-w-0 space-y-6">
       <div
         className={cn(
-          "flex flex-wrap items-end justify-between gap-3 rounded-xl border border-[oklch(0.52_0.12_252/0.22)] bg-[linear-gradient(168deg,oklch(0.12_0.04_262/0.85),oklch(0.07_0.03_266/0.88))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:gap-4 sm:rounded-2xl sm:p-6",
+          "grid gap-3 rounded-xl border border-[oklch(0.52_0.12_252/0.22)] bg-[linear-gradient(168deg,oklch(0.12_0.04_262/0.85),oklch(0.07_0.03_266/0.88))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:gap-4 sm:rounded-2xl sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto]",
         )}
       >
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[oklch(0.65_0.11_252)]">Month</p>
-          <p className="font-display text-[1.35rem] font-semibold tracking-[-0.04em] text-zinc-50 sm:text-[2rem] lg:text-[2.15rem]">
+          <p className="truncate font-display text-[1.35rem] font-semibold tracking-[-0.04em] text-zinc-50 sm:text-[2rem] lg:text-[2.15rem]">
             {monthLabel(cursor)}
           </p>
         </div>
-        <div className="w-full max-w-full space-y-2 sm:w-auto sm:min-w-[18rem]">
-          <div className="flex items-center justify-end gap-1.5 rounded-xl border border-white/[0.1] bg-black/40 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]">
-            <button
-              type="button"
-              onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "icon-sm" }),
-                "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
-              )}
-              aria-label="Previous month"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
-              className={cn(
-                buttonVariants({ variant: "outline", size: "icon-sm" }),
-                "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
-              )}
-              aria-label="Next month"
-            >
-              <ChevronRight className="size-4" />
-            </button>
+        <div className="w-full min-w-0">
+          <div className="flex items-start gap-2">
+            <div className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-black/40 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]">
+              <button
+                type="button"
+                onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() - 1, 1))}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "icon-sm" }),
+                  "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
+                )}
+                aria-label="Previous month"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "icon-sm" }),
+                  "h-9 w-9 rounded-lg border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.1] sm:h-10 sm:w-10",
+                )}
+                aria-label="Next month"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+            <div className="min-w-0 flex-1">
+              {filterControls}
+            </div>
           </div>
-          {filterControls}
         </div>
       </div>
 
