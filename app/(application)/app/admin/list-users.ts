@@ -12,6 +12,7 @@ function mapProfile(raw: Record<string, unknown>): UserProfileRow {
   return {
     user_id: String(raw.user_id),
     email: String(raw.email ?? ""),
+    display_name: raw.display_name != null ? String(raw.display_name) : null,
     is_admin: Boolean(raw.is_admin),
     trial_ends_at: String(raw.trial_ends_at),
     manual_premium: Boolean(raw.manual_premium),
@@ -22,6 +23,10 @@ function mapProfile(raw: Record<string, unknown>): UserProfileRow {
     last_active_at: raw.last_active_at != null ? String(raw.last_active_at) : null,
     created_at: String(raw.created_at ?? ""),
     updated_at: String(raw.updated_at ?? ""),
+    internal_note: raw.internal_note != null ? String(raw.internal_note) : null,
+    premium_granted_reason: raw.premium_granted_reason != null ? String(raw.premium_granted_reason) : null,
+    premium_granted_at: raw.premium_granted_at != null ? String(raw.premium_granted_at) : null,
+    premium_granted_by: raw.premium_granted_by != null ? String(raw.premium_granted_by) : null,
   };
 }
 
@@ -55,6 +60,48 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
   for (const r of journalRows ?? []) {
     const uid = String((r as { user_id: string }).user_id);
     counts.set(uid, (counts.get(uid) ?? 0) + 1);
+  }
+  const { data: accountRows } = await admin.from("trading_accounts").select("user_id");
+  const { data: accountDetailsRows } = await admin
+    .from("trading_accounts")
+    .select("id,user_id,name,account_type,created_at")
+    .order("created_at", { ascending: false });
+  const accountCounts = new Map<string, number>();
+  for (const r of accountRows ?? []) {
+    const uid = String((r as { user_id: string }).user_id);
+    accountCounts.set(uid, (accountCounts.get(uid) ?? 0) + 1);
+  }
+  const accountDetailsByUser = new Map<
+    string,
+    Array<{ id: string; name: string; account_type: string | null; created_at: string | null }>
+  >();
+  for (const row of accountDetailsRows ?? []) {
+    const uid = String((row as { user_id: string }).user_id);
+    const bucket = accountDetailsByUser.get(uid) ?? [];
+    bucket.push({
+      id: String((row as { id: string }).id),
+      name: String((row as { name?: string | null }).name ?? "Account"),
+      account_type: (row as { account_type?: string | null }).account_type ?? null,
+      created_at: (row as { created_at?: string | null }).created_at ?? null,
+    });
+    accountDetailsByUser.set(uid, bucket);
+  }
+  const { data: latestRows } = await admin
+    .from("journal_entries")
+    .select("user_id, entry_date, symbol, created_at")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  const recentByUser = new Map<string, string[]>();
+  for (const row of latestRows ?? []) {
+    const uid = String((row as { user_id: string }).user_id);
+    const current = recentByUser.get(uid) ?? [];
+    if (current.length >= 3) continue;
+    const entryDate = String((row as { entry_date?: string | null }).entry_date ?? "");
+    const createdAt = String((row as { created_at?: string | null }).created_at ?? "");
+    const symbol = String((row as { symbol?: string | null }).symbol ?? "");
+    const day = entryDate || (createdAt ? createdAt.slice(0, 10) : "");
+    current.push([day, symbol].filter(Boolean).join(" · "));
+    recentByUser.set(uid, current);
   }
 
   const stripe = getStripe();
@@ -104,6 +151,7 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
     return {
       user_id: profile.user_id,
       email: profile.email,
+      display_name: profile.display_name,
       is_admin: profile.is_admin,
       trial_ends_at: profile.trial_ends_at,
       manual_premium: profile.manual_premium,
@@ -117,6 +165,13 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
       premium_ends_at: profile.stripe_subscription_id
         ? (premiumEndsBySubscription.get(profile.stripe_subscription_id) ?? null)
         : null,
+      account_count: accountCounts.get(profile.user_id) ?? 0,
+      recent_activity: recentByUser.get(profile.user_id) ?? [],
+      trading_accounts: accountDetailsByUser.get(profile.user_id) ?? [],
+      internal_note: profile.internal_note,
+      premium_granted_reason: profile.premium_granted_reason,
+      premium_granted_at: profile.premium_granted_at,
+      premium_granted_by: profile.premium_granted_by,
     };
   });
 }

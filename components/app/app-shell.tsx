@@ -38,9 +38,6 @@ export function AppShell({ children, user, access }: AppShellProps) {
               <span className="rounded border border-white/[0.1] bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500">
                 app
               </span>
-              <span className="rounded border border-orange-300/55 bg-[linear-gradient(180deg,rgba(251,146,60,0.32),rgba(249,115,22,0.22))] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-orange-100 shadow-[0_0_16px_-5px_rgba(251,146,60,0.85),inset_0_1px_0_0_rgba(255,255,255,0.3)]">
-                beta
-              </span>
             </Link>
           </div>
           <div className="px-5 pt-2.5">
@@ -63,13 +60,13 @@ export function AppShell({ children, user, access }: AppShellProps) {
             <AppTopbar user={user} canWriteJournal={access.canWriteJournal} isAdmin={access.isAdmin} />
           </div>
           <div className="relative flex-1">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,oklch(0.14_0.065_262/0.34)_0%,transparent_36%)]" />
-            <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.045]" aria-hidden />
-            <div className="pointer-events-none absolute inset-0 bg-app-shell-key opacity-[0.62]" aria-hidden />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[54%] bg-app-shell-floor opacity-[0.72]" aria-hidden />
-            <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.016]" aria-hidden />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,oklch(0.14_0.065_262/0.24)_0%,transparent_34%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-grid opacity-[0.03]" aria-hidden />
+            <div className="pointer-events-none absolute inset-0 bg-app-shell-key opacity-[0.48]" aria-hidden />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-app-shell-floor opacity-[0.56]" aria-hidden />
+            <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.012]" aria-hidden />
             <WorkspaceGate>
-              <div className="relative mx-auto min-h-full w-full max-w-[1420px] px-4 py-6 sm:px-5 sm:py-8 md:px-8 md:py-10 lg:px-10 lg:py-11">
+              <div className="relative mx-auto min-h-full w-full max-w-[1680px] px-4 py-6 sm:px-6 sm:py-8 md:px-9 md:py-10 lg:px-12 lg:py-11 2xl:px-14">
                 {children}
               </div>
             </WorkspaceGate>

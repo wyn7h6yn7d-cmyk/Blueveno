@@ -31,6 +31,7 @@ function mapProfile(raw: Record<string, unknown>): UserProfileRow {
   return {
     user_id: String(raw.user_id),
     email: String(raw.email ?? ""),
+    display_name: raw.display_name != null ? String(raw.display_name) : null,
     is_admin: Boolean(raw.is_admin),
     trial_ends_at: String(raw.trial_ends_at),
     manual_premium: Boolean(raw.manual_premium),
@@ -39,6 +40,10 @@ function mapProfile(raw: Record<string, unknown>): UserProfileRow {
     stripe_subscription_id: raw.stripe_subscription_id != null ? String(raw.stripe_subscription_id) : null,
     account_disabled: Boolean(raw.account_disabled),
     last_active_at: raw.last_active_at != null ? String(raw.last_active_at) : null,
+    internal_note: raw.internal_note != null ? String(raw.internal_note) : null,
+    premium_granted_reason: raw.premium_granted_reason != null ? String(raw.premium_granted_reason) : null,
+    premium_granted_at: raw.premium_granted_at != null ? String(raw.premium_granted_at) : null,
+    premium_granted_by: raw.premium_granted_by != null ? String(raw.premium_granted_by) : null,
     created_at: String(raw.created_at ?? ""),
     updated_at: String(raw.updated_at ?? ""),
   };

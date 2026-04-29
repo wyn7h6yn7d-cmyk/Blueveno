@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
@@ -15,6 +16,22 @@ import { cn } from "@/lib/utils";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { mapTradingAccountRow } from "@/lib/trading-accounts/map";
+import {
+  applyEntryFilters,
+  EMPTY_ENTRY_FILTERS,
+  filterChips,
+  hasActiveFilters,
+  parseFiltersFromParams,
+  uniqueValues,
+  writeFiltersToParams,
+  type EntryFilters,
+} from "@/lib/user-data/entry-filters";
+import type { JournalRow } from "@/lib/user-data/types";
+import { Input } from "@/components/ui/input";
+import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
+import { computeMonthlyReview } from "@/lib/user-data/monthly-review";
+import { MonthlyReviewCard } from "@/components/reports/monthly-review-card";
 
 type Props = {
   userId: string;
@@ -35,8 +52,8 @@ function CumulativeChart({ points, currency }: { points: { i: number; t: string;
   const pad = 32;
   if (points.length < 2) {
     return (
-      <div className="flex h-44 items-center justify-center rounded-xl border border-white/[0.06] bg-black/20 text-[13px] text-zinc-500">
-        A few more trading days will draw the curve.
+      <div className="flex h-44 items-center justify-center rounded-xl border border-white/[0.06] bg-black/20 px-5 text-center text-[13px] text-zinc-500">
+        Add a few trading days to unlock performance and behavior patterns.
       </div>
     );
   }
@@ -387,9 +404,60 @@ function DisciplineTrend({ weekly, weeklyReflections }: { weekly: { weekStart: s
 }
 
 export function StatsPageClient({ userId, initialWorkspace }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { displayCurrency } = useAccess();
-  const { data, ready } = useUserWorkspace(userId, { initialWorkspace });
+  const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
   const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionStat[]>([]);
+  const [monthlyFocusRows, setMonthlyFocusRows] = useState<Array<{ weekStart: string; nextWeekFocus: string | null }>>([]);
+  const [latestReviewRule, setLatestReviewRule] = useState<string | null>(null);
+  const [latestReviewConfidence, setLatestReviewConfidence] = useState<number | null>(null);
+  const [accountComparisonRows, setAccountComparisonRows] = useState<
+    Array<{ id: string; name: string; type: string; pnl: number; winRate: number | null; tradedDays: number; disciplineScore: number | null }>
+  >([]);
+  const [personalRules, setPersonalRules] = useState<Array<{ id: string; title: string; is_active: boolean }>>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
+  const [accountScope, setAccountScope] = useState<"active" | "all">(
+    searchParams.get("accountScope") === "all" ? "all" : "active",
+  );
+  const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
+  const [exportMsg, setExportMsg] = useState<string | null>(null);
+  const [exportBusy, setExportBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+    const supabase = createClient();
+    void (async () => {
+      let query = supabase
+        .from("weekly_reflections")
+        .select("week_start, next_week_rule, next_week_focus, confidence_score")
+        .eq("user_id", userId)
+        .order("week_start", { ascending: false });
+      if (accountScope === "active") {
+        if (!activeAccountId) return;
+        query = query.eq("account_id", activeAccountId);
+      }
+      const { data: rows } = await query;
+      if (cancelled) return;
+      const mapped = ((rows ?? []) as Array<WeeklyReflectionStat & { next_week_rule?: string | null; confidence_score?: number | null }>)
+        .filter((r) => Boolean(r.week_start));
+      setWeeklyReflections(mapped);
+      setMonthlyFocusRows(
+        mapped.map((r) => ({
+          weekStart: r.week_start,
+          nextWeekFocus: (r as { next_week_focus?: string | null }).next_week_focus ?? null,
+        })),
+      );
+      setLatestReviewRule((mapped[0]?.next_week_rule ?? null) as string | null);
+      setLatestReviewConfidence((mapped[0]?.confidence_score ?? null) as number | null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, activeAccountId, accountScope]);
 
   useEffect(() => {
     let cancelled = false;
@@ -397,18 +465,86 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
     const supabase = createClient();
     void (async () => {
       const { data: rows } = await supabase
-        .from("weekly_reflections")
-        .select("week_start")
-        .eq("user_id", userId);
+        .from("personal_rules")
+        .select("id,title,is_active")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true });
       if (cancelled) return;
-      setWeeklyReflections(((rows ?? []) as WeeklyReflectionStat[]).filter((r) => Boolean(r.week_start)));
+      setPersonalRules((rows ?? []) as Array<{ id: string; title: string; is_active: boolean }>);
     })();
     return () => {
       cancelled = true;
     };
   }, [userId]);
 
-  const stats = useMemo(() => computeTradingStats(data.journal, weeklyReflections), [data.journal, weeklyReflections]);
+  useEffect(() => {
+    setFilters(parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
+    setAccountScope(searchParams.get("accountScope") === "all" ? "all" : "active");
+  }, [searchParams]);
+
+  useEffect(() => {
+    const base = new URLSearchParams(searchParams.toString());
+    if (accountScope === "all") base.set("accountScope", "all");
+    else base.delete("accountScope");
+    const next = writeFiltersToParams(base, filters);
+    const nextQuery = next.toString();
+    if (nextQuery === searchParams.toString()) return;
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [accountScope, filters, pathname, router, searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId || accountScope !== "all") return;
+    const supabase = createClient();
+    void (async () => {
+      const { data: rows } = await supabase
+        .from("journal_entries")
+          .select("id,created_at,entry_date,entry_time,symbol,setup,r_value,tag,note,chart_link_url,mood_state,followed_plan,respected_stop,no_revenge_trade,session_tag,market_condition,lesson_learned,rule_checks")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      if (cancelled) return;
+      const mapped: JournalRow[] = (rows ?? []).map((r) => ({
+        id: String(r.id),
+        createdAt: (r.created_at as string | null) ?? undefined,
+        entryDate: (r.entry_date as string | null) ?? undefined,
+        time: String(r.entry_time ?? ""),
+        sym: String(r.symbol ?? ""),
+        setup: String(r.setup ?? "Other"),
+        r: String(r.r_value ?? ""),
+        tag: String(r.tag ?? "None"),
+        note: (r.note as string | null) ?? undefined,
+        chartLinkUrl: (r.chart_link_url as string | null) ?? undefined,
+        moodState: (r.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
+        followedPlan: Boolean(r.followed_plan),
+        respectedStop: Boolean(r.respected_stop),
+        noRevengeTrade: Boolean(r.no_revenge_trade),
+        sessionTag: (r.session_tag as string | null) ?? undefined,
+        marketCondition: (r.market_condition as string | null) ?? undefined,
+        lessonLearned: (r.lesson_learned as string | null) ?? undefined,
+        ruleChecks: r.rule_checks
+          ? Object.fromEntries(
+              Object.entries(r.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
+            )
+          : undefined,
+      }));
+      setAllAccountEntries(mapped);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, accountScope]);
+
+  const baseEntries = accountScope === "all" ? allAccountEntries : data.journal;
+  const filteredEntries = useMemo(() => applyEntryFilters(baseEntries, filters), [baseEntries, filters]);
+  const stats = useMemo(() => computeTradingStats(filteredEntries, weeklyReflections), [filteredEntries, weeklyReflections]);
+  const preferredMonthKey = useMemo(() => {
+    if (filters.from && /^\d{4}-\d{2}-\d{2}$/.test(filters.from)) return filters.from.slice(0, 7);
+    return new Date().toISOString().slice(0, 7);
+  }, [filters.from]);
+  const monthlyReview = useMemo(
+    () => computeMonthlyReview(filteredEntries, monthlyFocusRows, preferredMonthKey),
+    [filteredEntries, monthlyFocusRows, preferredMonthKey],
+  );
 
   const netR = stats.cumulative.length > 0 ? stats.cumulative[stats.cumulative.length - 1]?.y ?? 0 : 0;
   const focusedAvg = stats.correlationHints.find((h) => h.label === "Avg P&L on Focused days")?.avgPnl ?? null;
@@ -418,7 +554,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
 
   const moodAverages = useMemo(() => {
     const buckets = new Map<string, number[]>();
-    for (const row of data.journal) {
+    for (const row of filteredEntries) {
       if (!row.moodState) continue;
       const pnl = parsePnlAmount(row.r);
       if (pnl === null) continue;
@@ -435,7 +571,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
       }))
       .sort((a, b) => b.avg - a.avg);
     return rows;
-  }, [data.journal]);
+  }, [filteredEntries]);
 
   const bestBehavior = moodAverages[0] ?? null;
   const weakestBehavior = moodAverages[moodAverages.length - 1] ?? null;
@@ -447,28 +583,263 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
     bestBehavior != null &&
     weakestBehavior != null;
 
+  const rulesAnalytics = useMemo(() => {
+    const activeRules = personalRules.filter((r) => r.is_active);
+    if (activeRules.length === 0 || filteredEntries.length === 0) {
+      return { adherence: null as number | null, mostBroken: null as string | null, breakCost: null as number | null, rows: [] as Array<{ title: string; followedPct: number | null; avgFollowed: number | null; avgBroken: number | null; breakCost: number | null }> };
+    }
+    const rows = activeRules.map((rule) => {
+      let followed = 0;
+      let broken = 0;
+      let followedSum = 0;
+      let brokenSum = 0;
+      for (const row of filteredEntries) {
+        const pnl = parsePnlAmount(row.r);
+        if (pnl === null) continue;
+        const flag = Boolean(row.ruleChecks?.[rule.id]);
+        if (flag) {
+          followed += 1;
+          followedSum += pnl;
+        } else {
+          broken += 1;
+          brokenSum += pnl;
+        }
+      }
+      const total = followed + broken;
+      return {
+        title: rule.title,
+        followedPct: total > 0 ? Math.round((followed / total) * 100) : null,
+        avgFollowed: followed > 0 ? followedSum / followed : null,
+        avgBroken: broken > 0 ? brokenSum / broken : null,
+        breakCost: broken > 0 ? brokenSum : null,
+        brokenCount: broken,
+      };
+    });
+    const adherenceSamples = rows.map((r) => r.followedPct).filter((v): v is number => v !== null);
+    const adherence = adherenceSamples.length > 0
+      ? Math.round(adherenceSamples.reduce((s, n) => s + n, 0) / adherenceSamples.length)
+      : null;
+    const mostBroken = rows.length > 0 ? rows.reduce((a, b) => (b.brokenCount > a.brokenCount ? b : a)).title : null;
+    const breakCost = rows.reduce((s, r) => s + (r.breakCost ?? 0), 0);
+    return { adherence, mostBroken, breakCost, rows };
+  }, [filteredEntries, personalRules]);
+
+  const sectionNavItems = useMemo(() => {
+    const items: Array<{ id: string; label: string }> = [
+      { id: "stats-summary", label: "Summary" },
+      { id: "stats-performance", label: "Performance" },
+      { id: "stats-behavior", label: "Behavior" },
+      { id: "stats-patterns", label: "Patterns" },
+    ];
+    if (accountComparisonRows.length > 1) {
+      items.push({ id: "stats-accounts", label: "Accounts" });
+    }
+    return items;
+  }, [accountComparisonRows.length]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+    const supabase = createClient();
+    void (async () => {
+      const [{ data: accounts }, { data: entries }] = await Promise.all([
+        supabase.from("trading_accounts").select("*").eq("user_id", userId).order("created_at", { ascending: true }),
+        supabase
+          .from("journal_entries")
+          .select("account_id,r_value,entry_date,created_at,followed_plan,respected_stop,no_revenge_trade")
+          .eq("user_id", userId),
+      ]);
+      if (cancelled) return;
+      const accountRows = (accounts ?? []).map((row) => mapTradingAccountRow(row as unknown as Record<string, unknown>));
+      const byAccount = new Map<
+        string,
+        { total: number; wins: number; losses: number; daySet: Set<string>; checksDone: number; checksTotal: number }
+      >();
+      for (const account of accountRows) {
+        byAccount.set(account.id, { total: 0, wins: 0, losses: 0, daySet: new Set(), checksDone: 0, checksTotal: 0 });
+      }
+      for (const row of entries ?? []) {
+        const accountId = String(row.account_id ?? "");
+        const bucket = byAccount.get(accountId);
+        if (!bucket) continue;
+        const pnl = parsePnlAmount(String(row.r_value ?? "")) ?? 0;
+        bucket.total += pnl;
+        if (pnl > 0) bucket.wins += 1;
+        if (pnl < 0) bucket.losses += 1;
+        const dayKey = row.entry_date ? String(row.entry_date) : row.created_at ? new Date(String(row.created_at)).toISOString().slice(0, 10) : null;
+        if (dayKey) bucket.daySet.add(dayKey);
+        bucket.checksTotal += 3;
+        if (row.followed_plan) bucket.checksDone += 1;
+        if (row.respected_stop) bucket.checksDone += 1;
+        if (row.no_revenge_trade) bucket.checksDone += 1;
+      }
+      setAccountComparisonRows(
+        accountRows.map((account) => {
+          const b = byAccount.get(account.id)!;
+          const directional = b.wins + b.losses;
+          return {
+            id: account.id,
+            name: account.name,
+            type: account.accountType,
+            pnl: b.total,
+            winRate: directional > 0 ? Math.round((b.wins / directional) * 100) : null,
+            tradedDays: b.daySet.size,
+            disciplineScore: b.checksTotal > 0 ? Math.round((b.checksDone / b.checksTotal) * 100) : null,
+          };
+        }),
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const onExportStatsSummary = () => {
+    if (exportBusy) return;
+    setExportBusy(true);
+    setExportMsg(null);
+    try {
+      const rows = [
+        { metric: "account scope", value: accountScope === "all" ? "all accounts" : "active account" },
+        { metric: "rows in scope", value: filteredEntries.length },
+        { metric: "net pnl", value: netR },
+        { metric: "win rate days pct", value: stats.winRateDays ?? "" },
+        { metric: "profit factor", value: stats.profitFactor ?? "" },
+        { metric: "max drawdown", value: stats.maxDrawdown ?? "" },
+        { metric: "avg green day", value: stats.avgGreenDay ?? "" },
+        { metric: "avg red day", value: stats.avgRedDay ?? "" },
+        { metric: "best day", value: stats.bestDay ? `${stats.bestDay.date} (${stats.bestDay.pnl})` : "" },
+        { metric: "worst day", value: stats.worstDay ? `${stats.worstDay.date} (${stats.worstDay.pnl})` : "" },
+      ];
+      const csv = recordsToCsv(
+        [
+          { key: "metric", label: "metric" },
+          { key: "value", label: "value" },
+        ],
+        rows,
+      );
+      triggerCsvDownload(`blueveno-stats-summary-${fileDate()}.csv`, csv);
+      setExportMsg("Stats summary export ready.");
+    } catch (error) {
+      setExportMsg(error instanceof Error ? error.message : "Could not export stats summary.");
+    } finally {
+      setExportBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-10">
       <PageHeader
         variant="signature"
         eyebrow="Performance"
         title="Stats"
-        description="See the week, review the behavior, and keep journaling."
+        description="Track performance, behavior, and recurring patterns."
         actions={
-          <Link href="/app/calendar" className={appSecondaryCta}>
-            <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
-            Calendar
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={onExportStatsSummary} className={appSecondaryCta} disabled={exportBusy}>
+              <ArrowUpRight className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
+              {exportBusy ? "Exporting…" : "Export summary CSV"}
+            </button>
+            <Link href="/app/calendar" className={appSecondaryCta}>
+              <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
+              Calendar
+            </Link>
+          </div>
         }
       />
+      {exportMsg ? <p className="text-[13px] text-zinc-400">{exportMsg}</p> : null}
+
+      <section className="space-y-2" aria-label="Stats filters">
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+          <button type="button" onClick={() => setFiltersOpen((v) => !v)} className="text-[12px] text-zinc-300 hover:text-zinc-100">
+            {filtersOpen ? "Hide filters" : "Filters"}
+          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={accountScope}
+              onChange={(e) => setAccountScope(e.target.value as "active" | "all")}
+              className="h-8 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300"
+            >
+              <option value="active">Active account</option>
+              <option value="all">All accounts</option>
+            </select>
+            {hasActiveFilters(filters) ? (
+              <button type="button" onClick={() => setFilters(EMPTY_ENTRY_FILTERS)} className="text-[12px] text-[oklch(0.78_0.11_252)] hover:underline">
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+        </div>
+        {filtersOpen ? (
+          <div className="grid gap-2 rounded-xl border border-white/[0.08] bg-black/20 p-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Input value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} placeholder="Search symbol or note" className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[13px]" />
+            <Input type="date" value={filters.from} onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))} className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[12px]" />
+            <Input type="date" value={filters.to} onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))} className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[12px]" />
+            <select value={filters.dayColor} onChange={(e) => setFilters((f) => ({ ...f, dayColor: e.target.value as EntryFilters["dayColor"] }))} className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300">
+              <option value="all">all days</option>
+              <option value="green">green days</option>
+              <option value="red">red days</option>
+            </select>
+            {[
+              { key: "symbol", values: uniqueValues(baseEntries, (row) => row.sym) },
+              { key: "mood", values: uniqueValues(baseEntries, (row) => row.moodState) },
+              { key: "setup", values: uniqueValues(baseEntries, (row) => String(row.setup)) },
+              { key: "mistake", values: uniqueValues(baseEntries, (row) => String(row.tag)) },
+              { key: "session", values: uniqueValues(baseEntries, (row) => row.sessionTag) },
+              { key: "market", values: uniqueValues(baseEntries, (row) => row.marketCondition) },
+            ].map((item) => (
+              <select
+                key={item.key}
+                value={filters[item.key as keyof EntryFilters] as string}
+                onChange={(e) => setFilters((f) => ({ ...f, [item.key]: e.target.value }))}
+                className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300"
+              >
+                <option value="all">{item.key}</option>
+                {item.values.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            ))}
+          </div>
+        ) : null}
+        {hasActiveFilters(filters) ? (
+          <div className="flex flex-wrap gap-1.5">
+            {filterChips(filters).map((chip) => (
+              <span key={chip} className="rounded-full border border-[oklch(0.58_0.12_252/0.34)] bg-[oklch(0.58_0.12_252/0.14)] px-2 py-0.5 text-[10px] text-zinc-200">
+                {chip}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
+      {ready && filteredEntries.length > 0 ? (
+        <section className="sticky top-[4.75rem] z-20 -mx-1 sm:mx-0" aria-label="Stats section navigation">
+          <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[oklch(0.12_0.03_264/0.86)] px-2 py-2 backdrop-blur">
+            <div className="flex min-w-max items-center gap-1.5">
+              {sectionNavItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[12px] text-zinc-300 transition hover:border-white/[0.16] hover:text-zinc-100"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {!ready ? (
         <div className="h-56 animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]" />
-      ) : data.journal.length === 0 ? (
+      ) : baseEntries.length === 0 ? (
         <EmptyState
           icon={CalendarDays}
           title="No stats yet"
-          description="Keep journaling to reveal patterns."
+          description="Add a few trading days to unlock performance and behavior patterns."
           action={
             <Link href="/app/journal" className={cn(appPrimaryCta, "inline-flex items-center gap-1.5")}>
               Log the day
@@ -476,9 +847,11 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </Link>
           }
         />
+      ) : filteredEntries.length === 0 ? (
+        <EmptyState icon={CalendarDays} title="No results for current filters" description="Clear filters to reveal your full stats view." />
       ) : (
         <>
-          <section className="grid gap-5 rounded-2xl border border-[oklch(0.52_0.12_252/0.18)] bg-[linear-gradient(165deg,oklch(0.14_0.038_262/0.94),oklch(0.09_0.03_266/0.92))] p-5 sm:p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] min-[460px]:grid-cols-2 lg:grid-cols-4" aria-label="Summary at a glance">
+          <section id="stats-summary" className="grid gap-5 scroll-mt-28 rounded-2xl border border-[oklch(0.52_0.12_252/0.18)] bg-[linear-gradient(165deg,oklch(0.14_0.038_262/0.94),oklch(0.09_0.03_266/0.92))] p-5 sm:p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] min-[460px]:grid-cols-2 lg:grid-cols-4" aria-label="Summary at a glance">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Net P&L</p>
               <p
@@ -508,6 +881,35 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </div>
           </section>
 
+          <MonthlyReviewCard
+            review={monthlyReview}
+            displayCurrency={displayCurrency}
+            storageKey={`blueveno:monthly-review:stats:${accountScope}:${monthlyReview.monthKey}`}
+            title="Monthly review report"
+          />
+
+          <section id="stats-performance" className="grid gap-4 scroll-mt-28 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2 xl:grid-cols-6" aria-label="Performance summary">
+            {[
+              { label: "Net P&L", value: fmtPnl(netR, displayCurrency), tone: netR },
+              { label: "Win rate", value: stats.winRateDays !== null ? `${stats.winRateDays}%` : "—", tone: 0 },
+              { label: "Avg green day", value: fmtPnl(stats.avgGreenDay, displayCurrency), tone: stats.avgGreenDay ?? 0 },
+              { label: "Avg red day", value: fmtPnl(stats.avgRedDay, displayCurrency), tone: stats.avgRedDay ?? 0 },
+              { label: "Max drawdown", value: fmtPnl(stats.maxDrawdown, displayCurrency), tone: stats.maxDrawdown ?? 0 },
+              {
+                label: "Profit factor",
+                value: stats.profitFactor === null ? "No losing days" : Number.isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : "—",
+                tone: 0,
+              },
+            ].map((item) => (
+              <div key={item.label} className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
+                <p className={cn("mt-1.5 font-display text-[1.2rem] tabular-nums", item.tone > 0 ? "text-emerald-200" : item.tone < 0 ? "text-rose-200" : "text-zinc-100")}>
+                  {item.value}
+                </p>
+              </div>
+            ))}
+          </section>
+
           <DashboardCard
             eyebrow="Trend"
             title="Cumulative P&L"
@@ -525,15 +927,130 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             <DashboardCard eyebrow="Weeks" title="Weekly totals trend" description="Recent weeks at a glance.">
               <WeeklyTrend weekly={stats.weekly} currency={displayCurrency} />
             </DashboardCard>
-            <DashboardCard eyebrow="Behavior" title="Mood distribution" description="Which state appears most often.">
+            <DashboardCard eyebrow="Behavior" title="Mood distribution" description="Which mood appears most often.">
               <MoodDistributionChart moodBreakdown={stats.moodBreakdown} />
             </DashboardCard>
             <DashboardCard eyebrow="Discipline" title="Discipline score trend" description="Weekly score with reflection bonus.">
               <DisciplineTrend weekly={stats.weekly} weeklyReflections={weeklyReflections} />
+              <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Weekly focus</p>
+                <p className="mt-1.5 text-[12px] text-zinc-300">
+                  Rule: {latestReviewRule?.trim() ? latestReviewRule : "No weekly rule saved yet."}
+                </p>
+                <p className="mt-1 text-[12px] text-zinc-400">
+                  Confidence: {latestReviewConfidence ?? "—"}/5
+                </p>
+              </div>
             </DashboardCard>
           </section>
 
-          <section aria-label="Behavior insights">
+          <section id="stats-patterns" className="grid gap-4 scroll-mt-28 lg:grid-cols-2" aria-label="Weekday and symbol performance">
+            <DashboardCard eyebrow="Weekday performance" title="How each weekday performs">
+              <div className="space-y-2.5">
+                {stats.weekdayPerformance.map((row) => (
+                  <div key={row.weekday} className="rounded-xl border border-white/[0.07] bg-black/15 px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-mono text-[12px] text-zinc-300">{row.weekday}</p>
+                      <p className={cn("font-mono text-[12px] tabular-nums", row.totalPnl > 0 ? "text-emerald-200" : row.totalPnl < 0 ? "text-rose-200" : "text-zinc-300")}>
+                        {fmtPnl(row.totalPnl, displayCurrency)}
+                      </p>
+                    </div>
+                    <p className="mt-1 text-[12px] text-zinc-500">
+                      Avg {fmtPnl(row.averagePnl, displayCurrency)} · {row.tradedDays} days
+                    </p>
+                  </div>
+                ))}
+                <p className="text-[12px] text-zinc-500">
+                  Best: {stats.bestWeekday ?? "—"} · Weakest: {stats.weakestWeekday ?? "—"}
+                </p>
+              </div>
+            </DashboardCard>
+            <DashboardCard eyebrow="Symbol performance" title="Ranked by contribution">
+              {stats.symbolPerformance.length === 0 ? (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
+                  Add symbol-tagged entries to see this view.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {stats.symbolPerformance.slice(0, 8).map((row) => (
+                    <div key={row.symbol} className="grid grid-cols-[1fr_auto] gap-3 rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5">
+                      <div>
+                        <p className="text-[13px] text-zinc-200">{row.symbol}</p>
+                        <p className="text-[11px] text-zinc-500">Avg {fmtPnl(row.averagePnl, displayCurrency)} · {row.entries} entries</p>
+                      </div>
+                      <p className={cn("font-mono text-[12px] tabular-nums", row.totalPnl > 0 ? "text-emerald-200" : row.totalPnl < 0 ? "text-rose-200" : "text-zinc-300")}>
+                        {fmtPnl(row.totalPnl, displayCurrency)}
+                      </p>
+                    </div>
+                  ))}
+                  <p className="text-[12px] text-zinc-500">
+                    Best symbol: {stats.bestSymbol ?? "—"} · Most traded: {stats.mostTradedSymbol ?? "—"}
+                  </p>
+                </div>
+              )}
+            </DashboardCard>
+          </section>
+
+          <section id="stats-accounts" className="scroll-mt-28" aria-label="Account comparison">
+            <DashboardCard eyebrow="Accounts" title="Account comparison">
+              {accountComparisonRows.length <= 1 ? (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
+                  Add another account to compare performance.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {accountComparisonRows.map((row) => (
+                    <div key={row.id} className="grid grid-cols-[1.25fr_repeat(5,minmax(0,1fr))] gap-2 rounded-lg border border-white/[0.07] bg-black/20 px-3 py-2 text-[12px]">
+                      <p className="truncate text-zinc-200">{row.name} <span className="text-zinc-500">({row.type})</span></p>
+                      <p className={cn("tabular-nums", row.pnl > 0 ? "text-emerald-200" : row.pnl < 0 ? "text-rose-200" : "text-zinc-300")}>{fmtPnl(row.pnl, displayCurrency)}</p>
+                      <p className="tabular-nums text-zinc-300">{row.winRate !== null ? `${row.winRate}%` : "—"}</p>
+                      <p className="tabular-nums text-zinc-300">{row.tradedDays}</p>
+                      <p className="tabular-nums text-zinc-300">{row.disciplineScore !== null ? `${row.disciplineScore}%` : "—"}</p>
+                      <p className="tabular-nums text-zinc-500">Account</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DashboardCard>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-2" aria-label="Setup and mistake analytics">
+            <DashboardCard eyebrow="Setups" title="Setup patterns">
+              {stats.setupPerformance.length === 0 ? (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
+                  Add setup tags to compare setup quality.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  <p className="text-[12px] text-zinc-500">Best setup by average P&L: <span className="text-zinc-200">{stats.bestSetup ?? "—"}</span></p>
+                  {stats.setupPerformance.slice(0, 7).map((row) => (
+                    <div key={row.setup} className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-white/[0.07] bg-black/15 px-3 py-2 text-[12px]">
+                      <p className="text-zinc-200">{row.setup} <span className="text-zinc-500">({row.entries})</span></p>
+                      <p className={cn("tabular-nums", (row.averagePnl ?? 0) > 0 ? "text-emerald-200" : (row.averagePnl ?? 0) < 0 ? "text-rose-200" : "text-zinc-300")}>
+                        Avg {fmtPnl(row.averagePnl, displayCurrency)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DashboardCard>
+            <DashboardCard eyebrow="Mistakes" title="Mistake impact">
+              <div className="space-y-3">
+                <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Most common mistake</p>
+                  <p className="mt-1.5 text-[13px] text-zinc-100">{stats.mostCommonMistake ?? "—"}</p>
+                </div>
+                <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Mistake cost</p>
+                  <p className={cn("mt-1.5 text-[13px] tabular-nums", (stats.mistakeCost ?? 0) <= 0 ? "text-rose-200" : "text-emerald-200")}>
+                    {fmtPnl(stats.mistakeCost, displayCurrency)}
+                  </p>
+                </div>
+              </div>
+            </DashboardCard>
+          </section>
+
+          <section id="stats-behavior" className="scroll-mt-28" aria-label="Behavior insights">
             <DashboardCard
               eyebrow="Behavior insights"
               title="How behavior links to your P&L"
@@ -568,18 +1085,69 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                     </div>
                   ))}
                   <div className="rounded-xl border border-emerald-400/18 bg-emerald-500/[0.06] px-4 py-3.5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-200/75">Best behavior state</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-200/75">Best mood</p>
                     <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-emerald-100">{bestBehavior?.state ?? "—"}</p>
                     <p className="mt-1 text-[12px] text-zinc-400">
                       {bestBehavior ? `${fmtPnl(bestBehavior.avg, displayCurrency)} · ${bestBehavior.sample} entries` : ""}
                     </p>
                   </div>
                   <div className="rounded-xl border border-rose-400/18 bg-rose-500/[0.06] px-4 py-3.5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-rose-200/75">Weakest behavior state</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-rose-200/75">Weakest mood</p>
                     <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-rose-100">{weakestBehavior?.state ?? "—"}</p>
                     <p className="mt-1 text-[12px] text-zinc-400">
                       {weakestBehavior ? `${fmtPnl(weakestBehavior.avg, displayCurrency)} · ${weakestBehavior.sample} entries` : ""}
                     </p>
+                  </div>
+                  <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Respected stop vs not</p>
+                    <p className="mt-2 text-[12px] text-zinc-300">
+                      {fmtPnl(stats.stopRespectedAvg, displayCurrency)} vs {fmtPnl(stats.stopNotRespectedAvg, displayCurrency)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">No revenge vs revenge</p>
+                    <p className="mt-2 text-[12px] text-zinc-300">
+                      {fmtPnl(stats.noRevengeAvg, displayCurrency)} vs {fmtPnl(stats.revengeAvg, displayCurrency)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </DashboardCard>
+          </section>
+
+          <section aria-label="Rules analytics">
+            <DashboardCard eyebrow="Rules" title="Rule adherence and impact" description="How consistently rules are followed and what breaks cost.">
+              {rulesAnalytics.rows.length === 0 ? (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
+                  Create active rules in Settings to track adherence here.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Rule adherence</p>
+                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.adherence !== null ? `${rulesAnalytics.adherence}%` : "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Most broken rule</p>
+                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.mostBroken ?? "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Rule break cost</p>
+                      <p className={cn("mt-1.5 text-[13px] tabular-nums", (rulesAnalytics.breakCost ?? 0) <= 0 ? "text-rose-200" : "text-emerald-200")}>
+                        {fmtPnl(rulesAnalytics.breakCost, displayCurrency)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {rulesAnalytics.rows.map((row) => (
+                      <div key={row.title} className="rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5 text-[12px]">
+                        <p className="text-zinc-200">{row.title}</p>
+                        <p className="mt-1 text-zinc-500">
+                          Followed {row.followedPct !== null ? `${row.followedPct}%` : "—"} · {fmtPnl(row.avgFollowed, displayCurrency)} when followed vs {fmtPnl(row.avgBroken, displayCurrency)} when broken
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

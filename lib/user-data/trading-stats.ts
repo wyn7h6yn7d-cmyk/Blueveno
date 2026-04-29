@@ -57,6 +57,38 @@ export type TradingStatsSnapshot = {
   bestWeekQuality: { weekStart: string; score: number } | null;
   moodBreakdown: MoodBreakdown;
   correlationHints: CorrelationStat[];
+  winRateDays: number | null;
+  maxDrawdown: number | null;
+  profitFactor: number | null;
+  weekdayPerformance: Array<{
+    weekday: string;
+    totalPnl: number;
+    averagePnl: number | null;
+    tradedDays: number;
+  }>;
+  bestWeekday: string | null;
+  weakestWeekday: string | null;
+  symbolPerformance: Array<{
+    symbol: string;
+    totalPnl: number;
+    averagePnl: number | null;
+    entries: number;
+  }>;
+  bestSymbol: string | null;
+  mostTradedSymbol: string | null;
+  setupPerformance: Array<{
+    setup: string;
+    totalPnl: number;
+    averagePnl: number | null;
+    entries: number;
+  }>;
+  bestSetup: string | null;
+  mostCommonMistake: string | null;
+  mistakeCost: number | null;
+  stopRespectedAvg: number | null;
+  stopNotRespectedAvg: number | null;
+  noRevengeAvg: number | null;
+  revengeAvg: number | null;
 };
 
 function weekLabel(weekStart: string) {
@@ -125,6 +157,13 @@ export function computeTradingStats(
   const tiltedPnl: number[] = [];
   const planTrue: number[] = [];
   const planFalse: number[] = [];
+  const stopTrue: number[] = [];
+  const stopFalse: number[] = [];
+  const noRevengeTrue: number[] = [];
+  const noRevengeFalse: number[] = [];
+  const setupMap = new Map<string, { sum: number; count: number }>();
+  const mistakeMap = new Map<string, { count: number; sum: number }>();
+  const symbolMap = new Map<string, { sum: number; count: number }>();
 
   for (const row of journal) {
     const key = dayKeyFromRow(row.entryDate, row.createdAt);
@@ -144,6 +183,22 @@ export function computeTradingStats(
     if (row.moodState === "Tilted") tiltedPnl.push(p);
     if (row.followedPlan) planTrue.push(p);
     else planFalse.push(p);
+    if (row.respectedStop) stopTrue.push(p);
+    else stopFalse.push(p);
+    if (row.noRevengeTrade) noRevengeTrue.push(p);
+    else noRevengeFalse.push(p);
+
+    const setupKey = String(row.setup ?? "Other").trim() || "Other";
+    const setupPrev = setupMap.get(setupKey) ?? { sum: 0, count: 0 };
+    setupMap.set(setupKey, { sum: setupPrev.sum + p, count: setupPrev.count + 1 });
+
+    const symbolKey = String(row.sym ?? "—").trim().toUpperCase() || "—";
+    const symbolPrev = symbolMap.get(symbolKey) ?? { sum: 0, count: 0 };
+    symbolMap.set(symbolKey, { sum: symbolPrev.sum + p, count: symbolPrev.count + 1 });
+
+    const mistakeKey = String(row.tag ?? "None").trim() || "None";
+    const mistakePrev = mistakeMap.get(mistakeKey) ?? { count: 0, sum: 0 };
+    mistakeMap.set(mistakeKey, { count: mistakePrev.count + 1, sum: mistakePrev.sum + p });
   }
 
   const dates = [...dayMap.keys()].sort((a, b) => a.localeCompare(b));
@@ -163,11 +218,17 @@ export function computeTradingStats(
   }
 
   const weekMap = new Map<string, number>();
+  const weekdayOrder = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const weekdayMap = new Map<string, { sum: number; count: number }>();
+  for (const day of weekdayOrder) weekdayMap.set(day, { sum: 0, count: 0 });
   for (const d of dailyBars) {
     const base = new Date(`${d.date}T12:00:00`);
     const ws = startOfWeekMonday(base);
     const wk = toDayKey(ws);
     weekMap.set(wk, (weekMap.get(wk) ?? 0) + d.pnl);
+    const weekday = base.toLocaleDateString("en-GB", { weekday: "short" });
+    const prev = weekdayMap.get(weekday) ?? { sum: 0, count: 0 };
+    weekdayMap.set(weekday, { sum: prev.sum + d.pnl, count: prev.count + 1 });
   }
   const weekKeys = [...weekMap.keys()].sort((a, b) => a.localeCompare(b));
   const weekly: WeeklyPoint[] = weekKeys.map((weekStart) => ({
@@ -219,6 +280,21 @@ export function computeTradingStats(
 
   const avgGreenDay = greens.length ? greens.reduce((a, b) => a + b, 0) / greens.length : null;
   const avgRedDay = reds.length ? reds.reduce((a, b) => a + b, 0) / reds.length : null;
+  const winRateDays = dailyBars.length > 0 ? Math.round((wins / dailyBars.length) * 100) : null;
+
+  let peak = 0;
+  let equity = 0;
+  let maxDrawdown = 0;
+  for (const d of dailyBars) {
+    equity += d.pnl;
+    if (equity > peak) peak = equity;
+    const drawdown = equity - peak;
+    if (drawdown < maxDrawdown) maxDrawdown = drawdown;
+  }
+
+  const grossProfit = dailyBars.filter((d) => d.pnl > 0).reduce((sum, d) => sum + d.pnl, 0);
+  const grossLossAbs = Math.abs(dailyBars.filter((d) => d.pnl < 0).reduce((sum, d) => sum + d.pnl, 0));
+  const profitFactor = grossLossAbs > 0 ? grossProfit / grossLossAbs : null;
 
   const orderedDesc = [...dailyBars].sort((a, b) => b.date.localeCompare(a.date));
   let streakLabel = "No streak";
@@ -306,6 +382,62 @@ export function computeTradingStats(
     correlationHints.push({ label: "Avg P&L when Followed plan = false", sample: planFalse.length, avgPnl: avg(planFalse) });
   }
 
+  const weekdayPerformance = weekdayOrder.map((weekday) => {
+    const bucket = weekdayMap.get(weekday) ?? { sum: 0, count: 0 };
+    return {
+      weekday,
+      totalPnl: bucket.sum,
+      averagePnl: bucket.count > 0 ? bucket.sum / bucket.count : null,
+      tradedDays: bucket.count,
+    };
+  });
+  const weekdayWithTrades = weekdayPerformance.filter((w) => w.tradedDays > 0);
+  const bestWeekday = weekdayWithTrades.length > 0
+    ? weekdayWithTrades.reduce((a, b) => (b.totalPnl > a.totalPnl ? b : a)).weekday
+    : null;
+  const weakestWeekday = weekdayWithTrades.length > 0
+    ? weekdayWithTrades.reduce((a, b) => (b.totalPnl < a.totalPnl ? b : a)).weekday
+    : null;
+
+  const symbolPerformance = [...symbolMap.entries()]
+    .map(([symbol, value]) => ({
+      symbol,
+      totalPnl: value.sum,
+      averagePnl: value.count > 0 ? value.sum / value.count : null,
+      entries: value.count,
+    }))
+    .sort((a, b) => b.totalPnl - a.totalPnl);
+  const bestSymbol = symbolPerformance.length > 0 ? symbolPerformance[0].symbol : null;
+  const mostTradedSymbol = symbolPerformance.length > 0
+    ? symbolPerformance.reduce((a, b) => (b.entries > a.entries ? b : a)).symbol
+    : null;
+
+  const setupPerformance = [...setupMap.entries()]
+    .map(([setup, value]) => ({
+      setup,
+      totalPnl: value.sum,
+      averagePnl: value.count > 0 ? value.sum / value.count : null,
+      entries: value.count,
+    }))
+    .sort((a, b) => b.totalPnl - a.totalPnl);
+  const bestSetup = setupPerformance.length > 0
+    ? setupPerformance.reduce((a, b) => ((b.averagePnl ?? -Infinity) > (a.averagePnl ?? -Infinity) ? b : a)).setup
+    : null;
+
+  const mistakeRows = [...mistakeMap.entries()].filter(([mistake]) => mistake.toLowerCase() !== "none");
+  const mostCommonMistake = mistakeRows.length > 0
+    ? mistakeRows.reduce((a, b) => (b[1].count > a[1].count ? b : a))[0]
+    : null;
+  const mistakeCost = mistakeRows.length > 0
+    ? mistakeRows.reduce((sum, [, value]) => sum + value.sum, 0)
+    : null;
+
+  const avgOrNull = (arr: number[]) => (arr.length > 0 ? arr.reduce((s, n) => s + n, 0) / arr.length : null);
+  const stopRespectedAvg = avgOrNull(stopTrue);
+  const stopNotRespectedAvg = avgOrNull(stopFalse);
+  const noRevengeAvg = avgOrNull(noRevengeTrue);
+  const revengeAvg = avgOrNull(noRevengeFalse);
+
   return {
     cumulative,
     dailyBars,
@@ -325,5 +457,22 @@ export function computeTradingStats(
     bestWeekQuality,
     moodBreakdown,
     correlationHints,
+    winRateDays,
+    maxDrawdown: dailyBars.length > 0 ? maxDrawdown : null,
+    profitFactor,
+    weekdayPerformance,
+    bestWeekday,
+    weakestWeekday,
+    symbolPerformance,
+    bestSymbol,
+    mostTradedSymbol,
+    setupPerformance,
+    bestSetup,
+    mostCommonMistake,
+    mistakeCost,
+    stopRespectedAvg,
+    stopNotRespectedAvg,
+    noRevengeAvg,
+    revengeAvg,
   };
 }

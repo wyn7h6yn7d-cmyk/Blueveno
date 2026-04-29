@@ -4,7 +4,7 @@ import { JournalWorkspace } from "@/components/journal/journal-workspace";
 import { getUserWorkspaceSnapshotForUser } from "@/lib/user-data/get-user-workspace-server";
 
 type Props = {
-  searchParams: Promise<{ date?: string | string[] }>;
+  searchParams: Promise<{ date?: string | string[]; week?: string | string[] }>;
 };
 
 function parseDateParam(raw: string | string[] | undefined): string | undefined {
@@ -20,6 +20,7 @@ export default async function JournalPage({ searchParams }: Props) {
 
   const sp = await searchParams;
   const highlightDate = parseDateParam(sp.date);
+  const weekAnchorDate = parseDateParam(sp.week);
 
   const initialWorkspace = await getUserWorkspaceSnapshotForUser(session.user.id);
 
@@ -29,6 +30,7 @@ export default async function JournalPage({ searchParams }: Props) {
       email={session.user.email ?? ""}
       initialWorkspace={initialWorkspace}
       highlightDate={highlightDate}
+      initialWeekAnchorDate={weekAnchorDate}
     />
   );
 }

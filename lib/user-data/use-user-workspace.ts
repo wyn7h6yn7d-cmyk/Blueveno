@@ -357,6 +357,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         tag: row.tag,
         note: row.note ?? null,
         chart_link_url: row.chartLinkUrl ?? null,
+        session_tag: row.sessionTag ?? null,
+        market_condition: row.marketCondition ?? null,
+        lesson_learned: row.lessonLearned ?? null,
+        rule_checks: row.ruleChecks ?? {},
       };
       const behaviorPayload = {
         mood_state: row.moodState ?? null,
@@ -404,6 +408,14 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         followedPlan: (inserted.followed_plan as boolean | null) ?? false,
         respectedStop: (inserted.respected_stop as boolean | null) ?? false,
         noRevengeTrade: (inserted.no_revenge_trade as boolean | null) ?? false,
+        sessionTag: (inserted.session_tag as string | null) ?? undefined,
+        marketCondition: (inserted.market_condition as string | null) ?? undefined,
+        lessonLearned: (inserted.lesson_learned as string | null) ?? undefined,
+        ruleChecks: inserted.rule_checks
+          ? Object.fromEntries(
+              Object.entries(inserted.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
+            )
+          : undefined,
       };
       setData((prev) => {
         const next = { ...prev, journal: [mapped, ...prev.journal].slice(0, 200) };
@@ -449,6 +461,10 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         followed_plan: row.followedPlan ?? false,
         respected_stop: row.respectedStop ?? false,
         no_revenge_trade: row.noRevengeTrade ?? false,
+        session_tag: row.sessionTag ?? null,
+        market_condition: row.marketCondition ?? null,
+        lesson_learned: row.lessonLearned ?? null,
+        rule_checks: row.ruleChecks ?? {},
         entry_date: row.entryDate ?? null,
       };
 
@@ -501,6 +517,14 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         followedPlan: (updated.followed_plan as boolean | null) ?? false,
         respectedStop: (updated.respected_stop as boolean | null) ?? false,
         noRevengeTrade: (updated.no_revenge_trade as boolean | null) ?? false,
+        sessionTag: (updated.session_tag as string | null) ?? undefined,
+        marketCondition: (updated.market_condition as string | null) ?? undefined,
+        lessonLearned: (updated.lesson_learned as string | null) ?? undefined,
+        ruleChecks: updated.rule_checks
+          ? Object.fromEntries(
+              Object.entries(updated.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
+            )
+          : undefined,
       };
       setData((prev) => {
         const next = {
@@ -563,7 +587,11 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       return { ok: false as const, error: msg };
     }
 
-    const { error: reflectionsError } = await supabase.from("weekly_reflections").delete().eq("user_id", userId);
+    const { error: reflectionsError } = await supabase
+      .from("weekly_reflections")
+      .delete()
+      .eq("user_id", userId)
+      .eq("account_id", activeAccountId);
     if (reflectionsError && !isMissingWeeklyReflectionsTableError(reflectionsError.message, reflectionsError.code)) {
       const msg = toUserDbError(reflectionsError.message);
       setLastError(msg);

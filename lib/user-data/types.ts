@@ -1,3 +1,5 @@
+import type { MarketCondition, MistakeTag, SessionTag, SetupTag } from "@/lib/user-data/journal-tags";
+
 export type JournalRow = {
   id: string;
   /** ISO timestamp from DB */
@@ -6,9 +8,9 @@ export type JournalRow = {
   entryDate?: string;
   time: string;
   sym: string;
-  setup: string;
+  setup: SetupTag | string;
   r: string;
-  tag: string;
+  tag: MistakeTag | string;
   /** Optional — journal page detail */
   note?: string;
   /** Optional linked chart URL */
@@ -18,6 +20,10 @@ export type JournalRow = {
   followedPlan?: boolean;
   respectedStop?: boolean;
   noRevengeTrade?: boolean;
+  sessionTag?: SessionTag | string;
+  marketCondition?: MarketCondition | string;
+  lessonLearned?: string;
+  ruleChecks?: Record<string, boolean>;
 };
 
 export type UserWorkspaceSnapshot = {

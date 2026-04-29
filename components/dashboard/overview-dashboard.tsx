@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, BarChart3, CalendarDays, NotebookPen } from "lucide-react";
 import { useAccess } from "@/components/access/access-provider";
 import { DashboardCard } from "@/components/app/dashboard-card";
@@ -13,6 +13,7 @@ import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   userId: string;
@@ -46,6 +47,10 @@ function formatStreakLabel(raw: string): string {
 export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
   const { displayCurrency } = useAccess();
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
+  const [weeklyReviewStatus, setWeeklyReviewStatus] = useState<{
+    status: "review_ready" | "saved" | "set_focus";
+    nextFocus: string | null;
+  }>({ status: "review_ready", nextFocus: null });
 
   const dayAgg = useMemo(() => buildDayAgg(data.journal), [data.journal]);
   const overviewStats = useMemo(
@@ -124,6 +129,84 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
   );
 
   const hasEntries = data.journal.length > 0;
+  const noLosingDays = overviewStats.losingDays === 0;
+  const lossMetricLabel = noLosingDays ? "Smallest green day" : "Worst day";
+  const lossMetricValue = noLosingDays ? overviewStats.smallestGreenDay : overviewStats.worstLossDay;
+  const secondaryKpis = [
+    { label: "Traded days", value: hasEntries ? String(overviewStats.tradedDays) : "—", tone: 0 },
+    {
+      label: "Average day",
+      value: hasEntries ? moneyOrDash(overviewStats.averageDay, displayCurrency) : "—",
+      tone: hasEntries ? (overviewStats.averageDay ?? 0) : 0,
+    },
+    {
+      label: "Best day",
+      value: hasEntries ? moneyOrDash(overviewStats.bestDay, displayCurrency) : "—",
+      tone: hasEntries ? (overviewStats.bestDay ?? 0) : 0,
+    },
+    {
+      label: lossMetricLabel,
+      value: hasEntries ? moneyOrDash(lossMetricValue, displayCurrency) : "—",
+      tone: hasEntries ? (lossMetricValue ?? 0) : 0,
+    },
+    {
+      label: "Avg green day",
+      value: hasEntries ? moneyOrDash(overviewStats.avgGreenDay, displayCurrency) : "—",
+      tone: hasEntries ? (overviewStats.avgGreenDay ?? 0) : 0,
+    },
+    {
+      label: "Avg red day",
+      value: hasEntries ? moneyOrDash(overviewStats.avgRedDay, displayCurrency) : "—",
+      tone: hasEntries ? (overviewStats.avgRedDay ?? 0) : 0,
+    },
+    { label: "Green / red days", value: hasEntries ? overviewStats.greenRedSummary : "—", tone: 0 },
+    {
+      label: "Streak",
+      value: hasEntries ? formatStreakLabel(overviewStats.streak) : "—",
+      tone: hasEntries
+        ? overviewStats.streak.includes("green")
+          ? 1
+          : overviewStats.streak.includes("red")
+            ? -1
+            : 0
+        : 0,
+    },
+  ];
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId || !activeAccountId) return;
+    const now = new Date();
+    const monday = new Date(now);
+    const offset = (monday.getDay() + 6) % 7;
+    monday.setDate(monday.getDate() - offset);
+    const weekStart = monday.toISOString().slice(0, 10);
+    const supabase = createClient();
+    void (async () => {
+      const { data: row } = await supabase
+        .from("weekly_reflections")
+        .select("what_worked, what_slipped, next_week_focus")
+        .eq("user_id", userId)
+        .eq("account_id", activeAccountId)
+        .eq("week_start", weekStart)
+        .maybeSingle();
+      if (cancelled) return;
+      const worked = String(row?.what_worked ?? "").trim();
+      const slipped = String(row?.what_slipped ?? "").trim();
+      const focus = String(row?.next_week_focus ?? "").trim();
+      if (worked || slipped || focus) {
+        setWeeklyReviewStatus({
+          status: focus ? "saved" : "set_focus",
+          nextFocus: focus || null,
+        });
+      } else {
+        setWeeklyReviewStatus({ status: "review_ready", nextFocus: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, activeAccountId, data.journal.length]);
 
   return (
     <div className="space-y-8">
@@ -143,7 +226,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
       <section className="space-y-4" aria-label="Overview KPIs">
         {!ready ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {Array.from({ length: 12 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
                 className="h-[7.25rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]"
@@ -152,7 +235,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           </div>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {[
                 {
                   label: "Week P&L",
@@ -166,64 +249,49 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                 },
                 { label: "Win rate", value: hasEntries ? percentOrDash(overviewStats.winRate) : "—", tone: 0 },
                 { label: "Discipline score", value: hasEntries ? percentOrDash(overviewStats.disciplineScore) : "—", tone: 0 },
-                { label: "Traded days", value: hasEntries ? String(overviewStats.tradedDays) : "—", tone: 0 },
-                {
-                  label: "Average day",
-                  value: hasEntries ? moneyOrDash(overviewStats.averageDay, displayCurrency) : "—",
-                  tone: hasEntries ? (overviewStats.averageDay ?? 0) : 0,
-                },
-                {
-                  label: "Best day",
-                  value: hasEntries ? moneyOrDash(overviewStats.bestDay, displayCurrency) : "—",
-                  tone: hasEntries ? (overviewStats.bestDay ?? 0) : 0,
-                },
-                {
-                  label: "Worst day",
-                  value: hasEntries ? moneyOrDash(overviewStats.worstDay, displayCurrency) : "—",
-                  tone: hasEntries ? (overviewStats.worstDay ?? 0) : 0,
-                },
-                {
-                  label: "Avg green day",
-                  value: hasEntries ? moneyOrDash(overviewStats.avgGreenDay, displayCurrency) : "—",
-                  tone: hasEntries ? (overviewStats.avgGreenDay ?? 0) : 0,
-                },
-                {
-                  label: "Avg red day",
-                  value: hasEntries ? moneyOrDash(overviewStats.avgRedDay, displayCurrency) : "—",
-                  tone: hasEntries ? (overviewStats.avgRedDay ?? 0) : 0,
-                },
-                { label: "Green / red days", value: hasEntries ? overviewStats.greenRedSummary : "—", tone: 0 },
-                {
-                  label: "Streak",
-                  value: hasEntries ? formatStreakLabel(overviewStats.streak) : "—",
-                  tone: hasEntries
-                    ? overviewStats.streak.includes("green")
-                      ? 1
-                      : overviewStats.streak.includes("red")
-                        ? -1
-                        : 0
-                    : 0,
-                },
               ].map((card) => (
                 <div
                   key={card.label}
                   className={cn(
-                    "rounded-2xl border border-white/[0.09] bg-[linear-gradient(155deg,oklch(0.14_0.03_262/0.96),oklch(0.095_0.028_264/0.95))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] ring-1 ring-white/[0.035]",
-                    card.label === "Streak" &&
-                      (card.tone > 0
-                        ? "border-emerald-400/45 bg-[linear-gradient(150deg,oklch(0.24_0.09_155/0.9),oklch(0.1_0.04_160/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.45_0.14_155/0.6)] ring-emerald-300/20"
-                        : card.tone < 0
-                          ? "border-rose-400/45 bg-[linear-gradient(150deg,oklch(0.24_0.09_18/0.9),oklch(0.1_0.04_22/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.48_0.14_18/0.6)] ring-rose-300/20"
-                          : "border-[oklch(0.62_0.12_252/0.45)] bg-[linear-gradient(150deg,oklch(0.24_0.08_252/0.9),oklch(0.1_0.04_262/0.95))] shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_18px_40px_-24px_oklch(0.58_0.14_252/0.6)] ring-[oklch(0.62_0.12_252/0.2)]"),
+                    "rounded-2xl border border-[oklch(0.58_0.1_252/0.3)] bg-[linear-gradient(155deg,oklch(0.2_0.05_258/0.95),oklch(0.105_0.03_264/0.95))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_28px_50px_-32px_oklch(0.5_0.14_252/0.6)] ring-1 ring-[oklch(0.6_0.1_252/0.16)]",
                   )}
                 >
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">{card.label}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400">{card.label}</p>
                   <p
                     className={cn(
-                      "font-display mt-2 text-[1.25rem] tabular-nums leading-none tracking-[-0.03em] sm:text-[1.4rem]",
+                      "font-display mt-2 text-[1.45rem] tabular-nums leading-none tracking-[-0.03em] sm:text-[1.65rem]",
                       card.tone > 0 && "text-emerald-200",
                       card.tone < 0 && "text-rose-200",
                       card.tone === 0 && "text-zinc-50",
+                    )}
+                  >
+                    {card.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+              {secondaryKpis.map((card) => (
+                <div
+                  key={card.label}
+                  className={cn(
+                    "rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.94),oklch(0.09_0.025_266/0.94))] px-3.5 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)]",
+                    card.label === "Streak" &&
+                      (card.tone > 0
+                        ? "border-emerald-400/25"
+                        : card.tone < 0
+                          ? "border-rose-400/25"
+                          : "border-[oklch(0.58_0.1_252/0.25)]"),
+                  )}
+                >
+                  <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">{card.label}</p>
+                  <p
+                    className={cn(
+                      "mt-1.5 text-[13px] font-semibold tabular-nums",
+                      card.tone > 0 && "text-emerald-200",
+                      card.tone < 0 && "text-rose-200",
+                      card.tone === 0 && "text-zinc-200",
                     )}
                   >
                     {card.value}
@@ -275,10 +343,13 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           </div>
         </DashboardCard>
 
-        <DashboardCard eyebrow="Recent activity" title="Latest journal days" contentClassName="p-0">
+        <DashboardCard eyebrow="Recent activity" title="Recent trading days" contentClassName="p-0">
           {recentActivity.length === 0 ? (
             <div className="px-5 py-8 text-sm text-zinc-500 sm:px-6">
-              No trading days yet. Add your first day to start building the calendar.
+              <p>Log your first trading day to see your week take shape.</p>
+              <Link href="/app/journal#add" className="mt-3 inline-flex text-[12px] text-[oklch(0.78_0.11_252)] hover:underline">
+                Add trading day
+              </Link>
             </div>
           ) : (
             <div className="divide-y divide-white/[0.06]">
@@ -310,29 +381,58 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         </DashboardCard>
       </section>
 
-      <section aria-label="Behavior insights">
+      <section className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]" aria-label="Behavior insights and weekly review">
         <DashboardCard
           eyebrow="Behavior insights"
-          title="Execution patterns"
-          description="Short, account-aware readouts based on your logged behavior checks."
+          title="Patterns from your entries"
+          description="Based on the account you're viewing."
         >
           {behaviorInsights.length === 0 ? (
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-6 text-sm text-zinc-500">
-              Log a few more days to unlock insights.
+              <p>Add a few trading days to unlock performance and behavior patterns.</p>
+              <Link href="/app/journal#add" className="mt-3 inline-flex text-[12px] text-[oklch(0.78_0.11_252)] hover:underline">
+                Log the day
+              </Link>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {behaviorInsights.map((insight) => (
                 <div
-                  key={insight.label}
-                  className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5"
+                  key={insight.title}
+                  className="rounded-xl border border-[oklch(0.58_0.1_252/0.2)] bg-[linear-gradient(160deg,oklch(0.15_0.04_260/0.85),oklch(0.095_0.03_264/0.9))] px-4 py-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]"
                 >
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">{insight.label}</p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-200">{insight.value}</p>
+                  <p className="text-[13px] font-medium text-zinc-100">{insight.title}</p>
+                  <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-300">{insight.detail}</p>
                 </div>
               ))}
             </div>
           )}
+        </DashboardCard>
+        <DashboardCard eyebrow="Weekly review" title="Current week">
+          <div className="space-y-3">
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Status</p>
+              <p className="mt-1.5 text-[13px] text-zinc-100">
+                {weeklyReviewStatus.status === "saved"
+                  ? "Reflection saved"
+                  : weeklyReviewStatus.status === "set_focus"
+                    ? "Set next week's focus"
+                    : "Review ready"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Next focus</p>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-300">
+                {weeklyReviewStatus.nextFocus ?? "Not set yet."}
+              </p>
+            </div>
+            <Link
+              href="/app/journal#weekly-review"
+              className="inline-flex h-9 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-3 text-[12px] text-zinc-200 hover:bg-white/[0.06]"
+            >
+              Close the week
+            </Link>
+          </div>
         </DashboardCard>
       </section>
 
@@ -359,7 +459,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
               href="/app/settings/billing"
               className="inline-flex items-center gap-1 text-[12px] font-medium uppercase tracking-[0.14em] text-[oklch(0.78_0.11_252)]"
             >
-              Plan & billing
+              Plan & access
               <ArrowUpRight className="size-3.5" />
             </Link>
           </div>

@@ -327,7 +327,19 @@ export function TradingAccountsSection() {
 
           {accounts.length === 0 ? (
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-sm text-zinc-500">
-              No trading accounts yet. Add your first account to start journaling.
+              <p>No trading accounts yet. Add one account to start journaling.</p>
+              {canManage ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById("accounts-create-name");
+                    if (el instanceof HTMLElement) el.focus();
+                  }}
+                  className="mt-3 inline-flex text-[12px] text-[oklch(0.78_0.11_252)] hover:underline"
+                >
+                  Create your first account
+                </button>
+              ) : null}
             </div>
           ) : (
             <div className="space-y-2.5">

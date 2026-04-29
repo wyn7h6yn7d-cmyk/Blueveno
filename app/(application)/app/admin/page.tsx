@@ -29,8 +29,8 @@ export default async function AdminPage() {
       <PageHeader
         variant="signature"
         eyebrow="Admin"
-        title="User Control Center"
-        description={`Manage roles, access states, trials, and account status. ${ADMIN_FULL_ACCESS_EMAIL} remains permanent admin with full access.`}
+        title="User management"
+        description={`Manage roles, access, and account status. ${ADMIN_FULL_ACCESS_EMAIL} is permanently protected as full admin.`}
       />
       <AdminUsersTable users={users} />
     </div>

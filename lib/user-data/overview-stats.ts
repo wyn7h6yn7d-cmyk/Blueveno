@@ -4,7 +4,7 @@ import type { JournalRow } from "@/lib/user-data/types";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 
-type BehaviorInsight = { label: string; value: string };
+export type BehaviorInsight = { title: string; detail: string };
 
 type OverviewStats = {
   weekPnl: number;
@@ -15,7 +15,8 @@ type OverviewStats = {
   winRate: number | null;
   averageDay: number | null;
   bestDay: number | null;
-  worstDay: number | null;
+  worstLossDay: number | null;
+  smallestGreenDay: number | null;
   avgGreenDay: number | null;
   avgRedDay: number | null;
   streak: string;
@@ -173,7 +174,8 @@ export function getOverviewStats({
     winRate: directionalTrades > 0 ? Math.round((winningTrades / directionalTrades) * 100) : null,
     averageDay: avg(totalPnl, tradedDays),
     bestDay: tradedDays > 0 ? Math.max(...daily.map((d) => d.pnl)) : null,
-    worstDay: tradedDays > 0 ? Math.min(...daily.map((d) => d.pnl)) : null,
+    worstLossDay: negatives.length > 0 ? Math.min(...negatives) : null,
+    smallestGreenDay: positives.length > 0 ? Math.min(...positives) : null,
     avgGreenDay: avg(positives.reduce((s, n) => s + n, 0), positives.length),
     avgRedDay: avg(negatives.reduce((s, n) => s + n, 0), negatives.length),
     streak: streakFromDaily(daily),
@@ -195,6 +197,10 @@ export function getBehaviorInsights({
   if (entries.length === 0) return insights;
 
   const daily = aggregateDaily(entries, timezone);
+  const pnlEntries = entries
+    .map((row) => parsePnlAmount(row.r))
+    .filter((value): value is number => value !== null && Number.isFinite(value));
+  if (pnlEntries.length < 4) return insights;
 
   const moodBuckets = new Map<string, { total: number; count: number }>();
   for (const row of entries) {
@@ -209,26 +215,19 @@ export function getBehaviorInsights({
     .filter(([, v]) => v.count >= 2)
     .map(([mood, v]) => ({ mood, avg: v.total / v.count }))
     .sort((a, b) => b.avg - a.avg)[0];
-  if (bestMood) {
+  if (bestMood && bestMood.avg > 0) {
     insights.push({
-      label: "Best mood",
-      value: `${bestMood.mood} · avg ${formatSignedPnlAmount(bestMood.avg, currency)}`,
-    });
-  }
-
-  const commonMood = [...moodBuckets.entries()].sort((a, b) => b[1].count - a[1].count)[0];
-  if (commonMood && commonMood[1].count >= 2) {
-    insights.push({
-      label: "Most common mood",
-      value: `${commonMood[0]} · ${commonMood[1].count} entries`,
+      title: `Best state: ${bestMood.mood}`,
+      detail: `${formatSignedPnlAmount(bestMood.avg, currency)} avg across ${moodBuckets.get(bestMood.mood)?.count ?? 0} entries`,
     });
   }
 
   const compare = (
     title: string,
-    yesLabel: string,
-    noLabel: string,
+    yesDetail: string,
+    noDetail: string,
     pick: (row: JournalRow) => boolean | undefined,
+    minimumEdge = 5,
   ) => {
     let yesTotal = 0;
     let yesCount = 0;
@@ -246,16 +245,21 @@ export function getBehaviorInsights({
       }
     }
     if (yesCount >= 2 && noCount >= 2) {
+      const yesAvg = yesTotal / yesCount;
+      const noAvg = noTotal / noCount;
+      if (!Number.isFinite(yesAvg) || !Number.isFinite(noAvg)) return;
+      if (yesAvg <= noAvg) return;
+      if (Math.abs(yesAvg - noAvg) < minimumEdge) return;
       insights.push({
-        label: title,
-        value: `${yesLabel} ${formatSignedPnlAmount(yesTotal / yesCount, currency)} vs ${noLabel} ${formatSignedPnlAmount(noTotal / noCount, currency)}`,
+        title,
+        detail: `${formatSignedPnlAmount(yesAvg, currency)} avg ${yesDetail} vs ${formatSignedPnlAmount(noAvg, currency)} ${noDetail}`,
       });
     }
   };
 
-  compare("Plan follow-through", "Followed", "not followed", (r) => r.followedPlan);
-  compare("Stop discipline", "Respected", "not respected", (r) => r.respectedStop);
-  compare("Revenge control", "No revenge", "revenge", (r) => r.noRevengeTrade);
+  compare("Following your plan is paying off", "when followed", "when not", (r) => r.followedPlan);
+  compare("Stop discipline is positive", "when respected", "when not respected", (r) => r.respectedStop);
+  compare("Revenge control is working", "when revenge-free", "when revenge happened", (r) => r.noRevengeTrade);
 
   const byDay = new Map<string, { allNoRevenge: boolean }>();
   for (const row of entries) {
@@ -270,10 +274,10 @@ export function getBehaviorInsights({
     if (byDay.get(key)?.allNoRevenge) revengeFreeStreak += 1;
     else break;
   }
-  if (orderedKeys.length > 0) {
+  if (orderedKeys.length >= 3 && revengeFreeStreak >= 2) {
     insights.push({
-      label: "Revenge-trade-free streak",
-      value: `${revengeFreeStreak} day${revengeFreeStreak === 1 ? "" : "s"}`,
+      title: "Revenge-free streak is building",
+      detail: `${revengeFreeStreak} straight day${revengeFreeStreak === 1 ? "" : "s"} without revenge trading`,
     });
   }
 
@@ -285,12 +289,12 @@ export function getBehaviorInsights({
   }
   const bestWeekday = [...weekdayBuckets.entries()]
     .filter(([, v]) => v.count >= 2)
-    .map(([day, v]) => ({ day, avg: v.total / v.count }))
-    .sort((a, b) => b.avg - a.avg)[0];
-  if (bestWeekday) {
+    .map(([day, v]) => ({ day, total: v.total }))
+    .sort((a, b) => b.total - a.total)[0];
+  if (bestWeekday && bestWeekday.total > 0) {
     insights.push({
-      label: "Best weekday",
-      value: `${bestWeekday.day} · avg ${formatSignedPnlAmount(bestWeekday.avg, currency)}`,
+      title: `Best weekday: ${bestWeekday.day}`,
+      detail: `${formatSignedPnlAmount(bestWeekday.total, currency)} total`,
     });
   }
 

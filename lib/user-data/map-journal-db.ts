@@ -17,6 +17,10 @@ export type JournalRowDb = {
   followed_plan?: boolean | null;
   respected_stop?: boolean | null;
   no_revenge_trade?: boolean | null;
+  session_tag?: string | null;
+  market_condition?: string | null;
+  lesson_learned?: string | null;
+  rule_checks?: Record<string, unknown> | null;
 };
 
 export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
@@ -35,6 +39,14 @@ export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
     followedPlan: r.followed_plan ?? false,
     respectedStop: r.respected_stop ?? false,
     noRevengeTrade: r.no_revenge_trade ?? false,
+    sessionTag: r.session_tag ?? undefined,
+    marketCondition: r.market_condition ?? undefined,
+    lessonLearned: r.lesson_learned ?? undefined,
+    ruleChecks: r.rule_checks
+      ? Object.fromEntries(
+          Object.entries(r.rule_checks).map(([k, v]) => [k, Boolean(v)]),
+        )
+      : undefined,
   };
 }
 

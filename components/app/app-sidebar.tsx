@@ -22,7 +22,7 @@ const MAIN_NAV = [
   { href: "/app/settings", label: "Settings", icon: Settings, match: (p: string) => p.startsWith("/app/settings") && !p.startsWith("/app/settings/billing") },
   {
     href: "/app/settings/billing",
-    label: "Billing",
+    label: "Plan & access",
     icon: CreditCard,
     match: (p: string) => p.startsWith("/app/settings/billing"),
   },
@@ -105,33 +105,32 @@ export function AppSidebarNav({ isAdmin = false, onNavigate, className }: AppSid
 
 export function AppSidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <div className="border-t border-white/[0.06] p-4">
+    <div className="border-t border-white/[0.06] px-4 pb-3 pt-2.5">
       <div
         className={cn(
-          "rounded-xl border border-[oklch(0.52_0.12_252/0.3)] bg-[linear-gradient(165deg,oklch(0.16_0.06_262/0.62),oklch(0.09_0.04_268/0.58))]",
-          "p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_16px_38px_-28px_oklch(0.62_0.15_252/0.52)]",
+          "rounded-lg border border-white/[0.07] bg-[linear-gradient(165deg,oklch(0.13_0.04_264/0.56),oklch(0.09_0.03_268/0.52))]",
+          "p-3 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)]",
         )}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <BluevenoWordmark />
-            <p className="mt-2.5 text-[12px] leading-relaxed text-zinc-500">Calendar · journal · stats</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 opacity-90">
+            <BluevenoWordmark className="text-[0.95rem]" />
           </div>
           <div
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/[0.09] px-2 py-1 shadow-[inset_0_1px_0_0_oklch(0.88_0.08_155/0.08)]"
+            className="flex shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/[0.08] px-1.5 py-0.5"
             title="Workspace session active"
             aria-label="Live — workspace session active"
           >
             <span
-              className="bv-live-dot size-2 shrink-0 rounded-full bg-emerald-400"
+              className="bv-live-dot size-1.5 shrink-0 rounded-full bg-emerald-400"
               aria-hidden
             />
-            <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.2em] text-emerald-300/95">
+            <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.14em] text-emerald-300/90">
               Live
             </span>
           </div>
         </div>
-        <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-500">
           <Link href="/privacy" onClick={onNavigate} className="transition hover:text-zinc-300">
             Privacy
           </Link>
@@ -142,9 +141,8 @@ export function AppSidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
             Cookies
           </Link>
         </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-zinc-500">
-          Blueveno is a journaling and review tool. It does not provide financial advice, trading signals, or investment
-          recommendations.
+        <p className="mt-2 text-[10px] leading-relaxed text-zinc-500">
+          Journaling and review tool only. Not financial advice.
         </p>
       </div>
     </div>

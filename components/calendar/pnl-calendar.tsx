@@ -27,13 +27,17 @@ type DayAggregate = {
   latestEntryId: string | null;
   count: number;
   latestNote: string | null;
+  hasChartLink: boolean;
 };
 
 type WeeklyReflectionSummary = {
   weekStart: string;
+  accountId?: string | null;
   whatWorked: string | null;
   whatSlipped: string | null;
   nextWeekFocus: string | null;
+  nextWeekRule?: string | null;
+  confidenceScore?: number | null;
 };
 
 const WEEKDAY_HEADERS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Weekend"] as const;
@@ -78,7 +82,7 @@ function monthLabel(d: Date): string {
 function dayCellClasses(total: number, hasData: boolean, inMonth: boolean): string {
   if (!hasData) {
     return cn(
-      "border border-white/[0.14] bg-[linear-gradient(165deg,oklch(0.12_0.032_264/0.76),oklch(0.075_0.026_268/0.66))] text-zinc-500",
+      "border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.11_0.028_264/0.58),oklch(0.07_0.022_268/0.54))] text-zinc-600",
       !inMonth && "opacity-38",
     );
   }
@@ -121,6 +125,14 @@ function weekAccent(total: number): string {
   return "bg-zinc-500/50";
 }
 
+function weekNumber(weekStart: Date): number {
+  const date = new Date(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 function weekDateRangeLabel(week: DayCell[]): string {
   const start = week[0].date.getDate();
   const end = week[6].date.getDate();
@@ -137,7 +149,7 @@ function startOfWeekMonday(date: Date): Date {
 
 function weekSummaryFromReflection(reflection?: WeeklyReflectionSummary): string | null {
   if (!reflection) return null;
-  const pick = [reflection.whatWorked, reflection.whatSlipped, reflection.nextWeekFocus]
+  const pick = [reflection.nextWeekFocus, reflection.nextWeekRule, reflection.whatWorked, reflection.whatSlipped]
     .map((value) => value?.trim() ?? "")
     .find((value) => value.length > 0);
   return pick ?? null;
@@ -169,9 +181,9 @@ function weekQualityScore(week: DayCell[], aggregates: Map<string, DayAggregate>
 }
 
 function reflectionStatus(rows: { label: string; value: string }[]): { label: string; tone: string } {
-  if (rows.length >= 3) return { label: "Complete", tone: "text-emerald-200" };
-  if (rows.length > 0) return { label: "Partial", tone: "text-amber-200" };
-  return { label: "Empty", tone: "text-zinc-400" };
+  if (rows.length >= 3) return { label: "Reflection saved", tone: "text-emerald-200" };
+  if (rows.length > 0) return { label: "In progress", tone: "text-amber-200" };
+  return { label: "Review ready", tone: "text-zinc-400" };
 }
 
 export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }: Props) {
@@ -185,9 +197,10 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
       const key = row.entryDate ?? keyFromDate(row.createdAt ? new Date(row.createdAt) : new Date());
       const val = parsePnlAmount(row.r) ?? 0;
       const rowNote = row.note?.trim() ? row.note.trim() : null;
+      const hasChart = Boolean(row.chartLinkUrl);
       const prev = map.get(key);
       if (!prev) {
-        map.set(key, { total: val, latestEntryId: row.id, count: 1, latestNote: rowNote });
+        map.set(key, { total: val, latestEntryId: row.id, count: 1, latestNote: rowNote, hasChartLink: hasChart });
         continue;
       }
       map.set(key, {
@@ -195,6 +208,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
         latestEntryId: prev.latestEntryId ?? row.id,
         count: prev.count + 1,
         latestNote: prev.latestNote ?? rowNote,
+        hasChartLink: prev.hasChartLink || hasChart,
       });
     }
     return map;
@@ -217,6 +231,47 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
     }
     return out;
   }, [cursor]);
+
+  const monthSummary = useMemo(() => {
+    const monthIndex = cursor.getMonth();
+    const year = cursor.getFullYear();
+    const monthEntries = entries.filter((row) => {
+      const d = row.entryDate ? new Date(`${row.entryDate}T12:00:00`) : row.createdAt ? new Date(row.createdAt) : null;
+      if (!d || Number.isNaN(d.getTime())) return false;
+      return d.getFullYear() === year && d.getMonth() === monthIndex;
+    });
+
+    const dayTotals = new Map<string, number>();
+    let checksDone = 0;
+    let checksTotal = 0;
+    for (const row of monthEntries) {
+      const key = row.entryDate ?? keyFromDate(row.createdAt ? new Date(row.createdAt) : new Date());
+      const pnl = parsePnlAmount(row.r) ?? 0;
+      dayTotals.set(key, (dayTotals.get(key) ?? 0) + pnl);
+      checksTotal += 3;
+      if (row.followedPlan) checksDone += 1;
+      if (row.respectedStop) checksDone += 1;
+      if (row.noRevengeTrade) checksDone += 1;
+    }
+
+    const tradedDays = dayTotals.size;
+    const dayValues = [...dayTotals.values()];
+    const monthPnl = dayValues.reduce((sum, value) => sum + value, 0);
+    const winDays = dayValues.filter((value) => value > 0).length;
+    const winRate = tradedDays > 0 ? Math.round((winDays / tradedDays) * 100) : null;
+    const disciplineScore = checksTotal > 0 ? Math.round((checksDone / checksTotal) * 100) : null;
+
+    const weekTotals = new Map<string, number>();
+    for (const [dayKey, total] of dayTotals.entries()) {
+      const ws = keyFromDate(startOfWeekMonday(new Date(`${dayKey}T12:00:00`)));
+      weekTotals.set(ws, (weekTotals.get(ws) ?? 0) + total);
+    }
+    const weekRows = [...weekTotals.entries()].map(([weekStart, total]) => ({ weekStart, total }));
+    const bestWeek = weekRows.length > 0 ? weekRows.reduce((a, b) => (b.total > a.total ? b : a)) : null;
+    const weakestWeek = weekRows.length > 0 ? weekRows.reduce((a, b) => (b.total < a.total ? b : a)) : null;
+
+    return { tradedDays, monthPnl, winRate, bestWeek, weakestWeek, disciplineScore };
+  }, [cursor, entries]);
 
   const weeklyReflectionsByWeekStart = useMemo(() => {
     const map = new Map<string, WeeklyReflectionSummary>();
@@ -275,6 +330,48 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
           </button>
         </div>
       </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6" aria-label="Month summary">
+        {[
+          { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl },
+          { label: "Win rate", value: monthSummary.winRate !== null ? `${monthSummary.winRate}%` : "—", tone: 0 },
+          { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0 },
+          {
+            label: "Best week",
+            value: monthSummary.bestWeek ? formatSignedPnlAmount(monthSummary.bestWeek.total, displayCurrency) : "—",
+            tone: monthSummary.bestWeek?.total ?? 0,
+          },
+          {
+            label: "Weakest week",
+            value: monthSummary.weakestWeek ? formatSignedPnlAmount(monthSummary.weakestWeek.total, displayCurrency) : "—",
+            tone: monthSummary.weakestWeek?.total ?? 0,
+          },
+          { label: "Discipline score", value: monthSummary.disciplineScore !== null ? `${monthSummary.disciplineScore}%` : "—", tone: 0 },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className="rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3"
+          >
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
+            <p
+              className={cn(
+                "mt-1.5 font-display text-[1rem] tabular-nums tracking-[-0.02em]",
+                item.tone > 0 && "text-emerald-200",
+                item.tone < 0 && "text-rose-200",
+                item.tone === 0 && "text-zinc-100",
+              )}
+            >
+              {item.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {monthSummary.tradedDays === 0 ? (
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-sm text-zinc-500">
+          Your month will fill as you log trading days.
+        </div>
+      ) : null}
 
       <div className="w-full min-w-0 overflow-x-auto overflow-y-visible pb-1 [-webkit-overflow-scrolling:touch]">
         <div className="flex w-full min-w-0 justify-center sm:justify-center xl:justify-start">
@@ -355,6 +452,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     const count = aggregateRows.reduce((sum, row) => sum + row.count, 0);
                     const latestEntryId = aggregateRows[aggregateRows.length - 1]?.latestEntryId ?? null;
                     const notePreview = aggregateRows.find((row) => row.latestNote)?.latestNote ?? null;
+                    const hasChartLink = aggregateRows.some((row) => row.hasChartLink);
                     const hasData = count > 0;
                     const cellClasses = dayCellClasses(total, hasData, cell.inMonth);
                     const isSelected = cell.key === selectedDayKey;
@@ -373,6 +471,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         className={cn(
                           "group relative box-border flex h-full min-h-[82px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 transition duration-200 sm:min-h-[188px] sm:rounded-xl sm:p-4.5 lg:min-h-[206px] lg:p-5",
                           cellClasses,
+                          cell.isWeekend && !hasData && "border-white/[0.06] bg-[linear-gradient(160deg,oklch(0.105_0.024_264/0.5),oklch(0.07_0.02_268/0.45))] text-zinc-600",
                           isSelected &&
                             "ring-2 ring-[oklch(0.72_0.14_252/0.72)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_0_0_1px_oklch(0.72_0.14_252/0.5)]",
                           hasData && "hover:brightness-[1.05] hover:ring-2 hover:ring-[oklch(0.58_0.12_252/0.5)]",
@@ -398,6 +497,11 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                               </span>
                             ) : null}
                           </div>
+                          {hasChartLink ? (
+                            <span className="w-fit max-w-full truncate rounded border border-[oklch(0.58_0.12_252/0.35)] bg-[oklch(0.58_0.12_252/0.15)] px-1 py-0.5 font-mono text-[7px] text-zinc-200 sm:px-1.5 sm:text-[9px]">
+                              Linked chart
+                            </span>
+                          ) : null}
                           {hasData && count > 1 ? (
                             <span className="w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/85 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]">
                               {count}×
@@ -428,13 +532,13 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                                   {formatSignedPnlAmount(total, displayCurrency)}
                                 </span>
                               </div>
-                              <div className="mt-1 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
+                            <div className="mt-1 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
                                 Day
                               </div>
                             </>
                           ) : (
                             <>
-                              <div className="font-mono text-[11px] tabular-nums text-zinc-500/85 sm:text-[13px]">—</div>
+                              <div className="font-mono text-[11px] tabular-nums text-zinc-600/85 sm:text-[13px]">—</div>
                             </>
                           )}
                         </div>
@@ -469,10 +573,13 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                   {(() => {
                     const quality = weekQualityScore(week, aggregates);
                     const status = reflectionStatus(weeklyReflectionRows);
+                    const nextFocusPreview = weeklyReflection?.nextWeekFocus?.trim() || "Not set";
+                    const weekNum = weekNumber(new Date(`${weekStartKey}T12:00:00`));
                     return (
-                  <div
+                  <Link
+                    href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
                     className={cn(
-                      "relative hidden box-border min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left sm:flex sm:min-h-[188px] sm:gap-1 sm:rounded-xl sm:p-5 lg:min-h-[206px] lg:p-5.5",
+                      "relative hidden box-border min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left outline-none transition hover:brightness-[1.04] focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.12_252/0.55)] sm:flex sm:min-h-[188px] sm:gap-1 sm:rounded-xl sm:p-5 lg:min-h-[206px] lg:p-5.5",
                       weekRailClasses(weekly),
                     )}
                   >
@@ -480,7 +587,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                     <div className="flex min-w-0 flex-col gap-2 pl-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:pl-3">
                       <div className="flex shrink-0 items-baseline gap-2 sm:flex-col sm:items-start sm:gap-0">
                         <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-white/55 sm:text-[9px] sm:tracking-[0.2em]">
-                          Wk {i + 1}
+                          Wk {weekNum}
                         </p>
                         <p className="font-mono text-[8px] tabular-nums text-white/65 sm:mt-1 sm:text-[10px] sm:text-white/70">
                           {weekDateRangeLabel(week)}
@@ -500,15 +607,9 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         <p className={cn("mt-1 font-mono text-[9px] uppercase tracking-[0.16em]", status.tone)}>
                           {status.label}
                         </p>
-                        {weeklyReflectionRows.length === 0 ? (
-                          <p className="mt-1 text-[11px] leading-snug text-white/55 sm:text-[12px]">
-                            —
-                          </p>
-                        ) : (
-                          <p className="mt-1 break-words text-[11px] leading-snug text-white/85 [overflow-wrap:anywhere] sm:text-[12px] line-clamp-2">
-                            {weeklySummary}
-                          </p>
-                        )}
+                        <p className="mt-1 break-words text-[11px] leading-snug text-white/85 [overflow-wrap:anywhere] sm:text-[12px] line-clamp-2">
+                          Next focus: {nextFocusPreview}
+                        </p>
                       </div>
                     </div>
                     <div className="min-w-0 overflow-hidden pl-2 sm:pl-3">
@@ -524,7 +625,7 @@ export function PnlCalendar({ entries, displayCurrency, weeklyReflections = [] }
                         </span>
                       </p>
                     </div>
-                  </div>
+                  </Link>
                     );
                   })()}
                 </Fragment>

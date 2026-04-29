@@ -25,6 +25,19 @@ export async function fetchJournalEntryForUser(
   if (isCancelled()) return { ok: false, reason: "missing" };
   if (!sessionOk) return { ok: false, reason: "session" };
 
+  const { data: profile, error: profileError } = await supabase
+    .from("user_profiles")
+    .select("active_trading_account_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (profileError) {
+    return { ok: false, reason: "error", message: profileError.message };
+  }
+  const activeTradingAccountId = (profile?.active_trading_account_id as string | null) ?? null;
+  if (!activeTradingAccountId) {
+    return { ok: false, reason: "missing" };
+  }
+
   for (let attempt = 0; attempt < 8; attempt++) {
     if (isCancelled()) return { ok: false, reason: "missing" };
 
@@ -33,6 +46,7 @@ export async function fetchJournalEntryForUser(
       .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
       .eq("id", entryId)
       .eq("user_id", userId)
+      .eq("account_id", activeTradingAccountId)
       .maybeSingle();
 
     if (error && isMissingEntryDateColumnError(error.message)) {
@@ -41,6 +55,7 @@ export async function fetchJournalEntryForUser(
         .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
         .eq("id", entryId)
         .eq("user_id", userId)
+        .eq("account_id", activeTradingAccountId)
         .maybeSingle());
     }
 

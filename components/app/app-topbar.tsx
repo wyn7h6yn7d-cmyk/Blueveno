@@ -28,6 +28,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
 import { WorkspaceSessionClock } from "@/components/app/workspace-session-clock";
 import { TopbarAccountSwitcher } from "@/components/app/topbar-account-switcher";
+import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 
 type AppTopbarProps = {
   user: { id: string; name?: string | null; email?: string | null; timezone?: string | null };
@@ -40,7 +41,7 @@ function sectionLabel(pathname: string): string {
   if (pathname.startsWith("/app/stats")) return "Stats";
   if (pathname.startsWith("/app/calendar")) return "Calendar";
   if (pathname.startsWith("/app/journal")) return "Journal";
-  if (pathname.startsWith("/app/settings/billing")) return "Billing";
+  if (pathname.startsWith("/app/settings/billing")) return "Plan & access";
   if (pathname.startsWith("/app/settings")) return "Settings";
   if (pathname.startsWith("/app/analytics")) return "Analytics";
   if (pathname.startsWith("/app/reviews")) return "Reviews";
@@ -52,11 +53,15 @@ function sectionLabel(pathname: string): string {
 export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: AppTopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { activeAccountId, loading: accountsLoading } = useTradingAccountsWorkspace();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const displayName = user.name?.trim() || user.email?.trim() || "Account";
   const fallbackInitial = displayName.charAt(0).toUpperCase() || "A";
   const label = sectionLabel(pathname);
+  const hasActiveAccount = Boolean(activeAccountId);
+  const newEntryHref = hasActiveAccount ? "/app/journal#add" : "/app/settings?section=accounts&new=1#accounts";
+  const newEntryDisabled = !canWriteJournal || accountsLoading;
   /** Greeting: profile display name when set, otherwise email (same source as Settings). */
   const helloName = user.name?.trim() || user.email?.trim() || "";
 
@@ -143,16 +148,17 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
           <WorkspaceSessionClock serverTimeZone={user.timezone} />
         </div>
         <Link
-          href="/app/journal#add"
+          href={newEntryHref}
           className={cn(
             buttonVariants({ variant: "default", size: "sm" }),
             "min-h-10 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.67_0.15_252))] px-2.5 text-[13px] font-semibold text-[oklch(0.1_0.04_265)] shadow-[0_14px_36px_-16px_oklch(0.43_0.14_252/0.62)] hover:brightness-[1.04] sm:px-3.5",
-            !canWriteJournal && "pointer-events-none opacity-40",
+            newEntryDisabled && "pointer-events-none opacity-40",
           )}
-          aria-disabled={!canWriteJournal}
+          aria-disabled={newEntryDisabled}
+          title={!hasActiveAccount && canWriteJournal ? "Set an active trading account first" : undefined}
         >
           <NotebookPen className="size-4 opacity-90 sm:mr-1.5" />
-          <span className="hidden sm:inline">New entry</span>
+          <span className="hidden sm:inline">{hasActiveAccount ? "New entry" : "Set account"}</span>
         </Link>
         <DropdownMenu>
           <DropdownMenuTrigger

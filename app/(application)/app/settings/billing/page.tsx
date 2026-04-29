@@ -1,14 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Check, Sparkles } from "lucide-react";
+import { Check } from "lucide-react";
 import { auth } from "@/auth";
 import { loadAccessForUser } from "@/lib/access/load-access";
 import { PageHeader } from "@/components/app/page-header";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatEur, PRICING_EUR } from "@/lib/marketing/pricing-copy";
-
-const PREMIUM_LABEL = "Blueveno Premium";
 
 const PREMIUM_INCLUDES = [
   "Ongoing journaling after trial",
@@ -49,9 +44,9 @@ export default async function BillingSettingsPage() {
     <div className="space-y-8">
       <PageHeader
         variant="signature"
-        eyebrow="Billing"
-        title="Plan"
-        description="Trial, read-only, and Premium — same prices as marketing."
+        eyebrow="Plan & access"
+        title="Plan & access"
+        description="Your access, account limits, and Premium options."
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
@@ -65,12 +60,9 @@ export default async function BillingSettingsPage() {
         >
           <div className="relative">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-300">
-                {PREMIUM_LABEL}
-              </span>
+              <span className="rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-300">Access state</span>
               {isTrial ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-200">
-                  <Sparkles className="size-3.5" strokeWidth={1.75} />
                   Trial active
                 </span>
               ) : null}
@@ -92,22 +84,33 @@ export default async function BillingSettingsPage() {
               ) : null}
             </div>
 
-            <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-2">
-              <h2 className="font-display text-3xl tracking-[-0.03em] text-zinc-50 md:text-4xl">
-                {formatEur(PRICING_EUR.monthly)}
-                <span className="ml-2 text-lg font-normal text-zinc-500">/ month</span>
-              </h2>
-              <span className="text-zinc-600">or</span>
-              <p className="font-display text-2xl tracking-[-0.03em] text-zinc-50 md:text-3xl">
-                {formatEur(PRICING_EUR.yearly)}
-                <span className="ml-2 text-base font-normal text-zinc-500">/ year</span>
-              </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Current state</p>
+                <p className="mt-1.5 text-[14px] text-zinc-100">
+                  {isAdminUser ? "Admin" : isPremium ? "Premium" : isTrial ? "Trial active" : "Read-only"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Account limit</p>
+                <p className="mt-1.5 text-[14px] text-zinc-100">{isAdminUser || isPremium ? "Up to 5 accounts" : "1 account during trial"}</p>
+              </div>
+              <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Premium monthly</p>
+                <p className="mt-1.5 text-[14px] text-zinc-100">€8.99 / month</p>
+              </div>
+              {trialEndLabel ? (
+                <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Trial end</p>
+                  <p className="mt-1.5 text-[14px] text-zinc-100">{trialEndLabel}</p>
+                </div>
+              ) : null}
             </div>
             <div className="mt-3 max-w-2xl text-[15px] leading-relaxed text-zinc-400">
               {isAdminUser ? (
                 <>
-                  <p>Admin access includes full Blueveno functionality without a subscription.</p>
-                  <p className="mt-3 text-zinc-500">Your workspace stays fully enabled while admin access is active.</p>
+                  <p>Full access is enabled for this account.</p>
+                  <p className="mt-3 text-zinc-500">Admin access is active and does not require payment.</p>
                 </>
               ) : isReadOnly ? (
                 <>
@@ -134,53 +137,20 @@ export default async function BillingSettingsPage() {
               ) : (
                 "Premium unlocks ongoing journaling after trial."
               )}
+              <p className="mt-3 text-zinc-500">
+                Premium is available by request. In-app checkout is not enabled yet.
+              </p>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              {(isReadOnly || isTrial) && !isAdminUser ? (
-                <>
-                  <Link
-                    href="/pricing"
-                    className={cn(
-                      buttonVariants({ variant: "default" }),
-                      "h-11 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.68_0.15_252))] px-6 text-[oklch(0.12_0.04_265)] shadow-[0_12px_40px_-12px_oklch(0.45_0.14_252/0.55)] hover:brightness-[1.03]",
-                    )}
-                  >
-                    View pricing
-                  </Link>
-                  <Link
-                    href="/app"
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "h-11 rounded-xl border-white/[0.14] bg-white/[0.04] px-5 text-zinc-100 hover:bg-white/[0.08]",
-                    )}
-                  >
-                    Open workspace
-                  </Link>
-                </>
-              ) : null}
-              {isPremium && !isAdminUser ? (
-                <Link
-                  href="/pricing"
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "h-11 rounded-xl border-white/[0.14] bg-white/[0.04] px-5 text-zinc-100 hover:bg-white/[0.08]",
-                  )}
-                >
-                  View pricing
-                </Link>
-              ) : null}
-              {isAdminUser ? (
-                <Link
-                  href="/pricing"
-                  className={cn(
-                    buttonVariants({ variant: "outline" }),
-                    "h-11 rounded-xl border-white/[0.14] bg-white/[0.04] px-5 text-zinc-100 hover:bg-white/[0.08]",
-                  )}
-                >
-                  View pricing
-                </Link>
-              ) : null}
+            <div className="mt-6 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[13px] text-zinc-400">
+              {isReadOnly ? "Ready to restore full journaling access?" : "Want to request Premium or update access?"}
+              <a
+                className="ml-1 text-[oklch(0.78_0.11_252)] underline-offset-4 hover:underline"
+                href="mailto:kennethalto95@gmail.com?subject=Blueveno%20Premium%20Access%20Request"
+              >
+                Contact support
+              </a>
+              .
             </div>
           </div>
         </div>

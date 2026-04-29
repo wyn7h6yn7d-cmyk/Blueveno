@@ -4,6 +4,7 @@ export type AccessState = "admin" | "trial_active" | "premium_active" | "trial_e
 export type UserProfileRow = {
   user_id: string;
   email: string;
+  display_name: string | null;
   is_admin: boolean;
   trial_ends_at: string;
   manual_premium: boolean;
@@ -12,6 +13,10 @@ export type UserProfileRow = {
   stripe_subscription_id: string | null;
   account_disabled: boolean;
   last_active_at: string | null;
+  internal_note: string | null;
+  premium_granted_reason: string | null;
+  premium_granted_at: string | null;
+  premium_granted_by: string | null;
   created_at: string;
   updated_at: string;
 };
