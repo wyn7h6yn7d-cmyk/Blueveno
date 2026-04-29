@@ -629,20 +629,24 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                   key={`desktop-week-${i}`}
                   href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
                   className={cn(
-                    "rounded-lg border px-3 py-2.5",
-                    "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.88),oklch(0.08_0.02_266/0.88))]",
+                    "rounded-xl border px-3.5 py-3.5",
+                    "min-h-[188px] lg:min-h-[206px]",
+                    "bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))]",
                     "border-white/[0.1]",
+                    "flex flex-col justify-between",
                   )}
                   title={weeklySummary ?? "No weekly reflection"}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">{weekDateRangeLabel(week)}</p>
-                    <p className={cn("font-display text-[1rem] tabular-nums", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-400">{weekDateRangeLabel(week)}</p>
+                    <p className={cn("font-display text-[1.2rem] tabular-nums tracking-[-0.03em]", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
                       {formatSignedPnlAmount(weekly, displayCurrency)}
                     </p>
                   </div>
-                  <p className="mt-1.5 text-[11px] text-zinc-300">Quality: <span className="text-zinc-100">{quality}%</span></p>
-                  <p className={cn("mt-1 font-mono text-[9px] uppercase tracking-[0.12em]", status.tone)}>{status.label}</p>
+                  <div>
+                    <p className="text-[12px] text-zinc-300">Quality: <span className="text-zinc-100">{quality}%</span></p>
+                    <p className={cn("mt-1 font-mono text-[10px] uppercase tracking-[0.14em]", status.tone)}>{status.label}</p>
+                  </div>
                 </Link>
               );
             })}
