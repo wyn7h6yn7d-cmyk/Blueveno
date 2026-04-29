@@ -362,6 +362,17 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         lesson_learned: row.lessonLearned ?? null,
         rule_checks: row.ruleChecks ?? {},
       };
+      const legacyPayload = {
+        user_id: userId,
+        account_id: activeAccountId,
+        entry_time: row.time,
+        symbol: row.sym,
+        setup: row.setup,
+        r_value: row.r,
+        tag: row.tag,
+        note: row.note ?? null,
+        chart_link_url: row.chartLinkUrl ?? null,
+      };
       const behaviorPayload = {
         mood_state: row.moodState ?? null,
         followed_plan: row.followedPlan ?? false,
@@ -382,7 +393,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       if (insertResult.error && isMissingEntryDateColumnError(insertResult.error.message)) {
         insertResult = await supabase
           .from("journal_entries")
-          .insert(basePayload)
+          .insert(legacyPayload)
           .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
           .single();
       }
