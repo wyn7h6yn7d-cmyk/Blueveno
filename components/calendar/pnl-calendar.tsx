@@ -303,10 +303,10 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     return map;
   }, [weeklyReflections]);
 
-  /** Mobile: 6 day columns only. Week rail appears from sm+. */
+  /** Mobile/tablet: 6 day columns only. Week rail appears from md+. */
   const calendarGridCols = cn(
     "[grid-template-columns:repeat(6,minmax(4.25rem,1fr))]",
-    "sm:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(11rem,14rem)]",
+    "md:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(11rem,14rem)]",
     "lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(12.75rem,16.5rem)]",
     "xl:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(13.5rem,18rem)]",
   );
@@ -439,11 +439,11 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
             <div
               className={cn(
                 headerBox,
-                "hidden min-w-0 font-mono text-[8px] uppercase tracking-[0.12em] text-[oklch(0.78_0.12_252)] sm:flex sm:text-[10px] sm:tracking-[0.18em] lg:text-[11px]",
+                "hidden min-w-0 font-mono text-[8px] uppercase tracking-[0.12em] text-[oklch(0.78_0.12_252)] md:flex md:text-[10px] md:tracking-[0.18em] lg:text-[11px]",
               )}
             >
-              <span className="sm:hidden">Σ</span>
-              <span className="hidden sm:inline">Week</span>
+              <span className="md:hidden">Σ</span>
+              <span className="hidden md:inline">Week</span>
             </div>
 
             {weeks.map((week, i) => {
@@ -609,7 +609,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                   <Link
                     href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
                     className={cn(
-                      "relative hidden box-border min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left outline-none transition hover:brightness-[1.04] focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.12_252/0.55)] sm:flex sm:min-h-[188px] sm:gap-1 sm:rounded-xl sm:p-5 lg:min-h-[206px] lg:p-5.5",
+                      "relative hidden box-border min-h-[142px] min-w-0 flex-col justify-between gap-2.5 overflow-hidden rounded-lg p-2.5 text-left outline-none transition hover:brightness-[1.04] focus-visible:ring-2 focus-visible:ring-[oklch(0.62_0.12_252/0.55)] md:flex md:min-h-[188px] md:gap-1 md:rounded-xl md:p-5 lg:min-h-[206px] lg:p-5.5",
                       weekRailClasses(weekly),
                     )}
                   >
