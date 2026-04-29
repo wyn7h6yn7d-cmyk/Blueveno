@@ -438,7 +438,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
   const [accountScope, setAccountScope] = useState<"active" | "all">(
-    searchParams.get("accountScope") === "all" ? "all" : "active",
+    searchParams.get("accountScope") === "active" ? "active" : "all",
   );
   const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
@@ -497,7 +497,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
 
   useEffect(() => {
     setFilters(parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
-    setAccountScope(searchParams.get("accountScope") === "all" ? "all" : "active");
+    setAccountScope(searchParams.get("accountScope") === "active" ? "active" : "all");
   }, [searchParams]);
 
   useEffect(() => {
