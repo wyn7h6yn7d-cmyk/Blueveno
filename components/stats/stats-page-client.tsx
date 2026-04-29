@@ -75,6 +75,17 @@ function CumulativeChart({ points, currency }: { points: { i: number; t: string;
     setTipIndex((prev) => (prev === i ? prev : i));
   };
 
+  const tipPoint =
+    tipIndex !== null
+      ? (() => {
+          const b = visibleBars[tipIndex];
+          const x = pad + tipIndex * step + step / 2;
+          const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
+          const y = b.pnl >= 0 ? midY - bh : midY + bh;
+          return { x, y, pnl: b.pnl, date: b.date };
+        })()
+      : null;
+
   const xTickIndexes = [0, Math.floor((n - 1) / 2), n - 1];
   const xTickLabels = xTickIndexes.map((i) => ({ i, date: points[i]?.t ?? "" }));
   const tipPoint =
@@ -295,15 +306,22 @@ function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; 
           </text>
         ))}
       </svg>
-      {tipIndex !== null ? (
+      {tipPoint ? (
         <div
           role="tooltip"
-          className="pointer-events-none absolute left-3 top-3 z-[20] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]"
+          className={cn(
+            "pointer-events-none absolute z-[20] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]",
+            tipPoint.x > w - 130 ? "-translate-x-full -translate-y-[115%]" : "-translate-x-1/2 -translate-y-[115%]",
+          )}
+          style={{
+            left: `${(tipPoint.x / w) * 100}%`,
+            top: `${Math.max(((tipPoint.y - 8) / h) * 100, 8)}%`,
+          }}
         >
           <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
-            {formatSignedPnlAmount(visibleBars[tipIndex].pnl, currency)}
+            {formatSignedPnlAmount(tipPoint.pnl, currency)}
           </p>
-          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{visibleBars[tipIndex].date}</p>
+          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{tipPoint.date}</p>
         </div>
       ) : null}
     </div>
@@ -497,13 +515,29 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
     if (!userId || accountScope !== "all") return;
     const supabase = createClient();
     void (async () => {
-      const { data: rows } = await supabase
+      const fullSelect =
+        "id,created_at,entry_date,entry_time,symbol,setup,r_value,tag,note,chart_link_url,mood_state,followed_plan,respected_stop,no_revenge_trade,session_tag,market_condition,lesson_learned,rule_checks";
+      const fallbackSelect =
+        "id,created_at,entry_date,entry_time,symbol,setup,r_value,tag,note,chart_link_url,mood_state,followed_plan,respected_stop,no_revenge_trade";
+
+      const primary = await supabase
         .from("journal_entries")
-          .select("id,created_at,entry_date,entry_time,symbol,setup,r_value,tag,note,chart_link_url,mood_state,followed_plan,respected_stop,no_revenge_trade,session_tag,market_condition,lesson_learned,rule_checks")
+        .select(fullSelect)
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
+
+      const secondary =
+        primary.error && /column|schema cache|rule_checks|session_tag|market_condition|lesson_learned/i.test(primary.error.message ?? "")
+          ? await supabase
+              .from("journal_entries")
+              .select(fallbackSelect)
+              .eq("user_id", userId)
+              .order("created_at", { ascending: false })
+          : null;
+
+      const rows = (secondary?.data ?? primary.data ?? []) as Array<Record<string, unknown>>;
       if (cancelled) return;
-      const mapped: JournalRow[] = (rows ?? []).map((r) => ({
+      const mapped: JournalRow[] = rows.map((r) => ({
         id: String(r.id),
         createdAt: (r.created_at as string | null) ?? undefined,
         entryDate: (r.entry_date as string | null) ?? undefined,
@@ -1011,42 +1045,6 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                   ))}
                 </div>
               )}
-            </DashboardCard>
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-2" aria-label="Setup and mistake analytics">
-            <DashboardCard eyebrow="Setups" title="Setup patterns">
-              {stats.setupPerformance.length === 0 ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
-                  Add setup tags to compare setup quality.
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  <p className="text-[12px] text-zinc-500">Best setup by average P&L: <span className="text-zinc-200">{stats.bestSetup ?? "—"}</span></p>
-                  {stats.setupPerformance.slice(0, 7).map((row) => (
-                    <div key={row.setup} className="grid grid-cols-[1fr_auto] gap-2 rounded-lg border border-white/[0.07] bg-black/15 px-3 py-2 text-[12px]">
-                      <p className="text-zinc-200">{row.setup} <span className="text-zinc-500">({row.entries})</span></p>
-                      <p className={cn("tabular-nums", (row.averagePnl ?? 0) > 0 ? "text-emerald-200" : (row.averagePnl ?? 0) < 0 ? "text-rose-200" : "text-zinc-300")}>
-                        Avg {fmtPnl(row.averagePnl, displayCurrency)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </DashboardCard>
-            <DashboardCard eyebrow="Mistakes" title="Mistake impact">
-              <div className="space-y-3">
-                <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Most common mistake</p>
-                  <p className="mt-1.5 text-[13px] text-zinc-100">{stats.mostCommonMistake ?? "—"}</p>
-                </div>
-                <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Mistake cost</p>
-                  <p className={cn("mt-1.5 text-[13px] tabular-nums", (stats.mistakeCost ?? 0) <= 0 ? "text-rose-200" : "text-emerald-200")}>
-                    {fmtPnl(stats.mistakeCost, displayCurrency)}
-                  </p>
-                </div>
-              </div>
             </DashboardCard>
           </section>
 
