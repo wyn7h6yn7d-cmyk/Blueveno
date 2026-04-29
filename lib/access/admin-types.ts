@@ -13,4 +13,5 @@ export type AdminUserListItem = {
   journal_entry_count: number;
   access_state: AccessState;
   subscription_label: string;
+  premium_ends_at: string | null;
 };

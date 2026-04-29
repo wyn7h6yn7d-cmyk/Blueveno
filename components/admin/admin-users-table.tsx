@@ -40,9 +40,9 @@ function badgeClass(tone: BadgeTone): string {
 }
 
 function formatDate(v: string | null): string {
-  if (!v) return "—";
+  if (!v) return "-";
   const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString();
 }
 
@@ -178,6 +178,7 @@ export function AdminUsersTable({ users }: Props) {
               <th className="px-4 py-3.5">Created</th>
               <th className="px-4 py-3.5">Trial ends</th>
               <th className="px-4 py-3.5">Premium</th>
+              <th className="px-4 py-3.5">Premium ends</th>
               <th className="px-4 py-3.5">Entries</th>
               <th className="px-4 py-3.5">Last active</th>
               <th className="px-4 py-3.5">Actions</th>
@@ -186,7 +187,7 @@ export function AdminUsersTable({ users }: Props) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-6 py-12 text-center">
+                <td colSpan={10} className="px-6 py-12 text-center">
                   <p className="font-display text-lg text-zinc-200">No users match your filters.</p>
                   <p className="mt-1 text-sm text-zinc-500">Adjust filters or search to continue managing access.</p>
                 </td>
@@ -249,6 +250,7 @@ export function AdminUsersTable({ users }: Props) {
                       {isPaid ? "Active" : "Inactive"}
                     </span>
                   </td>
+                  <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">{isPaid ? formatDate(u.premium_ends_at) : "-"}</td>
                   <td className="px-4 py-3.5 tabular-nums text-zinc-400">{u.journal_entry_count}</td>
                   <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">{formatDateTime(u.last_active_at)}</td>
                   <td className="px-4 py-3">

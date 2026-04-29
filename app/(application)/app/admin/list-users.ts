@@ -6,6 +6,7 @@ import { createAdminClient, isSupabaseServiceRoleConfigured } from "@/lib/supaba
 import { resolveAccess } from "@/lib/access/resolve-access";
 import type { UserProfileRow } from "@/lib/access/types";
 import type { AdminUserListItem } from "@/lib/access/admin-types";
+import { getStripe } from "@/lib/billing/stripe";
 
 function mapProfile(raw: Record<string, unknown>): UserProfileRow {
   return {
@@ -56,6 +57,35 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
     counts.set(uid, (counts.get(uid) ?? 0) + 1);
   }
 
+  const stripe = getStripe();
+  const premiumEndsBySubscription = new Map<string, string | null>();
+  const subscriptionIds = Array.from(
+    new Set(
+      (profiles as Record<string, unknown>[])
+        .map((p) => p.stripe_subscription_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0),
+    ),
+  );
+
+  if (stripe && subscriptionIds.length > 0) {
+    await Promise.all(
+      subscriptionIds.map(async (subscriptionId) => {
+        try {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          premiumEndsBySubscription.set(
+            subscriptionId,
+            subscription.current_period_end
+              ? new Date(subscription.current_period_end * 1000).toISOString()
+              : null,
+          );
+        } catch (error) {
+          console.error("[listUsersForAdmin] failed to retrieve Stripe subscription", subscriptionId, error);
+          premiumEndsBySubscription.set(subscriptionId, null);
+        }
+      }),
+    );
+  }
+
   return (profiles as Record<string, unknown>[]).map((p) => {
     const profile = mapProfile(p);
     const ctx = resolveAccess(profile, profile.email);
@@ -82,6 +112,9 @@ export async function listUsersForAdmin(): Promise<AdminUserListItem[]> {
       journal_entry_count: counts.get(profile.user_id) ?? 0,
       access_state: ctx.state,
       subscription_label: sub,
+      premium_ends_at: profile.stripe_subscription_id
+        ? (premiumEndsBySubscription.get(profile.stripe_subscription_id) ?? null)
+        : null,
     };
   });
 }
