@@ -48,9 +48,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionSummary[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
-  const [accountScope, setAccountScope] = useState<"active" | "all">(
-    searchParams.get("accountScope") === "active" ? "active" : "all",
-  );
+  const [accountScope, setAccountScope] = useState<"active" | "all">("all");
   const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
 
   useEffect(() => {
@@ -151,7 +149,6 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
 
   useEffect(() => {
     setFilters(parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
-    setAccountScope(searchParams.get("accountScope") === "active" ? "active" : "all");
   }, [searchParams]);
 
   useEffect(() => {
