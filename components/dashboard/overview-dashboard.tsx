@@ -26,6 +26,13 @@ function formatDayLabel(dayKey: string) {
   return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date);
 }
 
+function localDayKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function moneyOrDash(value: number | null, currency: string): string {
   return value === null || !Number.isFinite(value) ? "—" : signedMoney(value, currency);
 }
@@ -73,7 +80,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
     const days = Array.from({ length: 7 }).map((_, idx) => {
       const day = new Date(monday);
       day.setDate(monday.getDate() + idx);
-      const key = day.toISOString().slice(0, 10);
+      const key = localDayKey(day);
       return { key, label: day.toLocaleDateString("en-GB", { weekday: "short" }), day: day.getDate() };
     });
     return [
@@ -180,7 +187,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
     const monday = new Date(now);
     const offset = (monday.getDay() + 6) % 7;
     monday.setDate(monday.getDate() - offset);
-    const weekStart = monday.toISOString().slice(0, 10);
+    const weekStart = localDayKey(monday);
     const supabase = createClient();
     void (async () => {
       const { data: row } = await supabase
