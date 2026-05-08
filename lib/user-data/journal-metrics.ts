@@ -3,12 +3,15 @@ import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 
 export function toDayKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function dayKeyFromRow(entryDate?: string, createdAt?: string): string {
   if (entryDate) return entryDate;
-  if (createdAt) return new Date(createdAt).toISOString().slice(0, 10);
+  if (createdAt) return toDayKey(new Date(createdAt));
   return toDayKey(new Date());
 }
 
