@@ -251,21 +251,6 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
         </DashboardCard>
       ) : (
         <div className="space-y-4">
-          {baseEntries.length === 0 ? (
-            <DashboardCard eyebrow="Calendar" title="Ready for your first week" description="Your month will fill as you log trading days.">
-              <EmptyState
-                icon={CalendarDays}
-                title="No days logged yet"
-                description="Log a trading day to start filling your calendar."
-                action={
-                  <Link href="/app/journal#add" className={appPrimaryCta}>
-                    Log the day
-                  </Link>
-                }
-                className="border-none bg-transparent py-8 ring-0"
-              />
-            </DashboardCard>
-          ) : null}
           <div className="relative md:-mx-8 lg:-mx-10">
           <div
             className="pointer-events-none absolute -inset-x-4 -top-8 bottom-0 hidden bg-[radial-gradient(ellipse_82%_58%_at_46%_0%,oklch(0.42_0.12_252/0.13),transparent_64%)] md:block lg:-inset-x-8"
