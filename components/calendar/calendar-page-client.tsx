@@ -49,7 +49,9 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionSummary[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
-  const [accountScope, setAccountScope] = useState<"active" | "all">("all");
+  const [accountScope, setAccountScope] = useState<"active" | "all">(
+    searchParams.get("accountScope") === "all" ? "all" : "active",
+  );
   const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
 
   useEffect(() => {
@@ -154,7 +156,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
 
   useEffect(() => {
     const base = new URLSearchParams(searchParams.toString());
-    if (accountScope === "active") base.set("accountScope", "active");
+    if (accountScope === "all") base.set("accountScope", "all");
     else base.delete("accountScope");
     const next = writeFiltersToParams(base, filters);
     const nextQuery = next.toString();
@@ -199,8 +201,8 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
           onChange={(e) => setAccountScope(e.target.value as "active" | "all")}
           className="h-9 w-full rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300 sm:w-[11rem]"
         >
-          <option value="all">All accounts</option>
           <option value="active">Active account</option>
+          <option value="all">All accounts</option>
         </select>
       </div>
       {filtersOpen ? (
