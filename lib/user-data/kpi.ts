@@ -19,6 +19,23 @@ export function parsePnlAmount(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * Win rate from journal rows with parseable P&amp;L: winning / (winning + losing).
+ * Breakeven (0) and non-numeric cells are excluded from the denominator.
+ */
+export function tradeWinRatePercent(rows: Iterable<{ r: string }>): number | null {
+  let wins = 0;
+  let losses = 0;
+  for (const row of rows) {
+    const pnl = parsePnlAmount(row.r);
+    if (pnl === null) continue;
+    if (pnl > 0) wins += 1;
+    else if (pnl < 0) losses += 1;
+  }
+  const denom = wins + losses;
+  return denom > 0 ? Math.round((wins / denom) * 100) : null;
+}
+
 /** @deprecated Use parsePnlAmount — kept for existing imports */
 export function parseR(raw: string): number | null {
   return parsePnlAmount(raw);
@@ -68,7 +85,9 @@ export function computeKpis(journal: JournalRow[]): KpiSnapshot {
   const net = rs.reduce((a, b) => a + b, 0);
   const exp = net / rs.length;
   const wins = rs.filter((r) => r > 0).length;
-  const winPct = Math.round((wins / rs.length) * 100);
+  const losses = rs.filter((r) => r < 0).length;
+  const directional = wins + losses;
+  const winPct = directional > 0 ? Math.round((wins / directional) * 100) : 0;
 
   let cum = 0;
   let peak = 0;
@@ -88,7 +107,8 @@ export function computeKpis(journal: JournalRow[]): KpiSnapshot {
     expectancyDelta: "Per trade",
     expectancyTone: exp > 0 ? "positive" : exp < 0 ? "negative" : "neutral",
     winRate: `${winPct}%`,
-    winRateDelta: `${wins} / ${rs.length} winners`,
+    winRateDelta:
+      directional > 0 ? `${wins}W · ${losses}L (${rs.length} with P&L)` : `${rs.length} fill${rs.length === 1 ? "" : "s"}, no wins or losses`,
     winRateTone: winPct >= 50 ? "positive" : "neutral",
     maxDd: fmtSigned(maxDd, 1),
     maxDdDelta: "Worst drawdown vs peak",

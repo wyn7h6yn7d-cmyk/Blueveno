@@ -59,7 +59,7 @@ export function MonthlyReviewCard({
     `Month: ${review.monthKey}`,
     `Month P&L: ${formatSignedPnlAmount(review.monthPnl, displayCurrency)}`,
     `Traded days: ${review.tradedDays}`,
-    `Win rate: ${review.winRateDays ?? "—"}%`,
+    `Trade win rate: ${review.winRateTrades ?? "—"}%`,
     `Best day: ${review.bestDay ? `${review.bestDay.date} (${formatSignedPnlAmount(review.bestDay.pnl, displayCurrency)})` : "—"}`,
     `${review.worstOrSmallestGreenDay?.label ?? "Worst day"}: ${review.worstOrSmallestGreenDay ? `${review.worstOrSmallestGreenDay.date} (${formatSignedPnlAmount(review.worstOrSmallestGreenDay.pnl, displayCurrency)})` : "—"}`,
     `Best week: ${review.bestWeek ? `${review.bestWeek.weekStart} (${formatSignedPnlAmount(review.bestWeek.pnl, displayCurrency)})` : "—"}`,
@@ -106,7 +106,7 @@ export function MonthlyReviewCard({
       <div className="grid gap-2 rounded-xl border border-white/[0.08] bg-black/20 p-3 text-[12px] sm:grid-cols-2 lg:grid-cols-3">
         <p>Month P&L: <span className="text-zinc-200">{formatSignedPnlAmount(review.monthPnl, displayCurrency)}</span></p>
         <p>Traded days: <span className="text-zinc-200">{review.tradedDays}</span></p>
-        <p>Win rate: <span className="text-zinc-200">{review.winRateDays ?? "—"}%</span></p>
+        <p>Trade win rate: <span className="text-zinc-200">{review.winRateTrades ?? "—"}%</span></p>
         <p>Best day: <span className="text-zinc-200">{review.bestDay ? `${review.bestDay.date} (${formatSignedPnlAmount(review.bestDay.pnl, displayCurrency)})` : "—"}</span></p>
         <p>{review.worstOrSmallestGreenDay?.label ?? "Worst day"}: <span className="text-zinc-200">{review.worstOrSmallestGreenDay ? `${review.worstOrSmallestGreenDay.date} (${formatSignedPnlAmount(review.worstOrSmallestGreenDay.pnl, displayCurrency)})` : "—"}</span></p>
         <p>Best week: <span className="text-zinc-200">{review.bestWeek ? `${review.bestWeek.weekStart} (${formatSignedPnlAmount(review.bestWeek.pnl, displayCurrency)})` : "—"}</span></p>

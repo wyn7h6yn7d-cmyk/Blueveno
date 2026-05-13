@@ -1,6 +1,6 @@
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
-import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
 
 export function toDayKey(d: Date): string {
   const year = d.getFullYear();
@@ -133,14 +133,14 @@ export function computeOverviewKpis(journal: JournalRow[]): OverviewKpis {
     if (row.noRevengeTrade) completedChecks += 1;
   }
 
-  const winRateRaw = tradedDays > 0 ? (winningDays / tradedDays) * 100 : null;
+  const winRateRaw = tradeWinRatePercent(journal);
   const disciplineRaw = totalChecks > 0 ? (completedChecks / totalChecks) * 100 : null;
 
   return {
     tradedDays,
     winningDays,
     losingDays,
-    winRatePct: winRateRaw !== null && Number.isFinite(winRateRaw) ? Math.round(winRateRaw) : null,
+    winRatePct: winRateRaw,
     disciplineScorePct: disciplineRaw !== null && Number.isFinite(disciplineRaw) ? Math.round(disciplineRaw) : null,
     averageDay: safeAvg(totalPnl, tradedDays),
     bestDay: tradedDays > 0 ? Math.max(...dayAgg.map((d) => d.pnl)) : null,

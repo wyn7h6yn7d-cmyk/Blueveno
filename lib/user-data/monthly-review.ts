@@ -1,11 +1,12 @@
-import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
 import type { JournalRow } from "@/lib/user-data/types";
 
 export type MonthlyReviewSnapshot = {
   monthKey: string;
   monthPnl: number;
   tradedDays: number;
-  winRateDays: number | null;
+  /** Winning / (winning + losing) trades in month; breakevens excluded */
+  winRateTrades: number | null;
   bestDay: { date: string; pnl: number } | null;
   worstOrSmallestGreenDay: { date: string; pnl: number; label: "Worst day" | "Smallest green day" } | null;
   bestWeek: { weekStart: string; pnl: number } | null;
@@ -106,9 +107,7 @@ export function computeMonthlyReview(
       .map(([name, stats]) => ({ name, avg: stats.total / stats.count }))
       .sort((a, b) => b.avg - a.avg)[0]?.name ?? null;
   const monthPnl = daily.reduce((s, d) => s + d.pnl, 0);
-  const winDays = daily.filter((d) => d.pnl > 0).length;
-  const lossDays = daily.filter((d) => d.pnl < 0).length;
-  const directional = winDays + lossDays;
+  const winRateTrades = tradeWinRatePercent(rows);
   const focus = weeklyFocuses
     .filter((r) => r.weekStart.slice(0, 7) <= monthKey && Boolean(r.nextWeekFocus?.trim()))
     .sort((a, b) => b.weekStart.localeCompare(a.weekStart))[0]?.nextWeekFocus;
@@ -117,7 +116,7 @@ export function computeMonthlyReview(
     monthKey,
     monthPnl,
     tradedDays: daily.length,
-    winRateDays: directional > 0 ? Math.round((winDays / directional) * 100) : null,
+    winRateTrades,
     bestDay,
     worstOrSmallestGreenDay: worstDay
       ? { ...worstDay, label: "Worst day" }

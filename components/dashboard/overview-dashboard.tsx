@@ -254,7 +254,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                   value: hasEntries ? signedMoney(overviewStats.monthPnl, displayCurrency) : "—",
                   tone: hasEntries ? overviewStats.monthPnl : 0,
                 },
-                { label: "Win rate", value: hasEntries ? percentOrDash(overviewStats.winRate) : "—", tone: 0 },
+                { label: "Trade win rate", value: hasEntries ? percentOrDash(overviewStats.winRate) : "—", tone: 0 },
                 { label: "Discipline score", value: hasEntries ? percentOrDash(overviewStats.disciplineScore) : "—", tone: 0 },
               ].map((card) => (
                 <div

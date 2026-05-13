@@ -2,7 +2,7 @@ import type { ForexSessionLabel } from "@/lib/trading-session";
 import { primaryForexSessionUTC } from "@/lib/trading-session";
 import type { JournalRow } from "@/lib/user-data/types";
 import { journalEntryMoment } from "@/lib/user-data/journal-entry-time";
-import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
 import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 
 export type CumulativePoint = { i: number; t: string; y: number };
@@ -57,7 +57,8 @@ export type TradingStatsSnapshot = {
   bestWeekQuality: { weekStart: string; score: number } | null;
   moodBreakdown: MoodBreakdown;
   correlationHints: CorrelationStat[];
-  winRateDays: number | null;
+  /** Winning trades / (winning + losing); breakeven and non-numeric P&amp;L excluded */
+  winRateTrades: number | null;
   maxDrawdown: number | null;
   profitFactor: number | null;
   weekdayPerformance: Array<{
@@ -284,7 +285,7 @@ export function computeTradingStats(
 
   const avgGreenDay = greens.length ? greens.reduce((a, b) => a + b, 0) / greens.length : null;
   const avgRedDay = reds.length ? reds.reduce((a, b) => a + b, 0) / reds.length : null;
-  const winRateDays = dailyBars.length > 0 ? Math.round((wins / dailyBars.length) * 100) : null;
+  const winRateTrades = tradeWinRatePercent(journal);
 
   let peak = 0;
   let equity = 0;
@@ -461,7 +462,7 @@ export function computeTradingStats(
     bestWeekQuality,
     moodBreakdown,
     correlationHints,
-    winRateDays,
+    winRateTrades,
     maxDrawdown: dailyBars.length > 0 ? maxDrawdown : null,
     profitFactor,
     weekdayPerformance,

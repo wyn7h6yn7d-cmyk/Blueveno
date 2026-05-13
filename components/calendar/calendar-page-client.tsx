@@ -23,7 +23,7 @@ import {
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
 import { Input } from "@/components/ui/input";
-import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { tradeWinRatePercent } from "@/lib/user-data/kpi";
 
 type WeeklyReflectionSummary = {
   weekStart: string;
@@ -170,14 +170,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const moodOptions = useMemo(() => uniqueValues(baseEntries, (row) => row.moodState), [baseEntries]);
   const setupOptions = useMemo(() => uniqueValues(baseEntries, (row) => String(row.setup)), [baseEntries]);
   const filteredEntries = useMemo(() => applyEntryFilters(baseEntries, filters), [baseEntries, filters]);
-  const scopedTradeWinRate = useMemo(() => {
-    const validPnls = baseEntries
-      .map((row) => parsePnlAmount(row.r))
-      .filter((pnl): pnl is number => pnl !== null);
-    if (validPnls.length === 0) return null;
-    const wins = validPnls.filter((pnl) => pnl > 0).length;
-    return Math.round((wins / validPnls.length) * 100);
-  }, [baseEntries]);
+  const scopedTradeWinRate = useMemo(() => tradeWinRatePercent(baseEntries), [baseEntries]);
 
   const filterControls = (
     <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">

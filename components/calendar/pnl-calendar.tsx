@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
-import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -260,8 +260,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     const tradedDays = dayTotals.size;
     const dayValues = [...dayTotals.values()];
     const monthPnl = dayValues.reduce((sum, value) => sum + value, 0);
-    const winDays = dayValues.filter((value) => value > 0).length;
-    const winRate = tradedDays > 0 ? Math.round((winDays / tradedDays) * 100) : null;
+    const winRate = tradeWinRatePercent(monthEntries);
     const disciplineScore = checksTotal > 0 ? Math.round((checksDone / checksTotal) * 100) : null;
 
     const weekTotals = new Map<string, number>();
@@ -281,17 +280,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
       return { winRate: summaryWinRate };
     }
     const source = summaryEntries ?? entries;
-    const dayTotals = new Map<string, number>();
-    for (const row of source) {
-      const key = row.entryDate ?? (row.createdAt ? keyFromDate(new Date(row.createdAt)) : null);
-      if (!key) continue;
-      const pnl = parsePnlAmount(row.r);
-      if (pnl === null) continue;
-      dayTotals.set(key, (dayTotals.get(key) ?? 0) + pnl);
-    }
-    const tradedDays = dayTotals.size;
-    const winDays = [...dayTotals.values()].filter((value) => value > 0).length;
-    const winRate = tradedDays > 0 ? Math.round((winDays / tradedDays) * 100) : null;
+    const winRate = tradeWinRatePercent(source);
     return { winRate };
   }, [entries, summaryEntries, summaryWinRate]);
 
@@ -359,7 +348,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
       <div className="grid grid-cols-2 auto-rows-fr gap-2 sm:gap-3 xl:grid-cols-6" aria-label="Month summary">
         {[
           { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl, currencyOnly: true },
-          { label: "Win rate", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0, currencyOnly: false },
+          { label: "Trade win", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0, currencyOnly: false },
           { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0, currencyOnly: false },
           {
             label: "Best week",

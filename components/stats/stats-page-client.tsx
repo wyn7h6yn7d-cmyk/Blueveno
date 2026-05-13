@@ -617,6 +617,33 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
     bestBehavior != null &&
     weakestBehavior != null;
 
+  const behaviorInsightHints = useMemo(() => {
+    const labels = new Set(stats.correlationHints.map((h) => h.label));
+    return {
+      calm: labels.has("Avg P&L on Calm days"),
+      focused: labels.has("Avg P&L on Focused days"),
+      plan: labels.has("Avg P&L when Followed plan = true") && labels.has("Avg P&L when Followed plan = false"),
+      mood: bestBehavior != null && weakestBehavior != null,
+    };
+  }, [stats.correlationHints, bestBehavior, weakestBehavior]);
+
+  const behaviorInsightBlockers = useMemo(() => {
+    const rows: string[] = [];
+    if (!behaviorInsightHints.calm) {
+      rows.push("At least 3 trading days tagged Calm with a numeric day P&L.");
+    }
+    if (!behaviorInsightHints.focused) {
+      rows.push("At least 3 trading days tagged Focused with a numeric day P&L.");
+    }
+    if (!behaviorInsightHints.plan) {
+      rows.push("At least 3 days with Followed plan on and 3 with it off, each with a numeric day P&L.");
+    }
+    if (!behaviorInsightHints.mood) {
+      rows.push("At least 3 trading days that share one mood (Calm, Focused, Hesitant, or Tilted) and have a numeric day P&L.");
+    }
+    return rows;
+  }, [behaviorInsightHints]);
+
   const rulesAnalytics = useMemo(() => {
     const activeRules = personalRules.filter((r) => r.is_active);
     if (activeRules.length === 0 || filteredEntries.length === 0) {
@@ -737,7 +764,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         { metric: "account scope", value: accountScope === "all" ? "all accounts" : "active account" },
         { metric: "rows in scope", value: filteredEntries.length },
         { metric: "net pnl", value: netR },
-        { metric: "win rate days pct", value: stats.winRateDays ?? "" },
+        { metric: "win rate trades pct", value: stats.winRateTrades ?? "" },
         { metric: "profit factor", value: stats.profitFactor ?? "" },
         { metric: "max drawdown", value: stats.maxDrawdown ?? "" },
         { metric: "avg green day", value: stats.avgGreenDay ?? "" },
@@ -925,7 +952,11 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           <section id="stats-performance" className="grid gap-4 scroll-mt-28 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2 xl:grid-cols-6" aria-label="Performance summary">
             {[
               { label: "Net P&L", value: fmtPnl(netR, displayCurrency), tone: netR },
-              { label: "Win rate", value: stats.winRateDays !== null ? `${stats.winRateDays}%` : "—", tone: 0 },
+              {
+                label: "Trade win rate",
+                value: stats.winRateTrades !== null ? `${stats.winRateTrades}%` : "—",
+                tone: 0,
+              },
               { label: "Avg green day", value: fmtPnl(stats.avgGreenDay, displayCurrency), tone: stats.avgGreenDay ?? 0 },
               { label: "Avg red day", value: fmtPnl(stats.avgRedDay, displayCurrency), tone: stats.avgRedDay ?? 0 },
               { label: "Max drawdown", value: fmtPnl(stats.maxDrawdown, displayCurrency), tone: stats.maxDrawdown ?? 0 },
@@ -1032,17 +1063,49 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                   Add another account to compare performance.
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {accountComparisonRows.map((row) => (
-                    <div key={row.id} className="grid grid-cols-[1.25fr_repeat(5,minmax(0,1fr))] gap-2 rounded-lg border border-white/[0.07] bg-black/20 px-3 py-2 text-[12px]">
-                      <p className="truncate text-zinc-200">{row.name} <span className="text-zinc-500">({row.type})</span></p>
-                      <p className={cn("tabular-nums", row.pnl > 0 ? "text-emerald-200" : row.pnl < 0 ? "text-rose-200" : "text-zinc-300")}>{fmtPnl(row.pnl, displayCurrency)}</p>
-                      <p className="tabular-nums text-zinc-300">{row.winRate !== null ? `${row.winRate}%` : "—"}</p>
-                      <p className="tabular-nums text-zinc-300">{row.tradedDays}</p>
-                      <p className="tabular-nums text-zinc-300">{row.disciplineScore !== null ? `${row.disciplineScore}%` : "—"}</p>
-                      <p className="tabular-nums text-zinc-500">Account</p>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[32rem] border-collapse text-left text-[12px]" aria-label="Account comparison">
+                    <thead>
+                      <tr className="border-b border-white/[0.1] font-mono text-[9px] uppercase tracking-[0.12em] text-zinc-500 sm:text-[10px] sm:tracking-[0.14em]">
+                        <th scope="col" className="min-w-[10rem] px-3 py-2.5 text-left font-medium">
+                          Account
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Net profit and loss across all journal entries for this account">
+                          Net P&amp;L
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Winning trades as a percent of winning plus losing trades (breakevens excluded)">
+                          Trade win
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Number of distinct trading days with at least one entry">
+                          Traded days
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Share of plan, stop, and no-revenge checks marked true across entries">
+                          Discipline
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {accountComparisonRows.map((row) => (
+                        <tr key={row.id} className="border-b border-white/[0.06] transition-colors last:border-b-0 hover:bg-white/[0.03]">
+                          <td className="max-w-[14rem] px-3 py-2.5 align-middle">
+                            <p className="truncate text-zinc-200">
+                              {row.name} <span className="text-zinc-500">({row.type})</span>
+                            </p>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums">
+                            <span className={cn(row.pnl > 0 ? "text-emerald-200" : row.pnl < 0 ? "text-rose-200" : "text-zinc-300")}>
+                              {fmtPnl(row.pnl, displayCurrency)}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.winRate !== null ? `${row.winRate}%` : "—"}</td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.tradedDays}</td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">
+                            {row.disciplineScore !== null ? `${row.disciplineScore}%` : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </DashboardCard>
@@ -1052,13 +1115,26 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             <DashboardCard
               eyebrow="Behavior insights"
               title="How behavior links to your P&L"
-              description="Insights appear when sample size is strong enough."
+              description="Averages your day P&L against mood tags and discipline toggles. Each insight needs enough similar days to compare."
             >
               {!hasBehaviorInsights ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-8 text-center">
-                  <p className="font-display text-[1.15rem] tracking-[-0.02em] text-zinc-100">
-                    Keep journaling to reveal behavior patterns.
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-7 text-left sm:px-6">
+                  <p className="font-display text-[1.05rem] tracking-[-0.02em] text-zinc-100 sm:text-[1.15rem]">
+                    This section fills in when the stats above have enough labeled days.
                   </p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-zinc-400">
+                    You will see cards for Calm vs Focused days, following your plan vs not, best and weakest mood, and stop / revenge discipline — once the thresholds below are met for your current filters and account scope.
+                  </p>
+                  {behaviorInsightBlockers.length > 0 ? (
+                    <div className="mt-5">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Still needed</p>
+                      <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[13px] text-zinc-300">
+                        {behaviorInsightBlockers.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
