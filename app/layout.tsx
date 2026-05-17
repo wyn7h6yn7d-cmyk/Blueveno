@@ -5,6 +5,7 @@ import { JetBrains_Mono, Plus_Jakarta_Sans, Source_Sans_3 } from "next/font/goog
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const sourceSans = Source_Sans_3({
   variable: "--font-source",
@@ -66,6 +67,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           {children}
         </AuthSessionProvider>
+        <Analytics />
       </body>
     </html>
   );
