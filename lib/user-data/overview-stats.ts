@@ -4,9 +4,13 @@ import type { JournalRow } from "@/lib/user-data/types";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { computeDisciplineScorePercent } from "@/lib/user-data/discipline-stats";
 import { pickSmallestGreenDay, pickWorstLossDay } from "@/lib/user-data/stats-display";
-import { formatSignedPnlAmount } from "@/lib/format-pnl";
 
-export type BehaviorInsight = { title: string; detail: string };
+export type { BehaviorInsight, BehaviorInsightsResult } from "@/lib/user-data/behavior-insights";
+export {
+  BEHAVIOR_INSIGHT_MIN_ENTRIES,
+  BEHAVIOR_INSIGHT_MIN_TRADED_DAYS,
+  getBehaviorInsights,
+} from "@/lib/user-data/behavior-insights";
 
 type OverviewStats = {
   weekPnl: number;
@@ -31,14 +35,6 @@ type GetOverviewStatsParams = {
   activeAccountId?: string | null;
   timezone?: string | null;
   currency: string;
-};
-
-type GetBehaviorInsightsParams = {
-  entries: JournalRow[];
-  activeAccountId?: string | null;
-  timezone?: string | null;
-  currency: string;
-  maxItems?: number;
 };
 
 type DailyAgg = { key: string; pnl: number };
@@ -118,7 +114,6 @@ export function getOverviewStats({
   timezone,
   currency,
 }: GetOverviewStatsParams): OverviewStats {
-  // `entries` are already account-scoped by workspace state.
   void activeAccountId;
   void currency;
   const daily = aggregateDaily(entries, timezone);
@@ -169,7 +164,6 @@ export function getOverviewStats({
     tradedDays,
     winningDays,
     losingDays,
-    // Win rate is trade-based (+ / - entries), not day-based.
     winRate: directionalTrades > 0 ? Math.round((winningTrades / directionalTrades) * 100) : null,
     averageDay: avg(totalPnl, tradedDays),
     bestDay: tradedDays > 0 ? Math.max(...daily.map((d) => d.pnl)) : null,
@@ -182,141 +176,3 @@ export function getOverviewStats({
     greenRedSummary: `${winningDays} / ${losingDays}`,
   };
 }
-
-export function getBehaviorInsights({
-  entries,
-  activeAccountId,
-  timezone,
-  currency,
-  maxItems = 5,
-}: GetBehaviorInsightsParams): BehaviorInsight[] {
-  // `entries` are already account-scoped by workspace state.
-  void activeAccountId;
-  const insights: BehaviorInsight[] = [];
-  if (entries.length === 0) return insights;
-
-  const daily = aggregateDaily(entries, timezone);
-  const pnlEntries = entries
-    .map((row) => parsePnlAmount(row.r))
-    .filter((value): value is number => value !== null && Number.isFinite(value));
-  if (pnlEntries.length < 4) return insights;
-
-  const moodBuckets = new Map<string, { total: number; count: number }>();
-  const validMoods = new Set(["Calm", "Focused", "Hesitant", "Tilted"]);
-  for (const row of entries) {
-    const pnl = parsePnlAmount(row.r);
-    if (pnl === null) continue;
-    const mood = row.moodState;
-    if (!mood || !validMoods.has(mood)) continue;
-    const prev = moodBuckets.get(mood) ?? { total: 0, count: 0 };
-    moodBuckets.set(mood, { total: prev.total + pnl, count: prev.count + 1 });
-  }
-
-  const bestMood = [...moodBuckets.entries()]
-    .filter(([, v]) => v.count >= 2)
-    .map(([mood, v]) => ({ mood, avg: v.total / v.count }))
-    .sort((a, b) => b.avg - a.avg)[0];
-  if (bestMood && bestMood.avg > 0) {
-    const moodCount = moodBuckets.get(bestMood.mood)?.count ?? 0;
-    insights.push({
-      title: `You trade best when you're ${bestMood.mood.toLowerCase()}`,
-      detail: `About ${formatSignedPnlAmount(bestMood.avg, currency)} per day across ${moodCount} logged day${moodCount === 1 ? "" : "s"}.`,
-    });
-  }
-
-  const compare = (
-    title: string,
-    yesLabel: string,
-    noLabel: string,
-    pick: (row: JournalRow) => boolean | undefined,
-    minimumEdge = 5,
-  ) => {
-    let yesTotal = 0;
-    let yesCount = 0;
-    let noTotal = 0;
-    let noCount = 0;
-    for (const row of entries) {
-      const pnl = parsePnlAmount(row.r);
-      if (pnl === null) continue;
-      const picked = pick(row);
-      if (picked === true) {
-        yesTotal += pnl;
-        yesCount += 1;
-      } else if (picked === false) {
-        noTotal += pnl;
-        noCount += 1;
-      }
-    }
-    if (yesCount >= 2 && noCount >= 2) {
-      const yesAvg = yesTotal / yesCount;
-      const noAvg = noTotal / noCount;
-      if (!Number.isFinite(yesAvg) || !Number.isFinite(noAvg)) return;
-      if (yesAvg <= noAvg) return;
-      if (Math.abs(yesAvg - noAvg) < minimumEdge) return;
-      insights.push({
-        title,
-        detail: `${yesLabel}: ${formatSignedPnlAmount(yesAvg, currency)} avg · ${noLabel}: ${formatSignedPnlAmount(noAvg, currency)} avg.`,
-      });
-    }
-  };
-
-  compare(
-    "Following your plan lifts results",
-    "Plan followed",
-    "Plan missed",
-    (r) => (r.followedPlan === undefined ? undefined : r.followedPlan),
-  );
-  compare(
-    "Respecting your stop pays off",
-    "Stop respected",
-    "Stop broken",
-    (r) => (r.respectedStop === undefined ? undefined : r.respectedStop),
-  );
-  compare(
-    "Staying revenge-free helps",
-    "No revenge",
-    "Revenge taken",
-    (r) => (r.noRevengeTrade === undefined ? undefined : r.noRevengeTrade),
-  );
-
-  const byDay = new Map<string, { allNoRevenge: boolean }>();
-  for (const row of entries) {
-    const key = rowDayKey(row, timezone);
-    const prev = byDay.get(key);
-    const noRevenge = Boolean(row.noRevengeTrade);
-    byDay.set(key, { allNoRevenge: prev ? prev.allNoRevenge && noRevenge : noRevenge });
-  }
-  const orderedKeys = [...byDay.keys()].sort((a, b) => b.localeCompare(a));
-  let revengeFreeStreak = 0;
-  for (const key of orderedKeys) {
-    if (byDay.get(key)?.allNoRevenge) revengeFreeStreak += 1;
-    else break;
-  }
-  if (orderedKeys.length >= 3 && revengeFreeStreak >= 2) {
-    insights.push({
-      title: "Revenge-free run",
-      detail: `${revengeFreeStreak} day${revengeFreeStreak === 1 ? "" : "s"} in a row without revenge trades.`,
-    });
-  }
-
-  const weekdayBuckets = new Map<string, { total: number; count: number }>();
-  for (const d of daily) {
-    const weekday = new Date(`${d.key}T00:00:00`).toLocaleDateString("en-GB", { weekday: "short" });
-    const prev = weekdayBuckets.get(weekday) ?? { total: 0, count: 0 };
-    weekdayBuckets.set(weekday, { total: prev.total + d.pnl, count: prev.count + 1 });
-  }
-  const bestWeekday = [...weekdayBuckets.entries()]
-    .filter(([, v]) => v.count >= 2)
-    .map(([day, v]) => ({ day, total: v.total }))
-    .sort((a, b) => b.total - a.total)[0];
-  if (bestWeekday && bestWeekday.total > 0) {
-    const weekdayCount = weekdayBuckets.get(bestWeekday.day)?.count ?? 0;
-    insights.push({
-      title: `${bestWeekday.day} is your strongest day`,
-      detail: `${formatSignedPnlAmount(bestWeekday.total, currency)} total across ${weekdayCount} day${weekdayCount === 1 ? "" : "s"}.`,
-    });
-  }
-
-  return insights.slice(0, maxItems);
-}
-

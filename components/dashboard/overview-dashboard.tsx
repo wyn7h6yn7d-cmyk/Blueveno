@@ -9,12 +9,12 @@ import { PageHeader } from "@/components/app/page-header";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { buildDayAgg, signedMoney } from "@/lib/user-data/journal-metrics";
-import { formatDisciplinePercent } from "@/lib/user-data/discipline-stats";
+import { getDisciplineDisplay, summarizeDisciplineCoverage } from "@/lib/user-data/discipline-stats";
 import { entryDisciplineFraction } from "@/lib/user-data/stats-display";
 import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { DayBreakdownModule } from "@/components/dashboard/day-breakdown-module";
-import { appCardPrimary, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
+import { appCardPrimary, appKicker, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { createClient } from "@/lib/supabase/client";
 
@@ -104,17 +104,27 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       })
       .slice(0, 6)
       .map((row) => {
+        const pnlParsed = parsePnlAmount(row.r);
         return {
           id: row.id,
-          dayLabel: formatDayLabel(row.entryDate ?? (row.createdAt ? new Date(row.createdAt).toISOString().slice(0, 10) : "1970-01-01")),
-          pnl: parsePnlAmount(row.r) ?? 0,
-          mood: row.moodState ?? "Calm",
+          dayLabel: formatDayLabel(row.entryDate ?? row.createdAt?.slice(0, 10) ?? ""),
+          pnl: pnlParsed,
+          mood: row.moodState?.trim() || null,
           discipline: entryDisciplineFraction(row),
         };
-      });
+      })
+      .filter((row) => row.dayLabel.length > 0);
   }, [data.journal]);
 
-  const behaviorInsights = useMemo(
+  const disciplineCoverage = useMemo(
+    () => summarizeDisciplineCoverage(data.journal),
+    [data.journal],
+  );
+  const disciplineDisplay = useMemo(
+    () => getDisciplineDisplay(disciplineCoverage),
+    [disciplineCoverage],
+  );
+  const behaviorInsightsResult = useMemo(
     () =>
       getBehaviorInsights({
         entries: data.journal,
@@ -147,8 +157,9 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
     },
     {
       label: "Discipline score",
-      value: hasEntries ? formatDisciplinePercent(overviewStats.disciplineScore) : "—",
+      value: hasEntries ? disciplineDisplay.value : "—",
       tone: 0,
+      hint: hasEntries ? disciplineDisplay.hint : undefined,
     },
   ];
 
@@ -188,7 +199,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
   }, [userId, activeAccountId, data.journal.length]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <PageHeader
         variant="signature"
         eyebrow="Blueveno"
@@ -230,10 +241,16 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                       card.tone > 0 && "text-emerald-200",
                       card.tone < 0 && "text-rose-200",
                       card.tone === 0 && "text-zinc-50",
+                      card.label === "Discipline score" &&
+                        card.value === "Not enough discipline data" &&
+                        "text-[1.15rem] sm:text-[1.35rem]",
                     )}
                   >
                     {card.value}
                   </p>
+                  {card.hint ? (
+                    <p className={cn(appKicker, "mt-2 leading-snug")}>{card.hint}</p>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -272,10 +289,10 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                     ? "border-rose-400/30 bg-rose-500/[0.13] text-rose-100"
                     : "border-white/[0.1] bg-white/[0.03] text-zinc-300";
               return (
-                <div key={cell.key} className={cn("rounded-xl border p-2 text-center sm:p-2.5", tone)}>
-                  <p className="text-[10px] font-medium text-zinc-400 opacity-90">{cell.label}</p>
-                  <p className="mt-1 text-[12px] font-semibold tabular-nums sm:text-sm">{cell.day}</p>
-                  <p className="mt-1 text-[10px] tabular-nums sm:text-[11px]">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
+                <div key={cell.key} className={cn("rounded-xl p-2 text-center ring-1 ring-inset ring-white/[0.06] sm:p-2.5", tone)}>
+                  <p className="text-[12px] font-medium text-zinc-400">{cell.label}</p>
+                  <p className="mt-1 text-[13px] font-semibold tabular-nums sm:text-sm">{cell.day}</p>
+                  <p className="mt-1 text-[12px] tabular-nums text-zinc-300">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
                 </div>
               );
             })}
@@ -313,19 +330,21 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                   <p
                     className={cn(
                       "text-right tabular-nums sm:text-right",
-                      item.pnl > 0 && "text-emerald-200",
-                      item.pnl < 0 && "text-rose-200",
-                      item.pnl === 0 && "text-zinc-300",
+                      item.pnl !== null && item.pnl > 0 && "text-emerald-200",
+                      item.pnl !== null && item.pnl < 0 && "text-rose-200",
+                      (item.pnl === null || item.pnl === 0) && "text-zinc-300",
                     )}
                   >
-                    {signedMoney(item.pnl, displayCurrency)}
+                    {item.pnl === null ? "—" : signedMoney(item.pnl, displayCurrency)}
                   </p>
                   </div>
                   <div className="flex items-center justify-end gap-2 sm:contents">
-                  <p className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[12px] text-zinc-300">
-                    {item.mood}
-                  </p>
-                  <p className="text-[11px] text-zinc-500">{item.discipline}</p>
+                  {item.mood ? (
+                    <p className="rounded-md bg-white/[0.04] px-2 py-1 text-[12px] text-zinc-300 ring-1 ring-inset ring-white/[0.06]">
+                      {item.mood}
+                    </p>
+                  ) : null}
+                  <p className={cn(appKicker, "tabular-nums")}>{item.discipline}</p>
                   </div>
                 </div>
               ))}
@@ -340,16 +359,26 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
           title="Patterns from your entries"
           description="Based on the account you're viewing."
         >
-          {behaviorInsights.length === 0 ? (
+          {behaviorInsightsResult.showEmptyState ? (
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-6 text-sm text-zinc-500">
-              <p>Log a few more trading days to unlock behavior insights.</p>
+              <p>{behaviorInsightsResult.emptyMessage}</p>
+              {behaviorInsightsResult.disciplineDataNote ? (
+                <p className="mt-2 text-[12px] leading-relaxed text-zinc-400">
+                  {behaviorInsightsResult.disciplineDataNote}
+                </p>
+              ) : null}
               <Link href="/app/journal#add" className="mt-3 inline-flex text-[12px] text-[oklch(0.78_0.11_252)] hover:underline">
                 Log a trading day
               </Link>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {behaviorInsights.map((insight) => (
+              {behaviorInsightsResult.disciplineDataNote ? (
+                <p className="sm:col-span-2 text-[12px] leading-relaxed text-zinc-500">
+                  {behaviorInsightsResult.disciplineDataNote}
+                </p>
+              ) : null}
+              {behaviorInsightsResult.insights.map((insight) => (
                 <div
                   key={insight.title}
                   className="rounded-xl border border-[oklch(0.58_0.1_252/0.2)] bg-[linear-gradient(160deg,oklch(0.15_0.04_260/0.85),oklch(0.095_0.03_264/0.9))] px-4 py-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]"

@@ -36,10 +36,15 @@ function mapDisciplineFields(
   }
 
   return {
-    followedPlan: Boolean(r.followed_plan),
-    respectedStop: Boolean(r.respected_stop),
-    noRevengeTrade: Boolean(r.no_revenge_trade),
+    followedPlan: mapOptionalBool(r.followed_plan),
+    respectedStop: mapOptionalBool(r.respected_stop),
+    noRevengeTrade: mapOptionalBool(r.no_revenge_trade),
   };
+}
+
+function mapOptionalBool(value: boolean | null | undefined): boolean | undefined {
+  if (value === null || value === undefined) return undefined;
+  return value;
 }
 
 export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {

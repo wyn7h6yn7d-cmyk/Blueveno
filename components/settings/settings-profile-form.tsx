@@ -26,6 +26,7 @@ import {
   settingsSectionDescription,
   type SettingsSectionId,
 } from "@/lib/settings/sections";
+import { appFormFieldLifted } from "@/lib/ui/app-form";
 
 const SETTINGS_NAV_ITEMS: SectionNavItem[] = [
   { id: "profile", label: "Profile", icon: User },
@@ -36,18 +37,7 @@ const SETTINGS_NAV_ITEMS: SectionNavItem[] = [
   { id: "data", label: "Data & privacy", icon: Database },
 ];
 
-/** Visible control surface — reads as a box on dark cards (border + lift + top edge). */
-const field =
-  [
-    "h-10 w-full min-w-0 rounded-xl border px-3 text-[15px] text-zinc-100",
-    "border-[oklch(0.55_0.12_252/0.38)]",
-    "bg-[linear-gradient(168deg,oklch(0.17_0.06_262/0.72)_0%,oklch(0.1_0.045_268/0.88)_100%)]",
-    "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.1),0_4px_20px_-10px_rgba(0,0,0,0.85)]",
-    "placeholder:text-zinc-600",
-    "transition-[border-color,box-shadow] duration-200",
-    "focus-visible:border-[oklch(0.62_0.14_252/0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.1_0.04_268)]",
-  ].join(" ");
-
+const field = appFormFieldLifted;
 const selectField = cn(field, "cursor-pointer py-0 pr-9");
 
 export function SettingsProfileForm() {

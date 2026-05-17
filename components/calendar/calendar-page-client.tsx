@@ -15,7 +15,9 @@ import { appPrimaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
 import {
   applyEntryFilters,
+  DAY_COLOR_FILTER_LABELS,
   EMPTY_ENTRY_FILTERS,
+  FILTER_DIMENSION_ALL_LABEL,
   filterChips,
   hasActiveFilters,
   parseFiltersFromParams,
@@ -23,6 +25,8 @@ import {
   writeFiltersToParams,
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
+import { appFilterShell, appFormSelect } from "@/lib/ui/app-form";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { tradeWinRatePercent } from "@/lib/user-data/kpi";
 
@@ -150,7 +154,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const scopedTradeWinRate = useMemo(() => tradeWinRatePercent(baseEntries), [baseEntries]);
 
   const filterControls = (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
+    <div className={appFilterShell}>
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
@@ -186,7 +190,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
               onChange={(e) => setFilters((f) => ({ ...f, [item.key]: e.target.value }))}
               className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300"
             >
-              <option value="all">{item.key}</option>
+              <option value="all">{FILTER_DIMENSION_ALL_LABEL[item.key] ?? "All"}</option>
               {item.values.map((value) => (
                 <option key={value} value={value}>
                   {value}
@@ -195,9 +199,11 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             </select>
           ))}
           <select value={filters.dayColor} onChange={(e) => setFilters((f) => ({ ...f, dayColor: e.target.value as EntryFilters["dayColor"] }))} className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300">
-            <option value="all">all days</option>
-            <option value="green">green days</option>
-            <option value="red">red days</option>
+            {(Object.keys(DAY_COLOR_FILTER_LABELS) as EntryFilters["dayColor"][]).map((key) => (
+              <option key={key} value={key}>
+                {DAY_COLOR_FILTER_LABELS[key]}
+              </option>
+            ))}
           </select>
         </div>
       ) : null}

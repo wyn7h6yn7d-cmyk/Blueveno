@@ -9,6 +9,15 @@ export const PRICING_EUR = {
   currency: "EUR",
 } as const;
 
+/** In-app Plan & access — keep aligned with marketing pricing page */
+export const PREMIUM_BENEFITS = [
+  "Ongoing journaling after trial",
+  "Up to 5 trading accounts",
+  "Calendar with weekly totals",
+  "Stats, behavior review, and discipline score",
+  "Linked chart on every entry",
+] as const;
+
 export function formatEur(n: number): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",

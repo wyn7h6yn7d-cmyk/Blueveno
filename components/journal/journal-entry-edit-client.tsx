@@ -15,6 +15,7 @@ import { chartUrlForSave, isValidChartUrl, normalizeChartUrlInput } from "@/lib/
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
+import { appFormControl, appFormLabel } from "@/lib/ui/app-form";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import {
   MARKET_CONDITION_OPTIONS,
@@ -25,9 +26,8 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { syncLegacyBehaviorFromRuleChecks } from "@/lib/user-data/sync-rule-checks";
 
-const labelCls = "text-[12px] font-medium tracking-wide text-zinc-400";
-const inputCls =
-  "h-11 rounded-xl border-white/[0.1] bg-black/25 text-[15px] shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] placeholder:text-zinc-600 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
+const labelCls = appFormLabel;
+const inputCls = appFormControl;
 const MOOD_OPTIONS = ["Calm", "Focused", "Hesitant", "Tilted"] as const;
 
 type Props = {
@@ -523,7 +523,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                   const n = normalizeChartUrlInput(v);
                   if (n !== v) setChartUrl(n);
                 }}
-                placeholder="https://your-chart-link"
+                placeholder="Paste a chart URL"
                 disabled={!canWriteJournal}
                 className={cn(inputCls, "disabled:opacity-45")}
               />

@@ -4,7 +4,9 @@ import {
   computeDisciplineScorePercent,
   entryDisciplineScore,
   formatDisciplinePercent,
+  getDisciplineCoverageHint,
   rowDisciplineChecks,
+  summarizeDisciplineCoverage,
 } from "@/lib/user-data/discipline-stats";
 import { pickBestWorstWeeks } from "@/lib/user-data/week-aggregation";
 import { pickWorstOrSmallestGreenDay } from "@/lib/user-data/stats-display";
@@ -25,7 +27,19 @@ function row(partial: Partial<JournalRow>): JournalRow {
 describe("discipline-stats", () => {
   it("returns null when no discipline fields were recorded", () => {
     assert.equal(computeDisciplineScorePercent([row({})]), null);
-    assert.equal(formatDisciplinePercent(null), "Not enough data");
+    assert.equal(formatDisciplinePercent(null), "Not enough discipline data");
+  });
+
+  it("flags when most entries lack discipline checks", () => {
+    const entries = [
+      row({ followedPlan: true }),
+      row({}),
+      row({}),
+      row({}),
+      row({}),
+    ];
+    const coverage = summarizeDisciplineCoverage(entries);
+    assert.equal(getDisciplineCoverageHint(coverage), "Most entries are missing discipline checks.");
   });
 
   it("scores recorded checks and ignores missing fields", () => {

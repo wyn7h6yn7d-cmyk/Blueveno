@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:stats": "npx --yes tsx --test lib/user-data/discipline-stats.test.ts lib/user-data/monthly-review.test.ts lib/user-data/map-journal-db.test.ts lib/user-data/week-labels.test.ts lib/user-data/personal-rules-schema.test.ts lib/user-data/journal-write-payloads.test.ts lib/settings/sections.test.ts"
+    "test:stats": "npx --yes tsx --test lib/user-data/discipline-stats.test.ts lib/user-data/behavior-insights.test.ts lib/user-data/monthly-review.test.ts lib/user-data/map-journal-db.test.ts lib/user-data/week-labels.test.ts lib/user-data/personal-rules-schema.test.ts lib/user-data/journal-write-payloads.test.ts lib/settings/sections.test.ts lib/stats/stats-tabs.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

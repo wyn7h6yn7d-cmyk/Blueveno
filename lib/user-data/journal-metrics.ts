@@ -1,5 +1,6 @@
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import { computeDisciplineScorePercent } from "@/lib/user-data/discipline-stats";
 import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
 
 export function toDayKey(d: Date): string {
@@ -124,24 +125,15 @@ export function computeOverviewKpis(journal: JournalRow[]): OverviewKpis {
   const greenTotals = dayAgg.filter((d) => d.pnl > 0).map((d) => d.pnl);
   const redTotals = dayAgg.filter((d) => d.pnl < 0).map((d) => d.pnl);
 
-  let completedChecks = 0;
-  let totalChecks = 0;
-  for (const row of journal) {
-    totalChecks += 3;
-    if (row.followedPlan) completedChecks += 1;
-    if (row.respectedStop) completedChecks += 1;
-    if (row.noRevengeTrade) completedChecks += 1;
-  }
-
   const winRateRaw = tradeWinRatePercent(journal);
-  const disciplineRaw = totalChecks > 0 ? (completedChecks / totalChecks) * 100 : null;
+  const disciplineScorePct = computeDisciplineScorePercent(journal);
 
   return {
     tradedDays,
     winningDays,
     losingDays,
     winRatePct: winRateRaw,
-    disciplineScorePct: disciplineRaw !== null && Number.isFinite(disciplineRaw) ? Math.round(disciplineRaw) : null,
+    disciplineScorePct,
     averageDay: safeAvg(totalPnl, tradedDays),
     bestDay: tradedDays > 0 ? Math.max(...dayAgg.map((d) => d.pnl)) : null,
     worstDay: tradedDays > 0 ? Math.min(...dayAgg.map((d) => d.pnl)) : null,

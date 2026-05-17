@@ -191,12 +191,12 @@ export function AdminUsersTable({ users }: Props) {
           </div>
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
-          <div className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2"><p className="text-[11px] text-zinc-400">Admins</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.admins}</p></div>
-          <div className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2"><p className="text-[11px] text-zinc-400">Trial active</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.trialActive}</p></div>
-          <div className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2"><p className="text-[11px] text-zinc-400">Trial expired</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.trialExpired}</p></div>
-          <div className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2"><p className="text-[11px] text-zinc-400">Disabled</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.disabled}</p></div>
-          <div className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2"><p className="text-[11px] text-zinc-400">Trading accounts</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.accounts}</p></div>
-          <div className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2"><p className="text-[11px] text-zinc-400">Journal entries</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.entries}</p></div>
+          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Admins</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.admins}</p></div>
+          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Trial active</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.trialActive}</p></div>
+          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Trial expired</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.trialExpired}</p></div>
+          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Disabled</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.disabled}</p></div>
+          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Trading accounts</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.accounts}</p></div>
+          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Journal entries</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.entries}</p></div>
         </div>
       </div>
 
@@ -289,34 +289,34 @@ export function AdminUsersTable({ users }: Props) {
                   </td>
                   <td className="max-w-[10rem] truncate px-4 py-3.5 text-zinc-300">{u.display_name ?? "—"}</td>
                   <td className="px-4 py-3.5">
-                    <span className={cn("inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]", u.is_admin ? badgeClass("admin") : badgeClass("default"))}>
+                    <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", u.is_admin ? badgeClass("admin") : badgeClass("default"))}>
                       {u.is_admin ? "Admin" : "User"}
                     </span>
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex flex-wrap gap-1.5">
                       {u.access_state === "trial_active" ? (
-                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]", badgeClass("trial"))}>
+                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("trial"))}>
                           Trial active
                         </span>
                       ) : null}
                       {u.access_state === "trial_expired" ? (
                         <>
-                          <span className={cn("inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]", badgeClass("readonly"))}>
+                          <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("readonly"))}>
                             Trial expired
                           </span>
-                          <span className={cn("inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]", badgeClass("readonly"))}>
+                          <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("readonly"))}>
                             Read-only
                           </span>
                         </>
                       ) : null}
                       {u.access_state === "premium_active" ? (
-                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]", badgeClass("premium"))}>
+                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("premium"))}>
                           Premium
                         </span>
                       ) : null}
                       {u.account_disabled ? (
-                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]", badgeClass("disabled"))}>
+                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("disabled"))}>
                           Disabled
                         </span>
                       ) : null}
@@ -326,7 +326,7 @@ export function AdminUsersTable({ users }: Props) {
                   <td className="px-4 py-3.5">
                     <span
                       className={cn(
-                        "inline-flex rounded-lg border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]",
+                        "inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide",
                         isPaid
                           ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
                           : "border-zinc-500/30 bg-zinc-800/40 text-zinc-300",

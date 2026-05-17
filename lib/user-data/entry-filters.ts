@@ -18,6 +18,22 @@ export type EntryFilters = {
   search: string;
 };
 
+/** Sentence-case “all” labels for filter dropdowns */
+export const FILTER_DIMENSION_ALL_LABEL: Record<string, string> = {
+  symbol: "All symbols",
+  mood: "All moods",
+  setup: "All setups",
+  mistake: "All tags",
+  session: "All sessions",
+  market: "All markets",
+};
+
+export const DAY_COLOR_FILTER_LABELS: Record<EntryFilters["dayColor"], string> = {
+  all: "All days",
+  green: "Green days",
+  red: "Red days",
+};
+
 export const EMPTY_ENTRY_FILTERS: EntryFilters = {
   from: "",
   to: "",

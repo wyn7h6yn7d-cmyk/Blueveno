@@ -28,7 +28,9 @@ import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { mapTradingAccountRow } from "@/lib/trading-accounts/map";
 import {
   applyEntryFilters,
+  DAY_COLOR_FILTER_LABELS,
   EMPTY_ENTRY_FILTERS,
+  FILTER_DIMENSION_ALL_LABEL,
   filterChips,
   hasActiveFilters,
   parseFiltersFromParams,
@@ -36,6 +38,7 @@ import {
   writeFiltersToParams,
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
+import { appFilterShell, appFormSelect } from "@/lib/ui/app-form";
 import type { JournalRow } from "@/lib/user-data/types";
 import { Input } from "@/components/ui/input";
 import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
@@ -43,7 +46,7 @@ import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import { computeMonthlyReview } from "@/lib/user-data/monthly-review";
 import { mapJournalRowFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { MonthlyReviewCard } from "@/components/reports/monthly-review-card";
-import { useSectionScrollSpy } from "@/lib/ui/use-section-scroll-spy";
+import { DEFAULT_STATS_TAB, parseStatsTab, type StatsTabId } from "@/lib/stats/stats-tabs";
 
 type Props = {
   userId: string;
@@ -60,16 +63,179 @@ function formatDisciplineDisplay(score: number | null | undefined): string {
   return `${Math.round(score)}%`;
 }
 
-function CumulativeChart({ points, currency }: { points: { i: number; t: string; y: number }[]; currency: string }) {
+function formatProfitFactor(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "—";
+  return value.toFixed(2);
+}
+
+type TagPerformanceRow = {
+  label: string;
+  totalPnl: number;
+  averagePnl: number | null;
+  entries: number;
+};
+
+function computeTagPerformance(
+  entries: JournalRow[],
+  pick: (row: JournalRow) => string | undefined,
+  skip: (label: string) => boolean,
+  minEntries = 2,
+): TagPerformanceRow[] {
+  const map = new Map<string, { sum: number; count: number }>();
+  for (const row of entries) {
+    const pnl = parsePnlAmount(row.r);
+    if (pnl === null || !Number.isFinite(pnl)) continue;
+    const label = pick(row)?.trim();
+    if (!label || skip(label)) continue;
+    const prev = map.get(label) ?? { sum: 0, count: 0 };
+    map.set(label, { sum: prev.sum + pnl, count: prev.count + 1 });
+  }
+  return [...map.entries()]
+    .filter(([, v]) => v.count >= minEntries)
+    .map(([label, v]) => ({
+      label,
+      totalPnl: v.sum,
+      averagePnl: v.count > 0 ? v.sum / v.count : null,
+      entries: v.count,
+    }))
+    .sort((a, b) => b.totalPnl - a.totalPnl);
+}
+
+function AccountComparisonTable({
+  rows,
+  currency,
+}: {
+  rows: Array<{
+    id: string;
+    name: string;
+    type: string;
+    pnl: number;
+    winRate: number | null;
+    tradedDays: number;
+    disciplineScore: number | null;
+  }>;
+  currency: string;
+}) {
+  if (rows.length <= 1) {
+    return (
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
+        Add another account to compare performance.
+      </div>
+    );
+  }
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[32rem] border-collapse text-left text-[12px]" aria-label="Account comparison">
+        <thead>
+          <tr className="border-b border-white/[0.1] app-kicker text-[11px]">
+            <th scope="col" className="min-w-[10rem] px-3 py-2.5 text-left font-medium">
+              Account
+            </th>
+            <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium">
+              Net P&amp;L
+            </th>
+            <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium">
+              Trade win
+            </th>
+            <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium">
+              Traded days
+            </th>
+            <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium">
+              Discipline
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id} className="border-b border-white/[0.06] transition-colors last:border-b-0 hover:bg-white/[0.03]">
+              <td className="max-w-[14rem] px-3 py-2.5 align-middle">
+                <p className="truncate text-zinc-200">
+                  {row.name} <span className="text-zinc-500">({row.type})</span>
+                </p>
+              </td>
+              <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums">
+                <span className={cn(row.pnl > 0 ? "text-emerald-200" : row.pnl < 0 ? "text-rose-200" : "text-zinc-300")}>
+                  {fmtPnl(row.pnl, currency)}
+                </span>
+              </td>
+              <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">
+                {row.winRate !== null ? `${row.winRate}%` : "—"}
+              </td>
+              <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.tradedDays}</td>
+              <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">
+                {formatDisciplineDisplay(row.disciplineScore)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function TagPerformanceList({
+  rows,
+  currency,
+  emptyLabel,
+}: {
+  rows: TagPerformanceRow[];
+  currency: string;
+  emptyLabel: string;
+}) {
+  if (rows.length === 0) {
+    return (
+      <p className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[12px] text-zinc-500">
+        {emptyLabel}
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {rows.slice(0, 6).map((row) => (
+        <div key={row.label} className="grid grid-cols-[1fr_auto] gap-3 rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5">
+          <div>
+            <p className="text-[13px] text-zinc-200">{row.label}</p>
+            <p className="text-[11px] text-zinc-500">
+              Avg {fmtPnl(row.averagePnl, currency)} · {row.entries} entries
+            </p>
+          </div>
+          <p
+            className={cn(
+              "font-mono text-[12px] tabular-nums",
+              row.totalPnl > 0 ? "text-emerald-200" : row.totalPnl < 0 ? "text-rose-200" : "text-zinc-300",
+            )}
+          >
+            {fmtPnl(row.totalPnl, currency)}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CumulativeChart({
+  points,
+  currency,
+  compact = false,
+}: {
+  points: { i: number; t: string; y: number }[];
+  currency: string;
+  compact?: boolean;
+}) {
   const [tipIndex, setTipIndex] = useState<number | null>(null);
   const uid = useId();
   const fillId = `${uid}-cum-fill`;
   const w = 860;
-  const h = 320;
+  const h = compact ? 220 : 320;
   const pad = 32;
   if (points.length < 2) {
     return (
-      <div className="flex h-44 items-center justify-center rounded-xl border border-white/[0.06] bg-black/20 px-5 text-center text-[13px] text-zinc-500">
+      <div
+        className={cn(
+          "flex items-center justify-center rounded-xl border border-white/[0.06] bg-black/20 px-5 text-center text-[13px] text-zinc-500",
+          compact ? "h-36" : "h-44",
+        )}
+      >
         Add a few trading days to unlock performance and behavior patterns.
       </div>
     );
@@ -679,20 +845,55 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
 
   const sectionNavItems = useMemo<SectionNavItem[]>(
     () => [
-      { id: "stats-summary", label: "Summary", icon: LayoutGrid },
-      { id: "stats-performance", label: "Performance", icon: LineChart },
-      { id: "stats-behavior", label: "Behavior", icon: UserCheck },
-      { id: "stats-patterns", label: "Patterns", icon: Sparkles },
-      { id: "stats-accounts", label: "Accounts", icon: Wallet },
+      { id: "summary", label: "Summary", icon: LayoutGrid },
+      { id: "performance", label: "Performance", icon: LineChart },
+      { id: "behavior", label: "Behavior", icon: UserCheck },
+      { id: "patterns", label: "Patterns", icon: Sparkles },
+      { id: "accounts", label: "Accounts", icon: Wallet },
     ],
     [],
   );
 
-  const sectionIds = useMemo(() => sectionNavItems.map((item) => item.id), [sectionNavItems]);
-  const scrollSpyEnabled = ready && baseEntries.length > 0 && filteredEntries.length > 0;
-  const { activeId: activeSection, scrollToSection } = useSectionScrollSpy(sectionIds, {
-    enabled: scrollSpyEnabled,
-  });
+  const activeTab = parseStatsTab(searchParams.get("tab"));
+
+  const navigateTab = (tabId: string) => {
+    const tab = parseStatsTab(tabId) as StatsTabId;
+    const base = new URLSearchParams(searchParams.toString());
+    if (tab === DEFAULT_STATS_TAB) base.delete("tab");
+    else base.set("tab", tab);
+    const nextQuery = base.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  };
+
+  const sessionTagPerformance = useMemo(
+    () =>
+      computeTagPerformance(
+        filteredEntries,
+        (row) => row.sessionTag,
+        (label) => label === "Other" || label === "—",
+      ),
+    [filteredEntries],
+  );
+
+  const marketConditionPerformance = useMemo(
+    () =>
+      computeTagPerformance(
+        filteredEntries,
+        (row) => row.marketCondition,
+        (label) => label === "Other" || label === "—",
+      ),
+    [filteredEntries],
+  );
+
+  const mistakeTagPerformance = useMemo(
+    () =>
+      computeTagPerformance(
+        filteredEntries,
+        (row) => row.tag,
+        (label) => label === "None" || label === "Manual" || label === "—",
+      ),
+    [filteredEntries],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -800,7 +1001,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         variant="signature"
         eyebrow="Performance"
@@ -822,15 +1023,15 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
       {exportMsg ? <p className="text-[13px] text-zinc-400">{exportMsg}</p> : null}
 
       <section className="space-y-2" aria-label="Stats filters">
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-          <button type="button" onClick={() => setFiltersOpen((v) => !v)} className="text-[12px] text-zinc-300 hover:text-zinc-100">
+        <div className={cn(appFilterShell, "flex items-center justify-between gap-2")}>
+          <button type="button" onClick={() => setFiltersOpen((v) => !v)} className="text-[13px] text-zinc-300 hover:text-zinc-100">
             {filtersOpen ? "Hide filters" : "Filters"}
           </button>
           <div className="flex items-center gap-2">
             <select
               value={accountScope}
               onChange={(e) => setAccountScope(e.target.value as "active" | "all")}
-              className="h-8 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300"
+              className={cn(appFormSelect, "h-8 text-[12px]")}
             >
               <option value="active">Active account</option>
               <option value="all">All accounts</option>
@@ -843,14 +1044,16 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           </div>
         </div>
         {filtersOpen ? (
-          <div className="grid gap-2 rounded-xl border border-white/[0.08] bg-black/20 p-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={cn(appFilterShell, "grid gap-2 sm:grid-cols-2 lg:grid-cols-4")}>
             <Input value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} placeholder="Search symbol or note" className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[13px]" />
             <Input type="date" value={filters.from} onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))} className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[12px]" />
             <Input type="date" value={filters.to} onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))} className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[12px]" />
-            <select value={filters.dayColor} onChange={(e) => setFilters((f) => ({ ...f, dayColor: e.target.value as EntryFilters["dayColor"] }))} className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300">
-              <option value="all">all days</option>
-              <option value="green">green days</option>
-              <option value="red">red days</option>
+            <select value={filters.dayColor} onChange={(e) => setFilters((f) => ({ ...f, dayColor: e.target.value as EntryFilters["dayColor"] }))} className={appFormSelect}>
+              {(Object.keys(DAY_COLOR_FILTER_LABELS) as EntryFilters["dayColor"][]).map((key) => (
+                <option key={key} value={key}>
+                  {DAY_COLOR_FILTER_LABELS[key]}
+                </option>
+              ))}
             </select>
             {[
               { key: "symbol", values: uniqueValues(baseEntries, (row) => row.sym) },
@@ -864,9 +1067,9 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                 key={item.key}
                 value={filters[item.key as keyof EntryFilters] as string}
                 onChange={(e) => setFilters((f) => ({ ...f, [item.key]: e.target.value }))}
-                className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300"
+                className={appFormSelect}
               >
-                <option value="all">{item.key}</option>
+                <option value="all">{FILTER_DIMENSION_ALL_LABEL[item.key] ?? "All"}</option>
                 {item.values.map((value) => (
                   <option key={value} value={value}>
                     {value}
@@ -906,24 +1109,31 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         <>
           <SectionNav
             items={sectionNavItems}
-            activeId={activeSection}
-            onChange={scrollToSection}
-            ariaLabel="Jump to stats section"
+            activeId={activeTab}
+            onChange={navigateTab}
+            ariaLabel="Stats sections"
             variant="sticky"
           />
 
+          {filteredEntries.length === 0 ? (
+            <EmptyState icon={CalendarDays} title="No results for current filters" description="Clear filters to reveal your full stats view." />
+          ) : (
+            <div
+              key={activeTab}
+              role="tabpanel"
+              id={`stats-tabpanel-${activeTab}`}
+              aria-labelledby={`section-tab-${activeTab}`}
+              className="space-y-6"
+            >
+          {activeTab === "summary" ? (
+          <>
           <MonthlyReviewCard
             review={monthlyReview}
             displayCurrency={displayCurrency}
             storageKey={`blueveno:monthly-review:stats:${accountScope}:${monthlyReview.monthKey}`}
             title="Monthly review report"
           />
-
-          {filteredEntries.length === 0 ? (
-            <EmptyState icon={CalendarDays} title="No results for current filters" description="Clear filters to reveal your full stats view." />
-          ) : (
-            <>
-          <section id="stats-summary" className="grid gap-5 scroll-mt-28 rounded-2xl border border-[oklch(0.52_0.12_252/0.18)] bg-[linear-gradient(165deg,oklch(0.14_0.038_262/0.94),oklch(0.09_0.03_266/0.92))] p-5 sm:p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] min-[460px]:grid-cols-2 lg:grid-cols-4" aria-label="Summary at a glance">
+          <section className="grid gap-5 rounded-2xl border border-[oklch(0.52_0.12_252/0.18)] bg-[linear-gradient(165deg,oklch(0.14_0.038_262/0.94),oklch(0.09_0.03_266/0.92))] p-5 sm:p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] min-[460px]:grid-cols-2 lg:grid-cols-4" aria-label="Summary at a glance">
             <div>
               <p className="app-metric-label">Net P&L</p>
               <p
@@ -952,29 +1162,54 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               <p className="font-display mt-2 text-3xl tabular-nums text-zinc-50">{stats.dailyBars.length}</p>
             </div>
           </section>
+          <DashboardCard
+            eyebrow="Trend"
+            title="Cumulative P&L preview"
+            description="Running total for your current filter scope."
+            variant="inset"
+            className="overflow-hidden"
+          >
+            <CumulativeChart points={stats.cumulative} currency={displayCurrency} compact />
+          </DashboardCard>
+          </>
+          ) : null}
 
-
-          <section id="stats-performance" className="grid gap-4 scroll-mt-28 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2 xl:grid-cols-6" aria-label="Performance summary">
+          {activeTab === "performance" ? (
+          <>
+          <section className="grid gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Performance extremes">
+            <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3 sm:col-span-2 xl:col-span-3">
+              <p className="app-metric-label">Risk &amp; efficiency</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { label: "Max drawdown", value: fmtPnl(stats.maxDrawdown, displayCurrency), tone: stats.maxDrawdown ?? 0 },
+                  { label: "Profit factor", value: formatProfitFactor(stats.profitFactor), tone: 0 },
+                  { label: "Avg green day", value: fmtPnl(stats.avgGreenDay, displayCurrency), tone: stats.avgGreenDay ?? 0 },
+                  { label: "Avg red day", value: fmtPnl(stats.avgRedDay, displayCurrency), tone: stats.avgRedDay ?? 0 },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <p className="text-[11px] text-zinc-500">{item.label}</p>
+                    <p className={cn("mt-1 font-display text-xl tabular-nums", item.tone > 0 ? "text-emerald-200" : item.tone < 0 ? "text-rose-200" : "text-zinc-100")}>{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
+              <p className="app-metric-label">Best day</p>
+              <p className="mt-1.5 font-display text-lg tabular-nums text-emerald-200">{stats.bestDay ? fmtPnl(stats.bestDay.pnl, displayCurrency) : "—"}</p>
+              <p className="mt-1 text-[11px] text-zinc-500">{stats.bestDay?.date ?? "—"}</p>
+            </div>
+            <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
+              <p className="app-metric-label">{stats.worstDay ? "Worst day" : "Smallest green day"}</p>
+              <p className="mt-1.5 font-display text-lg tabular-nums text-rose-200">
+                {stats.worstDay ? fmtPnl(stats.worstDay.pnl, displayCurrency) : stats.smallestGreenDay ? fmtPnl(stats.smallestGreenDay.pnl, displayCurrency) : "—"}
+              </p>
+              <p className="mt-1 text-[11px] text-zinc-500">{stats.worstDay?.date ?? stats.smallestGreenDay?.date ?? "—"}</p>
+            </div>
+          </section>
+          <section className="grid gap-4 sm:grid-cols-2" aria-label="Performance headline">
             {[
               { label: "Net P&L", value: fmtPnl(netR, displayCurrency), tone: netR },
-              {
-                label: "Trade win rate",
-                value: stats.winRateTrades !== null ? `${stats.winRateTrades}%` : "—",
-                tone: 0,
-              },
-              { label: "Avg green day", value: fmtPnl(stats.avgGreenDay, displayCurrency), tone: stats.avgGreenDay ?? 0 },
-              { label: "Avg red day", value: fmtPnl(stats.avgRedDay, displayCurrency), tone: stats.avgRedDay ?? 0 },
-              { label: "Max drawdown", value: fmtPnl(stats.maxDrawdown, displayCurrency), tone: stats.maxDrawdown ?? 0 },
-              {
-                label: "Profit factor",
-                value:
-                  stats.profitFactor === null
-                    ? "—"
-                    : Number.isFinite(stats.profitFactor)
-                      ? stats.profitFactor.toFixed(2)
-                      : "—",
-                tone: 0,
-              },
+              { label: "Trade win rate", value: stats.winRateTrades !== null ? `${stats.winRateTrades}%` : "—", tone: 0 },
             ].map((item) => (
               <div key={item.label} className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
                 <p className="app-metric-label">{item.label}</p>
@@ -1002,6 +1237,13 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             <DashboardCard eyebrow="Weeks" title="Weekly totals trend" description="Recent weeks at a glance.">
               <WeeklyTrend weekly={stats.weekly} currency={displayCurrency} />
             </DashboardCard>
+          </section>
+          </>
+          ) : null}
+
+          {activeTab === "behavior" ? (
+          <>
+          <section className="grid gap-4 lg:grid-cols-2" aria-label="Behavior charts">
             <DashboardCard eyebrow="Behavior" title="Mood distribution" description="Which mood appears most often.">
               <MoodDistributionChart moodBreakdown={stats.moodBreakdown} />
             </DashboardCard>
@@ -1019,7 +1261,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </DashboardCard>
           </section>
 
-          <section id="stats-behavior" className="scroll-mt-28" aria-label="Behavior insights">
+          <section aria-label="Behavior insights">
             <DashboardCard
               eyebrow="Behavior insights"
               title="How behavior links to your P&L"
@@ -1081,7 +1323,50 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </DashboardCard>
           </section>
 
-          <section id="stats-patterns" className="grid gap-4 scroll-mt-28 lg:grid-cols-2" aria-label="Weekday and symbol performance">
+          <section aria-label="Rules analytics">
+            <DashboardCard eyebrow="Rules" title="Rule adherence and impact" description="How consistently rules are followed and what breaks cost.">
+              {rulesAnalytics.rows.length === 0 ? (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
+                  Create active rules in Settings to track adherence here.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
+                      <p className="app-metric-label">Rule adherence</p>
+                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.adherence !== null ? `${rulesAnalytics.adherence}%` : "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
+                      <p className="app-metric-label">Most broken rule</p>
+                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.mostBroken ?? "—"}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
+                      <p className="app-metric-label">Rule break cost</p>
+                      <p className={cn("mt-1.5 text-[13px] tabular-nums", (rulesAnalytics.breakCost ?? 0) <= 0 ? "text-rose-200" : "text-emerald-200")}>
+                        {fmtPnl(rulesAnalytics.breakCost, displayCurrency)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {rulesAnalytics.rows.map((row) => (
+                      <div key={row.title} className="rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5 text-[12px]">
+                        <p className="text-zinc-200">{row.title}</p>
+                        <p className="mt-1 text-zinc-500">
+                          Followed {row.followedPct !== null ? `${row.followedPct}%` : "—"} · {fmtPnl(row.avgFollowed, displayCurrency)} when followed vs {fmtPnl(row.avgBroken, displayCurrency)} when broken
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </DashboardCard>
+          </section>
+          </>
+          ) : null}
+
+          {activeTab === "patterns" ? (
+          <>
+          <section className="grid gap-4 lg:grid-cols-2" aria-label="Weekday and symbol performance">
             <DashboardCard eyebrow="Weekday performance" title="How each weekday performs">
               <div className="space-y-2.5">
                 {stats.weekdayPerformance.map((row) => (
@@ -1128,155 +1413,51 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </DashboardCard>
           </section>
 
-          <section id="stats-accounts" className="scroll-mt-28" aria-label="Account comparison">
-            <DashboardCard eyebrow="Accounts" title="Account comparison">
-              {accountComparisonRows.length <= 1 ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
-                  Add another account to compare performance.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[32rem] border-collapse text-left text-[12px]" aria-label="Account comparison">
-                    <thead>
-                      <tr className="border-b border-white/[0.1] app-kicker text-[11px]">
-                        <th scope="col" className="min-w-[10rem] px-3 py-2.5 text-left font-medium">
-                          Account
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Net profit and loss across all journal entries for this account">
-                          Net P&amp;L
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Winning trades as a percent of winning plus losing trades (breakevens excluded)">
-                          Trade win
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Number of distinct trading days with at least one entry">
-                          Traded days
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Share of plan, stop, and no-revenge checks marked true across entries">
-                          Discipline
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {accountComparisonRows.map((row) => (
-                        <tr key={row.id} className="border-b border-white/[0.06] transition-colors last:border-b-0 hover:bg-white/[0.03]">
-                          <td className="max-w-[14rem] px-3 py-2.5 align-middle">
-                            <p className="truncate text-zinc-200">
-                              {row.name} <span className="text-zinc-500">({row.type})</span>
-                            </p>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums">
-                            <span className={cn(row.pnl > 0 ? "text-emerald-200" : row.pnl < 0 ? "text-rose-200" : "text-zinc-300")}>
-                              {fmtPnl(row.pnl, displayCurrency)}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.winRate !== null ? `${row.winRate}%` : "—"}</td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.tradedDays}</td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">
-                            {formatDisciplineDisplay(row.disciplineScore)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+          <section className="grid gap-4 lg:grid-cols-2" aria-label="Setup and tag performance">
+            <DashboardCard eyebrow="Setup" title="Setup performance">
+              <TagPerformanceList
+                rows={stats.setupPerformance.map((row) => ({
+                  label: row.setup,
+                  totalPnl: row.totalPnl,
+                  averagePnl: row.averagePnl,
+                  entries: row.entries,
+                }))}
+                currency={displayCurrency}
+                emptyLabel="No setup-tagged entries in this scope."
+              />
+              {stats.bestSetup ? <p className="mt-2 text-[12px] text-zinc-500">Best setup: {stats.bestSetup}</p> : null}
+            </DashboardCard>
+            <DashboardCard eyebrow="Mistakes" title="Mistake tag performance">
+              <TagPerformanceList rows={mistakeTagPerformance} currency={displayCurrency} emptyLabel="No mistake tags logged yet." />
+              {stats.mostCommonMistake ? (
+                <p className="mt-2 text-[12px] text-zinc-500">
+                  Most common: {stats.mostCommonMistake}
+                  {stats.mistakeCost !== null && Number.isFinite(stats.mistakeCost)
+                    ? ` · cost ${fmtPnl(stats.mistakeCost, displayCurrency)}`
+                    : ""}
+                </p>
+              ) : null}
+            </DashboardCard>
+            <DashboardCard eyebrow="Session" title="Session tag performance">
+              <TagPerformanceList rows={sessionTagPerformance} currency={displayCurrency} emptyLabel="No session tags in this scope." />
+            </DashboardCard>
+            <DashboardCard eyebrow="Market" title="Market condition performance">
+              <TagPerformanceList rows={marketConditionPerformance} currency={displayCurrency} emptyLabel="No market conditions in this scope." />
             </DashboardCard>
           </section>
+          </>
+          ) : null}
 
-          <section id="stats-accounts" className="scroll-mt-28" aria-label="Account comparison">
-            <DashboardCard eyebrow="Accounts" title="Account comparison">
-              {accountComparisonRows.length <= 1 ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
-                  Add another account to compare performance.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[32rem] border-collapse text-left text-[12px]" aria-label="Account comparison">
-                    <thead>
-                      <tr className="border-b border-white/[0.1] app-kicker text-[11px]">
-                        <th scope="col" className="min-w-[10rem] px-3 py-2.5 text-left font-medium">
-                          Account
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Net profit and loss across all journal entries for this account">
-                          Net P&amp;L
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Winning trades as a percent of winning plus losing trades (breakevens excluded)">
-                          Trade win
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Number of distinct trading days with at least one entry">
-                          Traded days
-                        </th>
-                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Share of plan, stop, and no-revenge checks marked true across entries">
-                          Discipline
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {accountComparisonRows.map((row) => (
-                        <tr key={row.id} className="border-b border-white/[0.06] transition-colors last:border-b-0 hover:bg-white/[0.03]">
-                          <td className="max-w-[14rem] px-3 py-2.5 align-middle">
-                            <p className="truncate text-zinc-200">
-                              {row.name} <span className="text-zinc-500">({row.type})</span>
-                            </p>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums">
-                            <span className={cn(row.pnl > 0 ? "text-emerald-200" : row.pnl < 0 ? "text-rose-200" : "text-zinc-300")}>
-                              {fmtPnl(row.pnl, displayCurrency)}
-                            </span>
-                          </td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.winRate !== null ? `${row.winRate}%` : "—"}</td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.tradedDays}</td>
-                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">
-                            {formatDisciplineDisplay(row.disciplineScore)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+          {activeTab === "accounts" ? (
+          <>
+          <section aria-label="Account comparison">
+            <DashboardCard eyebrow="Accounts" title="Account comparison" description="Compare net P&amp;L and discipline across your trading accounts.">
+              <AccountComparisonTable rows={accountComparisonRows} currency={displayCurrency} />
             </DashboardCard>
           </section>
-
-          <section aria-label="Rules analytics">
-            <DashboardCard eyebrow="Rules" title="Rule adherence and impact" description="How consistently rules are followed and what breaks cost.">
-              {rulesAnalytics.rows.length === 0 ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
-                  Create active rules in Settings to track adherence here.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="app-metric-label">Rule adherence</p>
-                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.adherence !== null ? `${rulesAnalytics.adherence}%` : "—"}</p>
-                    </div>
-                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="app-metric-label">Most broken rule</p>
-                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.mostBroken ?? "—"}</p>
-                    </div>
-                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="app-metric-label">Rule break cost</p>
-                      <p className={cn("mt-1.5 text-[13px] tabular-nums", (rulesAnalytics.breakCost ?? 0) <= 0 ? "text-rose-200" : "text-emerald-200")}>
-                        {fmtPnl(rulesAnalytics.breakCost, displayCurrency)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {rulesAnalytics.rows.map((row) => (
-                      <div key={row.title} className="rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5 text-[12px]">
-                        <p className="text-zinc-200">{row.title}</p>
-                        <p className="mt-1 text-zinc-500">
-                          Followed {row.followedPct !== null ? `${row.followedPct}%` : "—"} · {fmtPnl(row.avgFollowed, displayCurrency)} when followed vs {fmtPnl(row.avgBroken, displayCurrency)} when broken
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </DashboardCard>
-          </section>
-            </>
+          </>
+          ) : null}
+            </div>
           )}
         </>
       )}

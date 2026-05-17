@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Fragment } from "react";
 import Link from "next/link";
 import { CalendarDayDrawer } from "@/components/calendar/calendar-day-drawer";
-import { ChevronLeft, ChevronRight, LineChart } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { computeDisciplineScorePercent, formatDisciplinePercent } from "@/lib/user-data/discipline-stats";
@@ -86,29 +86,60 @@ function monthLabel(d: Date): string {
   return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
-/** Day cell: green / red / neutral — strong, readable states */
-function dayCellClasses(total: number, hasData: boolean, inMonth: boolean): string {
+/** Day cell: green / red / neutral — strong on weekdays, calmer on weekends */
+function dayCellClasses(total: number, hasData: boolean, inMonth: boolean, isWeekend: boolean): string {
   if (!hasData) {
     return cn(
-      "border border-white/[0.08] bg-[linear-gradient(165deg,oklch(0.11_0.028_264/0.58),oklch(0.07_0.022_268/0.54))] text-zinc-600",
-      !inMonth && "opacity-38",
+      "border border-white/[0.07] bg-[linear-gradient(165deg,oklch(0.10_0.024_264/0.5),oklch(0.07_0.02_268/0.46))] text-zinc-600",
+      !inMonth && "opacity-30",
+      isWeekend && "border-white/[0.04] bg-[linear-gradient(165deg,oklch(0.09_0.018_264/0.38),oklch(0.065_0.016_268/0.34))]",
     );
   }
   if (total > 0) {
     return cn(
       "border border-emerald-400/58 bg-[linear-gradient(155deg,oklch(0.29_0.11_155/0.62),oklch(0.13_0.06_160/0.5))] text-emerald-50",
       "shadow-[inset_0_1px_0_0_oklch(0.9_0.08_155/0.24),0_0_0_1px_oklch(0.5_0.14_155/0.16)]",
-      !inMonth && "opacity-58",
+      !inMonth && "opacity-55",
+      isWeekend && "border-emerald-400/38 bg-[linear-gradient(155deg,oklch(0.22_0.08_155/0.48),oklch(0.11_0.045_160/0.38))] shadow-[inset_0_1px_0_0_oklch(0.88_0.06_155/0.14)]",
     );
   }
   if (total < 0) {
     return cn(
       "border border-rose-400/56 bg-[linear-gradient(155deg,oklch(0.31_0.11_18/0.6),oklch(0.13_0.06_22/0.5))] text-rose-50",
       "shadow-[inset_0_1px_0_0_oklch(0.92_0.07_15/0.16),0_0_0_1px_oklch(0.5_0.15_15/0.14)]",
-      !inMonth && "opacity-58",
+      !inMonth && "opacity-55",
+      isWeekend && "border-rose-400/36 bg-[linear-gradient(155deg,oklch(0.24_0.08_18/0.46),oklch(0.11_0.04_22/0.36))] shadow-[inset_0_1px_0_0_oklch(0.9_0.05_15/0.1)]",
     );
   }
-  return cn("border border-white/[0.14] bg-white/[0.06] text-zinc-300", !inMonth && "opacity-48");
+  return cn(
+    "border border-white/[0.12] bg-white/[0.05] text-zinc-300",
+    !inMonth && "opacity-45",
+    isWeekend && "border-white/[0.08] bg-white/[0.03]",
+  );
+}
+
+function dayLabelBadgeClasses({
+  hasData,
+  inMonth,
+  isToday,
+  isWeekend,
+}: {
+  hasData: boolean;
+  inMonth: boolean;
+  isToday: boolean;
+  isWeekend: boolean;
+}): string {
+  return cn(
+    "inline-flex min-w-[1.375rem] items-center justify-center rounded-md border px-1 py-0.5 font-mono text-[11px] tabular-nums leading-none sm:min-w-[1.5rem] sm:text-[12px]",
+    isToday
+      ? "border-[oklch(0.58_0.12_252/0.45)] bg-[oklch(0.58_0.12_252/0.14)] font-semibold text-[oklch(0.9_0.1_252)]"
+      : cn(
+          "border-white/[0.09] bg-black/35",
+          hasData ? "text-white/90" : inMonth ? "text-zinc-500" : "text-zinc-600",
+          isWeekend && !hasData && "border-white/[0.05] bg-black/20 text-zinc-600",
+          isWeekend && hasData && "border-white/[0.07] bg-black/28 text-white/80",
+        ),
+  );
 }
 
 function weekRailClasses(total: number): string {
@@ -463,7 +494,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                 className={cn(
                   headerBox,
                   "min-w-0 app-kicker font-medium",
-                  d === "Weekend" && "hidden sm:flex",
+                  d === "Weekend" && "hidden border-white/[0.06] bg-black/25 text-zinc-500 sm:flex",
                 )}
               >
                 <span className="sm:hidden">{d === "Weekend" ? "Sat–Sun" : d.slice(0, 3)}</span>
@@ -521,9 +552,8 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     const aggregateRows = cell.sourceKeys.map((k) => aggregates.get(k)).filter(Boolean) as DayAggregate[];
                     const total = aggregateRows.reduce((sum, row) => sum + row.total, 0);
                     const count = aggregateRows.reduce((sum, row) => sum + row.count, 0);
-                    const hasChartLink = aggregateRows.some((row) => row.hasChartLink);
                     const hasData = count > 0;
-                    const cellClasses = dayCellClasses(total, hasData, cell.inMonth);
+                    const cellClasses = dayCellClasses(total, hasData, cell.inMonth, cell.isWeekend);
                     const isSelected = cell.key === selectedCellKey && drawerOpen;
                     const isToday = cell.sourceKeys.includes(todayKey);
 
@@ -533,59 +563,43 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                         type="button"
                         onClick={() => openDayDrawer(cell)}
                         className={cn(
-                          "min-h-0 min-w-0 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
+                          "group/cell min-h-0 min-w-0 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
                           cell.isWeekend && "hidden sm:block",
                         )}
                         aria-label={`${cell.label}, ${hasData ? formatSignedPnlAmount(total, displayCurrency) : "no trades"}`}
                       >
                         <div
                           className={cn(
-                            "relative box-border flex h-full min-h-[4.25rem] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2.5 transition duration-200 sm:min-h-[5.75rem] sm:rounded-xl sm:p-3 lg:min-h-[6.25rem]",
+                            "relative box-border flex h-full min-h-[4.25rem] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2.5 transition-[box-shadow,filter] duration-200 sm:min-h-[5.75rem] sm:rounded-xl sm:p-3 lg:min-h-[6.25rem]",
                             cellClasses,
-                            cell.isWeekend && !hasData && "border-white/[0.06] bg-[linear-gradient(160deg,oklch(0.105_0.024_264/0.5),oklch(0.07_0.02_268/0.45))] text-zinc-600",
                             isSelected &&
-                              "ring-2 ring-[oklch(0.72_0.14_252/0.72)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_0_0_1px_oklch(0.72_0.14_252/0.5)]",
-                            "hover:brightness-[1.04] hover:ring-1 hover:ring-[oklch(0.58_0.12_252/0.35)]",
+                              "z-[1] ring-2 ring-[oklch(0.7_0.13_252/0.7)] ring-offset-2 ring-offset-[oklch(0.08_0.03_266)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_0_20px_-10px_oklch(0.5_0.14_252/0.45)]",
+                            !isSelected &&
+                              "group-hover/cell:brightness-[1.03] group-hover/cell:ring-1 group-hover/cell:ring-white/[0.14]",
                           )}
                         >
-                          <div className="flex items-start justify-between gap-1">
+                          <div className="flex items-start">
                             <span
-                              className={cn(
-                                "font-mono text-[11px] tabular-nums sm:text-[12px]",
-                                hasData ? "text-white/90" : cell.inMonth ? "text-zinc-400" : "text-zinc-600",
-                                isToday && "font-semibold text-[oklch(0.84_0.1_252)]",
-                              )}
+                              className={dayLabelBadgeClasses({
+                                hasData,
+                                inMonth: cell.inMonth,
+                                isToday,
+                                isWeekend: cell.isWeekend,
+                              })}
                             >
                               {cell.label}
                             </span>
-                            <div className="flex shrink-0 items-center gap-1">
-                              {hasData && count > 0 ? (
-                                <span
-                                  className="flex size-5 items-center justify-center rounded-full border border-white/[0.14] bg-black/40 font-mono text-[9px] font-medium text-zinc-100"
-                                  title={`${count} entr${count === 1 ? "y" : "ies"}`}
-                                >
-                                  {count}
-                                </span>
-                              ) : null}
-                              {hasChartLink ? (
-                                <span
-                                  className="hidden size-5 items-center justify-center rounded-full border border-[oklch(0.58_0.12_252/0.4)] bg-[oklch(0.58_0.12_252/0.2)] text-[oklch(0.82_0.1_252)] sm:flex"
-                                  title="Linked chart"
-                                >
-                                  <LineChart className="size-3" strokeWidth={2} />
-                                </span>
-                              ) : null}
-                            </div>
                           </div>
-                          <p
-                            className={cn(
-                              "w-full truncate text-right font-display text-[10px] font-semibold tabular-nums leading-none tracking-[-0.02em] sm:text-[13px]",
-                              hasData ? "text-white" : "text-zinc-600",
-                            )}
-                            title={hasData ? formatSignedPnlAmount(total, displayCurrency) : undefined}
-                          >
-                            {hasData ? formatSignedPnlAmount(total, displayCurrency) : "—"}
-                          </p>
+                          {hasData ? (
+                            <p
+                              className="w-full truncate text-right font-display text-[11px] font-semibold tabular-nums leading-none tracking-[-0.02em] text-white sm:text-[13px]"
+                              title={formatSignedPnlAmount(total, displayCurrency)}
+                            >
+                              {formatSignedPnlAmount(total, displayCurrency)}
+                            </p>
+                          ) : (
+                            <span className="block min-h-[0.85rem] sm:min-h-[1rem]" aria-hidden />
+                          )}
                         </div>
                       </button>
                     );
@@ -644,7 +658,10 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
 
       <CalendarDayDrawer
         open={drawerOpen}
-        onOpenChange={setDrawerOpen}
+        onOpenChange={(open) => {
+          setDrawerOpen(open);
+          if (!open) setSelectedCellKey(null);
+        }}
         dayKeys={drawerDayKeys}
         entries={entries}
         displayCurrency={displayCurrency}

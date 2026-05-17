@@ -25,8 +25,8 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        "flex flex-col gap-4 border-b border-white/[0.08] sm:flex-row sm:items-end sm:justify-between sm:gap-8",
-        isSig ? "pb-8 sm:pb-10" : "pb-7 sm:pb-9",
+        "flex flex-col gap-4 border-b border-white/[0.06] sm:flex-row sm:items-end sm:justify-between sm:gap-6",
+        isSig ? "pb-6 sm:pb-8" : "pb-6 sm:pb-7",
         className,
       )}
     >
@@ -48,7 +48,7 @@ export function PageHeader({
         {description ? (
           <p
             className={cn(
-              "max-w-2xl leading-[1.6] text-zinc-400",
+              "max-w-2xl leading-[1.6] text-zinc-400/95",
               isSig ? "text-[15px] md:text-base" : "text-[15px] md:text-[15px]",
             )}
           >

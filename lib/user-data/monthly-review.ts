@@ -1,5 +1,9 @@
 import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
-import { computeDisciplineScorePercent } from "@/lib/user-data/discipline-stats";
+import {
+  computeDisciplineScorePercent,
+  getDisciplineCoverageHint,
+  summarizeDisciplineCoverage,
+} from "@/lib/user-data/discipline-stats";
 import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 import {
   pickBestDay,
@@ -29,6 +33,7 @@ export type MonthlyReviewSnapshot = {
   avgGreenDay: number | null;
   avgRedDay: number | null;
   disciplineScore: number | null;
+  disciplineNote: string | null;
   bestMood: string | null;
   mostCommonMistake: string | null;
   bestSetup: string | null;
@@ -136,6 +141,7 @@ export function computeMonthlyReview(
     avgGreenDay: green.length ? green.reduce((s, v) => s + v, 0) / green.length : null,
     avgRedDay: red.length ? red.reduce((s, v) => s + v, 0) / red.length : null,
     disciplineScore: computeDisciplineScorePercent(rows),
+    disciplineNote: getDisciplineCoverageHint(summarizeDisciplineCoverage(rows)) ?? null,
     bestMood,
     mostCommonMistake,
     bestSetup,

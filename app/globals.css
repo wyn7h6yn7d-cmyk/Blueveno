@@ -134,15 +134,15 @@ body {
 }
 
 .app-kicker {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  color: oklch(0.55 0.02 260);
+  color: oklch(0.58 0.02 260);
 }
 
 .app-metric-label {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: oklch(0.62 0.02 260);
+  color: oklch(0.68 0.02 260);
 }
 
 ::selection {

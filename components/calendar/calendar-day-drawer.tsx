@@ -58,22 +58,22 @@ export function CalendarDayDrawer({ open, onOpenChange, dayKeys, entries, displa
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full border-white/[0.1] bg-[linear-gradient(168deg,oklch(0.11_0.032_262/0.98),oklch(0.07_0.028_266/0.98))] text-zinc-100 sm:max-w-md"
+        className="flex w-full flex-col border-white/[0.1] bg-[linear-gradient(168deg,oklch(0.11_0.032_262/0.98),oklch(0.07_0.028_266/0.98))] text-zinc-100 sm:max-w-md"
       >
-        <SheetHeader className="border-b border-white/[0.08] pb-4 text-left">
+        <SheetHeader className="space-y-1 border-b border-white/[0.08] pb-4 text-left">
           <SheetTitle className="font-display text-lg font-semibold tracking-tight text-zinc-50">
             {formatDayHeading(dayKeys)}
           </SheetTitle>
-          <SheetDescription className="text-zinc-400">
+          <SheetDescription className="text-[13px] leading-relaxed text-zinc-400">
             {dayEntries.length === 0
               ? "No entries logged for this day yet."
               : `${dayEntries.length} entr${dayEntries.length === 1 ? "y" : "ies"} · ${formatSignedPnlAmount(dailyPnl, displayCurrency)} day P&L`}
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-6">
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="text-[11px] font-medium text-zinc-500">Daily P&L</p>
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-1 pb-6 pt-4">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+            <p className="app-metric-label">Daily P&L</p>
             <p
               className={cn(
                 "font-display mt-1 text-2xl tabular-nums tracking-[-0.03em]",
@@ -87,7 +87,7 @@ export function CalendarDayDrawer({ open, onOpenChange, dayKeys, entries, displa
           </div>
 
           {dayEntries.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/[0.12] bg-white/[0.02] px-4 py-8 text-center">
+            <div className="rounded-xl border border-dashed border-white/[0.1] bg-white/[0.02] px-4 py-10 text-center">
               <NotebookPen className="mx-auto size-8 text-zinc-600" strokeWidth={1.5} />
               <p className="mt-3 text-[13px] text-zinc-400">Log this day to see entries and discipline here.</p>
               <Link href={addHref} className={cn(appPrimaryCta, "mt-4 inline-flex h-10 items-center px-4 text-[13px]")}>
@@ -105,7 +105,7 @@ export function CalendarDayDrawer({ open, onOpenChange, dayKeys, entries, displa
                 return (
                   <article
                     key={row.id}
-                    className="rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.92),oklch(0.09_0.026_266/0.92))] p-4"
+                    className="rounded-xl border border-white/[0.07] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.88),oklch(0.09_0.026_266/0.88))] p-4 transition-colors hover:border-white/[0.12]"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>

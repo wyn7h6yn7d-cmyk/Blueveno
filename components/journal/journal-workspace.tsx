@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { AlertTriangle, CalendarDays, LineChart, NotebookPen, Plus } from "lucide-react";
+import { AlertTriangle, CalendarDays, Check, ChevronRight, LineChart, NotebookPen, Plus } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { chartUrlForSave, isValidChartUrl } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { appFormControl, appFormLabel } from "@/lib/ui/app-form";
 import { createClient } from "@/lib/supabase/client";
 import { waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
@@ -33,7 +34,9 @@ import {
 } from "@/lib/user-data/journal-tags";
 import {
   applyEntryFilters,
+  DAY_COLOR_FILTER_LABELS,
   EMPTY_ENTRY_FILTERS,
+  FILTER_DIMENSION_ALL_LABEL,
   filterChips,
   hasActiveFilters,
   parseFiltersFromParams,
@@ -41,6 +44,7 @@ import {
   writeFiltersToParams,
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
+import { appFormSelect } from "@/lib/ui/app-form";
 import {
   isRetryableWeeklyReflectionSchemaError,
   isWeeklyReflectionTableMissing,
@@ -55,10 +59,110 @@ type Props = {
   initialWeekAnchorDate?: string;
 };
 
-const labelCls = "text-[12px] font-medium tracking-wide text-zinc-400";
-const inputCls =
-  "h-11 rounded-xl border-white/[0.1] bg-black/25 text-[15px] shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] placeholder:text-zinc-600 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
+const labelCls = appFormLabel;
+const inputCls = appFormControl;
 const MOOD_OPTIONS = ["Calm", "Focused", "Hesitant", "Tilted"] as const;
+
+function CheckPill({
+  label,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "inline-flex min-h-10 min-w-0 items-center gap-2.5 rounded-full border px-3.5 py-2 text-left text-[13px] font-medium transition-[border-color,background,color,box-shadow]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.4)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
+        checked
+          ? "border-[oklch(0.58_0.12_252/0.42)] bg-[oklch(0.58_0.12_252/0.12)] text-zinc-50 shadow-[0_0_24px_-14px_oklch(0.48_0.14_252/0.55)]"
+          : "border-white/[0.09] bg-white/[0.02] text-zinc-400 hover:border-white/[0.16] hover:bg-white/[0.04] hover:text-zinc-200",
+        disabled && "pointer-events-none opacity-45",
+      )}
+    >
+      <span
+        className={cn(
+          "flex size-[1.125rem] shrink-0 items-center justify-center rounded-full border transition-colors",
+          checked
+            ? "border-[oklch(0.72_0.11_252)] bg-[oklch(0.58_0.12_252/0.45)] text-zinc-950"
+            : "border-white/[0.18] bg-transparent",
+        )}
+        aria-hidden
+      >
+        {checked ? <Check className="size-2.5" strokeWidth={2.5} /> : null}
+      </span>
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+function JournalFormSection({
+  step,
+  title,
+  description,
+  children,
+  accent,
+}: {
+  step: string;
+  title: string;
+  description?: string;
+  children: ReactNode;
+  accent?: boolean;
+}) {
+  return (
+    <section
+      className={cn(
+        "space-y-4 py-6 first:pt-1",
+        accent && "rounded-xl bg-[linear-gradient(165deg,oklch(0.11_0.038_262/0.35),oklch(0.08_0.028_266/0.15))] px-1 sm:px-2",
+      )}
+    >
+      <header className="space-y-1">
+        <p className="text-[12px] font-medium text-zinc-500">Step {step}</p>
+        <p className="text-[15px] font-medium tracking-tight text-zinc-100">{title}</p>
+        {description ? <p className="text-[13px] leading-relaxed text-zinc-500">{description}</p> : null}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function JournalFormCollapsible({
+  step,
+  title,
+  children,
+}: {
+  step: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="group border-t border-white/[0.05]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-5 marker:content-none [&::-webkit-details-marker]:hidden">
+        <span className="inline-flex min-w-0 items-center gap-3">
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/[0.04] text-[11px] font-medium tabular-nums text-zinc-500">
+            {step}
+          </span>
+          <span className="min-w-0">
+            <span className="text-[14px] font-medium text-zinc-200">{title}</span>
+            <span className="ml-2 text-[12px] font-normal text-zinc-600">optional</span>
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-zinc-600 transition-transform group-open:rotate-90" strokeWidth={1.75} />
+      </summary>
+      <div className="space-y-4 pb-6 pt-0">{children}</div>
+    </details>
+  );
+}
 const RECENT_ACTIVITY_PREVIEW = 3;
 
 type WeeklyReflectionRow = {
@@ -567,7 +671,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         variant="signature"
         eyebrow="Journal"
@@ -608,9 +712,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               : "Read-only: your history stays here. Upgrade to log new days."
           }
         >
-          <form id="add" onSubmit={onQuickAdd} className="space-y-5">
-            <div className="space-y-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <p className="text-[12px] font-medium text-zinc-400">1. Result</p>
+          <form id="add" onSubmit={onQuickAdd} className="min-w-0">
+            <JournalFormSection step="1" title="Result" description="The day, symbol, and P&amp;L that anchor everything else.">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="jw-date" className={labelCls}>
@@ -663,92 +766,76 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   className={cn(inputCls, "font-mono disabled:opacity-45")}
                 />
               </div>
-            </div>
+            </JournalFormSection>
 
-            <div className="space-y-3.5 rounded-xl border border-[oklch(0.52_0.12_252/0.22)] bg-[linear-gradient(168deg,oklch(0.11_0.04_264/0.55),oklch(0.07_0.03_268/0.4))] p-4 sm:p-5">
-              <div>
-                <p className="text-[12px] font-medium text-zinc-300">2. Behavior</p>
-                <p className="mt-0.5 text-[11px] text-zinc-500">Mood and discipline — quick taps before you save.</p>
+            <JournalFormSection
+              step="2"
+              title="Behavior"
+              description="Mood and discipline — quick taps before you save."
+              accent
+            >
+              <div className="space-y-5">
+              <div className="space-y-2 sm:max-w-[11rem]">
+                <Label htmlFor="jw-mood" className={labelCls}>
+                  Mood
+                </Label>
+                <select
+                  id="jw-mood"
+                  value={moodState}
+                  onChange={(e) => setMoodState(e.target.value as "" | (typeof MOOD_OPTIONS)[number])}
+                  disabled={!canWriteJournal}
+                  className={cn(inputCls, "h-10 w-full rounded-xl px-3.5 text-[14px] disabled:opacity-45")}
+                >
+                  <option value="">Choose mood</option>
+                  {MOOD_OPTIONS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,9.5rem)_1fr] sm:items-end">
-                <div className="space-y-2">
-                  <Label htmlFor="jw-mood" className={labelCls}>
-                    Mood
-                  </Label>
-                  <select
-                    id="jw-mood"
-                    value={moodState}
-                    onChange={(e) => setMoodState(e.target.value as "" | (typeof MOOD_OPTIONS)[number])}
-                    disabled={!canWriteJournal}
-                    className={cn(inputCls, "h-10 w-full rounded-xl px-3.5 text-[14px] disabled:opacity-45")}
-                  >
-                    <option value="">Choose mood</option>
-                    {MOOD_OPTIONS.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-3">
+              <div className="space-y-2">
+                <p className={labelCls}>Discipline</p>
+                <div className="flex flex-wrap gap-2">
                   {[
-                    { id: "plan", label: "Followed plan", checked: followedPlan, set: setFollowedPlan },
-                    { id: "stop", label: "Respected stop", checked: respectedStop, set: setRespectedStop },
-                    { id: "revenge", label: "No revenge", checked: noRevengeTrade, set: setNoRevengeTrade },
+                    { label: "Followed plan", checked: followedPlan, set: setFollowedPlan },
+                    { label: "Respected stop", checked: respectedStop, set: setRespectedStop },
+                    { label: "No revenge", checked: noRevengeTrade, set: setNoRevengeTrade },
                   ].map((c) => (
-                    <label
-                      key={c.id}
-                      className="flex items-center gap-2 rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-2 text-[12px] text-zinc-300"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={c.checked}
-                        onChange={(e) => c.set(e.target.checked)}
-                        disabled={!canWriteJournal}
-                        className="size-3.5 rounded border-white/[0.2] bg-transparent"
-                      />
-                      {c.label}
-                    </label>
+                    <CheckPill
+                      key={c.label}
+                      label={c.label}
+                      checked={c.checked}
+                      onChange={c.set}
+                      disabled={!canWriteJournal}
+                    />
                   ))}
                 </div>
               </div>
               {personalRules.length > 0 ? (
-                <div className="space-y-2 border-t border-white/[0.06] pt-3">
-                  <p className="text-[11px] font-medium text-zinc-500">Your active rules</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
+                <div className="space-y-2 border-t border-white/[0.06] pt-4">
+                  <p className={labelCls}>Your active rules</p>
+                  <div className="flex flex-wrap gap-2">
                     {personalRules.map((rule) => (
-                      <label
+                      <CheckPill
                         key={rule.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-[12px] text-zinc-300"
-                      >
-                        <span className="truncate">{rule.title}</span>
-                        <input
-                          type="checkbox"
-                          checked={Boolean(ruleChecks[rule.id])}
-                          onChange={(e) => setRuleChecks((prev) => ({ ...prev, [rule.id]: e.target.checked }))}
-                          disabled={!canWriteJournal}
-                          className="size-3.5 rounded border-white/[0.2] bg-transparent"
-                        />
-                      </label>
+                        label={rule.title}
+                        checked={Boolean(ruleChecks[rule.id])}
+                        onChange={(next) => setRuleChecks((prev) => ({ ...prev, [rule.id]: next }))}
+                        disabled={!canWriteJournal}
+                      />
                     ))}
                   </div>
                 </div>
               ) : null}
-            </div>
+              </div>
+            </JournalFormSection>
 
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <details className="group">
-                <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-500 marker:content-none [&::-webkit-details-marker]:hidden">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="text-zinc-600 transition group-open:rotate-90">›</span>
-                    3. Context
-                    <span className="font-normal text-zinc-600">optional</span>
-                  </span>
-                </summary>
-                <div className="mt-3.5 grid gap-4 sm:grid-cols-2">
+            <JournalFormCollapsible step="3" title="Context">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="jw-setup" className={labelCls}>
-                    Setup tag <span className="text-zinc-500">Optional</span>
+                    Setup tag
                   </Label>
                   <select
                     id="jw-setup"
@@ -757,7 +844,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
-                    <option value="">Choose setup (optional)</option>
+                    <option value="">Choose setup</option>
                     {SETUP_TAG_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -767,7 +854,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jw-mistake" className={labelCls}>
-                    Mistake tag <span className="text-zinc-500">Optional</span>
+                    Mistake tag
                   </Label>
                   <select
                     id="jw-mistake"
@@ -776,7 +863,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
-                    <option value="">Choose mistake (optional)</option>
+                    <option value="">Choose mistake</option>
                     {MISTAKE_TAG_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -786,7 +873,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jw-session" className={labelCls}>
-                    Session tag <span className="text-zinc-500">Optional</span>
+                    Session tag
                   </Label>
                   <select
                     id="jw-session"
@@ -795,7 +882,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
-                    <option value="">Choose session (optional)</option>
+                    <option value="">Choose session</option>
                     {SESSION_TAG_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -805,7 +892,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="jw-market-condition" className={labelCls}>
-                    Market condition <span className="text-zinc-500">Optional</span>
+                    Market condition
                   </Label>
                   <select
                     id="jw-market-condition"
@@ -814,7 +901,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
-                    <option value="">Choose market condition (optional)</option>
+                    <option value="">Choose market condition</option>
                     {MARKET_CONDITION_OPTIONS.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -822,95 +909,77 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     ))}
                   </select>
                 </div>
+              </div>
+            </JournalFormCollapsible>
+
+            <JournalFormCollapsible step="4" title="Review">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="jw-note" className={labelCls}>
+                    Note
+                  </Label>
+                  <textarea
+                    id="jw-note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={3}
+                    placeholder="What stood out today?"
+                    disabled={!canWriteJournal}
+                    className={cn(
+                      "w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600",
+                      "shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
+                    )}
+                  />
                 </div>
-              </details>
-            </div>
-
-
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <details className="group">
-                <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-500 marker:content-none [&::-webkit-details-marker]:hidden">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="text-zinc-600 transition group-open:rotate-90">›</span>
-                    4. Review
-                    <span className="font-normal text-zinc-600">optional</span>
-                  </span>
-                </summary>
-                <div className="mt-3.5 space-y-2">
-                <Label htmlFor="jw-note" className={labelCls}>
-                  Note
-                </Label>
-                <textarea
-                  id="jw-note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  rows={3}
-                  placeholder="What stood out today?"
-                  disabled={!canWriteJournal}
-                  className={cn(
-                    "w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600",
-                    "shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
-                  )}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="jw-lesson" className={labelCls}>
+                    One lesson from today
+                  </Label>
+                  <textarea
+                    id="jw-lesson"
+                    value={lessonLearned}
+                    onChange={(e) => setLessonLearned(e.target.value)}
+                    rows={2}
+                    placeholder="One thing to repeat or avoid next time."
+                    disabled={!canWriteJournal}
+                    className={cn(
+                      "w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[14px] text-zinc-100 placeholder:text-zinc-600",
+                      "shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
+                    )}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="jw-lesson" className={labelCls}>
-                  One lesson from today
-                </Label>
-                <textarea
-                  id="jw-lesson"
-                  value={lessonLearned}
-                  onChange={(e) => setLessonLearned(e.target.value)}
-                  rows={2}
-                  placeholder="One thing I should repeat or avoid next time."
-                  disabled={!canWriteJournal}
-                  className={cn(
-                    "w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[14px] text-zinc-100 placeholder:text-zinc-600",
-                    "shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
-                  )}
-                />
-              </div>
-              </details>
-            </div>
+            </JournalFormCollapsible>
 
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <details className="group">
-                <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-500 marker:content-none [&::-webkit-details-marker]:hidden">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="text-zinc-600 transition group-open:rotate-90">›</span>
-                    5. Chart link
-                    <span className="font-normal text-zinc-600">optional</span>
-                  </span>
-                </summary>
-                <div className="mt-3 flex items-start gap-3">
-                <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] text-[oklch(0.74_0.11_252)]">
+            <JournalFormCollapsible step="5" title="Chart link">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.04] text-[oklch(0.74_0.11_252)]">
                   <LineChart className="size-4" strokeWidth={1.75} />
                 </span>
-                <div className="min-w-0 flex-1 space-y-2.5">
-                  <Label htmlFor="jw-chart-link" className={cn(labelCls, "text-zinc-200")}>
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Label htmlFor="jw-chart-link" className={labelCls}>
                     Linked chart
-                    <span className="ml-2 font-normal text-zinc-600">Optional</span>
                   </Label>
-                  <p className="text-[12px] text-zinc-500">Paste a chart link if you want it saved with this day.</p>
+                  <p className="text-[12px] leading-relaxed text-zinc-500">Paste a chart URL to keep with this day.</p>
                   <Input
                     id="jw-chart-link"
                     type="url"
                     value={chartUrl}
                     onChange={(e) => setChartUrl(e.target.value)}
-                    placeholder="https://your-chart-link"
+                    placeholder="Paste a chart URL"
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "disabled:opacity-45")}
                   />
                 </div>
-                </div>
-              </details>
-            </div>
+              </div>
+            </JournalFormCollapsible>
 
+            <div className="border-t border-white/[0.06] pt-6">
             <Button
               type="submit"
               disabled={saving || !canWriteJournal || !activeAccountId}
               className={cn(
-                "h-12 w-full rounded-xl text-[15px] font-semibold tracking-tight",
+                "mt-0 h-12 w-full rounded-xl text-[15px] font-semibold tracking-tight",
                 "bg-[linear-gradient(180deg,oklch(0.74_0.14_250),oklch(0.66_0.15_252))] text-[oklch(0.1_0.04_265)]",
                 "shadow-[0_1px_0_0_oklch(1_0_0_/0.14)_inset,0_18px_46px_-15px_oklch(0.42_0.14_252/0.58)] hover:brightness-[1.04] disabled:opacity-40",
               )}
@@ -928,8 +997,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                 Select an active trading account first (topbar account selector or Settings → Trading accounts).
               </p>
             ) : null}
-            {urlError ? <p className="text-[13px] text-rose-300/95">{urlError}</p> : null}
-            {saveError ? <p className="text-[13px] text-rose-300/95">{saveError}</p> : null}
+            {urlError ? <p className="mt-3 text-[13px] text-rose-300/95">{urlError}</p> : null}
+            {saveError ? <p className="mt-3 text-[13px] text-rose-300/95">{saveError}</p> : null}
+            </div>
           </form>
         </DashboardCard>
 
@@ -944,9 +1014,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           }
         >
           {filtersActive ? (
-            <div className="mb-3 rounded-lg border border-[oklch(0.58_0.12_252/0.3)] bg-[oklch(0.58_0.12_252/0.1)] px-3 py-2.5">
+            <div className="mb-4 rounded-xl border border-[oklch(0.58_0.12_252/0.28)] bg-[oklch(0.58_0.12_252/0.1)] px-3 py-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[11px] font-medium text-zinc-400">Active filters</p>
+                <p className="text-[11px] font-medium text-zinc-300">Filtering recent activity</p>
                 <button
                   type="button"
                   onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
@@ -973,11 +1043,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               onClick={() => setFiltersOpen((v) => !v)}
               className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
             >
-              {filtersOpen ? "Hide filters" : "Show filters"}
+              {filtersOpen ? "Hide activity filters" : "Filter activity"}
             </button>
           </div>
           {filtersOpen ? (
-            <div className="mb-4 grid gap-2 rounded-xl border border-white/[0.08] bg-black/20 p-3 sm:grid-cols-2">
+            <div className="mb-4 grid gap-2 rounded-xl bg-white/[0.02] p-3 sm:grid-cols-2">
               <Input value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} placeholder="Search symbol or note" className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[13px]" />
               <div className="grid grid-cols-2 gap-2">
                 <Input type="date" value={filters.from} onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))} className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[12px]" />
@@ -995,9 +1065,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   key={item.key}
                   value={filters[item.key as keyof EntryFilters] as string}
                   onChange={(e) => setFilters((f) => ({ ...f, [item.key]: e.target.value }))}
-                  className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300"
+                  className={appFormSelect}
                 >
-                  <option value="all">{item.key}</option>
+                  <option value="all">{FILTER_DIMENSION_ALL_LABEL[item.key] ?? "All"}</option>
                   {item.values.map((value) => (
                     <option key={value} value={value}>
                       {value}
@@ -1008,11 +1078,13 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <select
                 value={filters.dayColor}
                 onChange={(e) => setFilters((f) => ({ ...f, dayColor: e.target.value as EntryFilters["dayColor"] }))}
-                className="h-9 rounded-lg border border-white/[0.1] bg-black/25 px-2 text-[12px] text-zinc-300"
+                className={appFormSelect}
               >
-                <option value="all">all days</option>
-                <option value="green">green days</option>
-                <option value="red">red days</option>
+                {(Object.keys(DAY_COLOR_FILTER_LABELS) as EntryFilters["dayColor"][]).map((key) => (
+                  <option key={key} value={key}>
+                    {DAY_COLOR_FILTER_LABELS[key]}
+                  </option>
+                ))}
               </select>
               <div className="col-span-full flex flex-wrap gap-2 pt-1">
                 {[
@@ -1229,7 +1301,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             ) : null}
             {canWriteJournal && weeklyUnavailable ? (
               <p className="text-[13px] text-zinc-500">
-                The weekly_reflections table is not set up in this database yet. Run Supabase migrations, then refresh.
+                Weekly review is not available yet. Try again later or contact support if this persists.
               </p>
             ) : null}
             {canWriteJournal && !activeAccountId ? (

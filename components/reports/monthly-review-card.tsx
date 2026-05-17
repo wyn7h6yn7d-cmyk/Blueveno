@@ -14,10 +14,13 @@ import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { formatWeekHeadline } from "@/lib/user-data/week-labels";
 import { appCardPrimary, appCardSecondary, appKicker, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
 import { cn } from "@/lib/utils";
+import { formatDisciplinePercent } from "@/lib/user-data/discipline-stats";
 
 function formatDisciplineMetric(score: number | null | undefined): string {
-  if (score === null || score === undefined || !Number.isFinite(score)) return "—";
-  return `${Math.round(score)}%`;
+  if (score === null || score === undefined || !Number.isFinite(score)) {
+    return formatDisciplinePercent(null);
+  }
+  return formatDisciplinePercent(score);
 }
 
 function formatShortDate(iso: string): string {
@@ -182,8 +185,8 @@ export function MonthlyReviewCard({
 
   const disciplineHint =
     review.disciplineScore === null
-      ? "Save entries with Followed plan, Respected stop, or No revenge in the journal Behavior section."
-      : undefined;
+      ? "Not enough discipline data. Log Followed plan, Respected stop, or No revenge in the journal Behavior section."
+      : review.disciplineNote ?? undefined;
 
   const moodHint = !review.bestMood ? "Choose a mood when you log each trading day." : undefined;
 

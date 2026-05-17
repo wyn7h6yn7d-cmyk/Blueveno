@@ -112,8 +112,9 @@ export function SectionNav({
         aria-label={ariaLabel}
         onKeyDown={onKeyDown}
         className={cn(
-          "inline-flex min-w-0 items-center border border-white/[0.08] bg-white/[0.03]",
-          "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]",
+          "inline-flex min-w-0 items-center bg-[linear-gradient(180deg,oklch(0.12_0.034_262/0.85),oklch(0.09_0.028_266/0.9))]",
+          "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_12px_40px_-28px_oklch(0.45_0.14_252/0.35)]",
+          "ring-1 ring-white/[0.07]",
           variantTrack[size],
         )}
       >
@@ -139,8 +140,8 @@ export function SectionNav({
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
                 variantTab[size],
                 isActive
-                  ? "bg-[oklch(0.58_0.12_252/0.16)] text-zinc-50 shadow-[0_0_0_1px_oklch(0.58_0.12_252/0.32),0_10px_28px_-14px_oklch(0.48_0.14_252/0.55)]"
-                  : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200",
+                  ? "bg-[linear-gradient(180deg,oklch(0.62_0.13_252/0.22),oklch(0.52_0.12_252/0.14))] text-zinc-50 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.1),0_0_0_1px_oklch(0.58_0.12_252/0.35)]"
+                  : "text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200",
               )}
             >
               {Icon ? (
