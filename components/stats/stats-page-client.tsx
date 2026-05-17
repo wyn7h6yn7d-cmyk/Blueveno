@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ArrowUpRight, CalendarDays } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  LayoutGrid,
+  LineChart,
+  Sparkles,
+  UserCheck,
+  Wallet,
+} from "lucide-react";
+import { SectionNav, type SectionNavItem } from "@/components/app/section-nav";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
@@ -34,6 +43,7 @@ import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import { computeMonthlyReview } from "@/lib/user-data/monthly-review";
 import { mapJournalRowFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { MonthlyReviewCard } from "@/components/reports/monthly-review-card";
+import { useSectionScrollSpy } from "@/lib/ui/use-section-scroll-spy";
 
 type Props = {
   userId: string;
@@ -667,52 +677,22 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
     return { adherence, mostBroken, breakCost, rows };
   }, [filteredEntries, personalRules]);
 
-  const sectionNavItems = useMemo(
+  const sectionNavItems = useMemo<SectionNavItem[]>(
     () => [
-      { id: "stats-summary", label: "Summary" },
-      { id: "stats-performance", label: "Performance" },
-      { id: "stats-behavior", label: "Behavior" },
-      { id: "stats-patterns", label: "Patterns" },
-      { id: "stats-accounts", label: "Accounts" },
+      { id: "stats-summary", label: "Summary", icon: LayoutGrid },
+      { id: "stats-performance", label: "Performance", icon: LineChart },
+      { id: "stats-behavior", label: "Behavior", icon: UserCheck },
+      { id: "stats-patterns", label: "Patterns", icon: Sparkles },
+      { id: "stats-accounts", label: "Accounts", icon: Wallet },
     ],
     [],
   );
 
-  const [activeSection, setActiveSection] = useState(sectionNavItems[0]?.id ?? "stats-summary");
-  const scrollSpyEnabled = useRef(false);
-
-  const scrollToSection = useCallback((id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    scrollSpyEnabled.current = false;
-    setActiveSection(id);
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.setTimeout(() => {
-      scrollSpyEnabled.current = true;
-    }, 700);
-  }, []);
-
-  useEffect(() => {
-    if (!ready || baseEntries.length === 0 || filteredEntries.length === 0) return;
-    scrollSpyEnabled.current = true;
-    const ids = sectionNavItems.map((item) => item.id);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!scrollSpyEnabled.current) return;
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        const top = visible[0]?.target.id;
-        if (top && ids.includes(top)) setActiveSection(top);
-      },
-      { rootMargin: "-18% 0px -58% 0px", threshold: [0, 0.12, 0.35, 0.6] },
-    );
-    for (const id of ids) {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    }
-    return () => observer.disconnect();
-  }, [ready, baseEntries.length, filteredEntries.length, sectionNavItems]);
+  const sectionIds = useMemo(() => sectionNavItems.map((item) => item.id), [sectionNavItems]);
+  const scrollSpyEnabled = ready && baseEntries.length > 0 && filteredEntries.length > 0;
+  const { activeId: activeSection, scrollToSection } = useSectionScrollSpy(sectionIds, {
+    enabled: scrollSpyEnabled,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -924,29 +904,13 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         />
       ) : (
         <>
-          <section className="sticky top-[4.75rem] z-20 -mx-1 sm:mx-0" aria-label="Stats section navigation">
-            <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[oklch(0.12_0.03_264/0.92)] px-2 py-2 shadow-[0_12px_40px_-24px_rgba(0,0,0,0.85)] backdrop-blur-md">
-              <div className="flex min-w-max items-center gap-1.5" role="tablist" aria-label="Jump to stats section">
-                {sectionNavItems.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeSection === item.id}
-                    onClick={() => scrollToSection(item.id)}
-                    className={cn(
-                      "rounded-lg border px-3 py-1.5 text-[12px] transition",
-                      activeSection === item.id
-                        ? "border-[oklch(0.58_0.12_252/0.45)] bg-[oklch(0.58_0.12_252/0.18)] text-zinc-50"
-                        : "border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:border-white/[0.16] hover:text-zinc-100",
-                    )}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </section>
+          <SectionNav
+            items={sectionNavItems}
+            activeId={activeSection}
+            onChange={scrollToSection}
+            ariaLabel="Jump to stats section"
+            variant="sticky"
+          />
 
           <MonthlyReviewCard
             review={monthlyReview}

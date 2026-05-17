@@ -13,7 +13,8 @@ import { formatDisciplinePercent } from "@/lib/user-data/discipline-stats";
 import { entryDisciplineFraction } from "@/lib/user-data/stats-display";
 import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
-import { appCardPrimary, appCardSecondary, appKicker, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
+import { DayBreakdownModule } from "@/components/dashboard/day-breakdown-module";
+import { appCardPrimary, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { createClient } from "@/lib/supabase/client";
 
@@ -36,88 +37,8 @@ function localDayKey(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function moneyOrDash(value: number | null, currency: string): string {
-  return value === null || !Number.isFinite(value) ? "—" : signedMoney(value, currency);
-}
-
 function percentOrDash(value: number | null): string {
   return value === null || !Number.isFinite(value) ? "—" : `${Math.round(value)}%`;
-}
-
-function formatStreakLabel(raw: string): string {
-  if (raw.includes("green")) {
-    return raw.replace(/(\d+)\s+green\s+day(s?)/i, "Green streak · $1 day$2");
-  }
-  if (raw.includes("red")) {
-    return raw.replace(/(\d+)\s+red\s+day(s?)/i, "Red streak · $1 day$2");
-  }
-  return raw;
-}
-
-type BreakdownMetric = {
-  label: string;
-  value: string;
-  tone: number;
-};
-
-function metricValueClass(tone: number, large = false) {
-  return cn(
-    "font-display mt-1.5 tabular-nums tracking-[-0.03em]",
-    large ? "text-[1.35rem] sm:text-[1.5rem]" : "text-[1.05rem] sm:text-[1.15rem]",
-    tone > 0 && "text-emerald-200",
-    tone < 0 && "text-rose-200",
-    tone === 0 && "text-zinc-50",
-  );
-}
-
-function BreakdownMetricBox({ label, value, tone, large = false }: BreakdownMetric & { large?: boolean }) {
-  return (
-    <div
-      className={cn(
-        "min-w-0 rounded-xl border border-white/[0.1] px-3.5 py-3",
-        "bg-[linear-gradient(165deg,oklch(0.115_0.032_262/0.92),oklch(0.075_0.024_268/0.88))]",
-        "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)]",
-        large && "px-4 py-3.5 sm:py-4",
-      )}
-    >
-      <p className={appKicker}>{label}</p>
-      <p className={cn(metricValueClass(tone, large), "leading-snug")}>{value}</p>
-    </div>
-  );
-}
-
-function DayBreakdownGroup({
-  title,
-  hint,
-  metrics,
-  accent,
-}: {
-  title: string;
-  hint: string;
-  metrics: BreakdownMetric[];
-  accent?: "green" | "red" | "neutral";
-}) {
-  return (
-    <div
-      className={cn(
-        "flex min-h-0 flex-col rounded-xl border p-3 sm:p-3.5",
-        "bg-[linear-gradient(168deg,oklch(0.12_0.034_262/0.55),oklch(0.08_0.028_266/0.45))]",
-        accent === "green" && "border-emerald-400/25 shadow-[inset_0_1px_0_0_oklch(0.75_0.12_155/0.12)]",
-        accent === "red" && "border-rose-400/25 shadow-[inset_0_1px_0_0_oklch(0.8_0.1_15/0.1)]",
-        (!accent || accent === "neutral") && "border-white/[0.1] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]",
-      )}
-    >
-      <div className="mb-2.5 min-w-0 border-b border-white/[0.06] pb-2.5">
-        <p className="text-[13px] font-medium text-zinc-200">{title}</p>
-        <p className="mt-0.5 text-[11px] leading-snug text-zinc-500">{hint}</p>
-      </div>
-      <div className={cn("grid flex-1 gap-2", metrics.length > 1 ? "sm:grid-cols-2" : "grid-cols-1")}>
-        {metrics.map((metric) => (
-          <BreakdownMetricBox key={metric.label} {...metric} large={metrics.length === 1} />
-        ))}
-      </div>
-    </div>
-  );
 }
 
 export function OverviewDashboard({ userId, email, initialWorkspace, userTimezone }: Props) {
@@ -208,10 +129,6 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
   const noLosingDays = overviewStats.losingDays === 0;
   const lossMetricLabel = noLosingDays ? "Smallest green day" : "Worst day";
   const lossMetricValue = noLosingDays ? overviewStats.smallestGreenDay : overviewStats.worstLossDay;
-  const greenRedLabel = hasEntries
-    ? `${overviewStats.winningDays} green · ${overviewStats.losingDays} red`
-    : "—";
-
   const primaryKpis = [
     {
       label: "Week P&L",
@@ -232,88 +149,6 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       label: "Discipline score",
       value: hasEntries ? formatDisciplinePercent(overviewStats.disciplineScore) : "—",
       tone: 0,
-    },
-  ];
-
-  const streakTone = hasEntries
-    ? overviewStats.streak.includes("green")
-      ? 1
-      : overviewStats.streak.includes("red")
-        ? -1
-        : 0
-    : 0;
-  const greenDayShare =
-    hasEntries && overviewStats.tradedDays > 0
-      ? Math.round((overviewStats.winningDays / overviewStats.tradedDays) * 100)
-      : null;
-
-  const dayBreakdownGroups = [
-    {
-      title: "Activity",
-      hint: "How many days you logged",
-      metrics: [
-        { label: "Traded days", value: hasEntries ? String(overviewStats.tradedDays) : "—", tone: 0 },
-        {
-          label: "Green · red days",
-          value: greenRedLabel,
-          tone: 0,
-        },
-      ] satisfies BreakdownMetric[],
-    },
-    {
-      title: "Typical day",
-      hint: "Your average result per logged day",
-      metrics: [
-        {
-          label: "Average day",
-          value: hasEntries ? moneyOrDash(overviewStats.averageDay, displayCurrency) : "—",
-          tone: hasEntries ? (overviewStats.averageDay ?? 0) : 0,
-        },
-      ] satisfies BreakdownMetric[],
-    },
-    {
-      title: "Range",
-      hint: "Largest win and loss in the period",
-      metrics: [
-        {
-          label: "Best day",
-          value: hasEntries ? moneyOrDash(overviewStats.bestDay, displayCurrency) : "—",
-          tone: hasEntries ? (overviewStats.bestDay ?? 0) : 0,
-        },
-        {
-          label: lossMetricLabel,
-          value: hasEntries ? moneyOrDash(lossMetricValue, displayCurrency) : "—",
-          tone: hasEntries ? (lossMetricValue ?? 0) : 0,
-        },
-      ] satisfies BreakdownMetric[],
-    },
-    {
-      title: "Win vs loss days",
-      hint: "Average P&L on green and red days only",
-      metrics: [
-        {
-          label: "Avg green day",
-          value: hasEntries ? moneyOrDash(overviewStats.avgGreenDay, displayCurrency) : "—",
-          tone: hasEntries ? (overviewStats.avgGreenDay ?? 0) : 0,
-        },
-        {
-          label: "Avg red day",
-          value: hasEntries ? moneyOrDash(overviewStats.avgRedDay, displayCurrency) : "—",
-          tone: hasEntries ? (overviewStats.avgRedDay ?? 0) : 0,
-        },
-      ] satisfies BreakdownMetric[],
-    },
-    {
-      title: "Momentum",
-      hint: "Current run of same-color days",
-      accent: streakTone > 0 ? ("green" as const) : streakTone < 0 ? ("red" as const) : ("neutral" as const),
-      metrics: [
-        {
-          label: "Streak",
-          value: hasEntries ? formatStreakLabel(overviewStats.streak) : "—",
-          tone: streakTone,
-        },
-      ] satisfies BreakdownMetric[],
     },
   ];
 
@@ -378,7 +213,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                 />
               ))}
             </div>
-            <div className="h-28 animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02]" />
+            <div className="h-[17.5rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.02] sm:h-[15.5rem]" />
           </div>
         ) : (
           <>
@@ -403,26 +238,20 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
               ))}
             </div>
 
-            <div className={cn(appCardSecondary, "px-4 py-4 sm:px-5 sm:py-5")}>
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <p className={cn(appKicker, "text-zinc-400")}>Day breakdown</p>
-                  <p className="mt-1 text-[13px] leading-snug text-zinc-500">
-                    Grouped view of your logged days — volume, typical result, extremes, and streak.
-                  </p>
-                </div>
-                {greenDayShare !== null ? (
-                  <p className="rounded-full border border-white/[0.1] bg-black/25 px-2.5 py-1 text-[11px] text-zinc-400">
-                    <span className="font-medium text-emerald-200/90">{greenDayShare}%</span> green days
-                  </p>
-                ) : null}
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                {dayBreakdownGroups.map((group) => (
-                  <DayBreakdownGroup key={group.title} {...group} />
-                ))}
-              </div>
-            </div>
+            <DayBreakdownModule
+              hasEntries={hasEntries}
+              displayCurrency={displayCurrency}
+              tradedDays={overviewStats.tradedDays}
+              winningDays={overviewStats.winningDays}
+              losingDays={overviewStats.losingDays}
+              averageDay={overviewStats.averageDay}
+              bestDay={overviewStats.bestDay}
+              lossMetricLabel={lossMetricLabel}
+              lossMetricValue={lossMetricValue}
+              avgGreenDay={overviewStats.avgGreenDay}
+              avgRedDay={overviewStats.avgRedDay}
+              streakRaw={overviewStats.streak}
+            />
           </>
         )}
       </section>

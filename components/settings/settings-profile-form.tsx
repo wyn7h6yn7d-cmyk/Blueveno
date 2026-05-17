@@ -6,7 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { PageHeader } from "@/components/app/page-header";
-import { User } from "lucide-react";
+import {
+  Database,
+  Landmark,
+  ListChecks,
+  Lock,
+  SlidersHorizontal,
+  User,
+} from "lucide-react";
+import { SectionNav, type SectionNavItem } from "@/components/app/section-nav";
 import { cn } from "@/lib/utils";
 import { normalizeDisplayCurrency } from "@/lib/format-pnl";
 import { allTimezoneOptionValues } from "@/lib/timezone-options";
@@ -14,11 +22,19 @@ import { SettingsPanels } from "@/components/settings/settings-panels";
 import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
 import { fetchJournalEntriesForExport, fetchOwnedAccounts } from "@/lib/export/user-exports";
 import {
-  SETTINGS_SECTIONS,
   parseSettingsSection,
   settingsSectionDescription,
   type SettingsSectionId,
 } from "@/lib/settings/sections";
+
+const SETTINGS_NAV_ITEMS: SectionNavItem[] = [
+  { id: "profile", label: "Profile", icon: User },
+  { id: "accounts", label: "Trading accounts", icon: Landmark },
+  { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
+  { id: "rules", label: "Rules", icon: ListChecks },
+  { id: "security", label: "Security", icon: Lock },
+  { id: "data", label: "Data & privacy", icon: Database },
+];
 
 /** Visible control surface — reads as a box on dark cards (border + lift + top edge). */
 const field =
@@ -321,26 +337,13 @@ export function SettingsProfileForm() {
         description={settingsSectionDescription(section)}
       />
 
-      <nav className="-mx-1 overflow-x-auto sm:mx-0" aria-label="Settings sections">
-        <div className="flex min-w-max items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[oklch(0.12_0.03_264/0.88)] px-2 py-2 backdrop-blur-md">
-          {SETTINGS_SECTIONS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => navigateSection(item.id)}
-              aria-current={section === item.id ? "page" : undefined}
-              className={cn(
-                "shrink-0 rounded-lg border px-3 py-1.5 text-[12px] transition",
-                section === item.id
-                  ? "border-[oklch(0.58_0.12_252/0.45)] bg-[oklch(0.58_0.12_252/0.18)] text-zinc-50"
-                  : "border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:border-white/[0.16] hover:text-zinc-100",
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </nav>
+      <SectionNav
+        items={SETTINGS_NAV_ITEMS}
+        activeId={section}
+        onChange={(id) => navigateSection(id as SettingsSectionId)}
+        ariaLabel="Settings sections"
+        variant="compact"
+      />
 
       <SettingsPanels
         section={section}
