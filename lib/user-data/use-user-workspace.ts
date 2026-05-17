@@ -6,9 +6,11 @@ import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
 import { createClient } from "@/lib/supabase/client";
 import { hasBearerSession, waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
 import {
-  isMissingEntryDateColumnError,
-  JOURNAL_SELECT_WITH_ENTRY_DATE,
-  JOURNAL_SELECT_WITHOUT_ENTRY_DATE,
+  isRetryableJournalSchemaError,
+  JOURNAL_SELECT_BEHAVIOR_NO_ENTRY_DATE,
+  JOURNAL_SELECT_FULL,
+  JOURNAL_SELECT_LEGACY,
+  queryJournalWithSelectFallback,
 } from "@/lib/user-data/journal-entry-columns";
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { clearJournalCache, readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
@@ -133,28 +135,15 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       let queryError: string | undefined;
 
       const pull = async () => {
-        const first = await supabase
-          .from("journal_entries")
-          .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
-          .eq("user_id", uid)
-          .eq("account_id", accountId)
-          .order("created_at", { ascending: false });
-
-        let batch: JournalRowDb[] | null = null;
-        let error = first.error;
-
-        if (first.error && isMissingEntryDateColumnError(first.error.message)) {
-          const second = await supabase
+        const { data: batch, error } = await queryJournalWithSelectFallback<JournalRowDb[]>(async (select) => {
+          const result = await supabase
             .from("journal_entries")
-            .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
+            .select(select)
             .eq("user_id", uid)
             .eq("account_id", accountId)
             .order("created_at", { ascending: false });
-          batch = second.data as JournalRowDb[] | null;
-          error = second.error;
-        } else {
-          batch = first.data as JournalRowDb[] | null;
-        }
+          return { data: (result.data ?? null) as JournalRowDb[] | null, error: result.error };
+        });
 
         if (cancelled) return false;
         if (error) {
@@ -387,14 +376,25 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
           ...behaviorPayload,
           entry_date: row.entryDate ?? null,
         })
-        .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
+        .select(JOURNAL_SELECT_FULL)
         .single();
 
-      if (insertResult.error && isMissingEntryDateColumnError(insertResult.error.message)) {
+      if (insertResult.error && isRetryableJournalSchemaError(insertResult.error.message)) {
+        insertResult = await supabase
+          .from("journal_entries")
+          .insert({
+            ...basePayload,
+            ...behaviorPayload,
+          })
+          .select(JOURNAL_SELECT_BEHAVIOR_NO_ENTRY_DATE)
+          .single();
+      }
+
+      if (insertResult.error && isRetryableJournalSchemaError(insertResult.error.message)) {
         insertResult = await supabase
           .from("journal_entries")
           .insert(legacyPayload)
-          .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
+          .select(JOURNAL_SELECT_LEGACY)
           .single();
       }
 
@@ -485,10 +485,22 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         .eq("user_id", userId)
         .eq("account_id", activeAccountId)
         .eq("id", id)
-        .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
+        .select(JOURNAL_SELECT_FULL)
         .single();
 
-      if (updateResult.error && isMissingEntryDateColumnError(updateResult.error.message)) {
+      if (updateResult.error && isRetryableJournalSchemaError(updateResult.error.message)) {
+        const { entry_date: _entryDate, ...payloadWithoutEntryDate } = basePayload;
+        updateResult = await supabase
+          .from("journal_entries")
+          .update(payloadWithoutEntryDate)
+          .eq("user_id", userId)
+          .eq("account_id", activeAccountId)
+          .eq("id", id)
+          .select(JOURNAL_SELECT_BEHAVIOR_NO_ENTRY_DATE)
+          .single();
+      }
+
+      if (updateResult.error && isRetryableJournalSchemaError(updateResult.error.message)) {
         updateResult = await supabase
           .from("journal_entries")
           .update({
@@ -503,7 +515,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
           .eq("user_id", userId)
           .eq("account_id", activeAccountId)
           .eq("id", id)
-          .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
+          .select(JOURNAL_SELECT_LEGACY)
           .single();
       }
 

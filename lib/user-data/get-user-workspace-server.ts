@@ -1,11 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import {
-  isMissingEntryDateColumnError,
-  JOURNAL_SELECT_WITH_ENTRY_DATE,
-  JOURNAL_SELECT_WITHOUT_ENTRY_DATE,
-} from "@/lib/user-data/journal-entry-columns";
+import { queryJournalWithSelectFallback } from "@/lib/user-data/journal-entry-columns";
 import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
@@ -25,28 +21,16 @@ export async function getUserWorkspaceSnapshotForUser(userId: string): Promise<U
   if (!activeAccountId) {
     return EMPTY_WORKSPACE;
   }
-  const first = await supabase
-    .from("journal_entries")
-    .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
-    .eq("user_id", userId)
-    .eq("account_id", activeAccountId)
-    .order("created_at", { ascending: false });
 
-  let rows: JournalRowDb[] | null = null;
-  let error = first.error;
-
-  if (first.error && isMissingEntryDateColumnError(first.error.message)) {
-    const second = await supabase
+  const { data: rows, error } = await queryJournalWithSelectFallback<JournalRowDb[]>(async (select) => {
+    const result = await supabase
       .from("journal_entries")
-      .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
+      .select(select)
       .eq("user_id", userId)
       .eq("account_id", activeAccountId)
       .order("created_at", { ascending: false });
-    rows = second.data as JournalRowDb[] | null;
-    error = second.error;
-  } else {
-    rows = first.data as JournalRowDb[] | null;
-  }
+    return { data: (result.data ?? null) as JournalRowDb[] | null, error: result.error };
+  });
 
   if (error) {
     console.error("[getUserWorkspaceSnapshotForUser]", error.message);

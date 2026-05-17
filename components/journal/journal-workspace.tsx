@@ -53,6 +53,7 @@ const labelCls = "text-[12px] font-medium tracking-wide text-zinc-400";
 const inputCls =
   "h-11 rounded-xl border-white/[0.1] bg-black/25 text-[15px] shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] placeholder:text-zinc-600 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
 const MOOD_OPTIONS = ["Calm", "Focused", "Hesitant", "Tilted"] as const;
+const RECENT_ACTIVITY_PREVIEW = 3;
 
 type WeeklyReflectionRow = {
   week_start: string;
@@ -144,6 +145,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [recentExpanded, setRecentExpanded] = useState(false);
   const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
   const [personalRules, setPersonalRules] = useState<PersonalRuleRow[]>([]);
   const [ruleChecks, setRuleChecks] = useState<Record<string, boolean>>({});
@@ -220,14 +222,27 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const filteredRows = useMemo(() => applyEntryFilters(sortedRows, filters), [sortedRows, filters]);
   const filtersActive = hasActiveFilters(filters);
 
-  const rowsForLatestEntries = useMemo(() => {
+  useEffect(() => {
+    setRecentExpanded(false);
+  }, [entryDate, highlightDate]);
+
+  const recentActivityRows = useMemo(() => {
     if (highlightDate) {
       return filteredRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === highlightDate);
     }
     return [...filteredRows]
-      .sort((a, b) => dayKeyFromRow(b.entryDate, b.createdAt).localeCompare(dayKeyFromRow(a.entryDate, a.createdAt)))
-      .slice(0, 8);
-  }, [filteredRows, highlightDate]);
+      .filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) !== entryDate)
+      .sort((a, b) => dayKeyFromRow(b.entryDate, b.createdAt).localeCompare(dayKeyFromRow(a.entryDate, a.createdAt)));
+  }, [filteredRows, highlightDate, entryDate]);
+
+  const rowsForLatestEntries = useMemo(() => {
+    if (highlightDate || recentExpanded) return recentActivityRows;
+    return recentActivityRows.slice(0, RECENT_ACTIVITY_PREVIEW);
+  }, [recentActivityRows, highlightDate, recentExpanded]);
+
+  const recentHiddenCount = highlightDate
+    ? 0
+    : Math.max(0, recentActivityRows.length - RECENT_ACTIVITY_PREVIEW);
 
   const symbolOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.sym), [sortedRows]);
   const moodOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.moodState), [sortedRows]);
@@ -884,7 +899,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           description={
             highlightDate
               ? "All trades logged for this calendar day, including full notes."
-              : "Recent logged days with mood and discipline score (up to 8)."
+              : "Other logged days with mood and discipline — refreshes when you change the date above."
           }
         >
           {filtersActive ? (
@@ -1002,27 +1017,50 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           ) : rowsForLatestEntries.length === 0 ? (
             <EmptyState
               icon={NotebookPen}
-              title="Hidden by filters"
-              description="Entries exist, but current filters hide them."
+              title={filtersActive ? "Hidden by filters" : highlightDate ? "No entries this day" : "No other days yet"}
+              description={
+                filtersActive
+                  ? "Entries exist, but current filters hide them."
+                  : highlightDate
+                    ? "Nothing logged for this calendar day in the current account scope."
+                    : sortedRows.some((row) => dayKeyFromRow(row.entryDate, row.createdAt) === entryDate)
+                      ? "Only the selected date has entries. Pick another date or log an earlier day."
+                      : "Log your first trading day to see activity here."
+              }
               action={
-                <button
-                  type="button"
-                  onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
-                  className={appSecondaryCta}
-                >
-                  Clear filters
-                </button>
+                filtersActive ? (
+                  <button
+                    type="button"
+                    onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
+                    className={appSecondaryCta}
+                  >
+                    Clear filters
+                  </button>
+                ) : undefined
               }
               className="border-none bg-transparent py-8 ring-0"
             />
           ) : (
-            <JournalDayList
-              rows={rowsForLatestEntries}
-              highlightDate={highlightDate}
-              displayCurrency={displayCurrency}
-              expandNotes={Boolean(highlightDate)}
-              canWriteJournal={canWriteJournal}
-            />
+            <>
+              <JournalDayList
+                rows={rowsForLatestEntries}
+                highlightDate={highlightDate}
+                displayCurrency={displayCurrency}
+                expandNotes={Boolean(highlightDate)}
+                canWriteJournal={canWriteJournal}
+              />
+              {!highlightDate && recentHiddenCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setRecentExpanded((v) => !v)}
+                  className={cn(
+                    "mt-4 inline-flex h-9 w-full items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] text-[13px] font-medium text-zinc-300 transition hover:border-white/[0.16] hover:bg-white/[0.06] hover:text-zinc-100",
+                  )}
+                >
+                  {recentExpanded ? "Show less" : `See more (${recentHiddenCount})`}
+                </button>
+              ) : null}
+            </>
           )}
         </DashboardCard>
       </section>

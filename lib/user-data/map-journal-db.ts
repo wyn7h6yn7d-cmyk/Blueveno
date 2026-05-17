@@ -23,6 +23,25 @@ export type JournalRowDb = {
   rule_checks?: Record<string, unknown> | null;
 };
 
+function mapDisciplineFields(
+  r: JournalRowDb,
+): Pick<JournalRow, "followedPlan" | "respectedStop" | "noRevengeTrade"> {
+  const hasBehaviorColumns =
+    Object.prototype.hasOwnProperty.call(r, "followed_plan") ||
+    Object.prototype.hasOwnProperty.call(r, "respected_stop") ||
+    Object.prototype.hasOwnProperty.call(r, "no_revenge_trade");
+
+  if (!hasBehaviorColumns) {
+    return { followedPlan: undefined, respectedStop: undefined, noRevengeTrade: undefined };
+  }
+
+  return {
+    followedPlan: Boolean(r.followed_plan),
+    respectedStop: Boolean(r.respected_stop),
+    noRevengeTrade: Boolean(r.no_revenge_trade),
+  };
+}
+
 export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
   return {
     id: r.id,
@@ -36,9 +55,7 @@ export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
     note: r.note ?? undefined,
     chartLinkUrl: r.chart_link_url ?? undefined,
     moodState: r.mood_state ?? undefined,
-    followedPlan: r.followed_plan == null ? undefined : r.followed_plan,
-    respectedStop: r.respected_stop == null ? undefined : r.respected_stop,
-    noRevengeTrade: r.no_revenge_trade == null ? undefined : r.no_revenge_trade,
+    ...mapDisciplineFields(r),
     sessionTag: r.session_tag ?? undefined,
     marketCondition: r.market_condition ?? undefined,
     lessonLearned: r.lesson_learned ?? undefined,

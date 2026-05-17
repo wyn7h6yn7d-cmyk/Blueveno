@@ -1,10 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
-import {
-  isMissingEntryDateColumnError,
-  JOURNAL_SELECT_WITH_ENTRY_DATE,
-  JOURNAL_SELECT_WITHOUT_ENTRY_DATE,
-} from "@/lib/user-data/journal-entry-columns";
+import { queryJournalWithSelectFallback } from "@/lib/user-data/journal-entry-columns";
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
 
 export type FetchJournalEntryResult =
@@ -41,29 +37,22 @@ export async function fetchJournalEntryForUser(
   for (let attempt = 0; attempt < 8; attempt++) {
     if (isCancelled()) return { ok: false, reason: "missing" };
 
-    let { data, error } = await supabase
-      .from("journal_entries")
-      .select(JOURNAL_SELECT_WITH_ENTRY_DATE)
-      .eq("id", entryId)
-      .eq("user_id", userId)
-      .eq("account_id", activeTradingAccountId)
-      .maybeSingle();
-
-    if (error && isMissingEntryDateColumnError(error.message)) {
-      ({ data, error } = await supabase
+    const { data, error } = await queryJournalWithSelectFallback<JournalRowDb>(async (select) => {
+      const result = await supabase
         .from("journal_entries")
-        .select(JOURNAL_SELECT_WITHOUT_ENTRY_DATE)
+        .select(select)
         .eq("id", entryId)
         .eq("user_id", userId)
         .eq("account_id", activeTradingAccountId)
-        .maybeSingle());
-    }
+        .maybeSingle();
+      return { data: (result.data ?? null) as JournalRowDb | null, error: result.error };
+    });
 
     if (error) {
       return { ok: false, reason: "error", message: error.message };
     }
     if (data) {
-      return { ok: true, data: data as JournalRowDb };
+      return { ok: true, data };
     }
 
     if (attempt < 7) {
