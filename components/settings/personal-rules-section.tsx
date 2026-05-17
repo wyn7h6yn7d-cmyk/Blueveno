@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAccess } from "@/components/access/access-provider";
+import {
+  isMissingPersonalRulesTableError,
+  PERSONAL_RULES_SETUP_MESSAGE,
+} from "@/lib/user-data/personal-rules-schema";
 import { cn } from "@/lib/utils";
 
 const RULE_CATEGORIES = ["Risk", "Entry", "Exit", "Session", "Behavior", "Other"] as const;
@@ -29,6 +33,7 @@ export function PersonalRulesSection() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [setupRequired, setSetupRequired] = useState(false);
 
   async function loadRules() {
     const supabase = createClient();
@@ -36,18 +41,40 @@ export function PersonalRulesSection() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.rpc("seed_default_personal_rules", { p_user_id: user.id });
     const { data, error } = await supabase
       .from("personal_rules")
       .select("id,title,category,is_active,description")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
     if (error) {
+      if (isMissingPersonalRulesTableError(error.message, error.code)) {
+        setSetupRequired(true);
+        setMessage(PERSONAL_RULES_SETUP_MESSAGE);
+        setRules([]);
+        setLoading(false);
+        return;
+      }
       setMessage(error.message);
       setLoading(false);
       return;
     }
-    setRules((data ?? []) as RuleRow[]);
+    setSetupRequired(false);
+    let rows = (data ?? []) as RuleRow[];
+    if (rows.length === 0) {
+      await supabase.rpc("seed_default_personal_rules", { p_user_id: user.id });
+      const { data: seeded, error: reloadError } = await supabase
+        .from("personal_rules")
+        .select("id,title,category,is_active,description")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+      if (reloadError) {
+        setMessage(reloadError.message);
+        setLoading(false);
+        return;
+      }
+      rows = (seeded ?? []) as RuleRow[];
+    }
+    setRules(rows);
     setLoading(false);
   }
 
@@ -81,7 +108,12 @@ export function PersonalRulesSection() {
     });
     setSaving(false);
     if (error) {
-      setMessage(error.message);
+      if (isMissingPersonalRulesTableError(error.message, error.code)) {
+        setSetupRequired(true);
+        setMessage(PERSONAL_RULES_SETUP_MESSAGE);
+      } else {
+        setMessage(error.message);
+      }
       return;
     }
     setTitle("");
@@ -120,11 +152,11 @@ export function PersonalRulesSection() {
           <form onSubmit={onCreate} className="grid gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-[13px] text-zinc-300">Rule title</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Stop after 2 losses" disabled={!canWriteJournal || saving} className="h-10 rounded-xl border-white/[0.12] bg-black/25" />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Stop after 2 losses" disabled={!canWriteJournal || saving || setupRequired} className="h-10 rounded-xl border-white/[0.12] bg-black/25" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-[13px] text-zinc-300">Category</Label>
-              <select value={category} onChange={(e) => setCategory(e.target.value as RuleCategory)} disabled={!canWriteJournal || saving} className="h-10 w-full rounded-xl border border-white/[0.12] bg-black/25 px-3 text-[14px] text-zinc-100">
+              <select value={category} onChange={(e) => setCategory(e.target.value as RuleCategory)} disabled={!canWriteJournal || saving || setupRequired} className="h-10 w-full rounded-xl border border-white/[0.12] bg-black/25 px-3 text-[14px] text-zinc-100">
                 {RULE_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -134,10 +166,10 @@ export function PersonalRulesSection() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-[13px] text-zinc-300">Description (optional)</Label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Extra context" disabled={!canWriteJournal || saving} className="h-10 rounded-xl border-white/[0.12] bg-black/25" />
+              <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Extra context" disabled={!canWriteJournal || saving || setupRequired} className="h-10 rounded-xl border-white/[0.12] bg-black/25" />
             </div>
             <div className="sm:col-span-2">
-              <Button type="submit" disabled={!canWriteJournal || saving} className="h-9 rounded-xl px-4">
+              <Button type="submit" disabled={!canWriteJournal || saving || setupRequired} className="h-9 rounded-xl px-4">
                 {saving ? "Saving…" : "Add rule"}
               </Button>
             </div>
@@ -171,7 +203,11 @@ export function PersonalRulesSection() {
               </div>
             ))}
           </div>
-          {message ? <p className="text-[13px] text-zinc-400">{message}</p> : null}
+          {message ? (
+            <p className={cn("text-[13px] leading-relaxed", setupRequired ? "text-amber-200/90" : "text-zinc-400")}>
+              {message}
+            </p>
+          ) : null}
           {!canWriteJournal ? <p className="text-[12px] text-zinc-500">Read-only access: rules are visible but editing is locked.</p> : null}
         </div>
       )}

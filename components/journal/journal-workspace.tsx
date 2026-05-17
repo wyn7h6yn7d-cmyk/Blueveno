@@ -40,6 +40,11 @@ import {
   writeFiltersToParams,
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
+import {
+  isRetryableWeeklyReflectionSchemaError,
+  isWeeklyReflectionTableMissing,
+  queryWeeklyReflectionWithFallback,
+} from "@/lib/user-data/weekly-reflection-columns";
 
 type Props = {
   userId: string;
@@ -82,15 +87,10 @@ type SupabaseErrorLike = {
 
 function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefined, action: "load" | "save"): string {
   const message = (error?.message ?? "").toLowerCase();
-  const code = (error?.code ?? "").toUpperCase();
   if (message.includes("jwt") || message.includes("token") || message.includes("session")) {
     return "Please refresh and try again.";
   }
-  if (
-    code === "PGRST205" ||
-    (message.includes("weekly_reflections") &&
-      (message.includes("does not exist") || message.includes("column") || message.includes("could not find the table")))
-  ) {
+  if (isWeeklyReflectionTableMissing(error?.message, error?.code)) {
     return "Weekly reflection is unavailable right now.";
   }
   if (message.includes("row-level security") || message.includes("permission denied")) {
@@ -284,13 +284,18 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         if (!sessionOk) {
           throw { message: "Session not ready." } satisfies SupabaseErrorLike;
         }
-        const { data, error } = await supabase
-          .from("weekly_reflections")
-          .select("week_start, account_id, what_worked, what_slipped, next_week_focus, next_week_rule, confidence_score, weekly_note")
-          .eq("user_id", userId)
-          .eq("account_id", activeAccountId)
-          .eq("week_start", weekStartKey)
-          .maybeSingle();
+        const { data, error } = await queryWeeklyReflectionWithFallback(async (select, useAccountScope) => {
+          let q = supabase
+            .from("weekly_reflections")
+            .select(select)
+            .eq("user_id", userId)
+            .eq("week_start", weekStartKey);
+          if (useAccountScope) {
+            q = q.eq("account_id", activeAccountId);
+          }
+          const result = await q.maybeSingle();
+          return { data: result.data, error: result.error };
+        });
         if (error) throw error;
         if (cancelled) return;
         const row = (data ?? null) as WeeklyReflectionRow | null;
@@ -304,9 +309,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         setWeeklyUnavailable(false);
       } catch (error) {
         if (cancelled) return;
-        const msg = weeklyReflectionErrorMessage(error as SupabaseErrorLike, "load");
+        const err = error as SupabaseErrorLike;
+        const msg = weeklyReflectionErrorMessage(err, "load");
         setWeeklyMsg(msg);
-        setWeeklyUnavailable(msg.toLowerCase().includes("unavailable"));
+        setWeeklyUnavailable(isWeeklyReflectionTableMissing(err?.message, err?.code));
       } finally {
         if (cancelled) return;
         setWeeklyLoading(false);
@@ -383,48 +389,77 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       setWeeklyMsg("Session not ready. Refresh the page and try again.");
       return;
     }
-    const payload = {
-      user_id: userId,
-      account_id: activeAccountId,
-      week_start: weekStartKey,
+    const coreFields = {
       what_worked: weeklyWorked.trim() || null,
       what_slipped: weeklySlipped.trim() || null,
       next_week_focus: weeklyFocus.trim() || null,
-      next_week_rule: weeklyRule.trim() || null,
-      confidence_score: weeklyConfidence,
-      weekly_note: weeklyNote.trim() || null,
     };
+    const saveAttempts: Array<{ payload: Record<string, unknown>; onConflict: string }> = [
+      {
+        payload: {
+          user_id: userId,
+          account_id: activeAccountId,
+          week_start: weekStartKey,
+          ...coreFields,
+          next_week_rule: weeklyRule.trim() || null,
+          confidence_score: weeklyConfidence,
+          weekly_note: weeklyNote.trim() || null,
+        },
+        onConflict: "user_id,account_id,week_start",
+      },
+      {
+        payload: {
+          user_id: userId,
+          account_id: activeAccountId,
+          week_start: weekStartKey,
+          ...coreFields,
+        },
+        onConflict: "user_id,account_id,week_start",
+      },
+      {
+        payload: {
+          user_id: userId,
+          week_start: weekStartKey,
+          ...coreFields,
+        },
+        onConflict: "user_id,week_start",
+      },
+    ];
 
     let error: SupabaseErrorLike | null = null;
-    const upsertResult = await supabase.from("weekly_reflections").upsert(payload, { onConflict: "user_id,account_id,week_start" });
-    error = upsertResult.error;
 
-    // Fallback for environments where upsert conflict metadata is unavailable.
-    if (
-      error &&
-      (error.code === "42P10" ||
+    for (const attempt of saveAttempts) {
+      const upsertResult = await supabase
+        .from("weekly_reflections")
+        .upsert(attempt.payload, { onConflict: attempt.onConflict });
+      error = upsertResult.error;
+
+      if (!error) break;
+
+      if (
+        error.code === "42P10" ||
         error.message?.toLowerCase().includes("on conflict") ||
-        error.message?.toLowerCase().includes("unique or exclusion constraint"))
-    ) {
-      const insertResult = await supabase.from("weekly_reflections").insert(payload);
-      if (insertResult.error?.code === "23505") {
-        const updateResult = await supabase
-          .from("weekly_reflections")
-          .update({
-            what_worked: payload.what_worked,
-            what_slipped: payload.what_slipped,
-            next_week_focus: payload.next_week_focus,
-            next_week_rule: payload.next_week_rule,
-            confidence_score: payload.confidence_score,
-            weekly_note: payload.weekly_note,
-          })
-          .eq("user_id", userId)
-          .eq("account_id", activeAccountId)
-          .eq("week_start", weekStartKey);
-        error = updateResult.error;
-      } else {
-        error = insertResult.error;
+        error.message?.toLowerCase().includes("unique or exclusion constraint")
+      ) {
+        const insertResult = await supabase.from("weekly_reflections").insert(attempt.payload);
+        if (insertResult.error?.code === "23505") {
+          let updateQuery = supabase
+            .from("weekly_reflections")
+            .update(attempt.payload)
+            .eq("user_id", userId)
+            .eq("week_start", weekStartKey);
+          if ("account_id" in attempt.payload) {
+            updateQuery = updateQuery.eq("account_id", activeAccountId);
+          }
+          const updateResult = await updateQuery;
+          error = updateResult.error;
+        } else {
+          error = insertResult.error;
+        }
       }
+
+      if (!error) break;
+      if (!isRetryableWeeklyReflectionSchemaError(error.message, error.code)) break;
     }
 
     setWeeklySaving(false);
@@ -433,7 +468,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     if (!error) {
       setWeeklyUnavailable(false);
     } else {
-      setWeeklyUnavailable(msg.toLowerCase().includes("unavailable"));
+      setWeeklyUnavailable(isWeeklyReflectionTableMissing(error.message, error.code));
     }
   };
 
@@ -1187,7 +1222,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <p className="text-[13px] text-zinc-500">Weekly reflection is visible in read-only mode during trial expiry.</p>
             ) : null}
             {canWriteJournal && weeklyUnavailable ? (
-              <p className="text-[13px] text-zinc-500">This workspace is missing weekly reflection support. Run the latest Supabase migrations.</p>
+              <p className="text-[13px] text-zinc-500">
+                The weekly_reflections table is not set up in this database yet. Run Supabase migrations, then refresh.
+              </p>
             ) : null}
             {canWriteJournal && !activeAccountId ? (
               <p className="text-[13px] text-zinc-500">Select an active account to save weekly review.</p>

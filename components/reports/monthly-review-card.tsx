@@ -11,6 +11,7 @@ import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
 import type { MonthlyReviewSnapshot } from "@/lib/user-data/monthly-review";
 import { MONTHLY_REVIEW_MIN_TRADED_DAYS } from "@/lib/user-data/monthly-review";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import { formatWeekHeadline } from "@/lib/user-data/week-labels";
 import { appCardPrimary, appCardSecondary, appKicker, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
 import { cn } from "@/lib/utils";
 
@@ -134,8 +135,8 @@ export function MonthlyReviewCard({
     `Trade win rate: ${review.winRateTrades !== null ? `${review.winRateTrades}%` : "—"}`,
     `Best day: ${review.bestDay ? `${review.bestDay.date} (${formatSignedPnlAmount(review.bestDay.pnl, displayCurrency)})` : "—"}`,
     `${review.worstOrSmallestGreenDay?.label ?? "Worst day"}: ${review.worstOrSmallestGreenDay ? `${review.worstOrSmallestGreenDay.date} (${formatSignedPnlAmount(review.worstOrSmallestGreenDay.pnl, displayCurrency)})` : "—"}`,
-    `Best week: ${review.bestWeek ? `${review.bestWeek.weekStart} (${formatSignedPnlAmount(review.bestWeek.pnl, displayCurrency)})` : "—"}`,
-    `Weakest week: ${review.weakestWeek ? `${review.weakestWeek.weekStart} (${formatSignedPnlAmount(review.weakestWeek.pnl, displayCurrency)})` : review.bestWeek ? "Only one active week" : "—"}`,
+    `Best week: ${review.bestWeek ? `${formatWeekHeadline(review.bestWeek.weekStart)} (${formatSignedPnlAmount(review.bestWeek.pnl, displayCurrency)})` : "—"}`,
+    `Weakest week: ${review.weakestWeek ? `${formatWeekHeadline(review.weakestWeek.weekStart)} (${formatSignedPnlAmount(review.weakestWeek.pnl, displayCurrency)})` : review.bestWeek ? "Only one active week" : "—"}`,
     `Avg green day: ${review.avgGreenDay === null ? "—" : formatSignedPnlAmount(review.avgGreenDay, displayCurrency)}`,
     `Avg red day: ${review.avgRedDay === null ? "—" : formatSignedPnlAmount(review.avgRedDay, displayCurrency)}`,
     `Discipline score: ${formatDisciplineMetric(review.disciplineScore)}`,
@@ -302,7 +303,7 @@ export function MonthlyReviewCard({
                 value={
                   review.bestWeek ? (
                     <>
-                      Week of {formatShortDate(review.bestWeek.weekStart)}
+                      {formatWeekHeadline(review.bestWeek.weekStart)}
                       <span className={cn("ml-2 text-[15px]", pnlTone(review.bestWeek.pnl))}>
                         {formatSignedPnlAmount(review.bestWeek.pnl, displayCurrency)}
                       </span>
@@ -317,7 +318,7 @@ export function MonthlyReviewCard({
                 value={
                   review.weakestWeek ? (
                     <>
-                      Week of {formatShortDate(review.weakestWeek.weekStart)}
+                      {formatWeekHeadline(review.weakestWeek.weekStart)}
                       <span className={cn("ml-2 text-[15px]", pnlTone(review.weakestWeek.pnl))}>
                         {formatSignedPnlAmount(review.weakestWeek.pnl, displayCurrency)}
                       </span>

@@ -226,7 +226,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
             className="pointer-events-none absolute -inset-x-4 -top-8 bottom-0 hidden bg-[radial-gradient(ellipse_82%_58%_at_46%_0%,oklch(0.42_0.12_252/0.13),transparent_64%)] md:block lg:-inset-x-8"
             aria-hidden
           />
-          <div className="relative px-1 md:px-4 lg:px-6">
+          <div className="relative px-0 sm:px-4 lg:px-6">
             <PnlCalendar
               entries={filteredEntries}
               summaryEntries={baseEntries}

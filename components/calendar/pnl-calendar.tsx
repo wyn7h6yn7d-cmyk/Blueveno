@@ -11,6 +11,7 @@ import { computeDisciplineScorePercent, formatDisciplinePercent } from "@/lib/us
 import { dayKeyFromRow, toDayKey } from "@/lib/user-data/journal-metrics";
 import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
 import { pickBestWorstWeeks } from "@/lib/user-data/week-aggregation";
+import { formatWeekHeadline, isoWeekNumberFromDayKey } from "@/lib/user-data/week-labels";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -130,20 +131,6 @@ function weekAccent(total: number): string {
   if (total > 0) return "bg-emerald-400/80";
   if (total < 0) return "bg-rose-400/80";
   return "bg-zinc-500/50";
-}
-
-function weekNumber(weekStart: Date): number {
-  const date = new Date(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-}
-
-function weekDateRangeLabel(week: DayCell[]): string {
-  const start = week[0].date.getDate();
-  const end = week[6].date.getDate();
-  return `${String(start).padStart(2, "0")}–${String(end).padStart(2, "0")}`;
 }
 
 function startOfWeekMonday(date: Date): Date {
@@ -313,12 +300,54 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     return map;
   }, [weeklyReflections]);
 
-  /** Mobile: weekdays + week summary (6 cols). sm+: weekdays + weekend (6 cols). lg+: add week summary column (7 cols). */
+  /** Mobile: 5 weekdays + full-width week bar. sm+: weekend. lg+: week # column + week summary rail. */
   const calendarGridCols =
-    "[grid-template-columns:repeat(6,minmax(0,1fr))] sm:[grid-template-columns:repeat(6,minmax(0,1fr))] lg:[grid-template-columns:repeat(6,minmax(0,1fr))_minmax(16.5rem,16.5rem)]";
+    "grid w-full min-w-0 grid-cols-5 gap-2 sm:grid-cols-6 sm:gap-2.5 lg:grid-cols-[2.75rem_repeat(6,minmax(0,1fr))_minmax(13.5rem,1fr)] lg:gap-3";
+
+  type MonthSummaryCard =
+    | { label: string; value: string; tone: number }
+    | { label: string; weekStart: string; pnl: number; tone: number };
+
+  const monthSummaryCards: MonthSummaryCard[] = [
+    {
+      label: "Month P&L",
+      value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—",
+      tone: monthSummary.monthPnl,
+    },
+    {
+      label: "Trade win",
+      value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—",
+      tone: 0,
+    },
+    { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0 },
+    monthSummary.onlyOneActiveWeek
+      ? {
+          label: "Only active week",
+          weekStart: monthSummary.bestWeek?.weekStart ?? "",
+          pnl: monthSummary.bestWeek?.total ?? 0,
+          tone: monthSummary.bestWeek?.total ?? 0,
+        }
+      : {
+          label: "Best week",
+          weekStart: monthSummary.bestWeek?.weekStart ?? "",
+          pnl: monthSummary.bestWeek?.total ?? 0,
+          tone: monthSummary.bestWeek?.total ?? 0,
+        },
+    ...(monthSummary.onlyOneActiveWeek
+      ? []
+      : [
+          {
+            label: "Weakest week",
+            weekStart: monthSummary.weakestWeek?.weekStart ?? "",
+            pnl: monthSummary.weakestWeek?.total ?? 0,
+            tone: monthSummary.weakestWeek?.total ?? 0,
+          },
+        ]),
+    { label: "Discipline score", value: formatDisciplinePercent(monthSummary.disciplineScore), tone: 0 },
+  ];
 
   const headerBox =
-    "flex min-h-[2.55rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-0.5 py-1.5 text-center shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.4rem] sm:rounded-xl sm:px-1 sm:py-2.5";
+    "flex min-h-[2rem] items-center justify-center rounded-lg border border-white/[0.12] bg-black/40 px-1 py-1 text-center text-[11px] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:min-h-[3.4rem] sm:rounded-xl sm:px-1 sm:py-2.5 sm:text-[12px]";
 
   return (
     <div className="min-w-0 space-y-6">
@@ -367,52 +396,40 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
       </div>
 
       <div className="grid grid-cols-2 auto-rows-fr gap-2 sm:gap-3 xl:grid-cols-6" aria-label="Month summary">
-        {[
-          { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl, currencyOnly: true },
-          { label: "Trade win", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0, currencyOnly: false },
-          { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0, currencyOnly: false },
-          monthSummary.onlyOneActiveWeek
-            ? {
-                label: "Only active week",
-                value: monthSummary.bestWeek ? formatSignedPnlAmount(monthSummary.bestWeek.total, displayCurrency) : "—",
-                tone: monthSummary.bestWeek?.total ?? 0,
-                currencyOnly: true,
-              }
-            : {
-                label: "Best week",
-                value: monthSummary.bestWeek ? formatSignedPnlAmount(monthSummary.bestWeek.total, displayCurrency) : "—",
-                tone: monthSummary.bestWeek?.total ?? 0,
-                currencyOnly: true,
-              },
-          ...(!monthSummary.onlyOneActiveWeek
-            ? [
-                {
-                  label: "Weakest week",
-                  value: monthSummary.weakestWeek
-                    ? formatSignedPnlAmount(monthSummary.weakestWeek.total, displayCurrency)
-                    : "—",
-                  tone: monthSummary.weakestWeek?.total ?? 0,
-                  currencyOnly: true,
-                },
-              ]
-            : []),
-          { label: "Discipline score", value: formatDisciplinePercent(monthSummary.disciplineScore), tone: 0, currencyOnly: false },
-        ].map((item) => (
+        {monthSummaryCards.map((item) => (
           <div
             key={item.label}
-            className="flex h-full min-h-[82px] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-2.5 py-1.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3"
+            className="flex h-full min-h-[4.5rem] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3 py-2.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3"
           >
             <p className="app-kicker text-[11px]">{item.label}</p>
-            <p
-              className={cn(
-                "font-display text-[0.7rem] tabular-nums tracking-[-0.02em] sm:mt-1.5 sm:text-[1rem]",
-                item.tone > 0 && "text-emerald-200",
-                item.tone < 0 && "text-rose-200",
-                item.tone === 0 && "text-zinc-100",
-              )}
-            >
-              {item.value}
-            </p>
+            {"weekStart" in item && item.weekStart ? (
+              <div className="mt-1 space-y-0.5 sm:mt-1.5">
+                <p className="font-display text-[0.82rem] leading-snug text-zinc-100 sm:text-[0.92rem]">
+                  {formatWeekHeadline(item.weekStart)}
+                </p>
+                <p
+                  className={cn(
+                    "font-display text-[0.95rem] tabular-nums tracking-[-0.02em] sm:text-[1rem]",
+                    item.tone > 0 && "text-emerald-200",
+                    item.tone < 0 && "text-rose-200",
+                    item.tone === 0 && "text-zinc-100",
+                  )}
+                >
+                  {formatSignedPnlAmount(item.pnl, displayCurrency)}
+                </p>
+              </div>
+            ) : (
+              <p
+                className={cn(
+                  "font-display text-[0.95rem] tabular-nums tracking-[-0.02em] sm:mt-1.5 sm:text-[1rem]",
+                  item.tone > 0 && "text-emerald-200",
+                  item.tone < 0 && "text-rose-200",
+                  item.tone === 0 && "text-zinc-100",
+                )}
+              >
+                {"value" in item ? item.value : "—"}
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -438,33 +455,23 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                 "rounded-lg border border-white/[0.08] bg-black/25 p-1.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)] sm:rounded-xl sm:p-3 lg:p-3.5",
               )}
             >
-              <div className={cn("grid w-full min-w-0 gap-1.5 sm:gap-3 lg:gap-3.5", calendarGridCols)}>
+              <div className={calendarGridCols}>
+            <div className={cn(headerBox, "hidden min-w-0 app-kicker lg:flex")}>Wk</div>
             {WEEKDAY_HEADERS.map((d) => (
               <div
                 key={d}
                 className={cn(
                   headerBox,
-                  "min-w-0 app-kicker",
+                  "min-w-0 app-kicker font-medium",
                   d === "Weekend" && "hidden sm:flex",
                 )}
               >
-                <span className="sm:hidden">{d === "Weekend" ? "WE" : d.slice(0, 1)}</span>
+                <span className="sm:hidden">{d === "Weekend" ? "Sat–Sun" : d.slice(0, 3)}</span>
                 <span className="hidden sm:inline">{d}</span>
               </div>
             ))}
             <div
-              className={cn(
-                headerBox,
-                "app-kicker sm:hidden",
-              )}
-            >
-              Wk
-            </div>
-            <div
-              className={cn(
-                headerBox,
-                "hidden min-w-0 app-eyebrow lg:flex",
-              )}
+              className={cn(headerBox, "hidden min-w-0 app-kicker lg:flex")}
             >
               Week
             </div>
@@ -499,6 +506,18 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               const weeklyQuality = weekQualityScore(week, aggregates);
               return (
                 <Fragment key={`week-row-${i}`}>
+                  <div
+                    className={cn(
+                      headerBox,
+                      "hidden min-h-[4.25rem] flex-col gap-0.5 border-white/[0.1] bg-black/30 lg:flex lg:min-h-[6.25rem]",
+                    )}
+                    aria-hidden
+                  >
+                    <span className="app-kicker text-[9px]">Wk</span>
+                    <span className="font-display text-[0.95rem] tabular-nums text-zinc-100">
+                      {isoWeekNumberFromDayKey(weekStartKey)}
+                    </span>
+                  </div>
                   {displayCells.map((cell) => {
                     const aggregateRows = cell.sourceKeys.map((k) => aggregates.get(k)).filter(Boolean) as DayAggregate[];
                     const total = aggregateRows.reduce((sum, row) => sum + row.total, 0);
@@ -522,7 +541,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                       >
                         <div
                           className={cn(
-                            "relative box-border flex h-full min-h-[4.75rem] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 transition duration-200 sm:min-h-[5.75rem] sm:rounded-xl sm:p-3 lg:min-h-[6.25rem]",
+                            "relative box-border flex h-full min-h-[4.25rem] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2.5 transition duration-200 sm:min-h-[5.75rem] sm:rounded-xl sm:p-3 lg:min-h-[6.25rem]",
                             cellClasses,
                             cell.isWeekend && !hasData && "border-white/[0.06] bg-[linear-gradient(160deg,oklch(0.105_0.024_264/0.5),oklch(0.07_0.02_268/0.45))] text-zinc-600",
                             isSelected &&
@@ -551,7 +570,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                               ) : null}
                               {hasChartLink ? (
                                 <span
-                                  className="flex size-5 items-center justify-center rounded-full border border-[oklch(0.58_0.12_252/0.4)] bg-[oklch(0.58_0.12_252/0.2)] text-[oklch(0.82_0.1_252)]"
+                                  className="hidden size-5 items-center justify-center rounded-full border border-[oklch(0.58_0.12_252/0.4)] bg-[oklch(0.58_0.12_252/0.2)] text-[oklch(0.82_0.1_252)] sm:flex"
                                   title="Linked chart"
                                 >
                                   <LineChart className="size-3" strokeWidth={2} />
@@ -561,7 +580,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                           </div>
                           <p
                             className={cn(
-                              "font-display text-right text-[11px] font-semibold tabular-nums leading-none tracking-[-0.03em] sm:text-[13px]",
+                              "w-full truncate text-right font-display text-[10px] font-semibold tabular-nums leading-none tracking-[-0.02em] sm:text-[13px]",
                               hasData ? "text-white" : "text-zinc-600",
                             )}
                             title={hasData ? formatSignedPnlAmount(total, displayCurrency) : undefined}
@@ -574,18 +593,26 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                   })}
                   <Link
                     href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
-                    className="relative flex min-h-[82px] min-w-0 flex-col justify-between overflow-hidden rounded-lg border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] p-2 text-left sm:hidden"
+                    className="col-span-5 flex min-h-[3.25rem] items-center justify-between gap-3 overflow-hidden rounded-lg border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3 py-2.5 text-left sm:col-span-6 sm:hidden lg:hidden"
                     title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
                   >
                     <div className="min-w-0">
-                      <p className="truncate app-kicker">{weekDateRangeLabel(week)}</p>
-                      <p className={cn("mt-1 font-display text-[10px] tabular-nums tracking-[-0.02em]", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
-                        {formatSignedPnlAmount(weekly, displayCurrency)}
-                      </p>
+                      <p className="app-kicker text-[11px]">{formatWeekHeadline(weekStartKey)}</p>
+                      <p className="mt-0.5 text-[11px] text-zinc-500">Week total</p>
                     </div>
-                    <div>
-                      <p className="app-kicker">Q {weeklyQuality}%</p>
-                      <p className={cn("font-mono text-[8px] uppercase tracking-[0.08em]", weeklyStatus.tone)}>{weeklyStatus.label}</p>
+                    <p
+                      className={cn(
+                        "shrink-0 font-display text-[15px] tabular-nums tracking-[-0.02em]",
+                        weekly >= 0 ? "text-emerald-200" : "text-rose-200",
+                      )}
+                    >
+                      {formatSignedPnlAmount(weekly, displayCurrency)}
+                    </p>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[11px] text-zinc-400">
+                        Quality <span className="text-zinc-200">{weeklyQuality}%</span>
+                      </p>
+                      <p className={cn("text-[11px] font-medium", weeklyStatus.tone)}>{weeklyStatus.label}</p>
                     </div>
                   </Link>
                   <Link
@@ -594,7 +621,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <p className="app-kicker">{weekDateRangeLabel(week)}</p>
+                      <p className="app-kicker">{formatWeekHeadline(weekStartKey)}</p>
                       <p className={cn("font-display text-[1.2rem] tabular-nums tracking-[-0.03em]", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
                         {formatSignedPnlAmount(weekly, displayCurrency)}
                       </p>

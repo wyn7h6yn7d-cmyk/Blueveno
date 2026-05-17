@@ -90,9 +90,9 @@ $$;
 with default_rules as (
   select
     pr.user_id,
-    max(case when lower(pr.title) = 'followed my plan' then pr.id end) as plan_rule_id,
-    max(case when lower(pr.title) = 'respected my stop' then pr.id end) as stop_rule_id,
-    max(case when lower(pr.title) = 'no revenge trade' then pr.id end) as revenge_rule_id
+    (array_agg(pr.id) filter (where lower(pr.title) = 'followed my plan'))[1] as plan_rule_id,
+    (array_agg(pr.id) filter (where lower(pr.title) = 'respected my stop'))[1] as stop_rule_id,
+    (array_agg(pr.id) filter (where lower(pr.title) = 'no revenge trade'))[1] as revenge_rule_id
   from public.personal_rules pr
   group by pr.user_id
 )
