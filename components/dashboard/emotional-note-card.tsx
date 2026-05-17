@@ -24,7 +24,7 @@ export function EmotionalNoteCard({
         <Quote className="size-16 text-primary/80" strokeWidth={1} />
       </div>
       <div className="relative">
-        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">{label}</p>
+        <p className="app-kicker">{label}</p>
         <p className="mt-1 font-mono text-[11px] text-zinc-600">{session}</p>
         <blockquote className="mt-4 border-l-2 border-primary/45 pl-4 text-sm leading-relaxed text-zinc-300">
           {note}

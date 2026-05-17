@@ -6,6 +6,7 @@ import { Pencil } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { entryDisciplineFraction } from "@/lib/user-data/stats-display";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -97,7 +98,7 @@ function JournalDayCard({
     >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">{dayLabel(row)}</p>
+            <p className="app-metric-label">{dayLabel(row)}</p>
             <p className="mt-1 font-display text-[1.02rem] font-medium tracking-tight text-zinc-100">{row.sym}</p>
           </div>
           <p className="font-mono text-[15px] tabular-nums tracking-tight text-zinc-100">
@@ -120,7 +121,7 @@ function JournalDayCard({
             </span>
           ) : null}
           <span className="font-mono text-[10px] text-zinc-500">
-            Discipline {Number(Boolean(row.followedPlan)) + Number(Boolean(row.respectedStop)) + Number(Boolean(row.noRevengeTrade))}/3
+            Discipline {entryDisciplineFraction(row)}
           </span>
           {row.chartLinkUrl ? (
             <span className="rounded border border-[oklch(0.58_0.12_252/0.35)] bg-[oklch(0.58_0.12_252/0.16)] px-2 py-0.5 font-mono text-[10px] text-zinc-200">

@@ -1,4 +1,5 @@
 import { parsePnlAmount } from "@/lib/user-data/kpi";
+import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import type { JournalRow } from "@/lib/user-data/types";
 
 export type EntryFilters = {
@@ -34,9 +35,7 @@ export const EMPTY_ENTRY_FILTERS: EntryFilters = {
 };
 
 function rowDay(row: JournalRow): string {
-  if (row.entryDate) return row.entryDate;
-  if (row.createdAt) return new Date(row.createdAt).toISOString().slice(0, 10);
-  return "";
+  return dayKeyFromRow(row.entryDate, row.createdAt);
 }
 
 export function applyEntryFilters(rows: JournalRow[], filters: EntryFilters): JournalRow[] {
@@ -51,9 +50,9 @@ export function applyEntryFilters(rows: JournalRow[], filters: EntryFilters): Jo
     if (filters.mistake !== "all" && (row.tag ?? "") !== filters.mistake) return false;
     if (filters.session !== "all" && (row.sessionTag ?? "") !== filters.session) return false;
     if (filters.market !== "all" && (row.marketCondition ?? "") !== filters.market) return false;
-    if (filters.followedPlan && !row.followedPlan) return false;
-    if (filters.respectedStop && !row.respectedStop) return false;
-    if (filters.noRevengeTrade && !row.noRevengeTrade) return false;
+    if (filters.followedPlan && row.followedPlan !== true) return false;
+    if (filters.respectedStop && row.respectedStop !== true) return false;
+    if (filters.noRevengeTrade && row.noRevengeTrade !== true) return false;
     const pnl = parsePnlAmount(row.r);
     if (filters.dayColor === "green" && !((pnl ?? 0) > 0)) return false;
     if (filters.dayColor === "red" && !((pnl ?? 0) < 0)) return false;

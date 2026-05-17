@@ -216,7 +216,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
               <Lock className="size-[18px]" strokeWidth={1.75} />
             </span>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-200/80">Read-only</p>
+              <p className="app-metric-label text-amber-200/90">Read-only</p>
               <p className="mt-1 text-[14px] leading-relaxed text-zinc-200">
                 Upgrade to Premium to edit entries, add a linked chart, or change P&amp;L.
               </p>
@@ -242,7 +242,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       >
         <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">1. Result</p>
+            <p className="app-metric-label">1. Result</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="je-date" className={labelCls}>
@@ -299,7 +299,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
 
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
             <details>
-              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+              <summary className="cursor-pointer list-none app-metric-label">
                 2. Context (optional)
               </summary>
               <div className="mt-3.5 grid gap-4 sm:grid-cols-2">
@@ -385,7 +385,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
 
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
             <details>
-              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+              <summary className="cursor-pointer list-none app-metric-label">
                 3. Behavior (optional)
               </summary>
               <div className="mt-3 space-y-2">
@@ -430,7 +430,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
             </div>
             {personalRules.length > 0 ? (
               <div className="space-y-2 pt-1">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Active rules</p>
+                <p className="app-metric-label">Active rules</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {personalRules.map((rule) => (
                     <label
@@ -455,7 +455,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
 
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
             <details>
-              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+              <summary className="cursor-pointer list-none app-metric-label">
                 4. Review (optional)
               </summary>
               <div className="mt-3.5 space-y-2">
@@ -497,7 +497,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
 
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
             <details>
-              <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+              <summary className="cursor-pointer list-none app-metric-label">
                 5. Chart link (optional)
               </summary>
               <div className="mt-3 space-y-2">
@@ -543,7 +543,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
 
         {canWriteJournal ? (
           <div className="mt-8 border-t border-white/[0.08] pt-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Danger zone</p>
+            <p className="app-metric-label">Danger zone</p>
             <p className="mt-2 text-[13px] leading-relaxed text-zinc-500">
               Remove this day from your journal permanently.
             </p>

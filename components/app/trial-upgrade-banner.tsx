@@ -40,7 +40,7 @@ export function TrialUpgradeBanner() {
           <LockOpen className="size-[18px]" strokeWidth={1.75} />
         </span>
         <div className="min-w-0 space-y-1.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
+          <p className="app-kicker">
             {isExpired ? "Read-only workspace" : isEndingSoon ? "Trial ending soon" : "Trial active"}
           </p>
           <p className="font-display text-[1.05rem] font-medium tracking-tight text-zinc-50">

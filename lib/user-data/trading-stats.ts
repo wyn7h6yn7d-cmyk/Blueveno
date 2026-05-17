@@ -3,7 +3,9 @@ import { primaryForexSessionUTC } from "@/lib/trading-session";
 import type { JournalRow } from "@/lib/user-data/types";
 import { journalEntryMoment } from "@/lib/user-data/journal-entry-time";
 import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
+import { computeDisciplineScorePercent, rowDisciplineChecks } from "@/lib/user-data/discipline-stats";
 import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
+import { pickBestDay, pickSmallestGreenDay, pickWorstLossDay } from "@/lib/user-data/stats-display";
 
 export type CumulativePoint = { i: number; t: string; y: number };
 
@@ -46,6 +48,7 @@ export type TradingStatsSnapshot = {
   flatDays: number;
   bestDay: { date: string; pnl: number } | null;
   worstDay: { date: string; pnl: number } | null;
+  smallestGreenDay: { date: string; pnl: number } | null;
   avgGreenDay: number | null;
   avgRedDay: number | null;
   streakLabel: string;
@@ -136,12 +139,10 @@ function clamp100(n: number): number {
   return Math.max(0, Math.min(100, n));
 }
 
-function dayDisciplineScore(row: JournalRow): number {
-  const checks =
-    Number(Boolean(row.followedPlan)) +
-    Number(Boolean(row.respectedStop)) +
-    Number(Boolean(row.noRevengeTrade));
-  return Math.round((checks / 3) * 100);
+function dayDisciplineScore(row: JournalRow): number | null {
+  const { completed, total } = rowDisciplineChecks(row);
+  if (total === 0) return null;
+  return Math.round((completed / total) * 100);
 }
 
 /** Aggregate P&L by calendar day (multiple rows same day sum). */
@@ -169,15 +170,18 @@ export function computeTradingStats(
   for (const row of journal) {
     const key = dayKeyFromRow(row.entryDate, row.createdAt);
     const p = parsePnlAmount(row.r);
-    if (p === null) continue;
-    dayMap.set(key, (dayMap.get(key) ?? 0) + p);
 
     const score = dayDisciplineScore(row);
-    const d = dayDisciplineMap.get(key);
-    dayDisciplineMap.set(key, d ? { sum: d.sum + score, count: d.count + 1 } : { sum: score, count: 1 });
+    if (score !== null) {
+      const d = dayDisciplineMap.get(key);
+      dayDisciplineMap.set(key, d ? { sum: d.sum + score, count: d.count + 1 } : { sum: score, count: 1 });
+    }
     if (row.moodState) {
       dayMoodMap.set(key, row.moodState);
     }
+
+    if (p === null) continue;
+    dayMap.set(key, (dayMap.get(key) ?? 0) + p);
 
     if (row.moodState === "Calm") calmPnl.push(p);
     if (row.moodState === "Focused") focusedPnl.push(p);
@@ -259,29 +263,9 @@ export function computeTradingStats(
     }
   }
 
-  /** Best = highest day P&L; on tie, most recent calendar day. Worst = lowest; on tie, earliest day. */
-  let bestDay: { date: string; pnl: number } | null = null;
-  let worstDay: { date: string; pnl: number } | null = null;
-  for (const d of dailyBars) {
-    if (
-      !bestDay ||
-      d.pnl > bestDay.pnl ||
-      (d.pnl === bestDay.pnl && d.date > bestDay.date)
-    ) {
-      bestDay = { date: d.date, pnl: d.pnl };
-    }
-    if (
-      !worstDay ||
-      d.pnl < worstDay.pnl ||
-      (d.pnl === worstDay.pnl && d.date < worstDay.date)
-    ) {
-      worstDay = { date: d.date, pnl: d.pnl };
-    }
-  }
-
-  if (dailyBars.length <= 1) {
-    worstDay = null;
-  }
+  const bestDay = pickBestDay(dailyBars);
+  const worstDay = pickWorstLossDay(dailyBars);
+  const smallestGreenDay = pickSmallestGreenDay(dailyBars);
 
   const avgGreenDay = greens.length ? greens.reduce((a, b) => a + b, 0) / greens.length : null;
   const avgRedDay = reds.length ? reds.reduce((a, b) => a + b, 0) / reds.length : null;
@@ -351,7 +335,7 @@ export function computeTradingStats(
     if (mood === "Hesitant") moodBreakdown.hesitant += 1;
     if (mood === "Tilted") moodBreakdown.tilted += 1;
   }
-  const avgDisciplineScore = disciplineDays > 0 ? Math.round(disciplineTotal / disciplineDays) : null;
+  const avgDisciplineScore = computeDisciplineScorePercent(journal);
 
   const reflectionWeeks = new Set(weeklyReflections.map((r) => r.week_start));
   const weekDiscipline = new Map<string, { sum: number; count: number }>();
@@ -372,10 +356,15 @@ export function computeTradingStats(
   }
 
   const thisWeekKey = toDayKey(startOfWeekMonday(new Date()));
-  const thisWeekRaw = weekDiscipline.get(thisWeekKey);
-  const thisWeekDisciplineScore = thisWeekRaw
-    ? clamp100(Math.round(thisWeekRaw.sum / Math.max(thisWeekRaw.count, 1) + (reflectionWeeks.has(thisWeekKey) ? 5 : 0)))
-    : null;
+  const thisWeekEntries = journal.filter((row) => {
+    const key = dayKeyFromRow(row.entryDate, row.createdAt);
+    return toDayKey(startOfWeekMonday(new Date(`${key}T12:00:00`))) === thisWeekKey;
+  });
+  const thisWeekBase = computeDisciplineScorePercent(thisWeekEntries);
+  const thisWeekDisciplineScore =
+    thisWeekBase === null
+      ? null
+      : clamp100(Math.round(thisWeekBase + (reflectionWeeks.has(thisWeekKey) ? 5 : 0)));
 
   const correlationHints: CorrelationStat[] = [];
   const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -452,6 +441,7 @@ export function computeTradingStats(
     flatDays: flats,
     bestDay,
     worstDay,
+    smallestGreenDay,
     avgGreenDay,
     avgRedDay,
     streakLabel,

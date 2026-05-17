@@ -29,7 +29,7 @@ export function PaywallScreen() {
             After trial, your data stays read-only until upgrade. Premium unlocks ongoing journaling. Your history stays visible.
           </p>
           <div className="mt-10 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[oklch(0.62_0.12_252)]">Blueveno Premium</p>
+            <p className="app-eyebrow">Blueveno Premium</p>
             <div className="mt-4 flex flex-wrap items-baseline justify-center gap-x-5 gap-y-2">
               <div className="flex items-baseline gap-1.5">
                 <span className="font-display text-4xl tabular-nums tracking-[-0.03em] text-zinc-50">{formatEur(PRICING_EUR.monthly)}</span>

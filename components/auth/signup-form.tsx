@@ -97,7 +97,7 @@ export function SignupForm() {
       <div className="relative px-6 pb-8 pt-7 sm:px-8 sm:pb-9 sm:pt-8">
         <div className="mb-8 flex items-start justify-between gap-4 border-b border-white/[0.06] pb-6">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">New workspace</p>
+            <p className="app-kicker">New workspace</p>
             <p className="mt-2 max-w-[22rem] text-[13px] leading-relaxed text-zinc-500">
               Create your Blueveno account to start your 7-day free trial. Trial includes 1 trading account.
             </p>

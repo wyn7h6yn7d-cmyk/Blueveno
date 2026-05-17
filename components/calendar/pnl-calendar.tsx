@@ -3,10 +3,14 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Fragment } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDayDrawer } from "@/components/calendar/calendar-day-drawer";
+import { ChevronLeft, ChevronRight, LineChart } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import { computeDisciplineScorePercent, formatDisciplinePercent } from "@/lib/user-data/discipline-stats";
+import { dayKeyFromRow, toDayKey } from "@/lib/user-data/journal-metrics";
 import { parsePnlAmount, tradeWinRatePercent } from "@/lib/user-data/kpi";
+import { pickBestWorstWeeks } from "@/lib/user-data/week-aggregation";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -191,8 +195,16 @@ function reflectionStatus(rows: { label: string; value: string }[]): { label: st
 
 export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCurrency, weeklyReflections = [], filterControls = null }: Props) {
   const [cursor, setCursor] = useState(() => new Date());
-  const [selectedDayKey, setSelectedDayKey] = useState(() => keyFromDate(new Date()));
+  const [selectedCellKey, setSelectedCellKey] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerDayKeys, setDrawerDayKeys] = useState<string[]>([]);
   const todayKey = useMemo(() => keyFromDate(new Date()), []);
+
+  const openDayDrawer = (cell: DisplayCell) => {
+    setSelectedCellKey(cell.key);
+    setDrawerDayKeys(cell.sourceKeys);
+    setDrawerOpen(true);
+  };
 
   const aggregates = useMemo(() => {
     const map = new Map<string, DayAggregate>();
@@ -245,34 +257,43 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
     });
 
     const dayTotals = new Map<string, number>();
-    let checksDone = 0;
-    let checksTotal = 0;
     for (const row of monthEntries) {
-      const key = row.entryDate ?? keyFromDate(row.createdAt ? new Date(row.createdAt) : new Date());
+      const key = dayKeyFromRow(row.entryDate, row.createdAt);
       const pnl = parsePnlAmount(row.r) ?? 0;
       dayTotals.set(key, (dayTotals.get(key) ?? 0) + pnl);
-      checksTotal += 3;
-      if (row.followedPlan) checksDone += 1;
-      if (row.respectedStop) checksDone += 1;
-      if (row.noRevengeTrade) checksDone += 1;
     }
 
     const tradedDays = dayTotals.size;
     const dayValues = [...dayTotals.values()];
     const monthPnl = dayValues.reduce((sum, value) => sum + value, 0);
     const winRate = tradeWinRatePercent(monthEntries);
-    const disciplineScore = checksTotal > 0 ? Math.round((checksDone / checksTotal) * 100) : null;
+    const disciplineScore = computeDisciplineScorePercent(monthEntries);
 
     const weekTotals = new Map<string, number>();
     for (const [dayKey, total] of dayTotals.entries()) {
-      const ws = keyFromDate(startOfWeekMonday(new Date(`${dayKey}T12:00:00`)));
+      const ws = toDayKey(startOfWeekMonday(new Date(`${dayKey}T12:00:00`)));
       weekTotals.set(ws, (weekTotals.get(ws) ?? 0) + total);
     }
-    const weekRows = [...weekTotals.entries()].map(([weekStart, total]) => ({ weekStart, total }));
-    const bestWeek = weekRows.length > 0 ? weekRows.reduce((a, b) => (b.total > a.total ? b : a)) : null;
-    const weakestWeek = weekRows.length > 0 ? weekRows.reduce((a, b) => (b.total < a.total ? b : a)) : null;
+    const weekRows = [...weekTotals.entries()].map(([weekStart, pnl]) => ({ weekStart, pnl }));
+    const { bestWeek: bestWeekRaw, weakestWeek } = pickBestWorstWeeks(weekRows);
+    const bestWeek = bestWeekRaw ? { weekStart: bestWeekRaw.weekStart, total: bestWeekRaw.pnl } : null;
+    const weakestWeekDisplay = weakestWeek ? { weekStart: weakestWeek.weekStart, total: weakestWeek.pnl } : null;
+    const weeksWithTrades = weekRows.filter(({ weekStart }) =>
+      [...dayTotals.keys()].some(
+        (dayKey) => toDayKey(startOfWeekMonday(new Date(`${dayKey}T12:00:00`))) === weekStart,
+      ),
+    );
+    const onlyOneActiveWeek = weeksWithTrades.length <= 1;
 
-    return { tradedDays, monthPnl, winRate, bestWeek, weakestWeek, disciplineScore };
+    return {
+      tradedDays,
+      monthPnl,
+      winRate,
+      bestWeek,
+      weakestWeek: weakestWeekDisplay,
+      disciplineScore,
+      onlyOneActiveWeek,
+    };
   }, [cursor, entries]);
 
   const scopeSummary = useMemo(() => {
@@ -307,7 +328,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         )}
       >
         <div className="min-w-0 space-y-1.5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[oklch(0.65_0.11_252)]">Month</p>
+          <p className="app-eyebrow">Month</p>
           <p className="truncate font-display text-[1.35rem] font-semibold tracking-[-0.04em] text-zinc-50 sm:text-[2rem] lg:text-[2.15rem]">
             {monthLabel(cursor)}
           </p>
@@ -350,25 +371,38 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
           { label: "Month P&L", value: monthSummary.tradedDays > 0 ? formatSignedPnlAmount(monthSummary.monthPnl, displayCurrency) : "—", tone: monthSummary.monthPnl, currencyOnly: true },
           { label: "Trade win", value: scopeSummary.winRate !== null ? `${scopeSummary.winRate}%` : "—", tone: 0, currencyOnly: false },
           { label: "Traded days", value: String(monthSummary.tradedDays), tone: 0, currencyOnly: false },
-          {
-            label: "Best week",
-            value: monthSummary.bestWeek ? formatSignedPnlAmount(monthSummary.bestWeek.total, displayCurrency) : "—",
-            tone: monthSummary.bestWeek?.total ?? 0,
-            currencyOnly: true,
-          },
-          {
-            label: "Weakest week",
-            value: monthSummary.weakestWeek ? formatSignedPnlAmount(monthSummary.weakestWeek.total, displayCurrency) : "—",
-            tone: monthSummary.weakestWeek?.total ?? 0,
-            currencyOnly: true,
-          },
-          { label: "Discipline score", value: monthSummary.disciplineScore !== null ? `${monthSummary.disciplineScore}%` : "—", tone: 0, currencyOnly: false },
+          monthSummary.onlyOneActiveWeek
+            ? {
+                label: "Only active week",
+                value: monthSummary.bestWeek ? formatSignedPnlAmount(monthSummary.bestWeek.total, displayCurrency) : "—",
+                tone: monthSummary.bestWeek?.total ?? 0,
+                currencyOnly: true,
+              }
+            : {
+                label: "Best week",
+                value: monthSummary.bestWeek ? formatSignedPnlAmount(monthSummary.bestWeek.total, displayCurrency) : "—",
+                tone: monthSummary.bestWeek?.total ?? 0,
+                currencyOnly: true,
+              },
+          ...(!monthSummary.onlyOneActiveWeek
+            ? [
+                {
+                  label: "Weakest week",
+                  value: monthSummary.weakestWeek
+                    ? formatSignedPnlAmount(monthSummary.weakestWeek.total, displayCurrency)
+                    : "—",
+                  tone: monthSummary.weakestWeek?.total ?? 0,
+                  currencyOnly: true,
+                },
+              ]
+            : []),
+          { label: "Discipline score", value: formatDisciplinePercent(monthSummary.disciplineScore), tone: 0, currencyOnly: false },
         ].map((item) => (
           <div
             key={item.label}
             className="flex h-full min-h-[82px] flex-col justify-center rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-2.5 py-1.5 sm:min-h-[5rem] sm:justify-between sm:px-3.5 sm:py-3"
           >
-            <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-zinc-500 sm:text-[9px] sm:tracking-[0.16em]">{item.label}</p>
+            <p className="app-kicker text-[11px]">{item.label}</p>
             <p
               className={cn(
                 "font-display text-[0.7rem] tabular-nums tracking-[-0.02em] sm:mt-1.5 sm:text-[1rem]",
@@ -410,7 +444,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                 key={d}
                 className={cn(
                   headerBox,
-                  "min-w-0 font-mono text-[8px] uppercase tracking-[0.1em] text-zinc-400 sm:text-[10px] sm:tracking-[0.18em]",
+                  "min-w-0 app-kicker",
                   d === "Weekend" && "hidden sm:flex",
                 )}
               >
@@ -421,7 +455,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
             <div
               className={cn(
                 headerBox,
-                "min-w-0 font-mono text-[8px] uppercase tracking-[0.1em] text-zinc-400 sm:hidden",
+                "app-kicker sm:hidden",
               )}
             >
               Wk
@@ -429,7 +463,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
             <div
               className={cn(
                 headerBox,
-                "hidden min-w-0 font-mono text-[10px] uppercase tracking-[0.18em] text-[oklch(0.78_0.12_252)] lg:flex",
+                "hidden min-w-0 app-eyebrow lg:flex",
               )}
             >
               Week
@@ -469,125 +503,72 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     const aggregateRows = cell.sourceKeys.map((k) => aggregates.get(k)).filter(Boolean) as DayAggregate[];
                     const total = aggregateRows.reduce((sum, row) => sum + row.total, 0);
                     const count = aggregateRows.reduce((sum, row) => sum + row.count, 0);
-                    const latestEntryId = aggregateRows[aggregateRows.length - 1]?.latestEntryId ?? null;
-                    const notePreview = aggregateRows.find((row) => row.latestNote)?.latestNote ?? null;
                     const hasChartLink = aggregateRows.some((row) => row.hasChartLink);
                     const hasData = count > 0;
                     const cellClasses = dayCellClasses(total, hasData, cell.inMonth);
-                    const isSelected = cell.key === selectedDayKey;
+                    const isSelected = cell.key === selectedCellKey && drawerOpen;
                     const isToday = cell.sourceKeys.includes(todayKey);
 
-                    const hrefForDay = hasData
-                      ? count === 1 && latestEntryId
-                        ? `/app/journal/${latestEntryId}`
-                        : cell.isWeekend
-                          ? "/app/journal"
-                          : `/app/journal?date=${encodeURIComponent(cell.dateKeyForLink ?? "")}`
-                      : null;
-
-                    const content = (
-                      <div
-                        className={cn(
-                          "group relative box-border flex h-full min-h-[82px] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 transition duration-200 sm:min-h-[188px] sm:rounded-xl sm:p-4.5 lg:min-h-[206px] lg:p-5",
-                          cellClasses,
-                          cell.isWeekend && !hasData && "border-white/[0.06] bg-[linear-gradient(160deg,oklch(0.105_0.024_264/0.5),oklch(0.07_0.02_268/0.45))] text-zinc-600",
-                          isSelected &&
-                            "ring-2 ring-[oklch(0.72_0.14_252/0.72)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_0_0_1px_oklch(0.72_0.14_252/0.5)]",
-                          hasData && "hover:brightness-[1.05] hover:ring-2 hover:ring-[oklch(0.58_0.12_252/0.5)]",
-                        )}
-                      >
-                        <div className="flex min-w-0 flex-col items-stretch gap-0.5 self-stretch">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <span
-                              className={cn(
-                                "font-mono text-[10px] tabular-nums sm:text-[12px]",
-                                hasData
-                                  ? "text-white/90"
-                                  : cell.inMonth
-                                    ? "text-zinc-300"
-                                    : "text-zinc-500",
-                              )}
-                            >
-                              {cell.label}
-                            </span>
-                            {isToday ? (
-                              <span className="rounded-full border border-[oklch(0.72_0.14_252/0.55)] bg-[oklch(0.72_0.14_252/0.18)] px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.14em] text-[oklch(0.84_0.1_252)]">
-                                Today
-                              </span>
-                            ) : null}
-                          </div>
-                          {hasChartLink ? (
-                            <span className="w-fit max-w-full truncate rounded border border-[oklch(0.58_0.12_252/0.35)] bg-[oklch(0.58_0.12_252/0.15)] px-1 py-0.5 font-mono text-[7px] text-zinc-200 sm:px-1.5 sm:text-[9px]">
-                              Linked chart
-                            </span>
-                          ) : null}
-                          {hasData && count > 1 ? (
-                            <span className="w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/85 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:px-1.5 sm:text-[9px]">
-                              {count}×
-                            </span>
-                          ) : null}
-                          {hasData && notePreview ? (
-                            <span
-                              className="mt-0.5 hidden w-fit max-w-full truncate rounded border border-white/[0.1] bg-black/35 px-1 py-0.5 font-mono text-[8px] text-white/80 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.05)] sm:block sm:px-1.5 sm:text-[9px]"
-                              title={notePreview}
-                            >
-                              {notePreview}
-                            </span>
-                          ) : null}
-                        </div>
-                        <div className="min-w-0 max-w-full self-stretch overflow-hidden text-right">
-                          {hasData ? (
-                            <>
-                              <div
-                                className={cn(
-                                  "font-display font-semibold leading-[1.15] tabular-nums tracking-[-0.03em]",
-                                  "text-[7px] sm:text-[clamp(0.76rem,1.45vw,1.06rem)] lg:text-[clamp(0.9rem,1.25vw,1.24rem)] lg:tracking-[-0.045em]",
-                                )}
-                              >
-                                <span
-                                  className="block w-full whitespace-nowrap text-right text-white"
-                                  title={formatSignedPnlAmount(total, displayCurrency)}
-                                >
-                                  {formatSignedPnlAmount(total, displayCurrency)}
-                                </span>
-                              </div>
-                            <div className="mt-1 font-mono text-[7px] uppercase tracking-[0.08em] text-white/45 sm:mt-1.5 sm:text-[9px] sm:tracking-[0.12em]">
-                                Day
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="font-mono text-[11px] tabular-nums text-zinc-600/85 sm:text-[13px]">—</div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-
-                    if (hasData && hrefForDay) {
-                      return (
-                        <Link
-                          key={cell.key}
-                          href={hrefForDay}
-                          onClick={() => setSelectedDayKey(cell.key)}
-                          className={cn(
-                            "block min-h-0 min-w-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
-                            cell.isWeekend && "hidden sm:block",
-                          )}
-                        >
-                          {content}
-                        </Link>
-                      );
-                    }
                     return (
                       <button
                         key={cell.key}
                         type="button"
-                        onClick={() => setSelectedDayKey(cell.key)}
-                        className={cn("min-h-0 min-w-0 rounded-xl text-left", cell.isWeekend && "hidden sm:block")}
-                        aria-label={`Select day ${cell.key}`}
+                        onClick={() => openDayDrawer(cell)}
+                        className={cn(
+                          "min-h-0 min-w-0 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
+                          cell.isWeekend && "hidden sm:block",
+                        )}
+                        aria-label={`${cell.label}, ${hasData ? formatSignedPnlAmount(total, displayCurrency) : "no trades"}`}
                       >
-                        {content}
+                        <div
+                          className={cn(
+                            "relative box-border flex h-full min-h-[4.75rem] min-w-0 flex-col justify-between overflow-hidden rounded-lg p-2 transition duration-200 sm:min-h-[5.75rem] sm:rounded-xl sm:p-3 lg:min-h-[6.25rem]",
+                            cellClasses,
+                            cell.isWeekend && !hasData && "border-white/[0.06] bg-[linear-gradient(160deg,oklch(0.105_0.024_264/0.5),oklch(0.07_0.02_268/0.45))] text-zinc-600",
+                            isSelected &&
+                              "ring-2 ring-[oklch(0.72_0.14_252/0.72)] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08),0_0_0_1px_oklch(0.72_0.14_252/0.5)]",
+                            "hover:brightness-[1.04] hover:ring-1 hover:ring-[oklch(0.58_0.12_252/0.35)]",
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-1">
+                            <span
+                              className={cn(
+                                "font-mono text-[11px] tabular-nums sm:text-[12px]",
+                                hasData ? "text-white/90" : cell.inMonth ? "text-zinc-400" : "text-zinc-600",
+                                isToday && "font-semibold text-[oklch(0.84_0.1_252)]",
+                              )}
+                            >
+                              {cell.label}
+                            </span>
+                            <div className="flex shrink-0 items-center gap-1">
+                              {hasData && count > 0 ? (
+                                <span
+                                  className="flex size-5 items-center justify-center rounded-full border border-white/[0.14] bg-black/40 font-mono text-[9px] font-medium text-zinc-100"
+                                  title={`${count} entr${count === 1 ? "y" : "ies"}`}
+                                >
+                                  {count}
+                                </span>
+                              ) : null}
+                              {hasChartLink ? (
+                                <span
+                                  className="flex size-5 items-center justify-center rounded-full border border-[oklch(0.58_0.12_252/0.4)] bg-[oklch(0.58_0.12_252/0.2)] text-[oklch(0.82_0.1_252)]"
+                                  title="Linked chart"
+                                >
+                                  <LineChart className="size-3" strokeWidth={2} />
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <p
+                            className={cn(
+                              "font-display text-right text-[11px] font-semibold tabular-nums leading-none tracking-[-0.03em] sm:text-[13px]",
+                              hasData ? "text-white" : "text-zinc-600",
+                            )}
+                            title={hasData ? formatSignedPnlAmount(total, displayCurrency) : undefined}
+                          >
+                            {hasData ? formatSignedPnlAmount(total, displayCurrency) : "—"}
+                          </p>
+                        </div>
                       </button>
                     );
                   })}
@@ -597,23 +578,23 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-mono text-[8px] uppercase tracking-[0.1em] text-zinc-400">{weekDateRangeLabel(week)}</p>
+                      <p className="truncate app-kicker">{weekDateRangeLabel(week)}</p>
                       <p className={cn("mt-1 font-display text-[10px] tabular-nums tracking-[-0.02em]", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
                         {formatSignedPnlAmount(weekly, displayCurrency)}
                       </p>
                     </div>
                     <div>
-                      <p className="font-mono text-[8px] uppercase tracking-[0.08em] text-zinc-400">Q {weeklyQuality}%</p>
+                      <p className="app-kicker">Q {weeklyQuality}%</p>
                       <p className={cn("font-mono text-[8px] uppercase tracking-[0.08em]", weeklyStatus.tone)}>{weeklyStatus.label}</p>
                     </div>
                   </Link>
                   <Link
                     href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
-                    className="relative hidden min-h-[188px] rounded-xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3.5 text-left lg:flex lg:min-h-[206px] lg:flex-col lg:justify-between"
+                    className="relative hidden min-h-[5.75rem] rounded-xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3.5 text-left lg:flex lg:min-h-[6.25rem] lg:flex-col lg:justify-between"
                     title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">{weekDateRangeLabel(week)}</p>
+                      <p className="app-kicker">{weekDateRangeLabel(week)}</p>
                       <p className={cn("font-display text-[1.2rem] tabular-nums tracking-[-0.03em]", weekly >= 0 ? "text-emerald-200" : "text-rose-200")}>
                         {formatSignedPnlAmount(weekly, displayCurrency)}
                       </p>
@@ -634,6 +615,14 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
           </div>
         </div>
       </div>
+
+      <CalendarDayDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        dayKeys={drawerDayKeys}
+        entries={entries}
+        displayCurrency={displayCurrency}
+      />
     </div>
   );
 }

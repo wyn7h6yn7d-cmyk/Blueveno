@@ -61,8 +61,6 @@ export function TradingAccountsSection() {
   const [deleting, setDeleting] = useState(false);
 
   const focusCreate = searchParams.get("new") === "1";
-  const sectionParam = searchParams.get("section");
-  const shouldShow = sectionParam === null || sectionParam === "accounts";
   const canManage = canManageTradingAccounts(access);
   const maxAccounts = tradingAccountsMaxForAccess(access);
   const atAccountLimit = accounts.length >= maxAccounts;
@@ -71,7 +69,7 @@ export function TradingAccountsSection() {
     if (!focusCreate) return;
     const el = document.getElementById("accounts-create-name");
     el?.focus();
-  }, [focusCreate, shouldShow]);
+  }, [focusCreate]);
 
   async function handleSetMainAccount(id: string) {
     if (!userId) return;
@@ -192,8 +190,6 @@ export function TradingAccountsSection() {
     await reload();
   }
 
-  if (!shouldShow) return null;
-
   return (
     <div id="accounts">
       <DashboardCard
@@ -212,7 +208,7 @@ export function TradingAccountsSection() {
       {!loading ? (
         <div className="space-y-5">
           <form onSubmit={onSaveAccount} className="grid gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+            <p className="app-metric-label">
               {editingId ? "Edit account" : "Create account"}
             </p>
             <p className="text-[12px] text-zinc-500">{tradingAccountsUsageText(accounts.length, maxAccounts)}</p>

@@ -78,7 +78,7 @@ export function LoginForm({ callbackUrl, initialError, sessionWithoutProfile }: 
         ) : null}
         <div className="mb-8 flex items-start justify-between gap-4 border-b border-white/[0.06] pb-6">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Credentials</p>
+            <p className="app-kicker">Credentials</p>
             <p className="mt-2 max-w-[22rem] text-[13px] leading-relaxed text-zinc-500">
               Sign in to continue your journal.
             </p>

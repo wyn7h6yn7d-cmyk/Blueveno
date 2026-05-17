@@ -15,42 +15,17 @@ export type PnLCardDatum = {
   vsPriorPositive?: boolean;
 };
 
-const defaultData: PnLCardDatum[] = [
-  {
-    id: "session",
-    label: "Session",
-    netUsd: "+$1,240",
-    netR: "+1.9 R",
-    vsPrior: "+0.4 R vs yesterday",
-    vsPriorPositive: true,
-  },
-  {
-    id: "week",
-    label: "Week",
-    netUsd: "+$4,180",
-    netR: "+6.2 R",
-    vsPrior: "+1.1 R vs prior week",
-    vsPriorPositive: true,
-  },
-  {
-    id: "month",
-    label: "30 days",
-    netUsd: "+$18,960",
-    netR: "+24.1 R",
-    vsPrior: "−2.3 R vs prior 30d",
-    vsPriorPositive: false,
-  },
-];
-
 type PnLOverviewCardsProps = {
-  items?: PnLCardDatum[];
+  items: PnLCardDatum[];
   className?: string;
 };
 
-export function PnLOverviewCards({ items = defaultData, className }: PnLOverviewCardsProps) {
+export function PnLOverviewCards({ items, className }: PnLOverviewCardsProps) {
+  if (items.length === 0) return null;
+
   return (
     <div className={cn("grid gap-3 sm:grid-cols-3", className)}>
-      {items.map((d, i) => (
+      {items.map((d) => (
         <article
           key={d.id}
           className={cn(dashboardPanelClass, "flex flex-col p-4 sm:p-5")}
@@ -69,15 +44,12 @@ export function PnLOverviewCards({ items = defaultData, className }: PnLOverview
           </div>
           <p
             className={cn(
-              "mt-4 border-t border-white/[0.06] pt-3 font-mono text-[11px] leading-snug",
-              d.vsPriorPositive ? "text-zinc-500" : "text-amber-200/85",
+              "mt-4 border-t border-white/[0.06] pt-3 text-[12px] leading-snug text-zinc-500",
+              !d.vsPriorPositive && "text-amber-200/85",
             )}
           >
             {d.vsPrior}
           </p>
-          {i === 0 ? (
-            <p className="mt-2 font-mono text-[10px] text-zinc-600">Futures · combined accounts · after fees</p>
-          ) : null}
         </article>
       ))}
     </div>

@@ -45,7 +45,7 @@ export function TradeDetailDrawer({
         className="w-full max-w-md border-border/85 bg-bv-surface p-0 sm:max-w-lg"
       >
         <SheetHeader className="border-b border-white/[0.06] px-5 py-4 text-left">
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-zinc-500">Trade</p>
+          <p className="app-metric-label">Trade</p>
           <SheetTitle className="font-display text-lg font-medium tracking-tight text-zinc-50">
             {t.symbol} · {t.side}
           </SheetTitle>
@@ -55,38 +55,38 @@ export function TradeDetailDrawer({
         <div className="flex-1 space-y-6 overflow-y-auto px-5 py-5">
           <dl className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Opened</dt>
+              <dt className="app-kicker">Opened</dt>
               <dd className="mt-1 font-mono text-xs text-zinc-300">{t.openedAt}</dd>
             </div>
             <div>
-              <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Closed</dt>
+              <dt className="app-kicker">Closed</dt>
               <dd className="mt-1 font-mono text-xs text-zinc-300">{t.closedAt}</dd>
             </div>
             <div className="col-span-2">
-              <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Setup</dt>
+              <dt className="app-kicker">Setup</dt>
               <dd className="mt-1 text-zinc-200">{t.setup}</dd>
             </div>
             <div>
-              <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Entry</dt>
+              <dt className="app-kicker">Entry</dt>
               <dd className="mt-1 font-mono tabular-nums text-zinc-100">{t.entry}</dd>
             </div>
             <div>
-              <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Exit</dt>
+              <dt className="app-kicker">Exit</dt>
               <dd className="mt-1 font-mono tabular-nums text-zinc-100">{t.exit}</dd>
             </div>
             <div>
-              <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Size</dt>
+              <dt className="app-kicker">Size</dt>
               <dd className="mt-1 font-mono tabular-nums text-zinc-300">{t.size}</dd>
             </div>
             <div>
-              <dt className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">R</dt>
+              <dt className="app-kicker">R</dt>
               <dd className="mt-1 font-mono tabular-nums text-bv-ice/95">{t.rMultiple}</dd>
             </div>
           </dl>
 
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">P&amp;L</span>
+              <span className="app-kicker">P&amp;L</span>
               <span className="font-display text-xl tabular-nums text-zinc-50">{t.netPnl}</span>
             </div>
             <div className="mt-2 flex justify-between font-mono text-xs text-zinc-500">
@@ -97,23 +97,23 @@ export function TradeDetailDrawer({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-white/[0.06] bg-bv-surface-inset/60 px-3 py-2">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">MAE</p>
+              <p className="app-kicker">MAE</p>
               <p className="mt-1 font-mono text-sm tabular-nums text-amber-200/90">{t.mae}</p>
             </div>
             <div className="rounded-lg border border-white/[0.06] bg-bv-surface-inset/60 px-3 py-2">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">MFE</p>
+              <p className="app-kicker">MFE</p>
               <p className="mt-1 font-mono text-sm tabular-nums text-primary/90">{t.mfe}</p>
             </div>
           </div>
 
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Tags</p>
+            <p className="app-kicker">Tags</p>
             <SetupTags tags={t.tags} className="mt-2" />
           </div>
 
           {t.notes ? (
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">Desk note</p>
+              <p className="app-kicker">Desk note</p>
               <p className="mt-2 text-sm leading-relaxed text-zinc-400">{t.notes}</p>
             </div>
           ) : null}

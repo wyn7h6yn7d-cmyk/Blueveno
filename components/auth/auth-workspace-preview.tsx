@@ -22,7 +22,7 @@ export function AuthWorkspacePreview({ variant }: AuthWorkspacePreviewProps) {
               <span className="size-2 rounded-full bg-[oklch(0.48_0.12_152)]" />
             </span>
             <div className="flex flex-col gap-0.5">
-              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
+              <span className="app-kicker">
                 {isSignup ? "Workspace" : "Session"}
               </span>
               <span className="font-mono text-[11px] text-zinc-400">
@@ -30,14 +30,14 @@ export function AuthWorkspacePreview({ variant }: AuthWorkspacePreviewProps) {
               </span>
             </div>
           </div>
-          <span className="rounded-md border border-white/[0.07] bg-white/[0.03] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500">
+          <span className="rounded-md border border-white/[0.07] bg-white/[0.03] px-2 py-1 app-kicker text-[11px]">
             read-only
           </span>
         </div>
 
         <div className="px-4 pb-2 pt-5">
           <div className="flex items-center justify-between gap-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600">
+            <p className="app-kicker">
               Equity · 5m
             </p>
             <p className="font-mono text-[11px] tabular-nums text-bv-ice/90">
@@ -61,7 +61,7 @@ export function AuthWorkspacePreview({ variant }: AuthWorkspacePreviewProps) {
 
         <div className="grid gap-px border-t border-white/[0.06] bg-white/[0.04] sm:grid-cols-2">
           <div className="bg-bv-surface/60 px-4 py-3.5 backdrop-blur-[2px]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">
+            <p className="app-kicker">
               Ingest
             </p>
             <p className="mt-1.5 font-mono text-[13px] tabular-nums text-zinc-200">
@@ -69,7 +69,7 @@ export function AuthWorkspacePreview({ variant }: AuthWorkspacePreviewProps) {
             </p>
           </div>
           <div className="bg-bv-surface/60 px-4 py-3.5 backdrop-blur-[2px]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">
+            <p className="app-kicker">
               Review queue
             </p>
             <p className="mt-1.5 font-mono text-[13px] tabular-nums text-zinc-200">

@@ -110,7 +110,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
             <SheetTitle className="font-display text-lg font-medium tracking-tight text-zinc-50">
               Blueveno
             </SheetTitle>
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">Workspace</p>
+            <p className="app-kicker">Workspace</p>
           </SheetHeader>
           <div className="flex flex-col gap-1 p-3">
             <AppSidebarNav isAdmin={isAdmin} onNavigate={() => setMobileNavOpen(false)} />
@@ -121,7 +121,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
 
       <div className="order-2 flex w-full min-w-0 items-center gap-2 overflow-hidden sm:gap-4 md:order-none md:w-auto md:flex-1">
         <div className="min-w-0 flex-1 overflow-hidden pr-1">
-          <p className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 sm:block">Workspace</p>
+          <p className="hidden app-kicker sm:block">Workspace</p>
           <div className="mt-0.5 flex min-w-0 flex-col items-start gap-1 sm:mt-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1.5">
             <p className="font-display w-full min-w-0 truncate text-[1rem] font-semibold leading-tight tracking-[-0.02em] text-zinc-50 sm:w-auto sm:text-[1.14rem]">
               {label}

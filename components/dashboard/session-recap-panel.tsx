@@ -24,7 +24,7 @@ export function SessionRecapPanel({
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-emerald-400/80">What worked</p>
+          <p className="app-metric-label text-emerald-300/90">What worked</p>
           <ul className="mt-2 space-y-1.5 text-sm text-zinc-400">
             {positives.map((p) => (
               <li key={p} className="flex gap-2">
@@ -35,7 +35,7 @@ export function SessionRecapPanel({
           </ul>
         </div>
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/90">Friction</p>
+          <p className="app-metric-label text-amber-300/90">Friction</p>
           <ul className="mt-2 space-y-1.5 text-sm text-zinc-400">
             {negatives.map((n) => (
               <li key={n} className="flex gap-2">
@@ -48,7 +48,7 @@ export function SessionRecapPanel({
       </div>
 
       <div className="mt-6 border-t border-white/[0.06] pt-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Next session</p>
+        <p className="app-metric-label">Next session</p>
         <p className="mt-2 text-sm leading-relaxed text-zinc-300">{nextSession}</p>
       </div>
     </section>

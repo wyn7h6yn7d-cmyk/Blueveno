@@ -22,7 +22,7 @@ export function UpgradePrompt({ feature }: UpgradePromptProps) {
       <div className="pointer-events-none absolute -right-16 top-0 size-40 rounded-full bg-primary/12 blur-3xl" aria-hidden />
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 space-y-1">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-bv-eyebrow">
+          <p className="app-eyebrow">
             Requires {c.minPlan} or higher
           </p>
           <p className="font-display text-base font-medium text-zinc-50">{c.title}</p>

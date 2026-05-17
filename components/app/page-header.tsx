@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { appEyebrow } from "@/lib/ui/app-surface";
 import { cn } from "@/lib/utils";
 
 type PageHeaderProps = {
@@ -29,18 +30,11 @@ export function PageHeader({
         className,
       )}
     >
-      <div className="min-w-0 space-y-3.5">
+      <div className="min-w-0 space-y-3">
         {eyebrow ? (
           <>
-            <p
-              className={cn(
-                "font-mono uppercase tracking-[0.22em]",
-                isSig ? "text-[11px] text-[oklch(0.74_0.11_252)]" : "text-[10px] text-[oklch(0.62_0.1_252)]",
-              )}
-            >
-              {eyebrow}
-            </p>
-            <div className="h-px w-12 rounded-full bg-[linear-gradient(90deg,oklch(0.55_0.12_252/0.45),transparent)]" />
+            <p className={cn(appEyebrow, isSig && "text-[13px]")}>{eyebrow}</p>
+            <div className="h-px w-14 rounded-full bg-[linear-gradient(90deg,oklch(0.55_0.12_252/0.45),transparent)]" />
           </>
         ) : null}
         <h1
@@ -54,8 +48,8 @@ export function PageHeader({
         {description ? (
           <p
             className={cn(
-              "max-w-xl leading-[1.6] text-zinc-400",
-              isSig ? "text-[15px] md:text-base" : "text-sm md:text-[15px]",
+              "max-w-2xl leading-[1.6] text-zinc-400",
+              isSig ? "text-[15px] md:text-base" : "text-[15px] md:text-[15px]",
             )}
           >
             {description}

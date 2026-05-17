@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -30,7 +30,9 @@ import {
 import type { JournalRow } from "@/lib/user-data/types";
 import { Input } from "@/components/ui/input";
 import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
+import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import { computeMonthlyReview } from "@/lib/user-data/monthly-review";
+import { mapJournalRowFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { MonthlyReviewCard } from "@/components/reports/monthly-review-card";
 
 type Props = {
@@ -41,6 +43,11 @@ type Props = {
 function fmtPnl(n: number | null, currency: string) {
   if (n === null) return "—";
   return formatSignedPnlAmount(n, currency);
+}
+
+function formatDisciplineDisplay(score: number | null | undefined): string {
+  if (score === null || score === undefined || !Number.isFinite(score)) return "—";
+  return `${Math.round(score)}%`;
 }
 
 function CumulativeChart({ points, currency }: { points: { i: number; t: string; y: number }[]; currency: string }) {
@@ -91,11 +98,11 @@ function CumulativeChart({ points, currency }: { points: { i: number; t: string;
     <div className="relative space-y-3" onPointerLeave={() => setTipIndex(null)}>
       <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
         <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Current</p>
+          <p className="app-kicker">Current</p>
           <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-100">{formatSignedPnlAmount(endY, currency)}</p>
         </div>
         <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">Change</p>
+          <p className="app-kicker">Change</p>
           <p
             className={cn(
               "mt-1 font-mono text-[13px] tabular-nums",
@@ -535,33 +542,9 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               .order("created_at", { ascending: false })
           : null;
 
-      const rows = (secondary?.data ?? primary.data ?? []) as Array<Record<string, unknown>>;
+      const rows = (secondary?.data ?? primary.data ?? []) as JournalRowDb[];
       if (cancelled) return;
-      const mapped: JournalRow[] = rows.map((r) => ({
-        id: String(r.id),
-        createdAt: (r.created_at as string | null) ?? undefined,
-        entryDate: (r.entry_date as string | null) ?? undefined,
-        time: String(r.entry_time ?? ""),
-        sym: String(r.symbol ?? ""),
-        setup: String(r.setup ?? "Other"),
-        r: String(r.r_value ?? ""),
-        tag: String(r.tag ?? "None"),
-        note: (r.note as string | null) ?? undefined,
-        chartLinkUrl: (r.chart_link_url as string | null) ?? undefined,
-        moodState: (r.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
-        followedPlan: Boolean(r.followed_plan),
-        respectedStop: Boolean(r.respected_stop),
-        noRevengeTrade: Boolean(r.no_revenge_trade),
-        sessionTag: (r.session_tag as string | null) ?? undefined,
-        marketCondition: (r.market_condition as string | null) ?? undefined,
-        lessonLearned: (r.lesson_learned as string | null) ?? undefined,
-        ruleChecks: r.rule_checks
-          ? Object.fromEntries(
-              Object.entries(r.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
-            )
-          : undefined,
-      }));
-      setAllAccountEntries(mapped);
+      setAllAccountEntries(rows.map(mapJournalRowFromDb));
     })();
     return () => {
       cancelled = true;
@@ -573,11 +556,17 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
   const stats = useMemo(() => computeTradingStats(filteredEntries, weeklyReflections), [filteredEntries, weeklyReflections]);
   const preferredMonthKey = useMemo(() => {
     if (filters.from && /^\d{4}-\d{2}-\d{2}$/.test(filters.from)) return filters.from.slice(0, 7);
-    return new Date().toISOString().slice(0, 7);
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   }, [filters.from]);
+  const monthlyReviewEntries = useMemo(
+    () =>
+      baseEntries.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt).slice(0, 7) === preferredMonthKey),
+    [baseEntries, preferredMonthKey],
+  );
   const monthlyReview = useMemo(
-    () => computeMonthlyReview(filteredEntries, monthlyFocusRows, preferredMonthKey),
-    [filteredEntries, monthlyFocusRows, preferredMonthKey],
+    () => computeMonthlyReview(monthlyReviewEntries, monthlyFocusRows, preferredMonthKey),
+    [monthlyReviewEntries, monthlyFocusRows, preferredMonthKey],
   );
 
   const netR = stats.cumulative.length > 0 ? stats.cumulative[stats.cumulative.length - 1]?.y ?? 0 : 0;
@@ -609,13 +598,6 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
 
   const bestBehavior = moodAverages[0] ?? null;
   const weakestBehavior = moodAverages[moodAverages.length - 1] ?? null;
-  const hasBehaviorInsights =
-    focusedAvg != null &&
-    calmAvg != null &&
-    followedPlanAvg != null &&
-    notFollowedPlanAvg != null &&
-    bestBehavior != null &&
-    weakestBehavior != null;
 
   const behaviorInsightHints = useMemo(() => {
     const labels = new Set(stats.correlationHints.map((h) => h.label));
@@ -685,18 +667,52 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
     return { adherence, mostBroken, breakCost, rows };
   }, [filteredEntries, personalRules]);
 
-  const sectionNavItems = useMemo(() => {
-    const items: Array<{ id: string; label: string }> = [
+  const sectionNavItems = useMemo(
+    () => [
       { id: "stats-summary", label: "Summary" },
       { id: "stats-performance", label: "Performance" },
       { id: "stats-behavior", label: "Behavior" },
       { id: "stats-patterns", label: "Patterns" },
-    ];
-    if (accountComparisonRows.length > 1) {
-      items.push({ id: "stats-accounts", label: "Accounts" });
+      { id: "stats-accounts", label: "Accounts" },
+    ],
+    [],
+  );
+
+  const [activeSection, setActiveSection] = useState(sectionNavItems[0]?.id ?? "stats-summary");
+  const scrollSpyEnabled = useRef(false);
+
+  const scrollToSection = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    scrollSpyEnabled.current = false;
+    setActiveSection(id);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      scrollSpyEnabled.current = true;
+    }, 700);
+  }, []);
+
+  useEffect(() => {
+    if (!ready || baseEntries.length === 0 || filteredEntries.length === 0) return;
+    scrollSpyEnabled.current = true;
+    const ids = sectionNavItems.map((item) => item.id);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!scrollSpyEnabled.current) return;
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        const top = visible[0]?.target.id;
+        if (top && ids.includes(top)) setActiveSection(top);
+      },
+      { rootMargin: "-18% 0px -58% 0px", threshold: [0, 0.12, 0.35, 0.6] },
+    );
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
     }
-    return items;
-  }, [accountComparisonRows.length]);
+    return () => observer.disconnect();
+  }, [ready, baseEntries.length, filteredEntries.length, sectionNavItems]);
 
   useEffect(() => {
     let cancelled = false;
@@ -729,10 +745,18 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         if (pnl < 0) bucket.losses += 1;
         const dayKey = row.entry_date ? String(row.entry_date) : row.created_at ? new Date(String(row.created_at)).toISOString().slice(0, 10) : null;
         if (dayKey) bucket.daySet.add(dayKey);
-        bucket.checksTotal += 3;
-        if (row.followed_plan) bucket.checksDone += 1;
-        if (row.respected_stop) bucket.checksDone += 1;
-        if (row.no_revenge_trade) bucket.checksDone += 1;
+        if (row.followed_plan != null) {
+          bucket.checksTotal += 1;
+          if (row.followed_plan) bucket.checksDone += 1;
+        }
+        if (row.respected_stop != null) {
+          bucket.checksTotal += 1;
+          if (row.respected_stop) bucket.checksDone += 1;
+        }
+        if (row.no_revenge_trade != null) {
+          bucket.checksTotal += 1;
+          if (row.no_revenge_trade) bucket.checksDone += 1;
+        }
       }
       setAccountComparisonRows(
         accountRows.map((account) => {
@@ -770,7 +794,14 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         { metric: "avg green day", value: stats.avgGreenDay ?? "" },
         { metric: "avg red day", value: stats.avgRedDay ?? "" },
         { metric: "best day", value: stats.bestDay ? `${stats.bestDay.date} (${stats.bestDay.pnl})` : "" },
-        { metric: "worst day", value: stats.worstDay ? `${stats.worstDay.date} (${stats.worstDay.pnl})` : "" },
+        {
+          metric: stats.worstDay ? "worst day" : "smallest green day",
+          value: stats.worstDay
+            ? `${stats.worstDay.date} (${stats.worstDay.pnl})`
+            : stats.smallestGreenDay
+              ? `${stats.smallestGreenDay.date} (${stats.smallestGreenDay.pnl})`
+              : "",
+        },
       ];
       const csv = recordsToCsv(
         [
@@ -876,23 +907,6 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         ) : null}
       </section>
 
-      {ready && filteredEntries.length > 0 ? (
-        <section className="sticky top-[4.75rem] z-20 -mx-1 sm:mx-0" aria-label="Stats section navigation">
-          <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[oklch(0.12_0.03_264/0.86)] px-2 py-2 backdrop-blur">
-            <div className="flex min-w-max items-center gap-1.5">
-              {sectionNavItems.map((item) => (
-                <a
-                  key={item.id}
-                  href={`#${item.id}`}
-                  className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[12px] text-zinc-300 transition hover:border-white/[0.16] hover:text-zinc-100"
-                >
-                  {item.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       {!ready ? (
         <div className="h-56 animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]" />
@@ -908,13 +922,46 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </Link>
           }
         />
-      ) : filteredEntries.length === 0 ? (
-        <EmptyState icon={CalendarDays} title="No results for current filters" description="Clear filters to reveal your full stats view." />
       ) : (
         <>
+          <section className="sticky top-[4.75rem] z-20 -mx-1 sm:mx-0" aria-label="Stats section navigation">
+            <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[oklch(0.12_0.03_264/0.92)] px-2 py-2 shadow-[0_12px_40px_-24px_rgba(0,0,0,0.85)] backdrop-blur-md">
+              <div className="flex min-w-max items-center gap-1.5" role="tablist" aria-label="Jump to stats section">
+                {sectionNavItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeSection === item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={cn(
+                      "rounded-lg border px-3 py-1.5 text-[12px] transition",
+                      activeSection === item.id
+                        ? "border-[oklch(0.58_0.12_252/0.45)] bg-[oklch(0.58_0.12_252/0.18)] text-zinc-50"
+                        : "border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:border-white/[0.16] hover:text-zinc-100",
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <MonthlyReviewCard
+            review={monthlyReview}
+            displayCurrency={displayCurrency}
+            storageKey={`blueveno:monthly-review:stats:${accountScope}:${monthlyReview.monthKey}`}
+            title="Monthly review report"
+          />
+
+          {filteredEntries.length === 0 ? (
+            <EmptyState icon={CalendarDays} title="No results for current filters" description="Clear filters to reveal your full stats view." />
+          ) : (
+            <>
           <section id="stats-summary" className="grid gap-5 scroll-mt-28 rounded-2xl border border-[oklch(0.52_0.12_252/0.18)] bg-[linear-gradient(165deg,oklch(0.14_0.038_262/0.94),oklch(0.09_0.03_266/0.92))] p-5 sm:p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] min-[460px]:grid-cols-2 lg:grid-cols-4" aria-label="Summary at a glance">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Net P&L</p>
+              <p className="app-metric-label">Net P&L</p>
               <p
                 className={cn(
                   "font-display mt-2 text-3xl tabular-nums tracking-[-0.03em]",
@@ -925,7 +972,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               </p>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Win / loss days</p>
+              <p className="app-metric-label">Win / loss days</p>
               <p className="font-display mt-2 text-3xl tabular-nums text-zinc-50">
                 {stats.winDays}
                 <span className="text-zinc-600"> · </span>
@@ -933,21 +980,15 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               </p>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Streak</p>
+              <p className="app-metric-label">Streak</p>
               <p className="mt-2 font-display text-lg leading-snug tracking-tight text-zinc-100">{stats.streakLabel}</p>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Trading days</p>
+              <p className="app-metric-label">Trading days</p>
               <p className="font-display mt-2 text-3xl tabular-nums text-zinc-50">{stats.dailyBars.length}</p>
             </div>
           </section>
 
-          <MonthlyReviewCard
-            review={monthlyReview}
-            displayCurrency={displayCurrency}
-            storageKey={`blueveno:monthly-review:stats:${accountScope}:${monthlyReview.monthKey}`}
-            title="Monthly review report"
-          />
 
           <section id="stats-performance" className="grid gap-4 scroll-mt-28 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2 xl:grid-cols-6" aria-label="Performance summary">
             {[
@@ -962,12 +1003,17 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               { label: "Max drawdown", value: fmtPnl(stats.maxDrawdown, displayCurrency), tone: stats.maxDrawdown ?? 0 },
               {
                 label: "Profit factor",
-                value: stats.profitFactor === null ? "No losing days" : Number.isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : "—",
+                value:
+                  stats.profitFactor === null
+                    ? "—"
+                    : Number.isFinite(stats.profitFactor)
+                      ? stats.profitFactor.toFixed(2)
+                      : "—",
                 tone: 0,
               },
             ].map((item) => (
               <div key={item.label} className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
+                <p className="app-metric-label">{item.label}</p>
                 <p className={cn("mt-1.5 font-display text-[1.2rem] tabular-nums", item.tone > 0 ? "text-emerald-200" : item.tone < 0 ? "text-rose-200" : "text-zinc-100")}>
                   {item.value}
                 </p>
@@ -998,13 +1044,75 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             <DashboardCard eyebrow="Discipline" title="Discipline score trend" description="Weekly score with reflection bonus.">
               <DisciplineTrend weekly={stats.weekly} weeklyReflections={weeklyReflections} />
               <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Weekly focus</p>
+                <p className="app-metric-label">Weekly focus</p>
                 <p className="mt-1.5 text-[12px] text-zinc-300">
                   Rule: {latestReviewRule?.trim() ? latestReviewRule : "No weekly rule saved yet."}
                 </p>
                 <p className="mt-1 text-[12px] text-zinc-400">
                   Confidence: {latestReviewConfidence ?? "—"}/5
                 </p>
+              </div>
+            </DashboardCard>
+          </section>
+
+          <section id="stats-behavior" className="scroll-mt-28" aria-label="Behavior insights">
+            <DashboardCard
+              eyebrow="Behavior insights"
+              title="How behavior links to your P&L"
+              description="Averages day P&L against mood tags and discipline toggles. Unavailable metrics show as — until enough labeled days exist."
+            >
+              {behaviorInsightBlockers.length > 0 ? (
+                <p className="mb-4 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[12px] text-zinc-400">
+                  Some comparisons need more labeled days in your current filter scope. Cards below still show what is available.
+                </p>
+              ) : null}
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {[
+                  { title: "Avg P&L on Focused days", value: focusedAvg },
+                  { title: "Avg P&L on Calm days", value: calmAvg },
+                  { title: "Avg P&L when followed plan", value: followedPlanAvg },
+                  { title: "Avg P&L when plan was not followed", value: notFollowedPlanAvg },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-xl border border-white/[0.07] bg-black/15 px-4 py-3.5">
+                    <p className="app-kicker">
+                      {item.title}
+                    </p>
+                    <p
+                      className={cn(
+                        "mt-2 font-display text-2xl tabular-nums tracking-[-0.03em]",
+                        item.value === null ? "text-zinc-500" : (item.value ?? 0) >= 0 ? "text-emerald-200" : "text-rose-200",
+                      )}
+                    >
+                      {fmtPnl(item.value, displayCurrency)}
+                    </p>
+                  </div>
+                ))}
+                <div className="rounded-xl border border-emerald-400/18 bg-emerald-500/[0.06] px-4 py-3.5">
+                  <p className="app-metric-label text-emerald-200/85">Best mood</p>
+                  <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-emerald-100">{bestBehavior?.state ?? "—"}</p>
+                  <p className="mt-1 text-[12px] text-zinc-400">
+                    {bestBehavior ? `${fmtPnl(bestBehavior.avg, displayCurrency)} · ${bestBehavior.sample} entries` : "—"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-rose-400/18 bg-rose-500/[0.06] px-4 py-3.5">
+                  <p className="app-metric-label text-rose-200/85">Weakest mood</p>
+                  <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-rose-100">{weakestBehavior?.state ?? "—"}</p>
+                  <p className="mt-1 text-[12px] text-zinc-400">
+                    {weakestBehavior ? `${fmtPnl(weakestBehavior.avg, displayCurrency)} · ${weakestBehavior.sample} entries` : "—"}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
+                  <p className="app-metric-label">Respected stop vs not</p>
+                  <p className="mt-2 text-[12px] text-zinc-300">
+                    {fmtPnl(stats.stopRespectedAvg, displayCurrency)} vs {fmtPnl(stats.stopNotRespectedAvg, displayCurrency)}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
+                  <p className="app-metric-label">No revenge vs revenge</p>
+                  <p className="mt-2 text-[12px] text-zinc-300">
+                    {fmtPnl(stats.noRevengeAvg, displayCurrency)} vs {fmtPnl(stats.revengeAvg, displayCurrency)}
+                  </p>
+                </div>
               </div>
             </DashboardCard>
           </section>
@@ -1031,13 +1139,13 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               </div>
             </DashboardCard>
             <DashboardCard eyebrow="Symbol performance" title="Ranked by contribution">
-              {stats.symbolPerformance.length === 0 ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
-                  Add symbol-tagged entries to see this view.
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {stats.symbolPerformance.slice(0, 8).map((row) => (
+              <div className="space-y-2">
+                {stats.symbolPerformance.length === 0 ? (
+                  <p className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[12px] text-zinc-500">
+                    No symbol-tagged entries in this scope — totals show as —.
+                  </p>
+                ) : (
+                  stats.symbolPerformance.slice(0, 8).map((row) => (
                     <div key={row.symbol} className="grid grid-cols-[1fr_auto] gap-3 rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5">
                       <div>
                         <p className="text-[13px] text-zinc-200">{row.symbol}</p>
@@ -1047,12 +1155,12 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                         {fmtPnl(row.totalPnl, displayCurrency)}
                       </p>
                     </div>
-                  ))}
-                  <p className="text-[12px] text-zinc-500">
-                    Best symbol: {stats.bestSymbol ?? "—"} · Most traded: {stats.mostTradedSymbol ?? "—"}
-                  </p>
-                </div>
-              )}
+                  ))
+                )}
+                <p className="text-[12px] text-zinc-500">
+                  Best symbol: {stats.bestSymbol ?? "—"} · Most traded: {stats.mostTradedSymbol ?? "—"}
+                </p>
+              </div>
             </DashboardCard>
           </section>
 
@@ -1066,7 +1174,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[32rem] border-collapse text-left text-[12px]" aria-label="Account comparison">
                     <thead>
-                      <tr className="border-b border-white/[0.1] font-mono text-[9px] uppercase tracking-[0.12em] text-zinc-500 sm:text-[10px] sm:tracking-[0.14em]">
+                      <tr className="border-b border-white/[0.1] app-kicker text-[11px]">
                         <th scope="col" className="min-w-[10rem] px-3 py-2.5 text-left font-medium">
                           Account
                         </th>
@@ -1100,7 +1208,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                           <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.winRate !== null ? `${row.winRate}%` : "—"}</td>
                           <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.tradedDays}</td>
                           <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">
-                            {row.disciplineScore !== null ? `${row.disciplineScore}%` : "—"}
+                            {formatDisciplineDisplay(row.disciplineScore)}
                           </td>
                         </tr>
                       ))}
@@ -1111,79 +1219,56 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             </DashboardCard>
           </section>
 
-          <section id="stats-behavior" className="scroll-mt-28" aria-label="Behavior insights">
-            <DashboardCard
-              eyebrow="Behavior insights"
-              title="How behavior links to your P&L"
-              description="Averages your day P&L against mood tags and discipline toggles. Each insight needs enough similar days to compare."
-            >
-              {!hasBehaviorInsights ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-7 text-left sm:px-6">
-                  <p className="font-display text-[1.05rem] tracking-[-0.02em] text-zinc-100 sm:text-[1.15rem]">
-                    This section fills in when the stats above have enough labeled days.
-                  </p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-zinc-400">
-                    You will see cards for Calm vs Focused days, following your plan vs not, best and weakest mood, and stop / revenge discipline — once the thresholds below are met for your current filters and account scope.
-                  </p>
-                  {behaviorInsightBlockers.length > 0 ? (
-                    <div className="mt-5">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Still needed</p>
-                      <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[13px] text-zinc-300">
-                        {behaviorInsightBlockers.map((line) => (
-                          <li key={line}>{line}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
+          <section id="stats-accounts" className="scroll-mt-28" aria-label="Account comparison">
+            <DashboardCard eyebrow="Accounts" title="Account comparison">
+              {accountComparisonRows.length <= 1 ? (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
+                  Add another account to compare performance.
                 </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {[
-                    { title: "Avg P&L on Focused days", value: focusedAvg },
-                    { title: "Avg P&L on Calm days", value: calmAvg },
-                    { title: "Avg P&L when followed plan", value: followedPlanAvg },
-                    { title: "Avg P&L when plan was not followed", value: notFollowedPlanAvg },
-                  ].map((item) => (
-                    <div key={item.title} className="rounded-xl border border-white/[0.07] bg-black/15 px-4 py-3.5">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-zinc-500 min-[480px]:text-[10px] min-[480px]:tracking-[0.16em]">
-                        {item.title}
-                      </p>
-                      <p
-                        className={cn(
-                          "mt-2 font-display text-2xl tabular-nums tracking-[-0.03em]",
-                          (item.value ?? 0) >= 0 ? "text-emerald-200" : "text-rose-200",
-                        )}
-                      >
-                        {fmtPnl(item.value, displayCurrency)}
-                      </p>
-                    </div>
-                  ))}
-                  <div className="rounded-xl border border-emerald-400/18 bg-emerald-500/[0.06] px-4 py-3.5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-200/75">Best mood</p>
-                    <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-emerald-100">{bestBehavior?.state ?? "—"}</p>
-                    <p className="mt-1 text-[12px] text-zinc-400">
-                      {bestBehavior ? `${fmtPnl(bestBehavior.avg, displayCurrency)} · ${bestBehavior.sample} entries` : ""}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-rose-400/18 bg-rose-500/[0.06] px-4 py-3.5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-rose-200/75">Weakest mood</p>
-                    <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-rose-100">{weakestBehavior?.state ?? "—"}</p>
-                    <p className="mt-1 text-[12px] text-zinc-400">
-                      {weakestBehavior ? `${fmtPnl(weakestBehavior.avg, displayCurrency)} · ${weakestBehavior.sample} entries` : ""}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Respected stop vs not</p>
-                    <p className="mt-2 text-[12px] text-zinc-300">
-                      {fmtPnl(stats.stopRespectedAvg, displayCurrency)} vs {fmtPnl(stats.stopNotRespectedAvg, displayCurrency)}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">No revenge vs revenge</p>
-                    <p className="mt-2 text-[12px] text-zinc-300">
-                      {fmtPnl(stats.noRevengeAvg, displayCurrency)} vs {fmtPnl(stats.revengeAvg, displayCurrency)}
-                    </p>
-                  </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[32rem] border-collapse text-left text-[12px]" aria-label="Account comparison">
+                    <thead>
+                      <tr className="border-b border-white/[0.1] app-kicker text-[11px]">
+                        <th scope="col" className="min-w-[10rem] px-3 py-2.5 text-left font-medium">
+                          Account
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Net profit and loss across all journal entries for this account">
+                          Net P&amp;L
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Winning trades as a percent of winning plus losing trades (breakevens excluded)">
+                          Trade win
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Number of distinct trading days with at least one entry">
+                          Traded days
+                        </th>
+                        <th scope="col" className="whitespace-nowrap px-3 py-2.5 text-left font-medium" title="Share of plan, stop, and no-revenge checks marked true across entries">
+                          Discipline
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {accountComparisonRows.map((row) => (
+                        <tr key={row.id} className="border-b border-white/[0.06] transition-colors last:border-b-0 hover:bg-white/[0.03]">
+                          <td className="max-w-[14rem] px-3 py-2.5 align-middle">
+                            <p className="truncate text-zinc-200">
+                              {row.name} <span className="text-zinc-500">({row.type})</span>
+                            </p>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums">
+                            <span className={cn(row.pnl > 0 ? "text-emerald-200" : row.pnl < 0 ? "text-rose-200" : "text-zinc-300")}>
+                              {fmtPnl(row.pnl, displayCurrency)}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.winRate !== null ? `${row.winRate}%` : "—"}</td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">{row.tradedDays}</td>
+                          <td className="whitespace-nowrap px-3 py-2.5 align-middle tabular-nums text-zinc-300">
+                            {formatDisciplineDisplay(row.disciplineScore)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </DashboardCard>
@@ -1199,15 +1284,15 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                 <div className="space-y-3">
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Rule adherence</p>
+                      <p className="app-metric-label">Rule adherence</p>
                       <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.adherence !== null ? `${rulesAnalytics.adherence}%` : "—"}</p>
                     </div>
                     <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Most broken rule</p>
+                      <p className="app-metric-label">Most broken rule</p>
                       <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.mostBroken ?? "—"}</p>
                     </div>
                     <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Rule break cost</p>
+                      <p className="app-metric-label">Rule break cost</p>
                       <p className={cn("mt-1.5 text-[13px] tabular-nums", (rulesAnalytics.breakCost ?? 0) <= 0 ? "text-rose-200" : "text-emerald-200")}>
                         {fmtPnl(rulesAnalytics.breakCost, displayCurrency)}
                       </p>
@@ -1227,6 +1312,8 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               )}
             </DashboardCard>
           </section>
+            </>
+          )}
         </>
       )}
     </div>

@@ -9,9 +9,11 @@ import { PageHeader } from "@/components/app/page-header";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { buildDayAgg, signedMoney } from "@/lib/user-data/journal-metrics";
+import { formatDisciplinePercent } from "@/lib/user-data/discipline-stats";
+import { entryDisciplineFraction } from "@/lib/user-data/stats-display";
 import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
-import { appSecondaryCta } from "@/lib/ui/app-surface";
+import { appCardPrimary, appCardSecondary, appKicker, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,6 +21,7 @@ type Props = {
   userId: string;
   email: string;
   initialWorkspace: UserWorkspaceSnapshot;
+  userTimezone?: string | null;
 };
 
 function formatDayLabel(dayKey: string) {
@@ -51,7 +54,7 @@ function formatStreakLabel(raw: string): string {
   return raw;
 }
 
-export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
+export function OverviewDashboard({ userId, email, initialWorkspace, userTimezone }: Props) {
   const { displayCurrency } = useAccess();
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
   const [weeklyReviewStatus, setWeeklyReviewStatus] = useState<{
@@ -65,9 +68,10 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
       getOverviewStats({
         entries: data.journal,
         activeAccountId,
+        timezone: userTimezone,
         currency: displayCurrency,
       }),
-    [data.journal, activeAccountId, displayCurrency],
+    [data.journal, activeAccountId, userTimezone, displayCurrency],
   );
   const dayAggMap = useMemo(() => new Map(dayAgg.map((item) => [item.key, item.pnl])), [dayAgg]);
 
@@ -113,14 +117,12 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
       })
       .slice(0, 6)
       .map((row) => {
-        const checks = [row.followedPlan, row.respectedStop, row.noRevengeTrade];
-        const disciplineScore = checks.filter(Boolean).length;
         return {
           id: row.id,
           dayLabel: formatDayLabel(row.entryDate ?? (row.createdAt ? new Date(row.createdAt).toISOString().slice(0, 10) : "1970-01-01")),
           pnl: parsePnlAmount(row.r) ?? 0,
           mood: row.moodState ?? "Calm",
-          discipline: `${disciplineScore}/3`,
+          discipline: entryDisciplineFraction(row),
         };
       });
   }, [data.journal]);
@@ -130,53 +132,81 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
       getBehaviorInsights({
         entries: data.journal,
         activeAccountId,
+        timezone: userTimezone,
         currency: displayCurrency,
       }),
-    [data.journal, activeAccountId, displayCurrency],
+    [data.journal, activeAccountId, userTimezone, displayCurrency],
   );
 
   const hasEntries = data.journal.length > 0;
   const noLosingDays = overviewStats.losingDays === 0;
   const lossMetricLabel = noLosingDays ? "Smallest green day" : "Worst day";
   const lossMetricValue = noLosingDays ? overviewStats.smallestGreenDay : overviewStats.worstLossDay;
+  const greenRedLabel = hasEntries
+    ? `${overviewStats.winningDays} green · ${overviewStats.losingDays} red`
+    : "—";
+
+  const primaryKpis = [
+    {
+      label: "Week P&L",
+      value: hasEntries ? signedMoney(overviewStats.weekPnl, displayCurrency) : "—",
+      tone: hasEntries ? overviewStats.weekPnl : 0,
+    },
+    {
+      label: "Month P&L",
+      value: hasEntries ? signedMoney(overviewStats.monthPnl, displayCurrency) : "—",
+      tone: hasEntries ? overviewStats.monthPnl : 0,
+    },
+    {
+      label: "Win rate",
+      value: hasEntries ? percentOrDash(overviewStats.winRate) : "—",
+      tone: 0,
+    },
+    {
+      label: "Discipline score",
+      value: hasEntries ? formatDisciplinePercent(overviewStats.disciplineScore) : "—",
+      tone: 0,
+    },
+  ];
+
   const secondaryKpis = [
-    { label: "Traded days", value: hasEntries ? String(overviewStats.tradedDays) : "—", tone: 0 },
+    { label: "Traded days", value: hasEntries ? String(overviewStats.tradedDays) : "—", tone: 0 as const },
     {
       label: "Average day",
       value: hasEntries ? moneyOrDash(overviewStats.averageDay, displayCurrency) : "—",
-      tone: hasEntries ? (overviewStats.averageDay ?? 0) : 0,
+      tone: (hasEntries ? (overviewStats.averageDay ?? 0) : 0) as number,
     },
     {
       label: "Best day",
       value: hasEntries ? moneyOrDash(overviewStats.bestDay, displayCurrency) : "—",
-      tone: hasEntries ? (overviewStats.bestDay ?? 0) : 0,
+      tone: (hasEntries ? (overviewStats.bestDay ?? 0) : 0) as number,
     },
     {
       label: lossMetricLabel,
       value: hasEntries ? moneyOrDash(lossMetricValue, displayCurrency) : "—",
-      tone: hasEntries ? (lossMetricValue ?? 0) : 0,
+      tone: (hasEntries ? (lossMetricValue ?? 0) : 0) as number,
     },
     {
       label: "Avg green day",
       value: hasEntries ? moneyOrDash(overviewStats.avgGreenDay, displayCurrency) : "—",
-      tone: hasEntries ? (overviewStats.avgGreenDay ?? 0) : 0,
+      tone: (hasEntries ? (overviewStats.avgGreenDay ?? 0) : 0) as number,
     },
     {
       label: "Avg red day",
       value: hasEntries ? moneyOrDash(overviewStats.avgRedDay, displayCurrency) : "—",
-      tone: hasEntries ? (overviewStats.avgRedDay ?? 0) : 0,
+      tone: (hasEntries ? (overviewStats.avgRedDay ?? 0) : 0) as number,
     },
-    { label: "Green / red days", value: hasEntries ? overviewStats.greenRedSummary : "—", tone: 0 },
+    { label: "Green / red days", value: greenRedLabel, tone: 0 as const },
     {
       label: "Streak",
       value: hasEntries ? formatStreakLabel(overviewStats.streak) : "—",
-      tone: hasEntries
+      tone: (hasEntries
         ? overviewStats.streak.includes("green")
           ? 1
           : overviewStats.streak.includes("red")
             ? -1
             : 0
-        : 0,
+        : 0) as number,
     },
   ];
 
@@ -230,43 +260,31 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         }
       />
 
-      <section className="space-y-4" aria-label="Overview KPIs">
+      <section className="space-y-3" aria-label="Overview KPIs">
         {!ready ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-[7.25rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]"
-              />
-            ))}
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-[8.5rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]"
+                />
+              ))}
+            </div>
+            <div className="h-28 animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02]" />
           </div>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                {
-                  label: "Week P&L",
-                  value: hasEntries ? signedMoney(overviewStats.weekPnl, displayCurrency) : "—",
-                  tone: hasEntries ? overviewStats.weekPnl : 0,
-                },
-                {
-                  label: "Month P&L",
-                  value: hasEntries ? signedMoney(overviewStats.monthPnl, displayCurrency) : "—",
-                  tone: hasEntries ? overviewStats.monthPnl : 0,
-                },
-                { label: "Trade win rate", value: hasEntries ? percentOrDash(overviewStats.winRate) : "—", tone: 0 },
-                { label: "Discipline score", value: hasEntries ? percentOrDash(overviewStats.disciplineScore) : "—", tone: 0 },
-              ].map((card) => (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {primaryKpis.map((card) => (
                 <div
                   key={card.label}
-                  className={cn(
-                    "rounded-2xl border border-[oklch(0.58_0.1_252/0.3)] bg-[linear-gradient(155deg,oklch(0.2_0.05_258/0.95),oklch(0.105_0.03_264/0.95))] p-5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08),0_28px_50px_-32px_oklch(0.5_0.14_252/0.6)] ring-1 ring-[oklch(0.6_0.1_252/0.16)]",
-                  )}
+                  className={cn(appCardPrimary, "px-5 py-5 sm:px-6 sm:py-6")}
                 >
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400">{card.label}</p>
+                  <p className={appMetricLabel}>{card.label}</p>
                   <p
                     className={cn(
-                      "font-display mt-2 text-[1.45rem] tabular-nums leading-none tracking-[-0.03em] sm:text-[1.65rem]",
+                      "font-display mt-2.5 text-[1.75rem] tabular-nums leading-none tracking-[-0.035em] sm:text-[2rem]",
                       card.tone > 0 && "text-emerald-200",
                       card.tone < 0 && "text-rose-200",
                       card.tone === 0 && "text-zinc-50",
@@ -278,33 +296,32 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
               ))}
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-              {secondaryKpis.map((card) => (
-                <div
-                  key={card.label}
-                  className={cn(
-                    "rounded-xl border border-white/[0.08] bg-[linear-gradient(160deg,oklch(0.13_0.03_262/0.94),oklch(0.09_0.025_266/0.94))] px-3.5 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)]",
-                    card.label === "Streak" &&
-                      (card.tone > 0
-                        ? "border-emerald-400/25"
-                        : card.tone < 0
-                          ? "border-rose-400/25"
-                          : "border-[oklch(0.58_0.1_252/0.25)]"),
-                  )}
-                >
-                  <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-zinc-500">{card.label}</p>
-                  <p
+            <div className={cn(appCardSecondary, "px-4 py-4 sm:px-5 sm:py-4")}>
+              <p className={cn(appKicker, "mb-3")}>Day breakdown</p>
+              <div className="grid gap-x-5 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
+                {secondaryKpis.map((card) => (
+                  <div
+                    key={card.label}
                     className={cn(
-                      "mt-1.5 text-[13px] font-semibold tabular-nums",
-                      card.tone > 0 && "text-emerald-200",
-                      card.tone < 0 && "text-rose-200",
-                      card.tone === 0 && "text-zinc-200",
+                      "min-w-0 border-t border-white/[0.06] pt-3 first:border-t-0 first:pt-0 sm:border-t-0 sm:pt-0",
+                      card.label === "Streak" && card.tone > 0 && "sm:rounded-lg sm:bg-emerald-500/[0.06] sm:px-2 sm:py-1.5",
+                      card.label === "Streak" && card.tone < 0 && "sm:rounded-lg sm:bg-rose-500/[0.06] sm:px-2 sm:py-1.5",
                     )}
                   >
-                    {card.value}
-                  </p>
-                </div>
-              ))}
+                    <p className={appKicker}>{card.label}</p>
+                    <p
+                      className={cn(
+                        "mt-0.5 truncate text-[15px] font-semibold tabular-nums leading-snug",
+                        card.tone > 0 && "text-emerald-200/95",
+                        card.tone < 0 && "text-rose-200/95",
+                        card.tone === 0 && "text-zinc-200",
+                      )}
+                    >
+                      {card.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         )}
@@ -327,7 +344,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                     : "border-white/[0.1] bg-white/[0.03] text-zinc-300";
               return (
                 <div key={cell.key} className={cn("rounded-xl border p-2 text-center sm:p-2.5", tone)}>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-80">{cell.label}</p>
+                  <p className="text-[10px] font-medium text-zinc-400 opacity-90">{cell.label}</p>
                   <p className="mt-1 text-[12px] font-semibold tabular-nums sm:text-sm">{cell.day}</p>
                   <p className="mt-1 text-[10px] tabular-nums sm:text-[11px]">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
                 </div>
@@ -335,7 +352,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
             })}
           </div>
           <div className="mt-4 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Weekly total</p>
+            <p className="text-[11px] font-medium text-zinc-500">Weekly total</p>
             <p
               className={cn(
                 "font-display text-lg tabular-nums tracking-[-0.02em]",
@@ -379,7 +396,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                   <p className="rounded-md border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[12px] text-zinc-300">
                     {item.mood}
                   </p>
-                  <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-400">{item.discipline}</p>
+                  <p className="text-[11px] text-zinc-500">{item.discipline}</p>
                   </div>
                 </div>
               ))}
@@ -396,9 +413,9 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         >
           {behaviorInsights.length === 0 ? (
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-6 text-sm text-zinc-500">
-              <p>Add a few trading days to unlock performance and behavior patterns.</p>
+              <p>Log a few more trading days to unlock behavior insights.</p>
               <Link href="/app/journal#add" className="mt-3 inline-flex text-[12px] text-[oklch(0.78_0.11_252)] hover:underline">
-                Log the day
+                Log a trading day
               </Link>
             </div>
           ) : (
@@ -408,8 +425,8 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
                   key={insight.title}
                   className="rounded-xl border border-[oklch(0.58_0.1_252/0.2)] bg-[linear-gradient(160deg,oklch(0.15_0.04_260/0.85),oklch(0.095_0.03_264/0.9))] px-4 py-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]"
                 >
-                  <p className="text-[13px] font-medium text-zinc-100">{insight.title}</p>
-                  <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-300">{insight.detail}</p>
+                  <p className="text-[14px] font-medium leading-snug text-zinc-100">{insight.title}</p>
+                  <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-400">{insight.detail}</p>
                 </div>
               ))}
             </div>
@@ -418,7 +435,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
         <DashboardCard eyebrow="Weekly review" title="Current week">
           <div className="space-y-3">
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Status</p>
+              <p className="text-[11px] font-medium text-zinc-500">Status</p>
               <p className="mt-1.5 text-[13px] text-zinc-100">
                 {weeklyReviewStatus.status === "saved"
                   ? "Reflection saved"
@@ -428,7 +445,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
               </p>
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Next focus</p>
+              <p className="text-[11px] font-medium text-zinc-500">Next focus</p>
               <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-300">
                 {weeklyReviewStatus.nextFocus ?? "Not set yet."}
               </p>
@@ -464,7 +481,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace }: Props) {
           <div className="mt-4">
             <Link
               href="/app/settings/billing"
-              className="inline-flex items-center gap-1 text-[12px] font-medium uppercase tracking-[0.14em] text-[oklch(0.78_0.11_252)]"
+              className="inline-flex items-center gap-1 text-[13px] font-medium text-[oklch(0.78_0.11_252)]"
             >
               Plan & access
               <ArrowUpRight className="size-3.5" />

@@ -60,7 +60,7 @@ export default async function BillingSettingsPage() {
         >
           <div className="relative">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-300">Access state</span>
+              <span className="rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1 text-[12px] font-medium text-zinc-300">Access state</span>
               {isTrial ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-200">
                   Trial active
@@ -86,22 +86,22 @@ export default async function BillingSettingsPage() {
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Current state</p>
+                <p className="app-metric-label">Current state</p>
                 <p className="mt-1.5 text-[14px] text-zinc-100">
                   {isAdminUser ? "Admin" : isPremium ? "Premium" : isTrial ? "Trial active" : "Read-only"}
                 </p>
               </div>
               <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Account limit</p>
+                <p className="app-metric-label">Account limit</p>
                 <p className="mt-1.5 text-[14px] text-zinc-100">{isAdminUser || isPremium ? "Up to 5 accounts" : "1 account during trial"}</p>
               </div>
               <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Premium monthly</p>
+                <p className="app-metric-label">Premium monthly</p>
                 <p className="mt-1.5 text-[14px] text-zinc-100">€8.99 / month</p>
               </div>
               {trialEndLabel ? (
                 <div className="rounded-xl border border-white/[0.1] bg-white/[0.03] px-4 py-3">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Trial end</p>
+                  <p className="app-metric-label">Trial end</p>
                   <p className="mt-1.5 text-[14px] text-zinc-100">{trialEndLabel}</p>
                 </div>
               ) : null}
@@ -156,7 +156,7 @@ export default async function BillingSettingsPage() {
         </div>
 
         <aside className="space-y-4 rounded-2xl border border-white/[0.08] bg-black/20 p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Premium includes</p>
+          <p className="app-metric-label">Premium includes</p>
           <ul className="space-y-3 text-[13px] text-zinc-400">
             {PREMIUM_INCLUDES.map((line) => (
               <li key={line} className="flex gap-2">

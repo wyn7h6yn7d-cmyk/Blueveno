@@ -45,7 +45,7 @@ export function WorkspaceSessionClock({ serverTimeZone }: Props) {
           "bg-white/[0.04] px-1.5 py-0.5 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:px-2.5 sm:py-1 sm:max-w-none",
         )}
       >
-        <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-zinc-500 sm:text-[9px] sm:tracking-[0.2em]">
+        <span className="app-kicker">
           Session
         </span>
         <span className="min-w-0 truncate text-[11px] text-zinc-400 sm:text-[12px]">

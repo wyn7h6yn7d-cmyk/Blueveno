@@ -7,6 +7,7 @@ import { CalendarDays } from "lucide-react";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { EmptyState } from "@/components/app/empty-state";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
+import { mapJournalRowFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { useAccess } from "@/components/access/access-provider";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
@@ -117,33 +118,9 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
               .order("created_at", { ascending: false })
           : null;
 
-      const rows = (secondary?.data ?? primary.data ?? []) as Array<Record<string, unknown>>;
+      const rows = (secondary?.data ?? primary.data ?? []) as JournalRowDb[];
       if (cancelled) return;
-      const mapped: JournalRow[] = rows.map((r) => ({
-        id: String(r.id),
-        createdAt: (r.created_at as string | null) ?? undefined,
-        entryDate: (r.entry_date as string | null) ?? undefined,
-        time: String(r.entry_time ?? ""),
-        sym: String(r.symbol ?? ""),
-        setup: String(r.setup ?? "Other"),
-        r: String(r.r_value ?? ""),
-        tag: String(r.tag ?? "None"),
-        note: (r.note as string | null) ?? undefined,
-        chartLinkUrl: (r.chart_link_url as string | null) ?? undefined,
-        moodState: (r.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
-        followedPlan: Boolean(r.followed_plan),
-        respectedStop: Boolean(r.respected_stop),
-        noRevengeTrade: Boolean(r.no_revenge_trade),
-        sessionTag: (r.session_tag as string | null) ?? undefined,
-        marketCondition: (r.market_condition as string | null) ?? undefined,
-        lessonLearned: (r.lesson_learned as string | null) ?? undefined,
-        ruleChecks: r.rule_checks
-          ? Object.fromEntries(
-              Object.entries(r.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
-            )
-          : undefined,
-      }));
-      setAllAccountEntries(mapped);
+      setAllAccountEntries(rows.map(mapJournalRowFromDb));
     })();
     return () => {
       cancelled = true;

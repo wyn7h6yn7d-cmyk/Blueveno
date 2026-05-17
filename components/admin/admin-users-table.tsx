@@ -171,22 +171,22 @@ export function AdminUsersTable({ users }: Props) {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.12_0.03_264/0.82),oklch(0.09_0.03_266/0.88))] p-4">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Overview metrics</p>
+        <p className="app-metric-label">Overview metrics</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Total users</p>
+            <p className="app-metric-label">Total users</p>
             <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{users.length}</p>
           </div>
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Premium users</p>
+            <p className="app-metric-label">Premium users</p>
             <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.premium}</p>
           </div>
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Read-only + disabled</p>
+            <p className="app-metric-label">Read-only + disabled</p>
             <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.readOnly + summary.disabled}</p>
           </div>
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">New users (7d)</p>
+            <p className="app-metric-label">New users (7d)</p>
             <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.newUsers}</p>
           </div>
         </div>
@@ -202,7 +202,7 @@ export function AdminUsersTable({ users }: Props) {
 
       <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] bg-black/20 p-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Filters</span>
+          <span className="app-metric-label">Filters</span>
           {stateFilter !== "all" ? (
             <span className="rounded-md border border-[oklch(0.58_0.11_252/0.35)] bg-[oklch(0.58_0.11_252/0.12)] px-2 py-0.5 text-[11px] text-zinc-200">
               {stateFilter.replace("_", " ")}
@@ -245,7 +245,7 @@ export function AdminUsersTable({ users }: Props) {
       <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.11_0.035_264/0.92),oklch(0.085_0.03_266/0.94))] shadow-[0_24px_64px_-40px_rgba(0,0,0,0.75)]">
         <table className="w-full min-w-[1360px] border-collapse text-left text-[13px]">
           <thead>
-            <tr className="border-b border-white/[0.08] bg-black/20 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+            <tr className="border-b border-white/[0.08] bg-black/20 app-metric-label">
               <th className="px-4 py-3.5">Email</th>
               <th className="px-4 py-3.5">Display name</th>
               <th className="px-4 py-3.5">Role</th>
@@ -485,52 +485,52 @@ export function AdminUsersTable({ users }: Props) {
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Display name</p>
+                <p className="app-metric-label">Display name</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{detailsUser.display_name ?? "—"}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Access state</p>
+                <p className="app-metric-label">Access state</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{detailsUser.access_state}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Role</p>
+                <p className="app-metric-label">Role</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{detailsUser.is_admin ? "Admin" : "User"}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Trial ends</p>
+                <p className="app-metric-label">Trial ends</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{formatDate(detailsUser.trial_ends_at)}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Premium status</p>
+                <p className="app-metric-label">Premium status</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{premiumActive(detailsUser) ? "Active" : "Inactive"}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Premium ends</p>
+                <p className="app-metric-label">Premium ends</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{formatDate(detailsUser.premium_ends_at)}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Accounts</p>
+                <p className="app-metric-label">Accounts</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{detailsUser.account_count}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Entries</p>
+                <p className="app-metric-label">Entries</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{detailsUser.journal_entry_count}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Last active</p>
+                <p className="app-metric-label">Last active</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{formatDateTime(detailsUser.last_active_at)}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Created at</p>
+                <p className="app-metric-label">Created at</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{formatDateTime(detailsUser.created_at)}</p>
               </div>
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Premium granted at</p>
+                <p className="app-metric-label">Premium granted at</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{formatDateTime(detailsUser.premium_granted_at)}</p>
               </div>
             </div>
             <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Trading accounts</p>
+              <p className="app-metric-label">Trading accounts</p>
               {detailsUser.trading_accounts.length === 0 ? (
                 <p className="mt-2 text-[12px] text-zinc-500">No trading accounts.</p>
               ) : (
@@ -544,7 +544,7 @@ export function AdminUsersTable({ users }: Props) {
               )}
             </div>
             <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Recent activity</p>
+              <p className="app-metric-label">Recent activity</p>
               {detailsUser.recent_activity.length > 0 ? (
                 <ul className="mt-2 space-y-1 text-[12px] text-zinc-300">
                   {detailsUser.recent_activity.map((line) => (
@@ -556,7 +556,7 @@ export function AdminUsersTable({ users }: Props) {
               )}
             </div>
             <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Internal admin notes</p>
+              <p className="app-metric-label">Internal admin notes</p>
               <div className="mt-2 space-y-2">
                 <textarea
                   value={internalNote}

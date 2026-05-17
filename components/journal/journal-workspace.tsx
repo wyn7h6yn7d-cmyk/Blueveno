@@ -218,18 +218,16 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   }, [filters, pathname, router, searchParams]);
 
   const filteredRows = useMemo(() => applyEntryFilters(sortedRows, filters), [sortedRows, filters]);
-
-  const latestEntriesToday = useMemo(() => {
-    const todayKey = toDayKey(new Date());
-    return filteredRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === todayKey);
-  }, [filteredRows]);
+  const filtersActive = hasActiveFilters(filters);
 
   const rowsForLatestEntries = useMemo(() => {
     if (highlightDate) {
       return filteredRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === highlightDate);
     }
-    return latestEntriesToday;
-  }, [filteredRows, latestEntriesToday, highlightDate]);
+    return [...filteredRows]
+      .sort((a, b) => dayKeyFromRow(b.entryDate, b.createdAt).localeCompare(dayKeyFromRow(a.entryDate, a.createdAt)))
+      .slice(0, 8);
+  }, [filteredRows, highlightDate]);
 
   const symbolOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.sym), [sortedRows]);
   const moodOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.moodState), [sortedRows]);
@@ -556,7 +554,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         >
           <form id="add" onSubmit={onQuickAdd} className="space-y-5">
             <div className="space-y-3.5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">1. Result</p>
+              <p className="text-[12px] font-medium text-zinc-400">1. Result</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="jw-date" className={labelCls}>
@@ -611,10 +609,85 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </div>
             </div>
 
+            <div className="space-y-3.5 rounded-xl border border-[oklch(0.52_0.12_252/0.22)] bg-[linear-gradient(168deg,oklch(0.11_0.04_264/0.55),oklch(0.07_0.03_268/0.4))] p-4 sm:p-5">
+              <div>
+                <p className="text-[12px] font-medium text-zinc-300">2. Behavior</p>
+                <p className="mt-0.5 text-[11px] text-zinc-500">Mood and discipline — quick taps before you save.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,9.5rem)_1fr] sm:items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="jw-mood" className={labelCls}>
+                    Mood
+                  </Label>
+                  <select
+                    id="jw-mood"
+                    value={moodState}
+                    onChange={(e) => setMoodState(e.target.value as "" | (typeof MOOD_OPTIONS)[number])}
+                    disabled={!canWriteJournal}
+                    className={cn(inputCls, "h-10 w-full rounded-xl px-3.5 text-[14px] disabled:opacity-45")}
+                  >
+                    <option value="">Choose mood</option>
+                    {MOOD_OPTIONS.map((m) => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {[
+                    { id: "plan", label: "Followed plan", checked: followedPlan, set: setFollowedPlan },
+                    { id: "stop", label: "Respected stop", checked: respectedStop, set: setRespectedStop },
+                    { id: "revenge", label: "No revenge", checked: noRevengeTrade, set: setNoRevengeTrade },
+                  ].map((c) => (
+                    <label
+                      key={c.id}
+                      className="flex items-center gap-2 rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-2 text-[12px] text-zinc-300"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={c.checked}
+                        onChange={(e) => c.set(e.target.checked)}
+                        disabled={!canWriteJournal}
+                        className="size-3.5 rounded border-white/[0.2] bg-transparent"
+                      />
+                      {c.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {personalRules.length > 0 ? (
+                <div className="space-y-2 border-t border-white/[0.06] pt-3">
+                  <p className="text-[11px] font-medium text-zinc-500">Your active rules</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {personalRules.map((rule) => (
+                      <label
+                        key={rule.id}
+                        className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-[12px] text-zinc-300"
+                      >
+                        <span className="truncate">{rule.title}</span>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(ruleChecks[rule.id])}
+                          onChange={(e) => setRuleChecks((prev) => ({ ...prev, [rule.id]: e.target.checked }))}
+                          disabled={!canWriteJournal}
+                          className="size-3.5 rounded border-white/[0.2] bg-transparent"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <details>
-                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  2. Context (optional)
+              <details className="group">
+                <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-500 marker:content-none [&::-webkit-details-marker]:hidden">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="text-zinc-600 transition group-open:rotate-90">›</span>
+                    3. Context
+                    <span className="font-normal text-zinc-600">optional</span>
+                  </span>
                 </summary>
                 <div className="mt-3.5 grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -697,80 +770,15 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </details>
             </div>
 
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <details>
-                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  3. Behavior (optional)
-                </summary>
-                <div className="mt-3 space-y-2">
-                <Label htmlFor="jw-mood" className={labelCls}>
-                  Mood
-                </Label>
-                <select
-                  id="jw-mood"
-                  value={moodState}
-                  onChange={(e) => setMoodState(e.target.value as "" | (typeof MOOD_OPTIONS)[number])}
-                  disabled={!canWriteJournal}
-                  className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
-                >
-                  <option value="">Choose mood (optional)</option>
-                  {MOOD_OPTIONS.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {[
-                  { id: "plan", label: "Followed my plan", checked: followedPlan, set: setFollowedPlan },
-                  { id: "stop", label: "Respected my stop", checked: respectedStop, set: setRespectedStop },
-                  { id: "revenge", label: "No revenge trade", checked: noRevengeTrade, set: setNoRevengeTrade },
-                ].map((c) => (
-                  <label
-                    key={c.id}
-                    className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-[13px] text-zinc-300"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={c.checked}
-                      onChange={(e) => c.set(e.target.checked)}
-                      disabled={!canWriteJournal}
-                      className="size-4 rounded border-white/[0.2] bg-transparent"
-                    />
-                    {c.label}
-                  </label>
-                ))}
-              </div>
-              {personalRules.length > 0 ? (
-                <div className="space-y-2 pt-1">
-                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Active rules</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {personalRules.map((rule) => (
-                      <label
-                        key={rule.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-[12px] text-zinc-300"
-                      >
-                        <span className="truncate">{rule.title}</span>
-                        <input
-                          type="checkbox"
-                          checked={Boolean(ruleChecks[rule.id])}
-                          onChange={(e) => setRuleChecks((prev) => ({ ...prev, [rule.id]: e.target.checked }))}
-                          disabled={!canWriteJournal}
-                          className="size-4 rounded border-white/[0.2] bg-transparent"
-                        />
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              </details>
-            </div>
 
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
-              <details>
-                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  4. Review (optional)
+              <details className="group">
+                <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-500 marker:content-none [&::-webkit-details-marker]:hidden">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="text-zinc-600 transition group-open:rotate-90">›</span>
+                    4. Review
+                    <span className="font-normal text-zinc-600">optional</span>
+                  </span>
                 </summary>
                 <div className="mt-3.5 space-y-2">
                 <Label htmlFor="jw-note" className={labelCls}>
@@ -809,10 +817,14 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </details>
             </div>
 
-            <div className="rounded-xl border border-[oklch(0.52_0.12_252/0.2)] bg-[linear-gradient(168deg,oklch(0.1_0.04_264/0.5),oklch(0.06_0.03_268/0.45))] p-4 sm:p-5">
-              <details>
-                <summary className="cursor-pointer list-none font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400">
-                  5. Chart link (optional)
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:p-5">
+              <details className="group">
+                <summary className="cursor-pointer list-none text-[12px] font-medium text-zinc-500 marker:content-none [&::-webkit-details-marker]:hidden">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="text-zinc-600 transition group-open:rotate-90">›</span>
+                    5. Chart link
+                    <span className="font-normal text-zinc-600">optional</span>
+                  </span>
                 </summary>
                 <div className="mt-3 flex items-start gap-3">
                 <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] text-[oklch(0.74_0.11_252)]">
@@ -872,9 +884,33 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           description={
             highlightDate
               ? "All trades logged for this calendar day, including full notes."
-              : "Latest logged days with mood and discipline score."
+              : "Recent logged days with mood and discipline score (up to 8)."
           }
         >
+          {filtersActive ? (
+            <div className="mb-3 rounded-lg border border-[oklch(0.58_0.12_252/0.3)] bg-[oklch(0.58_0.12_252/0.1)] px-3 py-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[11px] font-medium text-zinc-400">Active filters</p>
+                <button
+                  type="button"
+                  onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
+                  className="text-[11px] font-medium text-[oklch(0.78_0.11_252)] hover:underline"
+                >
+                  Clear filters
+                </button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {filterChips(filters).map((chip) => (
+                  <span
+                    key={chip}
+                    className="rounded-full border border-[oklch(0.58_0.12_252/0.4)] bg-[oklch(0.58_0.12_252/0.18)] px-2 py-0.5 text-[10px] text-zinc-100"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
           <div className="mb-3 flex items-center justify-between gap-2">
             <button
               type="button"
@@ -883,15 +919,6 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             >
               {filtersOpen ? "Hide filters" : "Show filters"}
             </button>
-            {hasActiveFilters(filters) ? (
-              <button
-                type="button"
-                onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
-                className="text-[12px] text-[oklch(0.78_0.11_252)] hover:underline"
-              >
-                Clear filters
-              </button>
-            ) : null}
           </div>
           {filtersOpen ? (
             <div className="mb-4 grid gap-2 rounded-xl border border-white/[0.08] bg-black/20 p-3 sm:grid-cols-2">
@@ -954,23 +981,13 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </div>
             </div>
           ) : null}
-          {hasActiveFilters(filters) ? (
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {filterChips(filters).map((chip) => (
-                <span key={chip} className="rounded-full border border-[oklch(0.58_0.12_252/0.34)] bg-[oklch(0.58_0.12_252/0.14)] px-2 py-0.5 text-[10px] text-zinc-200">
-                  {chip}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
           {sortedRows.length === 0 ? (
             <EmptyState
               icon={NotebookPen}
-              title="No trading days yet"
+              title="No trading days logged yet"
               description={
                 canWriteJournal
-                  ? "Log your first trading day to build your week and month."
+                  ? "No trading days logged yet."
                   : "Your history stays available in read-only mode."
               }
               action={
@@ -985,8 +1002,17 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           ) : rowsForLatestEntries.length === 0 ? (
             <EmptyState
               icon={NotebookPen}
-              title="No entries match current filters"
-              description="Clear filters to bring your full journal back."
+              title="Hidden by filters"
+              description="Entries exist, but current filters hide them."
+              action={
+                <button
+                  type="button"
+                  onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
+                  className={appSecondaryCta}
+                >
+                  Clear filters
+                </button>
+              }
               className="border-none bg-transparent py-8 ring-0"
             />
           ) : (

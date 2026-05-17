@@ -2,26 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { PageHeader } from "@/components/app/page-header";
-import { DashboardCard } from "@/components/app/dashboard-card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { KeyRound, LogOut, Shield, User } from "lucide-react";
+import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DISPLAY_CURRENCY_CODES,
-  displayCurrencyLabel,
-  normalizeDisplayCurrency,
-} from "@/lib/format-pnl";
-import { allTimezoneOptionValues, TIMEZONE_GROUPS } from "@/lib/timezone-options";
-import { TradingAccountsSection } from "@/components/settings/trading-accounts-section";
-import { PersonalRulesSection } from "@/components/settings/personal-rules-section";
+import { normalizeDisplayCurrency } from "@/lib/format-pnl";
+import { allTimezoneOptionValues } from "@/lib/timezone-options";
+import { SettingsPanels } from "@/components/settings/settings-panels";
 import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
 import { fetchJournalEntriesForExport, fetchOwnedAccounts } from "@/lib/export/user-exports";
+import {
+  SETTINGS_SECTIONS,
+  parseSettingsSection,
+  settingsSectionDescription,
+  type SettingsSectionId,
+} from "@/lib/settings/sections";
 
 /** Visible control surface — reads as a box on dark cards (border + lift + top edge). */
 const field =
@@ -39,6 +36,8 @@ const selectField = cn(field, "cursor-pointer py-0 pr-9");
 
 export function SettingsProfileForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const section = parseSettingsSection(searchParams.get("section"));
   const { activeAccountId } = useTradingAccountsWorkspace();
   const [email, setEmail] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState("");
@@ -49,7 +48,7 @@ export function SettingsProfileForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<{ section: "profile" | "preferences"; message: string } | null>(null);
   const [accountMessage, setAccountMessage] = useState<string | null>(null);
   const [accountBusy, setAccountBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState<null | "journal" | "calendar">(null);
@@ -66,7 +65,7 @@ export function SettingsProfileForm() {
       if (cancelled) return;
       if (error || !user) {
         setLoading(false);
-        setMessage("Could not load profile — try signing in again.");
+        setSaveFeedback({ section: "profile", message: "Could not load profile — try signing in again." });
         return;
       }
       setEmail(user.email ?? "");
@@ -87,10 +86,21 @@ export function SettingsProfileForm() {
     };
   }, []);
 
-  async function onSave(e: React.FormEvent) {
+  function navigateSection(next: SettingsSectionId) {
+    setSaveFeedback(null);
+    setAccountMessage(null);
+    setExportMessage(null);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("section", next);
+    if (next !== "accounts") params.delete("new");
+    const query = params.toString();
+    router.replace(query ? `/app/settings?${query}` : "/app/settings", { scroll: false });
+  }
+
+  async function onSave(e: React.FormEvent, source: "profile" | "preferences") {
     e.preventDefault();
     setSaving(true);
-    setMessage(null);
+    setSaveFeedback(null);
     const supabase = createClient();
     const tz =
       timezone.trim() ||
@@ -105,10 +115,10 @@ export function SettingsProfileForm() {
     });
     setSaving(false);
     if (error) {
-      setMessage(error.message);
+      setSaveFeedback({ section: source, message: error.message });
       return;
     }
-    setMessage("Saved.");
+    setSaveFeedback({ section: source, message: "Saved." });
     router.refresh();
   }
 
@@ -308,357 +318,77 @@ export function SettingsProfileForm() {
         variant="signature"
         eyebrow="Settings"
         title="Account settings"
-        description="Profile, preferences, security, and sessions."
+        description={settingsSectionDescription(section)}
       />
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-        {[
-          { href: "#settings-profile", label: "Profile" },
-          { href: "/app/settings?section=accounts#accounts", label: "Trading accounts" },
-          { href: "#settings-preferences", label: "Preferences" },
-          { href: "#settings-security", label: "Security" },
-          { href: "#settings-data-privacy", label: "Data & privacy" },
-        ].map((item) =>
-          item.href.startsWith("/app/") ? (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="rounded-lg border border-white/[0.1] bg-black/20 px-2.5 py-1 text-[12px] text-zinc-300 hover:text-zinc-100"
+      <nav className="-mx-1 overflow-x-auto sm:mx-0" aria-label="Settings sections">
+        <div className="flex min-w-max items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[oklch(0.12_0.03_264/0.88)] px-2 py-2 backdrop-blur-md">
+          {SETTINGS_SECTIONS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => navigateSection(item.id)}
+              aria-current={section === item.id ? "page" : undefined}
+              className={cn(
+                "shrink-0 rounded-lg border px-3 py-1.5 text-[12px] transition",
+                section === item.id
+                  ? "border-[oklch(0.58_0.12_252/0.45)] bg-[oklch(0.58_0.12_252/0.18)] text-zinc-50"
+                  : "border-white/[0.08] bg-white/[0.03] text-zinc-400 hover:border-white/[0.16] hover:text-zinc-100",
+              )}
             >
               {item.label}
-            </Link>
-          ) : (
-            <a
-              key={item.label}
-              href={item.href}
-              className="rounded-lg border border-white/[0.1] bg-black/20 px-2.5 py-1 text-[12px] text-zinc-300 hover:text-zinc-100"
-            >
-              {item.label}
-            </a>
-          ),
-        )}
-      </div>
-
-      <form id="profile-form" onSubmit={onSave}>
-        <div id="settings-profile">
-          <DashboardCard eyebrow="Profile" title="Your profile" description="Your public name and account email.">
-          {loading ? (
-            <p className="text-[15px] text-zinc-500">Loading profile…</p>
-          ) : (
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="display-name" className="text-[13px] text-zinc-300">
-                  Display name
-                </Label>
-                <Input
-                  id="display-name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Your name"
-                  className={field}
-                  autoComplete="name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-[13px] text-zinc-300">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  value={email ?? ""}
-                  readOnly
-                  className={cn(field, "cursor-not-allowed opacity-80")}
-                />
-              </div>
-            </div>
-          )}
-          <div className="mt-4">
-            <Button
-              type="submit"
-              className="h-10 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.67_0.15_252))] px-4 text-[13px] font-semibold text-[oklch(0.1_0.04_265)] shadow-[0_12px_32px_-16px_oklch(0.45_0.14_252/0.58)] hover:brightness-[1.03]"
-              disabled={loading || saving}
-            >
-              {saving ? "Saving…" : "Save profile"}
-            </Button>
-          </div>
-          </DashboardCard>
+            </button>
+          ))}
         </div>
-      </form>
+      </nav>
 
-      <TradingAccountsSection />
-
-      <form id="preferences-form" onSubmit={onSave}>
-        <div id="settings-preferences">
-          <DashboardCard eyebrow="Preferences" title="Workspace preferences" description="Choose timezone and display currency.">
-            {loading ? (
-              <p className="text-[15px] text-zinc-500">Loading preferences…</p>
-            ) : (
-              <div className="grid gap-5">
-                <div className="space-y-2">
-                <Label htmlFor="timezone" className="text-[13px] text-zinc-300">
-                  Timezone
-                </Label>
-                <p className="text-[13px] text-zinc-500">Used for local times across journal, calendar, and stats.</p>
-                <select
-                  id="timezone"
-                  value={timezoneSelectValue}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (v === "__custom__") setTimezone("");
-                    else setTimezone(v);
-                  }}
-                  className={selectField}
-                >
-                  {TIMEZONE_GROUPS.map((g) => (
-                    <optgroup key={g.region} label={g.region}>
-                      {g.options.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                  {timezone && !knownTimezones.includes(timezone) ? (
-                    <option value={timezone}>{timezone} (saved)</option>
-                  ) : null}
-                  <option value="__custom__">Custom IANA…</option>
-                </select>
-                {timezoneSelectValue === "__custom__" ? (
-                  <Input
-                    id="timezone-custom"
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                    placeholder="e.g. Europe/London"
-                    className={field}
-                    aria-label="Custom IANA timezone"
-                  />
-                ) : null}
-              </div>
-                <div className="space-y-2">
-                <Label htmlFor="display-currency" className="text-[13px] text-zinc-300">
-                  Display currency
-                </Label>
-                <p className="text-[13px] text-zinc-500">Applied to P&L formatting in journal, calendar, and stats.</p>
-                <select
-                  id="display-currency"
-                  value={displayCurrency}
-                  onChange={(e) => setDisplayCurrency(e.target.value)}
-                  className={selectField}
-                >
-                  {DISPLAY_CURRENCY_CODES.map((code) => (
-                    <option key={code} value={code}>
-                      {code} — {displayCurrencyLabel(code)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            )}
-            <div className="mt-4">
-              <Button
-                type="submit"
-                className="h-10 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.67_0.15_252))] px-4 text-[13px] font-semibold text-[oklch(0.1_0.04_265)] shadow-[0_12px_32px_-16px_oklch(0.45_0.14_252/0.58)] hover:brightness-[1.03]"
-                disabled={loading || saving}
-              >
-                {saving ? "Saving…" : "Save preferences"}
-              </Button>
-            </div>
-          </DashboardCard>
-        </div>
-        {message ? <p className="mt-4 text-sm text-zinc-400">{message}</p> : null}
-      </form>
-
-      <PersonalRulesSection />
-
-      <div id="settings-security">
-        <DashboardCard
-          eyebrow="Security"
-          title="Security"
-          description="Update sign-in details and keep your account secure."
-        >
-          <div className="grid gap-6 xl:grid-cols-2">
-        <form onSubmit={onUpdatePassword} className="space-y-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Password</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="new-password" className="text-[13px] text-zinc-300">
-                New password
-              </Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 8 characters"
-                className={field}
-                autoComplete="new-password"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password" className="text-[13px] text-zinc-300">
-                Confirm password
-              </Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat password"
-                className={field}
-                autoComplete="new-password"
-              />
-            </div>
-          </div>
-          <Button
-            type="submit"
-            variant="outline"
-            className="h-9 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-            disabled={accountBusy}
-          >
-            Update password
-          </Button>
-        </form>
-
-          <form onSubmit={onUpdateEmail} className="space-y-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">Email</p>
-            <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-            <div className="space-y-2">
-              <Label htmlFor="pending-email" className="text-[13px] text-zinc-300">
-                New email
-              </Label>
-              <Input
-                id="pending-email"
-                type="email"
-                value={pendingEmail}
-                onChange={(e) => setPendingEmail(e.target.value)}
-                placeholder="you@example.com"
-                className={field}
-                autoComplete="email"
-              />
-            </div>
-            <Button
-              type="submit"
-              variant="outline"
-              className="h-9 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-              disabled={accountBusy}
-            >
-              Update email
-            </Button>
-            </div>
-            <p className="text-[12px] text-zinc-500">We will ask you to confirm the new email from your inbox.</p>
-          </form>
-        </div>
-        </DashboardCard>
-      </div>
-
-      <DashboardCard
-        eyebrow="Sessions"
-        title="Active sessions"
-        description="Manage where your account stays signed in."
-      >
-        <div className="grid gap-4">
-          <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <Shield className="mt-0.5 size-5 text-[oklch(0.65_0.12_250)]" strokeWidth={1.75} />
-              <div>
-                <p className="text-[15px] font-medium text-zinc-200">This device</p>
-                <p className="text-sm text-zinc-500">Sign out from this browser session.</p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 shrink-0 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-              disabled={accountBusy}
-              onClick={() => signOut("local")}
-            >
-              <LogOut className="mr-2 size-4" />
-              Sign out
-            </Button>
-          </div>
-          <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <KeyRound className="mt-0.5 size-5 text-zinc-500" strokeWidth={1.75} />
-              <div>
-                <p className="text-[15px] font-medium text-zinc-200">Other devices</p>
-                <p className="text-sm text-zinc-500">End sessions on other signed-in devices.</p>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 shrink-0 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-              disabled={accountBusy}
-              onClick={() => signOut("others")}
-            >
-              Sign out others
-            </Button>
-          </div>
-        </div>
-        {accountMessage ? <p className="mt-4 text-sm text-zinc-400">{accountMessage}</p> : null}
-      </DashboardCard>
-
-      <div id="settings-data-privacy">
-        <DashboardCard
-          eyebrow="Data & privacy"
-          title="Data rights"
-          description="Export your data, access policy information, and contact us for deletion/support requests."
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11 rounded-xl border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 hover:bg-white/[0.08]"
-            onClick={exportJournalCsv}
-            disabled={Boolean(exportBusy)}
-          >
-            {exportBusy === "journal" ? "Exporting…" : "Export journal CSV"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11 rounded-xl border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 hover:bg-white/[0.08]"
-            onClick={exportCalendarSummaryCsv}
-            disabled={Boolean(exportBusy)}
-          >
-            {exportBusy === "calendar" ? "Exporting…" : "Export calendar summary CSV"}
-          </Button>
-          <Link
-            href="/privacy"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
-          >
-            View privacy policy
-          </Link>
-          <a
-            href="mailto:kennethalto95@gmail.com?subject=Blueveno%20Account%20Deletion%20Request"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-400/30 bg-rose-500/[0.08] px-4 text-[13px] text-rose-200 transition hover:bg-rose-500/[0.14]"
-          >
-            Request account deletion
-          </a>
-          <a
-            href="mailto:kennethalto95@gmail.com?subject=Blueveno%20Support%20Request"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
-          >
-            Contact support
-          </a>
-        </div>
-          {exportMessage ? <p className="mt-3 text-sm text-zinc-400">{exportMessage}</p> : null}
-          {activeAccountId ? (
-            <p className="mt-1 text-[12px] text-zinc-500">
-              Settings exports include all accounts you own. Page-level exports can follow active account scope.
-            </p>
-          ) : null}
-        </DashboardCard>
-      </div>
+      <SettingsPanels
+        section={section}
+        field={field}
+        selectField={selectField}
+        loading={loading}
+        saving={saving}
+        saveFeedback={saveFeedback}
+        onSave={onSave}
+        displayName={displayName}
+        setDisplayName={setDisplayName}
+        email={email}
+        timezoneSelectValue={timezoneSelectValue}
+        timezone={timezone}
+        setTimezone={setTimezone}
+        knownTimezones={knownTimezones}
+        displayCurrency={displayCurrency}
+        setDisplayCurrency={setDisplayCurrency}
+        newPassword={newPassword}
+        setNewPassword={setNewPassword}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+        pendingEmail={pendingEmail}
+        setPendingEmail={setPendingEmail}
+        accountBusy={accountBusy}
+        accountMessage={accountMessage}
+        onUpdatePassword={onUpdatePassword}
+        onUpdateEmail={onUpdateEmail}
+        signOut={signOut}
+        exportBusy={exportBusy}
+        exportMessage={exportMessage}
+        exportJournalCsv={exportJournalCsv}
+        exportCalendarSummaryCsv={exportCalendarSummaryCsv}
+        activeAccountId={activeAccountId}
+      />
 
       <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
         <div className="flex items-center gap-3">
           <User className="size-5 text-zinc-500" strokeWidth={1.75} />
           <p className="text-sm text-zinc-500">
-            Plan and access details are available from the Plan & access section.
+            Plan and access details are available from the{" "}
+            <Link href="/app/settings/billing" className="text-[oklch(0.78_0.11_252)] hover:underline">
+              Plan &amp; access
+            </Link>{" "}
+            section.
           </p>
         </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 app-metric-label">
           <Link href="/privacy" className="transition hover:text-zinc-300">
             Privacy
           </Link>
@@ -672,4 +402,5 @@ export function SettingsProfileForm() {
       </div>
     </div>
   );
+
 }

@@ -146,19 +146,19 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
         >
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Setup tag</p>
+              <p className="app-metric-label">Setup tag</p>
               <p className="mt-1.5 text-[13px] text-zinc-100">{row.setup || "—"}</p>
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Mistake tag</p>
+              <p className="app-metric-label">Mistake tag</p>
               <p className="mt-1.5 text-[13px] text-zinc-100">{row.tag || "—"}</p>
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Session</p>
+              <p className="app-metric-label">Session</p>
               <p className="mt-1.5 text-[13px] text-zinc-100">{(row.session_tag as string | null) ?? "—"}</p>
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-500">Market condition</p>
+              <p className="app-metric-label">Market condition</p>
               <p className="mt-1.5 text-[13px] text-zinc-100">{(row.market_condition as string | null) ?? "—"}</p>
             </div>
           </div>
@@ -185,7 +185,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
                 )}
               >
                 <p>{item.label}</p>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em]">{item.ok ? "Yes" : "No"}</p>
+                <p className="mt-1 text-[12px] font-medium text-zinc-200">{item.ok ? "Yes" : "No"}</p>
               </div>
             ))}
           </div>
@@ -194,19 +194,19 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
 
       <DashboardCard eyebrow="Review notes" title="What happened today" description="Your note, one lesson, and linked chart actions.">
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Note</p>
+          <p className="app-kicker">Note</p>
           <p className="mt-2 text-sm leading-relaxed text-zinc-300">{(row.note as string | null) ?? "No note added."}</p>
         </div>
 
         <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">One lesson</p>
+          <p className="app-kicker">One lesson</p>
           <p className="mt-2 text-sm leading-relaxed text-zinc-300">
             {(row.lesson_learned as string | null) ?? "No lesson added."}
           </p>
         </div>
 
         <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Linked chart</p>
+          <p className="app-kicker">Linked chart</p>
           {chartUrl ? (
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <p className="max-w-full break-all text-sm text-zinc-400">{chartUrl}</p>
@@ -273,7 +273,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
           </div>
           {sameDayEntries.length > 0 ? (
             <div className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-600">Same-day entries</p>
+              <p className="app-kicker">Same-day entries</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {sameDayEntries.map((entry) => (
                   <Link

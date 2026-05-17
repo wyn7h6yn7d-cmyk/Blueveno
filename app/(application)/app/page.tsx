@@ -16,6 +16,7 @@ export default async function AppHomePage() {
       userId={session.user.id}
       email={session.user.email ?? ""}
       initialWorkspace={initialWorkspace}
+      userTimezone={session.user.timezone}
     />
   );
 }

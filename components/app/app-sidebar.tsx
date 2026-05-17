@@ -46,7 +46,7 @@ export function AppSidebarNav({ isAdmin = false, onNavigate, className }: AppSid
 
   return (
     <nav className={cn("flex flex-col gap-1", className)} aria-label="Workspace">
-      <p className="mb-2 px-3.5 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Navigate</p>
+      <p className="app-kicker mb-2 px-3.5">Navigate</p>
       {MAIN_NAV.map((item) => {
         const active = item.match(pathname);
         return (
@@ -125,12 +125,10 @@ export function AppSidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
               className="bv-live-dot size-1.5 shrink-0 rounded-full bg-emerald-400"
               aria-hidden
             />
-            <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.14em] text-emerald-300/90">
-              Live
-            </span>
+            <span className="text-[11px] font-medium text-emerald-300/90">Live</span>
           </div>
         </div>
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[9px] uppercase tracking-[0.14em] text-zinc-500">
+        <div className="app-kicker mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
           <Link href="/privacy" onClick={onNavigate} className="transition hover:text-zinc-300">
             Privacy
           </Link>
@@ -141,7 +139,7 @@ export function AppSidebarFooter({ onNavigate }: { onNavigate?: () => void }) {
             Cookies
           </Link>
         </div>
-        <p className="mt-2 text-[10px] leading-relaxed text-zinc-500">
+        <p className="mt-2 text-[12px] leading-relaxed text-zinc-500">
           Journaling and review tool only. Not financial advice.
         </p>
       </div>

@@ -125,6 +125,26 @@ body {
   font-family: var(--font-heading), system-ui, sans-serif;
 }
 
+/* App workspace typography — prefer over uppercase micro-labels */
+.app-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: oklch(0.72 0.1 252);
+}
+
+.app-kicker {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: oklch(0.55 0.02 260);
+}
+
+.app-metric-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: oklch(0.62 0.02 260);
+}
+
 ::selection {
   background: oklch(0.48 0.12 252 / 0.38);
   color: oklch(0.98 0.006 265);

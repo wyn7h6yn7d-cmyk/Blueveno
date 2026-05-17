@@ -43,17 +43,13 @@ export function AuthSplitLayout({
                 </span>
               </LogoLink>
 
-              <p className="mt-16 font-mono text-[11px] uppercase tracking-[0.32em] text-bv-eyebrow">
-                {eyebrow}
-              </p>
+              <p className="app-eyebrow mt-16 text-[13px]">{eyebrow}</p>
               <h1 className="font-display mt-5 max-w-[26rem] text-[2rem] font-medium leading-[1.08] tracking-[-0.03em] text-zinc-50 xl:text-[2.2rem]">
                 {title}
               </h1>
               <p className="mt-6 max-w-md text-[15px] leading-relaxed text-zinc-500">{subtitle}</p>
 
-              <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                {specItems.join(" · ")}
-              </p>
+              <p className="app-kicker mt-10">{specItems.join(" · ")}</p>
 
               <div className="mt-14 max-w-lg">
                 <AuthWorkspacePreview variant={variant} />
@@ -61,7 +57,7 @@ export function AuthSplitLayout({
             </div>
 
             <div className="space-y-4 border-t border-white/[0.06] pt-12">
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-600">Privacy</p>
+              <p className="app-kicker">Privacy</p>
               <p className="max-w-md text-sm leading-relaxed text-zinc-500">
                 Encrypted sessions. Your journal data stays private to your account.
               </p>
@@ -76,7 +72,7 @@ export function AuthSplitLayout({
               <div className="ml-auto flex items-center gap-6">
                 <Link
                   href="/"
-                  className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 transition hover:text-zinc-300"
+                  className="app-kicker transition hover:text-zinc-300"
                 >
                   Product
                 </Link>
@@ -86,9 +82,7 @@ export function AuthSplitLayout({
             <div className="flex flex-1 flex-col justify-center px-6 pb-16 pt-6 sm:px-10 lg:px-14 lg:pb-20 lg:pt-4 xl:px-16">
               <div className="mx-auto w-full max-w-[440px]">
                 <div className="mb-10 lg:hidden">
-                  <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-bv-eyebrow">
-                    {eyebrow}
-                  </p>
+                  <p className="app-eyebrow text-[13px]">{eyebrow}</p>
                   <div className="font-display mt-4 text-[1.65rem] font-medium leading-[1.1] tracking-[-0.03em] text-zinc-50">
                     {title}
                   </div>

@@ -8,6 +8,8 @@ import { AppSidebarFooter, AppSidebarNav } from "@/components/app/app-sidebar";
 import { AppTopbar } from "@/components/app/app-topbar";
 import { WorkspaceGate } from "@/components/app/workspace-gate";
 import type { AccessContextClient } from "@/lib/access/types";
+import { appContentWrap } from "@/lib/ui/app-surface";
+import { cn } from "@/lib/utils";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -35,8 +37,8 @@ export function AppShell({ children, user, access }: AppShellProps) {
               className="group flex items-center gap-2 outline-none ring-offset-2 ring-offset-bv-void focus-visible:ring-2 focus-visible:ring-primary"
             >
               <BluevenoWordmark className="text-[1.12rem]" />
-              <span className="rounded border border-white/[0.1] bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500">
-                app
+              <span className="rounded border border-white/[0.1] bg-white/[0.04] px-1.5 py-0.5 text-[11px] font-medium text-zinc-500">
+                App
               </span>
             </Link>
           </div>
@@ -46,7 +48,7 @@ export function AppShell({ children, user, access }: AppShellProps) {
               title="Current workspace access state"
             >
               <span className="size-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.95)]" aria-hidden />
-              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-emerald-100">{accessLabel}</span>
+              <span className="text-[12px] font-medium text-emerald-100">{accessLabel}</span>
             </div>
           </div>
           <div className="flex flex-1 flex-col overflow-y-auto p-4">
@@ -66,7 +68,7 @@ export function AppShell({ children, user, access }: AppShellProps) {
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[52%] bg-app-shell-floor opacity-[0.56]" aria-hidden />
             <div className="pointer-events-none absolute inset-0 bg-noise opacity-[0.012]" aria-hidden />
             <WorkspaceGate>
-              <div className="relative mx-auto min-h-full w-full max-w-[1680px] px-4 py-6 sm:px-6 sm:py-8 md:px-9 md:py-10 lg:px-12 lg:py-11 2xl:px-14">
+              <div className={cn("relative min-h-full px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-9 lg:px-10 lg:py-10", appContentWrap)}>
                 {children}
               </div>
             </WorkspaceGate>
