@@ -5,14 +5,14 @@ import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { EMPTY_WORKSPACE } from "@/lib/user-data/types";
 import { createClient } from "@/lib/supabase/client";
 import { hasBearerSession, waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
+import { queryJournalWithSelectFallback } from "@/lib/user-data/journal-entry-columns";
 import {
-  isRetryableJournalSchemaError,
-  JOURNAL_SELECT_BEHAVIOR_NO_ENTRY_DATE,
-  JOURNAL_SELECT_FULL,
-  JOURNAL_SELECT_LEGACY,
-  queryJournalWithSelectFallback,
-} from "@/lib/user-data/journal-entry-columns";
-import { mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
+  buildJournalInsertPayloads,
+  buildJournalUpdatePayloads,
+  insertJournalWithPayloadFallback,
+  updateJournalWithPayloadFallback,
+} from "@/lib/user-data/journal-write-payloads";
+import { mapJournalRowFromDb, mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { clearJournalCache, readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
 import { useAccess } from "@/components/access/access-provider";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
@@ -336,98 +336,16 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         return { ok: false as const, error: msg };
       }
 
-      const basePayload = {
-        user_id: userId,
-        account_id: activeAccountId,
-        entry_time: row.time,
-        symbol: row.sym,
-        setup: row.setup,
-        r_value: row.r,
-        tag: row.tag,
-        note: row.note ?? null,
-        chart_link_url: row.chartLinkUrl ?? null,
-        session_tag: row.sessionTag ?? null,
-        market_condition: row.marketCondition ?? null,
-        lesson_learned: row.lessonLearned ?? null,
-        rule_checks: row.ruleChecks ?? {},
-      };
-      const legacyPayload = {
-        user_id: userId,
-        account_id: activeAccountId,
-        entry_time: row.time,
-        symbol: row.sym,
-        setup: row.setup,
-        r_value: row.r,
-        tag: row.tag,
-        note: row.note ?? null,
-        chart_link_url: row.chartLinkUrl ?? null,
-      };
-      const behaviorPayload = {
-        mood_state: row.moodState ?? null,
-        followed_plan: row.followedPlan ?? false,
-        respected_stop: row.respectedStop ?? false,
-        no_revenge_trade: row.noRevengeTrade ?? false,
-      };
-
-      let insertResult = await supabase
-        .from("journal_entries")
-        .insert({
-          ...basePayload,
-          ...behaviorPayload,
-          entry_date: row.entryDate ?? null,
-        })
-        .select(JOURNAL_SELECT_FULL)
-        .single();
-
-      if (insertResult.error && isRetryableJournalSchemaError(insertResult.error.message)) {
-        insertResult = await supabase
-          .from("journal_entries")
-          .insert({
-            ...basePayload,
-            ...behaviorPayload,
-          })
-          .select(JOURNAL_SELECT_BEHAVIOR_NO_ENTRY_DATE)
-          .single();
-      }
-
-      if (insertResult.error && isRetryableJournalSchemaError(insertResult.error.message)) {
-        insertResult = await supabase
-          .from("journal_entries")
-          .insert(legacyPayload)
-          .select(JOURNAL_SELECT_LEGACY)
-          .single();
-      }
-
-      const { data: inserted, error } = insertResult;
+      const { data: inserted, error } = await insertJournalWithPayloadFallback(
+        supabase,
+        buildJournalInsertPayloads(row, userId, activeAccountId),
+      );
       if (error || !inserted) {
         const msg = toUserDbError(error?.message);
         setLastError(msg);
         return { ok: false as const, error: msg };
       }
-      const mapped: JournalRow = {
-        id: inserted.id as string,
-        createdAt: (inserted.created_at as string | null) ?? undefined,
-        entryDate: (inserted.entry_date as string | null) ?? undefined,
-        time: (inserted.entry_time as string) ?? "",
-        sym: (inserted.symbol as string) ?? "",
-        setup: (inserted.setup as string) ?? "—",
-        r: (inserted.r_value as string) ?? "",
-        tag: (inserted.tag as string) ?? "Manual",
-        note: (inserted.note as string | null) ?? undefined,
-        chartLinkUrl: (inserted.chart_link_url as string | null) ?? undefined,
-        moodState: (inserted.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
-        followedPlan: (inserted.followed_plan as boolean | null) ?? false,
-        respectedStop: (inserted.respected_stop as boolean | null) ?? false,
-        noRevengeTrade: (inserted.no_revenge_trade as boolean | null) ?? false,
-        sessionTag: (inserted.session_tag as string | null) ?? undefined,
-        marketCondition: (inserted.market_condition as string | null) ?? undefined,
-        lessonLearned: (inserted.lesson_learned as string | null) ?? undefined,
-        ruleChecks: inserted.rule_checks
-          ? Object.fromEntries(
-              Object.entries(inserted.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
-            )
-          : undefined,
-      };
+      const mapped = mapJournalRowFromDb(inserted);
       setData((prev) => {
         const next = { ...prev, journal: [mapped, ...prev.journal].slice(0, 200) };
         if (userId) writeJournalCache(userId, next);
@@ -460,95 +378,17 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
         return { ok: false as const, error: msg };
       }
 
-      const basePayload = {
-        entry_time: row.time,
-        symbol: row.sym,
-        setup: row.setup,
-        r_value: row.r,
-        tag: row.tag,
-        note: row.note ?? null,
-        chart_link_url: row.chartLinkUrl ?? null,
-        mood_state: row.moodState ?? null,
-        followed_plan: row.followedPlan ?? false,
-        respected_stop: row.respectedStop ?? false,
-        no_revenge_trade: row.noRevengeTrade ?? false,
-        session_tag: row.sessionTag ?? null,
-        market_condition: row.marketCondition ?? null,
-        lesson_learned: row.lessonLearned ?? null,
-        rule_checks: row.ruleChecks ?? {},
-        entry_date: row.entryDate ?? null,
-      };
-
-      let updateResult = await supabase
-        .from("journal_entries")
-        .update(basePayload)
-        .eq("user_id", userId)
-        .eq("account_id", activeAccountId)
-        .eq("id", id)
-        .select(JOURNAL_SELECT_FULL)
-        .single();
-
-      if (updateResult.error && isRetryableJournalSchemaError(updateResult.error.message)) {
-        const { entry_date: _entryDate, ...payloadWithoutEntryDate } = basePayload;
-        updateResult = await supabase
-          .from("journal_entries")
-          .update(payloadWithoutEntryDate)
-          .eq("user_id", userId)
-          .eq("account_id", activeAccountId)
-          .eq("id", id)
-          .select(JOURNAL_SELECT_BEHAVIOR_NO_ENTRY_DATE)
-          .single();
-      }
-
-      if (updateResult.error && isRetryableJournalSchemaError(updateResult.error.message)) {
-        updateResult = await supabase
-          .from("journal_entries")
-          .update({
-            entry_time: row.time,
-            symbol: row.sym,
-            setup: row.setup,
-            r_value: row.r,
-            tag: row.tag,
-            note: row.note ?? null,
-            chart_link_url: row.chartLinkUrl ?? null,
-          })
-          .eq("user_id", userId)
-          .eq("account_id", activeAccountId)
-          .eq("id", id)
-          .select(JOURNAL_SELECT_LEGACY)
-          .single();
-      }
-
-      const { data: updated, error } = updateResult;
+      const { data: updated, error } = await updateJournalWithPayloadFallback(
+        supabase,
+        buildJournalUpdatePayloads(row),
+        { userId, accountId: activeAccountId, id },
+      );
       if (error || !updated) {
         const msg = toUserDbError(error?.message);
         setLastError(msg);
         return { ok: false as const, error: msg };
       }
-      const mapped: JournalRow = {
-        id: updated.id as string,
-        createdAt: (updated.created_at as string | null) ?? undefined,
-        entryDate: (updated.entry_date as string | null) ?? undefined,
-        time: (updated.entry_time as string) ?? "",
-        sym: (updated.symbol as string) ?? "",
-        setup: (updated.setup as string) ?? "—",
-        r: (updated.r_value as string) ?? "",
-        tag: (updated.tag as string) ?? "Manual",
-        note: (updated.note as string | null) ?? undefined,
-        chartLinkUrl: (updated.chart_link_url as string | null) ?? undefined,
-        moodState: (updated.mood_state as "Calm" | "Focused" | "Hesitant" | "Tilted" | null) ?? undefined,
-        followedPlan: (updated.followed_plan as boolean | null) ?? false,
-        respectedStop: (updated.respected_stop as boolean | null) ?? false,
-        noRevengeTrade: (updated.no_revenge_trade as boolean | null) ?? false,
-        sessionTag: (updated.session_tag as string | null) ?? undefined,
-        marketCondition: (updated.market_condition as string | null) ?? undefined,
-        lessonLearned: (updated.lesson_learned as string | null) ?? undefined,
-        ruleChecks: updated.rule_checks
-          ? Object.fromEntries(
-              Object.entries(updated.rule_checks as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)]),
-            )
-          : undefined,
-      };
+      const mapped = mapJournalRowFromDb(updated);
       setData((prev) => {
         const next = {
           ...prev,

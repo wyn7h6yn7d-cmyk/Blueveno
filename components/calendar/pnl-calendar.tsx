@@ -456,7 +456,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
               )}
             >
               <div className={calendarGridCols}>
-            <div className={cn(headerBox, "hidden min-w-0 app-kicker lg:flex")}>Wk</div>
+            <div className={cn(headerBox, "hidden min-w-0 app-kicker lg:flex")}>W</div>
             {WEEKDAY_HEADERS.map((d) => (
               <div
                 key={d}
@@ -509,11 +509,10 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                   <div
                     className={cn(
                       headerBox,
-                      "hidden min-h-[4.25rem] flex-col gap-0.5 border-white/[0.1] bg-black/30 lg:flex lg:min-h-[6.25rem]",
+                      "hidden min-h-[4.25rem] border-white/[0.1] bg-black/30 lg:flex lg:min-h-[6.25rem]",
                     )}
-                    aria-hidden
+                    aria-label={`Week ${isoWeekNumberFromDayKey(weekStartKey)}`}
                   >
-                    <span className="app-kicker text-[9px]">Wk</span>
                     <span className="font-display text-[0.95rem] tabular-nums text-zinc-100">
                       {isoWeekNumberFromDayKey(weekStartKey)}
                     </span>

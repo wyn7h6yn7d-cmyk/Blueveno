@@ -23,6 +23,7 @@ import {
   SETUP_TAG_OPTIONS,
 } from "@/lib/user-data/journal-tags";
 import { createClient } from "@/lib/supabase/client";
+import { syncLegacyBehaviorFromRuleChecks } from "@/lib/user-data/sync-rule-checks";
 
 const labelCls = "text-[12px] font-medium tracking-wide text-zinc-400";
 const inputCls =
@@ -149,6 +150,11 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
     setUrlError(null);
     setSaveError(null);
     setSaving(true);
+    const behavior = syncLegacyBehaviorFromRuleChecks(personalRules, ruleChecks, {
+      followedPlan,
+      respectedStop,
+      noRevengeTrade,
+    });
     const result = await updateRow(entryId, {
       entryDate,
       time: initialRow.time,
@@ -159,9 +165,9 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       note: note.trim() || undefined,
       chartLinkUrl: chartUrlForSave(chartUrl),
       moodState: moodState || undefined,
-      followedPlan,
-      respectedStop,
-      noRevengeTrade,
+      followedPlan: behavior.followedPlan,
+      respectedStop: behavior.respectedStop,
+      noRevengeTrade: behavior.noRevengeTrade,
       sessionTag: sessionTag || undefined,
       marketCondition: marketCondition || undefined,
       lessonLearned: lessonLearned.trim() || undefined,

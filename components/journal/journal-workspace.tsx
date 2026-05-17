@@ -24,6 +24,7 @@ import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
 import { fetchJournalEntriesForExport } from "@/lib/export/user-exports";
+import { syncLegacyBehaviorFromRuleChecks } from "@/lib/user-data/sync-rule-checks";
 import {
   MARKET_CONDITION_OPTIONS,
   MISTAKE_TAG_OPTIONS,
@@ -338,6 +339,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     setUrlError(null);
     setSaveError(null);
     setSaving(true);
+    const behavior = syncLegacyBehaviorFromRuleChecks(personalRules, ruleChecks, {
+      followedPlan,
+      respectedStop,
+      noRevengeTrade,
+    });
     const result = await addRow({
       entryDate,
       time: "Day close",
@@ -348,9 +354,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       note: note.trim() || undefined,
       chartLinkUrl: chartUrlForSave(chartUrl),
       moodState: moodState || undefined,
-      followedPlan,
-      respectedStop,
-      noRevengeTrade,
+      followedPlan: behavior.followedPlan,
+      respectedStop: behavior.respectedStop,
+      noRevengeTrade: behavior.noRevengeTrade,
       sessionTag: sessionTag || undefined,
       marketCondition: marketCondition || undefined,
       lessonLearned: lessonLearned.trim() || undefined,
