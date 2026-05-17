@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SUPPORT_REQUEST_MAILTO } from "@/lib/legal/constants";
 
 export function HomeFooter() {
   return (
@@ -19,7 +20,7 @@ export function HomeFooter() {
             <Link href="/cookies" className="transition hover:text-zinc-400">
               Cookies
             </Link>
-            <a href="mailto:kennethalto95@gmail.com" className="transition hover:text-zinc-400">
+            <a href={SUPPORT_REQUEST_MAILTO} className="transition hover:text-zinc-400">
               Contact
             </a>
             <span className="text-zinc-700">© {new Date().getFullYear()}</span>

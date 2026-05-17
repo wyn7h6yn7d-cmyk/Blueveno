@@ -27,6 +27,9 @@ import {
   type SettingsSectionId,
 } from "@/lib/settings/sections";
 import { appFormFieldLifted } from "@/lib/ui/app-form";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { formatUserError } from "@/lib/feedback/format-error";
+import { trackExportCsvClicked } from "@/lib/analytics/track-product-event";
 
 const SETTINGS_NAV_ITEMS: SectionNavItem[] = [
   { id: "profile", label: "Profile", icon: User },
@@ -41,6 +44,7 @@ const field = appFormFieldLifted;
 const selectField = cn(field, "cursor-pointer py-0 pr-9");
 
 export function SettingsProfileForm() {
+  const toast = useAppToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const section = parseSettingsSection(searchParams.get("section"));
@@ -121,25 +125,35 @@ export function SettingsProfileForm() {
     });
     setSaving(false);
     if (error) {
-      setSaveFeedback({ section: source, message: error.message });
+      const msg = formatUserError(error, source === "profile" ? "Could not save profile." : "Could not save preferences.");
+      setSaveFeedback({ section: source, message: msg });
+      toast.error(msg);
       return;
     }
-    setSaveFeedback({ section: source, message: "Saved." });
+    const ok = source === "profile" ? "Profile saved." : "Preferences saved.";
+    setSaveFeedback({ section: source, message: ok });
+    toast.success(ok);
     router.refresh();
   }
 
   async function onUpdatePassword(e: React.FormEvent) {
     e.preventDefault();
     if (!newPassword.trim()) {
-      setAccountMessage("Enter a new password.");
+      const msg = "Enter a new password.";
+      setAccountMessage(msg);
+      toast.error(msg);
       return;
     }
     if (newPassword.length < 8) {
-      setAccountMessage("Password must be at least 8 characters.");
+      const msg = "Password must be at least 8 characters.";
+      setAccountMessage(msg);
+      toast.error(msg);
       return;
     }
     if (newPassword !== confirmPassword) {
-      setAccountMessage("Passwords do not match.");
+      const msg = "Passwords do not match.";
+      setAccountMessage(msg);
+      toast.error(msg);
       return;
     }
     setAccountBusy(true);
@@ -148,18 +162,23 @@ export function SettingsProfileForm() {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setAccountBusy(false);
     if (error) {
-      setAccountMessage(error.message);
+      const msg = formatUserError(error, "Could not update password.");
+      setAccountMessage(msg);
+      toast.error(msg);
       return;
     }
     setNewPassword("");
     setConfirmPassword("");
     setAccountMessage("Password updated.");
+    toast.success("Password updated.");
   }
 
   async function onUpdateEmail(e: React.FormEvent) {
     e.preventDefault();
     if (!pendingEmail.trim()) {
-      setAccountMessage("Enter an email.");
+      const msg = "Enter an email.";
+      setAccountMessage(msg);
+      toast.error(msg);
       return;
     }
     setAccountBusy(true);
@@ -168,10 +187,14 @@ export function SettingsProfileForm() {
     const { error } = await supabase.auth.updateUser({ email: pendingEmail.trim() });
     setAccountBusy(false);
     if (error) {
-      setAccountMessage(error.message);
+      const msg = formatUserError(error, "Could not update email.");
+      setAccountMessage(msg);
+      toast.error(msg);
       return;
     }
-    setAccountMessage("Check your inbox to confirm the new email.");
+    const ok = "Check your inbox to confirm the new email.";
+    setAccountMessage(ok);
+    toast.info(ok);
   }
 
   const knownTimezones = allTimezoneOptionValues();
@@ -191,7 +214,9 @@ export function SettingsProfileForm() {
         : await supabase.auth.signOut({ scope: "local" });
     setAccountBusy(false);
     if (error) {
-      setAccountMessage(error.message);
+      const msg = formatUserError(error, "Could not sign out.");
+      setAccountMessage(msg);
+      toast.error(msg);
       return;
     }
     if (scope === "local") {
@@ -199,7 +224,9 @@ export function SettingsProfileForm() {
       router.refresh();
       return;
     }
-    setAccountMessage("Signed out from other devices.");
+    const ok = "Signed out from other devices.";
+    setAccountMessage(ok);
+    toast.success(ok);
   }
 
   async function exportJournalCsv() {
@@ -258,10 +285,15 @@ export function SettingsProfileForm() {
         ],
         csvRows,
       );
+      trackExportCsvClicked("journal", "settings");
       triggerCsvDownload(`blueveno-journal-${fileDate()}.csv`, csv);
-      setExportMessage(`Journal export ready (${csvRows.length} rows).`);
+      const ok = `Journal CSV ready (${csvRows.length} rows).`;
+      setExportMessage(ok);
+      toast.success(ok);
     } catch (error) {
-      setExportMessage(error instanceof Error ? error.message : "Export failed.");
+      const msg = formatUserError(error, "Could not export journal CSV.");
+      setExportMessage(msg);
+      toast.error(msg);
     } finally {
       setExportBusy(null);
     }
@@ -309,10 +341,15 @@ export function SettingsProfileForm() {
         ],
         csvRows,
       );
+      trackExportCsvClicked("calendar_summary", "settings");
       triggerCsvDownload(`blueveno-calendar-summary-${fileDate()}.csv`, csv);
-      setExportMessage(`Calendar summary export ready (${csvRows.length} rows).`);
+      const ok = `Calendar summary CSV ready (${csvRows.length} rows).`;
+      setExportMessage(ok);
+      toast.success(ok);
     } catch (error) {
-      setExportMessage(error instanceof Error ? error.message : "Export failed.");
+      const msg = formatUserError(error, "Could not export calendar summary.");
+      setExportMessage(msg);
+      toast.error(msg);
     } finally {
       setExportBusy(null);
     }
@@ -333,6 +370,7 @@ export function SettingsProfileForm() {
         onChange={(id) => navigateSection(id as SettingsSectionId)}
         ariaLabel="Settings sections"
         variant="compact"
+        className="app-scroll-tabs-x w-full"
       />
 
       <SettingsPanels

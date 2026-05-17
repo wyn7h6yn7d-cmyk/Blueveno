@@ -13,6 +13,10 @@ import { cn } from "@/lib/utils";
 import { useAccess } from "@/components/access/access-provider";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { InlineFeedback } from "@/components/app/inline-feedback";
+import { formatUserError } from "@/lib/feedback/format-error";
+import { notifyReadOnlyBlocked } from "@/lib/feedback/read-only-action";
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
@@ -26,6 +30,7 @@ type Props = {
 export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
   const router = useRouter();
   const { displayCurrency, canWriteJournal } = useAccess();
+  const toast = useAppToast();
   const { removeRow } = useUserWorkspace(userId, { initialWorkspace });
   const { accounts, activeAccountId } = useTradingAccountsWorkspace();
   const [deleting, setDeleting] = useState(false);
@@ -53,18 +58,24 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
   const sameDayEntries = orderedRows.filter((r) => (r.entryDate ?? "") === entryDay && r.id !== row.id).slice(0, 6);
 
   const onDelete = async () => {
-    if (!canWriteJournal) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "journal_delete");
+      return;
+    }
     setDeleteError(null);
     setDeleting(true);
     const result = await removeRow(row.id);
     setDeleting(false);
     if (result.ok) {
       setConfirmOpen(false);
+      toast.success("Entry deleted.");
       router.push("/app/journal");
       router.refresh();
       return;
     }
-    setDeleteError(result.error);
+    const msg = formatUserError(result.error, "Could not delete this entry.");
+    setDeleteError(msg);
+    toast.error(msg);
   };
 
   async function copyChartLink(url: string) {
@@ -132,11 +143,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
         }
       />
 
-      {deleteError ? (
-        <p className="text-[13px] text-rose-300/95" role="alert">
-          {deleteError}
-        </p>
-      ) : null}
+      <InlineFeedback message={deleteError} tone="error" />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <DashboardCard

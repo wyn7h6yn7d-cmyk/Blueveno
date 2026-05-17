@@ -180,16 +180,17 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                 </div>
 
                 <div className="mt-4 sm:mt-5">
-                  <p className="mb-3 px-1 font-mono text-[9px] uppercase tracking-[0.22em] text-zinc-600 sm:hidden">
+                  <p className="mb-3 px-1 font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-600 sm:hidden">
                     {weekLabel}
                   </p>
 
-                  <div className="mb-3 grid grid-cols-7 gap-1.5 sm:hidden">
+                  <div className="-mx-1 overflow-x-auto overscroll-x-contain px-1 sm:mx-0 sm:overflow-visible sm:px-0">
+                  <div className="mb-3 grid min-w-[18.5rem] grid-cols-7 gap-1.5 sm:hidden">
                     {WEEKDAYS_MOBILE.map((d, idx) => (
                       <div
                         key={`${d}-${idx}`}
                         className={cn(
-                          "text-center font-mono text-[8px] uppercase tracking-[0.14em]",
+                          "text-center font-mono text-[10px] uppercase tracking-[0.12em]",
                           idx >= 5 ? "text-zinc-600" : "text-zinc-500",
                         )}
                       >
@@ -201,7 +202,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-4">
                     <div className="min-w-0 flex-1">
                       <div
-                        className="grid grid-cols-7 gap-1.5 sm:gap-2.5 lg:gap-3"
+                        className="grid min-w-[18.5rem] grid-cols-7 gap-1.5 sm:min-w-0 sm:gap-2.5 lg:gap-3"
                         role="grid"
                         aria-label={`${weekLabel} day-by-day P&L`}
                       >
@@ -304,6 +305,7 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                         </div>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               </motion.article>

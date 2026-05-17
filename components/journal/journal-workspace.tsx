@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CalendarDays, Check, ChevronRight, LineChart, NotebookPen, Plus } from "lucide-react";
@@ -18,10 +18,18 @@ import { chartUrlForSave, isValidChartUrl } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { ReadOnlyBlockedNotice } from "@/components/access/read-only-blocked-notice";
 import { appFormControl, appFormLabel } from "@/lib/ui/app-form";
 import { createClient } from "@/lib/supabase/client";
 import { waitForSessionUser } from "@/lib/supabase/wait-for-browser-session";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { InlineFeedback } from "@/components/app/inline-feedback";
+import { formatUserError } from "@/lib/feedback/format-error";
+import { notifyReadOnlyBlocked } from "@/lib/feedback/read-only-action";
+import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
+import { trackExportCsvClicked, trackProductEvent } from "@/lib/analytics/track-product-event";
+import { feedbackToneFromMessage } from "@/lib/feedback/feedback-tone";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { fileDate, recordsToCsv, triggerCsvDownload } from "@/lib/export/csv";
 import { fetchJournalEntriesForExport } from "@/lib/export/user-exports";
@@ -213,6 +221,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { canWriteJournal, displayCurrency } = useAccess();
+  const toast = useAppToast();
   const { accounts } = useTradingAccountsWorkspace();
   const { data, ready, activeAccountId, addRow, lastError, resetJournal } = useUserWorkspace(userId, { initialWorkspace });
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -243,6 +252,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [weeklySaving, setWeeklySaving] = useState(false);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [weeklyUnavailable, setWeeklyUnavailable] = useState(false);
+  const [weeklySaved, setWeeklySaved] = useState(false);
   const [resettingJournal, setResettingJournal] = useState(false);
   const [resetMsg, setResetMsg] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
@@ -365,72 +375,73 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     return () => window.clearTimeout(t);
   }, [highlightDate, ready, rowsForLatestEntries.length]);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (!userId) return;
-    if (!activeAccountId) {
-      setWeeklyWorked("");
-      setWeeklySlipped("");
-      setWeeklyFocus("");
-      setWeeklyRule("");
-      setWeeklyConfidence(null);
-      setWeeklyNote("");
+  const applyWeeklyRow = useCallback((row: WeeklyReflectionRow | null) => {
+    setWeeklyWorked(row?.what_worked ?? "");
+    setWeeklySlipped(row?.what_slipped ?? "");
+    setWeeklyFocus(row?.next_week_focus ?? "");
+    setWeeklyRule(row?.next_week_rule ?? "");
+    setWeeklyConfidence(row?.confidence_score ?? null);
+    setWeeklyNote(row?.weekly_note ?? "");
+  }, []);
+
+  const loadWeeklyReflection = useCallback(async (): Promise<boolean> => {
+    if (!userId || !activeAccountId) {
+      applyWeeklyRow(null);
       setWeeklyMsg(null);
+      setWeeklyUnavailable(false);
       setWeeklyLoading(false);
-      return;
+      return false;
     }
-    /* eslint-disable react-hooks/set-state-in-effect -- loading flag toggles around async reflection fetch */
     setWeeklyLoading(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
     const supabase = createClient();
-    void (async () => {
-      try {
-        const sessionOk = await waitForSessionUser(supabase, userId, () => cancelled);
-        if (!sessionOk) {
-          throw { message: "Session not ready." } satisfies SupabaseErrorLike;
-        }
-        const { data, error } = await queryWeeklyReflectionWithFallback(async (select, useAccountScope) => {
-          let q = supabase
-            .from("weekly_reflections")
-            .select(select)
-            .eq("user_id", userId)
-            .eq("week_start", weekStartKey);
-          if (useAccountScope) {
-            q = q.eq("account_id", activeAccountId);
-          }
-          const result = await q.maybeSingle();
-          return { data: result.data, error: result.error };
-        });
-        if (error) throw error;
-        if (cancelled) return;
-        const row = (data ?? null) as WeeklyReflectionRow | null;
-        setWeeklyWorked(row?.what_worked ?? "");
-        setWeeklySlipped(row?.what_slipped ?? "");
-        setWeeklyFocus(row?.next_week_focus ?? "");
-        setWeeklyRule(row?.next_week_rule ?? "");
-        setWeeklyConfidence(row?.confidence_score ?? null);
-        setWeeklyNote(row?.weekly_note ?? "");
-        setWeeklyMsg(null);
-        setWeeklyUnavailable(false);
-      } catch (error) {
-        if (cancelled) return;
-        const err = error as SupabaseErrorLike;
-        const msg = weeklyReflectionErrorMessage(err, "load");
-        setWeeklyMsg(msg);
-        setWeeklyUnavailable(isWeeklyReflectionTableMissing(err?.message, err?.code));
-      } finally {
-        if (cancelled) return;
-        setWeeklyLoading(false);
+    try {
+      const sessionOk = await waitForSessionUser(supabase, userId, () => false);
+      if (!sessionOk) {
+        throw { message: "Session not ready." } satisfies SupabaseErrorLike;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, weekStartKey, activeAccountId]);
+      const { data, error } = await queryWeeklyReflectionWithFallback(async (select, useAccountScope) => {
+        let q = supabase
+          .from("weekly_reflections")
+          .select(select)
+          .eq("user_id", userId)
+          .eq("week_start", weekStartKey);
+        if (useAccountScope) {
+          q = q.eq("account_id", activeAccountId);
+        }
+        const result = await q.maybeSingle();
+        return { data: result.data, error: result.error };
+      });
+      if (error) throw error;
+      applyWeeklyRow((data ?? null) as WeeklyReflectionRow | null);
+      setWeeklyMsg(null);
+      setWeeklyUnavailable(false);
+      return true;
+    } catch (error) {
+      const err = error as SupabaseErrorLike;
+      const msg = weeklyReflectionErrorMessage(err, "load");
+      setWeeklyMsg(msg);
+      setWeeklyUnavailable(isWeeklyReflectionTableMissing(err?.message, err?.code));
+      return false;
+    } finally {
+      setWeeklyLoading(false);
+    }
+  }, [userId, weekStartKey, activeAccountId, applyWeeklyRow]);
+
+  useEffect(() => {
+    setWeeklySaved(false);
+    void loadWeeklyReflection();
+  }, [loadWeeklyReflection]);
+
+  const touchWeeklyForm = useCallback(() => {
+    setWeeklySaved(false);
+  }, []);
 
   const onQuickAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canWriteJournal) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "journal_create");
+      return;
+    }
     if (!entryDate.trim() || !symbol.trim() || !pnl.trim()) return;
     if (pnl.includes(".")) {
       setSaveError("Use comma for decimals (e.g. 100,80). Dot is not allowed.");
@@ -468,9 +479,13 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     });
     setSaving(false);
     if (!result.ok) {
-      setSaveError(result.error ?? lastError ?? "Could not save day entry.");
+      const msg = formatUserError(result.error ?? lastError, "Could not save this trading day.");
+      setSaveError(msg);
+      toast.error(msg);
       return;
     }
+    trackProductEvent(PRODUCT_ANALYTICS_EVENTS.journalEntryCreated, { surface: "journal" });
+    toast.success("Trading day saved.");
     setSymbol("");
     setPnl("");
     setSetupTag("Pullback");
@@ -489,8 +504,13 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
 
   const onSaveWeeklyReflection = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId || !canWriteJournal || !activeAccountId) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "weekly_review");
+      return;
+    }
+    if (!userId || !activeAccountId) return;
     setWeeklyMsg(null);
+    setWeeklySaved(false);
     setWeeklySaving(true);
     const supabase = createClient();
     const { data: authUser } = await supabase.auth.getUser();
@@ -572,13 +592,26 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       if (!isRetryableWeeklyReflectionSchemaError(error.message, error.code)) break;
     }
 
+    if (error) {
+      setWeeklySaving(false);
+      const msg = weeklyReflectionErrorMessage(error, "save");
+      setWeeklyMsg(msg);
+      toast.error(formatUserError(error, msg));
+      setWeeklyUnavailable(isWeeklyReflectionTableMissing(error.message, error.code));
+      return;
+    }
+
+    const reloaded = await loadWeeklyReflection();
     setWeeklySaving(false);
-    const msg = error ? weeklyReflectionErrorMessage(error, "save") : "Weekly reflection saved.";
-    setWeeklyMsg(msg);
-    if (!error) {
+    if (reloaded) {
+      setWeeklySaved(true);
+      trackProductEvent(PRODUCT_ANALYTICS_EVENTS.weeklyReviewSaved, { surface: "journal" });
+      setWeeklyMsg("Weekly review saved.");
+      toast.success("Weekly review saved.");
       setWeeklyUnavailable(false);
     } else {
-      setWeeklyUnavailable(isWeeklyReflectionTableMissing(error.message, error.code));
+      setWeeklyMsg("Saved, but could not refresh — reload the page to confirm.");
+      toast.info("Saved. Refresh the page if fields look out of date.");
     }
   };
 
@@ -661,10 +694,15 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         ],
         csvRows,
       );
+      trackExportCsvClicked("journal", "journal");
       triggerCsvDownload(`blueveno-journal-${fileDate()}.csv`, csv);
-      setExportMsg(`CSV export ready (${csvRows.length} rows).`);
+      const okMsg = `Journal CSV ready (${csvRows.length} rows).`;
+      setExportMsg(okMsg);
+      toast.success(okMsg);
     } catch (error) {
-      setExportMsg(error instanceof Error ? error.message : "Could not export CSV.");
+      const msg = formatUserError(error, "Could not export journal CSV.");
+      setExportMsg(msg);
+      toast.error(msg);
     } finally {
       setExportBusy(false);
     }
@@ -678,7 +716,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         title="Add trading day"
         description="Log the day once. Calendar and stats update automatically."
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="app-page-actions-mobile flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
             <Link href="/app/calendar" className={appSecondaryCta}>
               <CalendarDays className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
               Calendar
@@ -699,7 +737,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           {resetMsg}
         </p>
       ) : null}
-      {exportMsg ? <p className="text-[13px] text-zinc-400">{exportMsg}</p> : null}
+      <InlineFeedback message={exportMsg} tone={feedbackToneFromMessage(exportMsg)} />
 
       <section className="grid min-w-0 gap-6 lg:grid-cols-[1.18fr_0.82fr] lg:items-start lg:gap-8 xl:gap-10">
         <DashboardCard
@@ -709,7 +747,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           description={
             canWriteJournal
               ? "Date, symbol, P&L, note, behavior, and optional linked chart."
-              : "Read-only: your history stays here. Upgrade to log new days."
+              : "Read-only — your history stays here."
           }
         >
           <form id="add" onSubmit={onQuickAdd} className="min-w-0">
@@ -974,12 +1012,12 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </div>
             </JournalFormCollapsible>
 
-            <div className="border-t border-white/[0.06] pt-6">
+            <div className="sticky bottom-0 z-10 -mx-1 border-t border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.1_0.035_266/0.98),oklch(0.085_0.032_268/0.99))] px-1 pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-6 sm:pb-0 sm:backdrop-blur-none">
             <Button
               type="submit"
               disabled={saving || !canWriteJournal || !activeAccountId}
               className={cn(
-                "mt-0 h-12 w-full rounded-xl text-[15px] font-semibold tracking-tight",
+                "mt-0 h-12 w-full rounded-xl text-base font-semibold tracking-tight sm:text-[15px]",
                 "bg-[linear-gradient(180deg,oklch(0.74_0.14_250),oklch(0.66_0.15_252))] text-[oklch(0.1_0.04_265)]",
                 "shadow-[0_1px_0_0_oklch(1_0_0_/0.14)_inset,0_18px_46px_-15px_oklch(0.42_0.14_252/0.58)] hover:brightness-[1.04] disabled:opacity-40",
               )}
@@ -988,9 +1026,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               {saving ? "Saving…" : "Save trading day"}
             </Button>
             {!canWriteJournal ? (
-              <p className="text-[13px] text-zinc-400">
-                Read-only mode is active after trial. Upgrade to keep adding trading days.
-              </p>
+              <ReadOnlyBlockedNotice compact context="adding trading days" />
             ) : null}
             {canWriteJournal && !activeAccountId ? (
               <p className="text-[13px] text-zinc-400">
@@ -998,7 +1034,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </p>
             ) : null}
             {urlError ? <p className="mt-3 text-[13px] text-rose-300/95">{urlError}</p> : null}
-            {saveError ? <p className="mt-3 text-[13px] text-rose-300/95">{saveError}</p> : null}
+            <InlineFeedback message={saveError} tone="error" className="mt-3" />
             </div>
           </form>
         </DashboardCard>
@@ -1185,7 +1221,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
         description="Capture what happened and set one rule for next week."
       >
         <form className="space-y-4" onSubmit={onSaveWeeklyReflection}>
-          <div className="grid gap-3 sm:grid-cols-[12rem_minmax(0,1fr)] sm:items-center">
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:items-center">
             <Label htmlFor="jr-week" className={labelCls}>
               Week anchor date
             </Label>
@@ -1193,12 +1229,15 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               id="jr-week"
               type="date"
               value={weekAnchorDate}
-              onChange={(e) => setWeekAnchorDate(e.target.value)}
+              onChange={(e) => {
+                touchWeeklyForm();
+                setWeekAnchorDate(e.target.value);
+              }}
               disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
               className={cn(inputCls, "disabled:opacity-45")}
             />
           </div>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="jr-worked" className={labelCls}>
                 What worked?
@@ -1206,7 +1245,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <textarea
                 id="jr-worked"
                 value={weeklyWorked}
-                onChange={(e) => setWeeklyWorked(e.target.value)}
+                onChange={(e) => {
+                  touchWeeklyForm();
+                  setWeeklyWorked(e.target.value);
+                }}
                 rows={4}
                 disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                 className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
@@ -1219,7 +1261,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <textarea
                 id="jr-slipped"
                 value={weeklySlipped}
-                onChange={(e) => setWeeklySlipped(e.target.value)}
+                onChange={(e) => {
+                  touchWeeklyForm();
+                  setWeeklySlipped(e.target.value);
+                }}
                 rows={4}
                 disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                 className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
@@ -1232,7 +1277,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <textarea
                 id="jr-focus"
                 value={weeklyFocus}
-                onChange={(e) => setWeeklyFocus(e.target.value)}
+                onChange={(e) => {
+                  touchWeeklyForm();
+                  setWeeklyFocus(e.target.value);
+                }}
                 rows={4}
                 disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                 className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
@@ -1247,7 +1295,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <textarea
                 id="jr-rule"
                 value={weeklyRule}
-                onChange={(e) => setWeeklyRule(e.target.value)}
+                onChange={(e) => {
+                  touchWeeklyForm();
+                  setWeeklyRule(e.target.value);
+                }}
                 rows={2}
                 placeholder="One non-negotiable rule for next week."
                 disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
@@ -1261,7 +1312,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   <button
                     key={score}
                     type="button"
-                    onClick={() => setWeeklyConfidence(score)}
+                    onClick={() => {
+                      touchWeeklyForm();
+                      setWeeklyConfidence(score);
+                    }}
                     disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
                     className={cn(
                       "inline-flex h-9 w-9 items-center justify-center rounded-full border text-[13px] font-semibold transition",
@@ -1285,7 +1339,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             <textarea
               id="jr-note"
               value={weeklyNote}
-              onChange={(e) => setWeeklyNote(e.target.value)}
+              onChange={(e) => {
+                touchWeeklyForm();
+                setWeeklyNote(e.target.value);
+              }}
               rows={2}
               placeholder="Anything else worth carrying into next week."
               disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
@@ -1294,10 +1351,27 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={!canWriteJournal || weeklySaving || weeklyLoading || weeklyUnavailable} className="h-10 rounded-xl px-4">
-              {weeklySaving ? "Saving…" : weeklyUnavailable ? "Weekly review unavailable" : "Save weekly review"}
+              {weeklySaving
+                ? "Saving…"
+                : weeklyLoading
+                  ? "Loading…"
+                  : weeklyUnavailable
+                    ? "Weekly review unavailable"
+                    : weeklySaved
+                      ? "Update weekly review"
+                      : "Save weekly review"}
             </Button>
+            {weeklySaved && !weeklySaving && !weeklyLoading ? (
+              <span
+                className="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-400/35 bg-[linear-gradient(180deg,oklch(0.22_0.09_160/0.4),oklch(0.16_0.08_160/0.28))] px-4 text-[13px] font-medium text-emerald-100 shadow-[0_0_20px_-10px_rgba(52,211,153,0.65),inset_0_1px_0_0_rgba(255,255,255,0.15)]"
+                role="status"
+              >
+                <Check className="size-4 shrink-0" strokeWidth={2.25} aria-hidden />
+                Saved for this week
+              </span>
+            ) : null}
             {!canWriteJournal ? (
-              <p className="text-[13px] text-zinc-500">Weekly reflection is visible in read-only mode during trial expiry.</p>
+              <ReadOnlyBlockedNotice compact context="saving weekly reflections" />
             ) : null}
             {canWriteJournal && weeklyUnavailable ? (
               <p className="text-[13px] text-zinc-500">
@@ -1307,16 +1381,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             {canWriteJournal && !activeAccountId ? (
               <p className="text-[13px] text-zinc-500">Select an active account to save weekly review.</p>
             ) : null}
-            {weeklyMsg ? (
-              <p
-                className={cn(
-                  "text-[13px]",
-                  weeklyMsg.includes("saved") || weeklyMsg.toLowerCase().includes("unavailable") ? "text-zinc-400" : "text-rose-300/95",
-                )}
-              >
-                {weeklyMsg}
-              </p>
-            ) : null}
+            <InlineFeedback
+              message={weeklyMsg && !weeklySaved ? weeklyMsg : null}
+              tone={weeklyMsg?.toLowerCase().includes("saved") ? "success" : "error"}
+            />
           </div>
         </form>
       </DashboardCard>

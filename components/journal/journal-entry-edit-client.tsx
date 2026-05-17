@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Lock, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,16 @@ import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { chartUrlForSave, isValidChartUrl, normalizeChartUrlInput } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
+import { ReadOnlyBlockedNotice } from "@/components/access/read-only-blocked-notice";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
 import { appFormControl, appFormLabel } from "@/lib/ui/app-form";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { InlineFeedback } from "@/components/app/inline-feedback";
+import { formatUserError } from "@/lib/feedback/format-error";
+import { notifyReadOnlyBlocked } from "@/lib/feedback/read-only-action";
+import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
+import { trackProductEvent } from "@/lib/analytics/track-product-event";
 import {
   MARKET_CONDITION_OPTIONS,
   MISTAKE_TAG_OPTIONS,
@@ -47,6 +54,7 @@ type PersonalRuleRow = {
 export function JournalEntryEditClient({ userId, entryId, initialWorkspace, initialRow }: Props) {
   const router = useRouter();
   const { canWriteJournal, displayCurrency } = useAccess();
+  const toast = useAppToast();
   const { updateRow, removeRow, lastError } = useUserWorkspace(userId, { initialWorkspace });
 
   const [entryDate, setEntryDate] = useState(
@@ -137,7 +145,10 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canWriteJournal) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "journal_edit");
+      return;
+    }
     if (!entryDate.trim() || !symbol.trim() || !pnl.trim()) return;
     if (pnl.includes(".")) {
       setSaveError("Use comma for decimals (e.g. 100,80). Dot is not allowed.");
@@ -175,26 +186,36 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
     });
     setSaving(false);
     if (!result.ok) {
-      setSaveError(result.error ?? lastError ?? "Could not update entry.");
+      const msg = formatUserError(result.error ?? lastError, "Could not update this entry.");
+      setSaveError(msg);
+      toast.error(msg);
       return;
     }
+    trackProductEvent(PRODUCT_ANALYTICS_EVENTS.journalEntryEdited, { surface: "journal" });
+    toast.success("Entry updated.");
     router.push(`/app/journal/${entryId}`);
     router.refresh();
   };
 
   const onDelete = async () => {
-    if (!canWriteJournal) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "journal_delete");
+      return;
+    }
     setDeleteError(null);
     setDeleting(true);
     const result = await removeRow(entryId);
     setDeleting(false);
     if (result.ok) {
       setConfirmOpen(false);
+      toast.success("Entry deleted.");
       router.push("/app/journal");
       router.refresh();
       return;
     }
-    setDeleteError(result.error);
+    const msg = formatUserError(result.error, "Could not delete this entry.");
+    setDeleteError(msg);
+    toast.error(msg);
   };
 
   return (
@@ -212,30 +233,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
         }
       />
 
-      {!canWriteJournal ? (
-        <div
-          className="flex flex-col gap-3 rounded-2xl border border-amber-400/25 bg-amber-500/[0.08] p-4 sm:flex-row sm:items-center sm:justify-between"
-          role="status"
-        >
-          <div className="flex gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-500/10 text-amber-200">
-              <Lock className="size-[18px]" strokeWidth={1.75} />
-            </span>
-            <div>
-              <p className="app-metric-label text-amber-200/90">Read-only</p>
-              <p className="mt-1 text-[14px] leading-relaxed text-zinc-200">
-                Upgrade to Premium to edit entries, add a linked chart, or change P&amp;L.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/app/settings/billing"
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 text-[13px] font-medium text-amber-100 transition hover:bg-amber-500/25"
-          >
-            View billing
-          </Link>
-        </div>
-      ) : null}
+      <ReadOnlyBlockedNotice context="editing entries and linked charts" />
 
       <DashboardCard
         eyebrow="Edit"
@@ -243,7 +241,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
         description={
           canWriteJournal
             ? `Adjust P&L in ${displayCurrency} (set in Settings). Linked chart is optional.`
-            : "Fields are locked until you upgrade — your saved values stay visible below."
+            : "Read-only — your saved values stay visible below."
         }
       >
         <form onSubmit={onSubmit} className="space-y-6">
@@ -544,7 +542,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
             {saving ? "Saving…" : "Save changes"}
           </Button>
           {urlError ? <p className="text-[13px] text-rose-300/95">{urlError}</p> : null}
-          {saveError ? <p className="text-[13px] text-rose-300/95">{saveError}</p> : null}
+          <InlineFeedback message={saveError} tone="error" />
         </form>
 
         {canWriteJournal ? (
@@ -563,11 +561,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
               <Trash2 className="mr-2 size-4" strokeWidth={2} aria-hidden />
               {deleting ? "Deleting…" : "Delete entry"}
             </Button>
-            {deleteError ? (
-              <p className="mt-3 text-[13px] text-rose-300/95" role="alert">
-                {deleteError}
-              </p>
-            ) : null}
+            <InlineFeedback message={deleteError} tone="error" className="mt-3" />
           </div>
         ) : null}
       </DashboardCard>

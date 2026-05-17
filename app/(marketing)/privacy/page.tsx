@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LegalContactLink } from "@/components/legal/legal-contact-link";
+import { LegalList, LegalPageLayout, LegalSection } from "@/components/legal/legal-page-layout";
+import { DELETION_REQUEST_MAILTO, TRIAL_PREMIUM_SUMMARY } from "@/lib/legal/constants";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Blueveno collects, uses, and protects your data.",
+  description:
+    "How Blueveno collects, uses, and protects your data. Journaling and review tool — not financial advice.",
   alternates: {
     canonical: "/privacy",
   },
@@ -16,84 +20,127 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-2xl bg-background px-5 py-24 text-zinc-100 sm:px-8">
-      <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Legal</p>
-      <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight">Privacy Policy</h1>
-      <p className="mt-6 text-[15px] leading-relaxed text-zinc-400">
-        This Privacy Policy explains what data Blueveno processes, why it is processed, how long it is kept, and how you can
-        request access, correction, or deletion.
-      </p>
+    <LegalPageLayout
+      currentPath="/privacy"
+      title="Privacy Policy"
+      intro="This policy explains what data Blueveno processes, why we process it, how long we keep it, and how you can access, correct, or delete your information."
+    >
+      <LegalSection title="1. What Blueveno is">
+        <p>
+          Blueveno is a personal trading journal and review workspace. You record your own sessions, link optional chart
+          URLs, and review calendar and stats derived from your entries. Blueveno does not provide financial advice,
+          trading signals, or investment recommendations.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">1. Data we process</h2>
-      <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-zinc-400">
-        <li>
-          <span className="font-medium text-zinc-200">Account and identity:</span> account ID, email, display name, timezone,
-          and authentication/session data required to sign in securely.
-        </li>
-        <li>
-          <span className="font-medium text-zinc-200">Journal data:</span> journal entries, date/time, symbol, P&amp;L values,
-          notes, mood/state, discipline checks (followed plan, respected stop, no revenge trade), and linked chart URLs.
-        </li>
-        <li>
-          <span className="font-medium text-zinc-200">Access and billing state:</span> trial status, premium/subscription access
-          state, and related entitlement fields used to control write/read-only access.
-        </li>
-        <li>
-          <span className="font-medium text-zinc-200">Admin management data:</span> role flags, account status fields, and
-          audit-relevant metadata needed to operate admin/user management.
-        </li>
-        <li>
-          <span className="font-medium text-zinc-200">Security and operations:</span> basic logs and technical signals required
-          to keep the service stable, available, and protected.
-        </li>
-      </ul>
+      <LegalSection title="2. Data we store">
+        <LegalList
+          items={[
+            <>
+              <span className="font-medium text-zinc-200">Account and identity:</span> email, display name, timezone,
+              display currency preference, authentication identifiers, and session data needed to sign in securely.
+            </>,
+            <>
+              <span className="font-medium text-zinc-200">Journal and review data:</span> entry dates, symbols, P&amp;L
+              amounts you enter, notes, mood and discipline fields, tags, weekly reflections, personal rules, and
+              optional chart links you provide.
+            </>,
+            <>
+              <span className="font-medium text-zinc-200">Trading accounts:</span> account names, types, currency, and
+              related settings you configure in the app.
+            </>,
+            <>
+              <span className="font-medium text-zinc-200">Access state:</span> trial status, premium or read-only access,
+              and entitlement fields used to control what you can edit in the workspace.
+            </>,
+            <>
+              <span className="font-medium text-zinc-200">Operations and security:</span> technical logs and error signals
+              needed to keep the service reliable and secure.
+            </>,
+            <>
+              <span className="font-medium text-zinc-200">Product analytics:</span> anonymous usage events (for example,
+              opening Calendar or exporting a summary CSV). We do not send journal notes, P&amp;L values, symbols, or
+              other trading content in analytics events. See our{" "}
+              <Link href="/cookies" className="text-bv-ice/90 underline-offset-4 hover:underline">
+                Cookie Policy
+              </Link>{" "}
+              for more detail.
+            </>,
+          ]}
+        />
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">2. Why we process data</h2>
-      <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-zinc-400">
-        <li>To provide and secure account access.</li>
-        <li>To deliver journal, calendar, and stats features.</li>
-        <li>To enforce trial/premium/read-only access rules.</li>
-        <li>To support admin safety and abuse prevention.</li>
-        <li>To comply with applicable legal obligations.</li>
-      </ul>
+      <LegalSection title="3. Why we process data">
+        <LegalList
+          items={[
+            "To create and secure your account.",
+            "To provide journal, calendar, stats, and settings features.",
+            "To enforce trial, Premium, and read-only access rules.",
+            "To respond to support and deletion requests.",
+            "To maintain platform safety and comply with legal obligations.",
+          ]}
+        />
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">3. Data retention</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        We keep data for as long as needed to operate your account and comply with legal obligations. If you request account
-        deletion, we remove or anonymize personal data unless specific records must be retained for security, fraud
-        prevention, or legal compliance.
-      </p>
+      <LegalSection title="4. Trial and Premium access">
+        <p>{TRIAL_PREMIUM_SUMMARY}</p>
+        <p>
+          Access state is stored so the app can show the correct limits (for example, read-only mode after trial). We do
+          not store payment card details in the app today.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">4. Data sharing</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Blueveno does not sell personal data. Data is processed by infrastructure providers needed to run authentication,
-        storage, and hosting. Access is limited to what is required to provide the service.
-      </p>
+      <LegalSection title="5. Retention">
+        <p>
+          We keep data for as long as your account is active and as needed to operate the service. If you request
+          deletion, we remove or anonymize personal data unless we must retain specific records for security, dispute
+          resolution, or legal compliance.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">5. Your rights</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Depending on your jurisdiction, you may request access, correction, deletion, or restriction of your data.
-        You may also object to certain processing where applicable.
-      </p>
+      <LegalSection title="6. Sharing">
+        <p>
+          We do not sell your personal data. Data is processed by infrastructure providers that host authentication,
+          database storage, and the web application (for example, hosting and database services). They process data only
+          on our instructions and as needed to run Blueveno.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">6. Deletion requests and contact</h2>
-      <p className="mt-10 text-[15px] leading-relaxed text-zinc-400">
-        For account deletion or support requests, contact us from your account email so we can verify ownership:{" "}
-        <a href="mailto:kennethalto95@gmail.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
-          kennethalto95@gmail.com
-        </a>
-        .
-      </p>
+      <LegalSection title="7. Your rights">
+        <p>
+          Depending on your location, you may have rights to access, correct, export, restrict, or delete your personal
+          data, and to object to certain processing. Contact us using the email below and we will respond within a
+          reasonable time.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">7. Updates</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        We may update this policy as the product evolves. Material updates will be reflected on this page.
-      </p>
-      <p className="mt-12">
-        <Link href="/" className="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-300">
-          ← Back to home
-        </Link>
-      </p>
-    </main>
+      <LegalSection title="8. Account deletion">
+        <p>
+          To request deletion, email us from the address tied to your account so we can verify ownership. Include
+          &quot;Account deletion&quot; in the subject line or use this link:{" "}
+          <a href={DELETION_REQUEST_MAILTO} className="text-bv-ice/90 underline-offset-4 hover:underline">
+            Request account deletion
+          </a>
+          . Deletion removes your journal data and account access unless we must retain limited records for legal or
+          security reasons.
+        </p>
+        <p>
+          You can also open Settings → Data &amp; privacy in the app for export and deletion options where available.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="9. Contact">
+        <p>
+          Support and privacy requests: <LegalContactLink className="text-bv-ice/90 underline-offset-4 hover:underline" />.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="10. Updates">
+        <p>
+          We may update this policy as the product changes. The &quot;Last updated&quot; date at the top reflects the
+          current version. Continued use after an update means you accept the revised policy, subject to applicable law.
+        </p>
+      </LegalSection>
+    </LegalPageLayout>
   );
 }

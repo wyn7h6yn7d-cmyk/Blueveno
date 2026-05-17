@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LegalContactLink } from "@/components/legal/legal-contact-link";
+import { LegalList, LegalPageLayout, LegalSection } from "@/components/legal/legal-page-layout";
+import { TRIAL_PREMIUM_SUMMARY } from "@/lib/legal/constants";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms for using Blueveno.",
+  description:
+    "Terms for using Blueveno — a trading journal and review tool, not financial advice.",
   alternates: {
     canonical: "/terms",
   },
@@ -16,76 +20,109 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-2xl bg-background px-5 py-24 text-zinc-100 sm:px-8">
-      <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Legal</p>
-      <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight">Terms of Service</h1>
-      <p className="mt-6 text-[15px] leading-relaxed text-zinc-400">
-        These Terms govern access to and use of Blueveno. By creating an account or using the service, you agree to these Terms.
-      </p>
+    <LegalPageLayout
+      currentPath="/terms"
+      title="Terms of Service"
+      intro="These Terms govern your access to and use of Blueveno. By creating an account or using the service, you agree to these Terms."
+    >
+      <LegalSection title="1. The service">
+        <p>
+          Blueveno is a journaling and review tool for your own trading activity. It helps you log sessions, review
+          discipline, inspect calendar summaries, and export your data. Blueveno is not a broker, exchange, signal
+          service, or investment adviser.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">1. Service scope</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Blueveno is a trading journal and review tool. It helps you record, review, and analyze your own activity.
-      </p>
+      <LegalSection title="2. No financial advice">
+        <LegalList
+          items={[
+            "Blueveno does not provide financial advice, trading signals, or investment recommendations.",
+            "Nothing in the app, website, or support responses is a solicitation to buy or sell any instrument.",
+            "You are solely responsible for your trading decisions, position sizing, risk management, and outcomes.",
+            "Past journal entries or statistics do not guarantee future results.",
+          ]}
+        />
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">2. No financial advice</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Blueveno is a journaling and review tool. It does not provide financial advice, trading signals, or investment
-        recommendations.
-      </p>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        You are fully responsible for your trading decisions, risk management, and outcomes.
-      </p>
+      <LegalSection title="3. Eligibility and account">
+        <p>
+          You must be old enough to form a binding contract in your jurisdiction. You are responsible for accurate
+          registration information, keeping credentials secure, and all activity under your account. Notify us promptly if
+          you suspect unauthorized access.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">3. Account and security</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        You are responsible for keeping your credentials secure and for activity under your account. You must provide
-        accurate information and notify us if you believe your account is compromised.
-      </p>
+      <LegalSection title="4. Trial, Premium, and access">
+        <p>{TRIAL_PREMIUM_SUMMARY}</p>
+        <p>
+          We may change trial length, pricing, or feature limits with reasonable notice where required. Premium may be
+          enabled by request or through future in-app checkout when available.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">4. Trial, premium, and access</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Accounts may start with a trial period. Premium access enables full write features. After trial ends without Premium,
-        access becomes read-only until upgrade. Billing/subscription terms may be expanded when paid checkout is enabled.
-      </p>
+      <LegalSection title="5. Acceptable use">
+        <LegalList
+          items={[
+            "Do not misuse the service or attempt unauthorized access.",
+            "Do not interfere with platform security or availability.",
+            "Do not use Blueveno for unlawful purposes.",
+            "Do not upload content that infringes others' rights or contains malware.",
+          ]}
+        />
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">5. Acceptable use</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        You agree not to misuse the service, interfere with platform security, attempt unauthorized access, reverse engineer
-        protected systems, or use Blueveno for unlawful purposes.
-      </p>
+      <LegalSection title="6. Your content">
+        <p>
+          You retain ownership of journal content and links you add. You grant Blueveno a limited license to host,
+          process, back up, and display that content solely to operate the service for you.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">6. Data and content</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        You retain rights to your journal content and uploaded links. You grant Blueveno the limited rights necessary to
-        host, process, and display your content to operate the service.
-      </p>
+      <LegalSection title="7. Privacy and cookies">
+        <p>
+          Our{" "}
+          <Link href="/privacy" className="text-bv-ice/90 underline-offset-4 hover:underline">
+            Privacy Policy
+          </Link>{" "}
+          explains what data we process and how to request deletion. Our{" "}
+          <Link href="/cookies" className="text-bv-ice/90 underline-offset-4 hover:underline">
+            Cookie Policy
+          </Link>{" "}
+          explains cookies, session storage, and analytics.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">7. Disclaimers and limitation of liability</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        The service is provided on an &quot;as is&quot; and &quot;as available&quot; basis. To the maximum extent permitted by law, Blueveno
-        disclaims warranties and is not liable for indirect, incidental, or consequential damages arising from your use of
-        the service.
-      </p>
+      <LegalSection title="8. Disclaimers">
+        <p>
+          The service is provided &quot;as is&quot; and &quot;as available.&quot; To the fullest extent permitted by law,
+          Blueveno disclaims warranties of merchantability, fitness for a particular purpose, and non-infringement. We do
+          not warrant uninterrupted or error-free operation.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">8. Changes and termination</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        We may update these Terms from time to time. Continued use after updates means acceptance of the revised Terms. We
-        may suspend or terminate accounts that violate these Terms or threaten platform integrity.
-      </p>
+      <LegalSection title="9. Limitation of liability">
+        <p>
+          To the maximum extent permitted by law, Blueveno and its operators are not liable for indirect, incidental,
+          special, consequential, or punitive damages, or for trading losses, lost profits, or lost data arising from
+          your use of the service.
+        </p>
+      </LegalSection>
 
-      <p className="mt-10 text-[15px] leading-relaxed text-zinc-400">
-        Questions about these Terms:{" "}
-        <a href="mailto:kennethalto95@gmail.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
-          kennethalto95@gmail.com
-        </a>
-        .
-      </p>
-      <p className="mt-12">
-        <Link href="/" className="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-300">
-          ← Back to home
-        </Link>
-      </p>
-    </main>
+      <LegalSection title="10. Changes and termination">
+        <p>
+          We may update these Terms or discontinue features. Material changes will be posted on this page. We may suspend
+          or terminate accounts that violate these Terms or threaten platform integrity. You may stop using Blueveno at
+          any time and request account deletion as described in the Privacy Policy.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="11. Contact">
+        <p>
+          Questions about these Terms:{" "}
+          <LegalContactLink subject="Blueveno Terms Question" className="text-bv-ice/90 underline-offset-4 hover:underline" />
+          .
+        </p>
+      </LegalSection>
+    </LegalPageLayout>
   );
 }

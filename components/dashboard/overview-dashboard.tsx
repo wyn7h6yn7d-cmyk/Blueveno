@@ -14,6 +14,9 @@ import { entryDisciplineFraction } from "@/lib/user-data/stats-display";
 import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-stats";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { DayBreakdownModule } from "@/components/dashboard/day-breakdown-module";
+import { OverviewOnboardingChecklist } from "@/components/dashboard/overview-onboarding-checklist";
+import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
+import { getOverviewOnboardingChecklist } from "@/lib/onboarding/overview-checklist";
 import { appCardPrimary, appKicker, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { createClient } from "@/lib/supabase/client";
@@ -44,6 +47,7 @@ function percentOrDash(value: number | null): string {
 export function OverviewDashboard({ userId, email, initialWorkspace, userTimezone }: Props) {
   const { displayCurrency } = useAccess();
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
+  const { accounts, loading: accountsLoading } = useTradingAccountsWorkspace();
   const [weeklyReviewStatus, setWeeklyReviewStatus] = useState<{
     status: "review_ready" | "saved" | "set_focus";
     nextFocus: string | null;
@@ -136,6 +140,16 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
   );
 
   const hasEntries = data.journal.length > 0;
+
+  const onboarding = useMemo(
+    () =>
+      getOverviewOnboardingChecklist({
+        accountCount: accounts.length,
+        entryCount: data.journal.length,
+        tradedDays: overviewStats.tradedDays,
+      }),
+    [accounts.length, data.journal.length, overviewStats.tradedDays],
+  );
   const noLosingDays = overviewStats.losingDays === 0;
   const lossMetricLabel = noLosingDays ? "Smallest green day" : "Worst day";
   const lossMetricValue = noLosingDays ? overviewStats.smallestGreenDay : overviewStats.worstLossDay;
@@ -213,6 +227,10 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
         }
       />
 
+      {ready && !accountsLoading && onboarding.show ? (
+        <OverviewOnboardingChecklist items={onboarding.items} />
+      ) : null}
+
       <section className="space-y-3" aria-label="Overview KPIs">
         {!ready ? (
           <div className="space-y-3">
@@ -279,7 +297,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
           title="Current week"
           description="Outcome color and total in one line."
         >
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-6">
             {weekCells.map((cell) => {
               const pnl = cell.keys.reduce((acc, key) => acc + (dayAggMap.get(key) ?? 0), 0);
               const tone =

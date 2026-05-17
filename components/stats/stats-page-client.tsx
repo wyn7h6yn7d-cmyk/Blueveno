@@ -23,6 +23,12 @@ import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { cn } from "@/lib/utils";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { InlineFeedback } from "@/components/app/inline-feedback";
+import { formatUserError } from "@/lib/feedback/format-error";
+import { feedbackToneFromMessage } from "@/lib/feedback/feedback-tone";
+import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
+import { trackExportCsvClicked, trackProductEvent } from "@/lib/analytics/track-product-event";
 import { createClient } from "@/lib/supabase/client";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { mapTradingAccountRow } from "@/lib/trading-accounts/map";
@@ -608,6 +614,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const toast = useAppToast();
   const { displayCurrency } = useAccess();
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
   const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionStat[]>([]);
@@ -626,6 +633,10 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
   const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exportBusy, setExportBusy] = useState(false);
+
+  useEffect(() => {
+    trackProductEvent(PRODUCT_ANALYTICS_EVENTS.statsOpened, { surface: "stats" });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -991,6 +1002,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         ],
         rows,
       );
+      trackExportCsvClicked("stats_summary", "stats");
       triggerCsvDownload(`blueveno-stats-summary-${fileDate()}.csv`, csv);
       setExportMsg("Stats summary export ready.");
     } catch (error) {
@@ -1008,7 +1020,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
         title="Stats"
         description="Track performance, behavior, and recurring patterns."
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="app-page-actions-mobile flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
             <button type="button" onClick={onExportStatsSummary} className={appSecondaryCta} disabled={exportBusy}>
               <ArrowUpRight className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
               {exportBusy ? "Exporting…" : "Export summary CSV"}
@@ -1020,7 +1032,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           </div>
         }
       />
-      {exportMsg ? <p className="text-[13px] text-zinc-400">{exportMsg}</p> : null}
+      <InlineFeedback message={exportMsg} tone={feedbackToneFromMessage(exportMsg)} />
 
       <section className="space-y-2" aria-label="Stats filters">
         <div className={cn(appFilterShell, "flex items-center justify-between gap-2")}>
@@ -1113,6 +1125,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             onChange={navigateTab}
             ariaLabel="Stats sections"
             variant="sticky"
+            className="app-scroll-tabs-x w-full"
           />
 
           {filteredEntries.length === 0 ? (
@@ -1231,7 +1244,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
           </DashboardCard>
 
           <section className="grid gap-4 lg:grid-cols-2" aria-label="Secondary charts">
-            <DashboardCard eyebrow="Days" title="Daily P&amp;L bars" description="One bar per trading day." variant="inset" className="overflow-x-hidden">
+            <DashboardCard eyebrow="Days" title="Daily P&amp;L bars" description="One bar per trading day." variant="inset" className="overflow-x-auto">
               <DailyBars bars={stats.dailyBars} currency={displayCurrency} />
             </DashboardCard>
             <DashboardCard eyebrow="Weeks" title="Weekly totals trend" description="Recent weeks at a glance.">

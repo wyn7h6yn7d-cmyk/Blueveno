@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ErrorInfo, type ReactNode, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Wallet, X } from "lucide-react";
 import { useAccess } from "@/components/access/access-provider";
@@ -66,7 +67,7 @@ function TopbarAccountSwitcherInner() {
   return (
     <>
       <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1.5">
-        <div className="inline-flex min-w-0 items-center gap-1.5 overflow-hidden rounded-full border border-[oklch(0.58_0.11_252/0.36)] bg-[oklch(0.14_0.045_262/0.88)] py-1 pl-2 pr-2 text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:pr-2.5">
+        <div className="inline-flex min-h-10 min-w-0 max-w-full items-center gap-1.5 overflow-hidden rounded-full border border-[oklch(0.58_0.11_252/0.36)] bg-[oklch(0.14_0.045_262/0.88)] py-1 pl-2 pr-2 text-zinc-100 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06)] sm:pr-2.5">
           <Wallet className="size-3.5 shrink-0 text-[oklch(0.74_0.11_252)]" />
           <select
             value={activeAccountId ?? ""}
@@ -81,7 +82,7 @@ function TopbarAccountSwitcherInner() {
               }
               setAccountActionError(result.error);
             }}
-            className="h-6 min-w-0 max-w-[9rem] shrink truncate bg-transparent text-[12px] text-zinc-100 outline-none sm:max-w-[11rem] md:max-w-[13rem]"
+            className="h-8 min-w-0 max-w-[7.5rem] shrink truncate bg-transparent text-[13px] text-zinc-100 outline-none min-[400px]:max-w-[9rem] sm:max-w-[11rem] md:max-w-[13rem]"
             aria-label="Select trading account"
           >
             {accounts.length === 0 ? <option value="">No accounts</option> : null}
@@ -92,28 +93,33 @@ function TopbarAccountSwitcherInner() {
             ))}
           </select>
           {activeAccount ? (
-            <span className="shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-[1px] text-[9px] uppercase tracking-[0.12em] text-emerald-200">
+            <span className="hidden shrink-0 rounded-full border border-emerald-400/35 bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-200 min-[400px]:inline-flex">
               Active
             </span>
           ) : null}
           <button
             type="button"
-            className="h-6 shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 text-[11px] text-zinc-200 transition hover:bg-white/[0.1]"
+            className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.04] px-2.5 text-[12px] text-zinc-200 transition hover:bg-white/[0.1] sm:px-3"
             onClick={() => router.push("/app/settings?section=accounts#accounts")}
+            aria-label="Manage trading accounts"
           >
-            Manage
+            <span className="hidden sm:inline">Manage</span>
+            <span className="sm:hidden">···</span>
           </button>
         </div>
         <span
-          className="inline-flex shrink-0 items-center rounded-full border border-white/[0.12] bg-white/[0.03] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-400"
+          className="hidden shrink-0 items-center rounded-full border border-white/[0.12] bg-white/[0.03] px-2 py-0.5 font-mono text-[11px] uppercase tracking-wide text-zinc-400 min-[430px]:inline-flex"
           title={`Trading accounts in use (${Math.min(accounts.length, maxAccounts)} of ${maxAccounts})`}
         >
           Accounts {Math.min(accounts.length, maxAccounts)}/{maxAccounts}
         </span>
       </div>
       {access.state === "trial_active" && maxAccounts === 1 && accounts.length >= 1 ? (
-        <p className="hidden text-[11px] text-zinc-500 sm:block sm:text-[12px]">
-          1 trading account during trial. Upgrade for up to 5.
+        <p className="hidden text-[12px] text-zinc-500 sm:block">
+          Trial: 1 account.{" "}
+          <Link href="/app/settings/billing" className="text-[oklch(0.78_0.11_252)] hover:underline">
+            Premium supports up to 5
+          </Link>
         </p>
       ) : null}
 

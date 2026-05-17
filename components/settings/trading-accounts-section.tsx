@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,14 @@ import {
   tradingAccountsUsageText,
 } from "@/lib/trading-accounts/entitlements";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
+import { AccountAccessLimits } from "@/components/access/account-access-limits";
+import { PLAN_ACCESS_HREF } from "@/lib/access/access-messaging";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { InlineFeedback } from "@/components/app/inline-feedback";
+import { formatUserError } from "@/lib/feedback/format-error";
+import { feedbackToneFromMessage } from "@/lib/feedback/feedback-tone";
+import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
+import { trackProductEvent } from "@/lib/analytics/track-product-event";
 
 const field =
   "h-10 w-full min-w-0 rounded-xl border border-white/[0.12] bg-black/25 px-3 text-[14px] text-zinc-100 placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)]";
@@ -42,7 +50,7 @@ const EMPTY_FORM: FormState = {
 };
 export function TradingAccountsSection() {
   const access = useAccess();
-  const { isReadOnlyTrial } = access;
+  const toast = useAppToast();
   const searchParams = useSearchParams();
   const {
     userId,
@@ -75,33 +83,46 @@ export function TradingAccountsSection() {
     if (!userId) return;
     const result = await setActiveAccount(id);
     if (!result.ok) {
-      setMessage(result.error);
+      const msg = formatUserError(result.error, "Could not set main account.");
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     setMessage("Main account updated.");
+    toast.success("Main account updated.");
   }
 
   async function onSaveAccount(e: React.FormEvent) {
     e.preventDefault();
     if (!userId || !canManage) return;
     if (!editingId && atAccountLimit) {
-      setMessage(maxAccounts === 1 ? "Upgrade to Premium to add more accounts." : "You've reached the 5-account limit.");
+      const msg = maxAccounts === 1 ? "Upgrade to Premium to add more accounts." : "You've reached the 5-account limit.";
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     if (!form.name.trim()) {
-      setMessage("Account name is required.");
+      const msg = "Account name is required.";
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     if (!form.accountType) {
-      setMessage("Account type is required.");
+      const msg = "Account type is required.";
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     if (!form.currency.trim()) {
-      setMessage("Currency is required.");
+      const msg = "Currency is required.";
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     if (form.startingBalance.trim() && Number.isNaN(Number(form.startingBalance.trim()))) {
-      setMessage("Starting balance must be numeric.");
+      const msg = "Starting balance must be numeric.";
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
 
@@ -122,22 +143,32 @@ export function TradingAccountsSection() {
       const { error } = await supabase.from("trading_accounts").update(payload).eq("id", editingId).eq("user_id", userId);
       if (error) {
         setSaving(false);
-        setMessage(error.message);
+        const msg = formatUserError(error, "Could not update account.");
+        setMessage(msg);
+        toast.error(msg);
         return;
       }
       setMessage("Account updated.");
+      toast.success("Account updated.");
     } else {
       const { data, error } = await supabase.from("trading_accounts").insert(payload).select("id").single();
       if (error) {
         setSaving(false);
-        setMessage(error.message);
+        const msg = formatUserError(error, "Could not create account.");
+        setMessage(msg);
+        toast.error(msg);
         return;
       }
       const newId = (data?.id as string | undefined) ?? null;
-      if (newId && (!activeAccountId || accounts.length === 0)) {
+      const isFirstAccount = accounts.length === 0;
+      if (newId && (!activeAccountId || isFirstAccount)) {
         await setActiveAccount(newId);
       }
+      if (isFirstAccount) {
+        trackProductEvent(PRODUCT_ANALYTICS_EVENTS.firstTradingAccountCreated, { surface: "settings" });
+      }
       setMessage("Account created.");
+      toast.success("Account created.");
     }
 
     setEditingId(null);
@@ -158,13 +189,17 @@ export function TradingAccountsSection() {
       .eq("account_id", deleteId);
     if (journalDeleteError) {
       setDeleting(false);
-      setMessage(journalDeleteError.message);
+      const msg = formatUserError(journalDeleteError, "Could not clear journal for this account.");
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     const { error } = await supabase.from("trading_accounts").delete().eq("id", deleteId).eq("user_id", userId);
     if (error) {
       setDeleting(false);
-      setMessage(error.message);
+      const msg = formatUserError(error, "Could not delete account.");
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     const remaining = accounts.filter((a) => a.id !== deleteId);
@@ -179,7 +214,9 @@ export function TradingAccountsSection() {
           .eq("user_id", userId);
         if (clearActiveError) {
           setDeleting(false);
-          setMessage(clearActiveError.message);
+          const msg = formatUserError(clearActiveError, "Could not update active account.");
+          setMessage(msg);
+          toast.error(msg);
           return;
         }
       }
@@ -187,6 +224,7 @@ export function TradingAccountsSection() {
     setDeleting(false);
     setDeleteId(null);
     setMessage("Account deleted.");
+    toast.success("Account deleted.");
     await reload();
   }
 
@@ -207,7 +245,8 @@ export function TradingAccountsSection() {
 
       {!loading ? (
         <div className="space-y-5">
-          <form onSubmit={onSaveAccount} className="grid gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <AccountAccessLimits />
+          <form onSubmit={onSaveAccount} className="grid gap-3 rounded-xl bg-white/[0.02] p-4 ring-1 ring-inset ring-white/[0.06]">
             <p className="app-metric-label">
               {editingId ? "Edit account" : "Create account"}
             </p>
@@ -303,20 +342,19 @@ export function TradingAccountsSection() {
                 </Button>
               ) : null}
             </div>
-            {!canManage ? (
-              <p className="text-[12px] text-zinc-500">
-                {isReadOnlyTrial ? "Read-only access after trial. Keep your history visible." : "Account management is disabled."}{" "}
-                <Link href="/app/settings/billing" className="text-[oklch(0.78_0.11_252)] underline-offset-4 hover:underline">
-                  Upgrade to keep journaling and manage accounts
-                </Link>
-                .
-              </p>
-            ) : null}
             {canManage && atAccountLimit && !editingId ? (
-              <p className="text-[12px] text-zinc-500">
-                {maxAccounts === 1
-                  ? "Upgrade to Premium to add more accounts."
-                  : "You've reached the 5-account limit."}
+              <p className="text-[13px] text-zinc-500">
+                {maxAccounts === 1 ? (
+                  <>
+                    Trial is limited to 1 account.{" "}
+                    <Link href={PLAN_ACCESS_HREF} className="text-[oklch(0.78_0.11_252)] underline-offset-4 hover:underline">
+                      Premium supports up to 5
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  "You've reached the 5-account limit on Premium."
+                )}
               </p>
             ) : null}
           </form>
@@ -411,13 +449,7 @@ export function TradingAccountsSection() {
           )}
         </div>
       ) : null}
-      {message ? <p className="mt-4 text-[13px] text-zinc-400">{message}</p> : null}
-      {!canManage && !loading ? (
-        <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-zinc-500">
-          <Lock className="size-3.5" />
-          You can switch accounts, but create/edit/delete are locked in read-only access after trial.
-        </p>
-      ) : null}
+      <InlineFeedback message={message} tone={feedbackToneFromMessage(message)} className="mt-4" />
 
         <ConfirmDialog
           open={Boolean(deleteId)}

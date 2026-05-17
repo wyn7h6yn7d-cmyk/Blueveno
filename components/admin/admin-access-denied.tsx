@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function AdminAccessDenied() {
   return (
-    <div className="mx-auto max-w-2xl rounded-2xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.12_0.03_264/0.95),oklch(0.09_0.028_268/0.98))] p-7 text-center shadow-[0_26px_70px_-44px_rgba(0,0,0,0.85)]">
+    <div className="mx-auto max-w-2xl rounded-2xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.12_0.03_264/0.95),oklch(0.09_0.028_268/0.98))] p-5 text-center shadow-[0_26px_70px_-44px_rgba(0,0,0,0.85)] sm:p-7">
       <div className="mx-auto flex size-11 items-center justify-center rounded-xl border border-rose-400/30 bg-rose-500/[0.12] text-rose-200">
         <ShieldX className="size-5" strokeWidth={1.9} />
       </div>

@@ -146,7 +146,7 @@ function JournalDayCard({
             <Link
               href={`/app/journal/${row.id}/edit`}
               prefetch
-              title={canWriteJournal ? "Edit entry" : "Read-only — upgrade to edit entries"}
+              title={canWriteJournal ? "Edit entry" : "Read-only — request Premium to edit"}
               className={cn(
                 buttonVariants({ variant: "outline", size: "sm" }),
                 "h-8 rounded-lg border-white/[0.12] bg-white/[0.03] px-3 text-[12px] font-medium text-zinc-200 hover:bg-white/[0.06]",

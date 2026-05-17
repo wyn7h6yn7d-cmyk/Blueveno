@@ -15,6 +15,7 @@ import { TIMEZONE_GROUPS } from "@/lib/timezone-options";
 import { TradingAccountsSection } from "@/components/settings/trading-accounts-section";
 import { PersonalRulesSection } from "@/components/settings/personal-rules-section";
 import type { SettingsSectionId } from "@/lib/settings/sections";
+import { DELETION_REQUEST_MAILTO, SUPPORT_REQUEST_MAILTO } from "@/lib/legal/constants";
 
 type SaveFeedback = { section: "profile" | "preferences"; message: string } | null;
 
@@ -395,14 +396,26 @@ export function SettingsPanels({
             >
               View privacy policy
             </Link>
+            <Link
+              href="/terms"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/cookies"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
+            >
+              Cookie Policy
+            </Link>
             <a
-              href="mailto:kennethalto95@gmail.com?subject=Blueveno%20Account%20Deletion%20Request"
+              href={DELETION_REQUEST_MAILTO}
               className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-400/30 bg-rose-500/[0.08] px-4 text-[13px] text-rose-200 transition hover:bg-rose-500/[0.14]"
             >
               Request account deletion
             </a>
             <a
-              href="mailto:kennethalto95@gmail.com?subject=Blueveno%20Support%20Request"
+              href={SUPPORT_REQUEST_MAILTO}
               className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
             >
               Contact support

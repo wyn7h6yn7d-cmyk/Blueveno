@@ -211,8 +211,8 @@ export function CookieConsentModal() {
               onChange={() => undefined}
             />
             <ToggleRow
-              title="Third-party cookies"
-              description="Help us measure service performance and improve user experience."
+              title="Analytics cookies"
+              description="Allow privacy-safe product analytics (for example, Vercel Web Analytics) to understand which features are used. No journal notes, P&L, or symbols are sent."
               checked={thirdParty}
               onChange={setThirdParty}
             />

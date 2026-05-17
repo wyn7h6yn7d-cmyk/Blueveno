@@ -11,13 +11,17 @@ import {
   effectiveMonthlyFromYearlyEur,
   yearlySavingsPercentApprox,
 } from "@/lib/marketing/pricing-copy";
+import {
+  BLUEVENO_SUPPORT_EMAIL,
+  formatTrialDaysLabel,
+  getTrialDaysRemaining,
+} from "@/lib/access/access-messaging";
 import { tradingAccountsMaxForAccess } from "@/lib/trading-accounts/entitlements";
+import { PremiumRequestLink } from "@/components/analytics/premium-request-link";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
 import { cn } from "@/lib/utils";
 
-const SUPPORT_EMAIL = "kennethalto95@gmail.com";
-const PREMIUM_REQUEST_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Blueveno Premium Access Request")}`;
-const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Blueveno Support Request")}`;
+const SUPPORT_MAILTO = `mailto:${BLUEVENO_SUPPORT_EMAIL}?subject=${encodeURIComponent("Blueveno Support Request")}`;
 
 type AccessTone = "admin" | "premium" | "trial" | "readonly";
 
@@ -30,7 +34,11 @@ function formatTrialEnd(iso: string | null): string | null {
   });
 }
 
-function accessPresentation(state: AccessState, isAdmin: boolean): {
+function accessPresentation(
+  state: AccessState,
+  isAdmin: boolean,
+  trialEndsAt: string | null,
+): {
   tone: AccessTone;
   label: string;
   headline: string;
@@ -49,22 +57,25 @@ function accessPresentation(state: AccessState, isAdmin: boolean): {
       tone: "premium",
       label: "Premium active",
       headline: "Premium is active on your account.",
-      detail: "You have full write access and can use up to 5 trading accounts.",
+      detail: "You have full write access, full calendar history, stats, and up to 5 trading accounts.",
     };
   }
   if (state === "trial_active") {
+    const daysLabel = formatTrialDaysLabel(getTrialDaysRemaining(trialEndsAt));
     return {
       tone: "trial",
       label: "Trial active",
-      headline: "Your 7-day trial is active.",
-      detail: "Log trades, review stats, and explore the workspace. Trial includes 1 trading account.",
+      headline: daysLabel ?? "Your free trial is active",
+      detail:
+        "Log trades, review your week in Calendar, and explore Stats as your journal grows. Trial includes 1 trading account.",
     };
   }
   return {
     tone: "readonly",
     label: "Read-only",
     headline: "Trial ended — workspace is read-only.",
-    detail: "Your history stays visible. Upgrade to Premium to journal again and add more accounts.",
+    detail:
+      "Your journal and calendar history stay visible. Request Premium to journal again, add accounts, and unlock full stats.",
   };
 }
 
@@ -106,7 +117,7 @@ export default async function BillingSettingsPage() {
   }
 
   const { state, isAdmin, trialEndsAt } = access;
-  const presentation = accessPresentation(state, isAdmin);
+  const presentation = accessPresentation(state, isAdmin, trialEndsAt);
   const trialEndLabel = formatTrialEnd(trialEndsAt);
   const maxAccounts = tradingAccountsMaxForAccess({ isAdmin, state });
   const accountLimitLabel =
@@ -259,9 +270,9 @@ export default async function BillingSettingsPage() {
             </p>
             <div className="flex flex-wrap gap-2">
               {showRequestPremium ? (
-                <a href={PREMIUM_REQUEST_MAILTO} className={cn(appPrimaryCta, "h-10 px-5 text-[14px]")}>
+                <PremiumRequestLink source="billing_page" className={cn(appPrimaryCta, "h-10 px-5 text-[14px]")}>
                   Request Premium access
-                </a>
+                </PremiumRequestLink>
               ) : null}
               <a
                 href={SUPPORT_MAILTO}

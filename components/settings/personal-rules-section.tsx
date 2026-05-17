@@ -7,11 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAccess } from "@/components/access/access-provider";
+import { ReadOnlyBlockedNotice } from "@/components/access/read-only-blocked-notice";
 import {
   isMissingPersonalRulesTableError,
   PERSONAL_RULES_SETUP_MESSAGE,
 } from "@/lib/user-data/personal-rules-schema";
 import { cn } from "@/lib/utils";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { InlineFeedback } from "@/components/app/inline-feedback";
+import { formatUserError } from "@/lib/feedback/format-error";
+import { notifyReadOnlyBlocked } from "@/lib/feedback/read-only-action";
+import { feedbackToneFromMessage } from "@/lib/feedback/feedback-tone";
 
 const RULE_CATEGORIES = ["Risk", "Entry", "Exit", "Session", "Behavior", "Other"] as const;
 type RuleCategory = (typeof RULE_CATEGORIES)[number];
@@ -26,6 +32,7 @@ type RuleRow = {
 
 export function PersonalRulesSection() {
   const { canWriteJournal } = useAccess();
+  const toast = useAppToast();
   const [rules, setRules] = useState<RuleRow[]>([]);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<RuleCategory>("Behavior");
@@ -84,7 +91,10 @@ export function PersonalRulesSection() {
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!canWriteJournal) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "rules_create");
+      return;
+    }
     if (!title.trim()) {
       setMessage("Rule title is required.");
       return;
@@ -112,35 +122,49 @@ export function PersonalRulesSection() {
         setSetupRequired(true);
         setMessage(PERSONAL_RULES_SETUP_MESSAGE);
       } else {
-        setMessage(error.message);
+        const msg = formatUserError(error, "Could not add rule.");
+        setMessage(msg);
+        toast.error(msg);
       }
       return;
     }
     setTitle("");
     setDescription("");
+    toast.success("Rule added.");
     await loadRules();
   }
 
   async function toggleRule(id: string, current: boolean) {
-    if (!canWriteJournal) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "rules_toggle");
+      return;
+    }
     const supabase = createClient();
     const { error } = await supabase.from("personal_rules").update({ is_active: !current }).eq("id", id);
     if (error) {
-      setMessage(error.message);
+      const msg = formatUserError(error, "Could not update rule.");
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     setRules((prev) => prev.map((r) => (r.id === id ? { ...r, is_active: !current } : r)));
   }
 
   async function deleteRule(id: string) {
-    if (!canWriteJournal) return;
+    if (!canWriteJournal) {
+      notifyReadOnlyBlocked(toast, "rules_delete");
+      return;
+    }
     const supabase = createClient();
     const { error } = await supabase.from("personal_rules").delete().eq("id", id);
     if (error) {
-      setMessage(error.message);
+      const msg = formatUserError(error, "Could not delete rule.");
+      setMessage(msg);
+      toast.error(msg);
       return;
     }
     setRules((prev) => prev.filter((r) => r.id !== id));
+    toast.success("Rule removed.");
   }
 
   return (
@@ -203,12 +227,12 @@ export function PersonalRulesSection() {
               </div>
             ))}
           </div>
-          {message ? (
-            <p className={cn("text-[13px] leading-relaxed", setupRequired ? "text-amber-200/90" : "text-zinc-400")}>
-              {message}
-            </p>
-          ) : null}
-          {!canWriteJournal ? <p className="text-[12px] text-zinc-500">Read-only access: rules are visible but editing is locked.</p> : null}
+          <InlineFeedback
+            message={message}
+            tone={setupRequired ? "neutral" : feedbackToneFromMessage(message)}
+            className={cn(setupRequired && "text-amber-200/90")}
+          />
+          {!canWriteJournal ? <ReadOnlyBlockedNotice compact context="editing rules" className="mt-2" /> : null}
         </div>
       )}
     </DashboardCard>

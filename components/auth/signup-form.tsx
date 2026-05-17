@@ -9,6 +9,8 @@ import { authFieldClass, authLabelClass } from "@/lib/auth-field";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { cn } from "@/lib/utils";
+import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
+import { trackProductEvent } from "@/lib/analytics/track-product-event";
 
 function normalizeSignupError(message: string): string {
   const m = message.toLowerCase();
@@ -76,17 +78,20 @@ export function SignupForm() {
     }
 
     if (data.user && !data.session) {
+      trackProductEvent(PRODUCT_ANALYTICS_EVENTS.signupCompleted, { signup_flow: "email_confirmation" });
       setIsError(false);
       setMessage("Check your email to confirm your account, then sign in.");
       return;
     }
 
     if (data.session) {
+      trackProductEvent(PRODUCT_ANALYTICS_EVENTS.signupCompleted, { signup_flow: "session" });
       router.replace("/app");
       router.refresh();
       return;
     }
 
+    trackProductEvent(PRODUCT_ANALYTICS_EVENTS.signupCompleted, { signup_flow: "email_confirmation" });
     setIsError(false);
     setMessage("Account created. You can sign in.");
   }
@@ -174,10 +179,14 @@ export function SignupForm() {
                 I agree to the{" "}
                 <a href="/terms" className="underline underline-offset-4 hover:text-zinc-100">
                   Terms of Service
-                </a>{" "}
-                and{" "}
+                </a>
+                ,{" "}
                 <a href="/privacy" className="underline underline-offset-4 hover:text-zinc-100">
                   Privacy Policy
+                </a>
+                , and{" "}
+                <a href="/cookies" className="underline underline-offset-4 hover:text-zinc-100">
+                  Cookie Policy
                 </a>
                 .
               </span>

@@ -29,6 +29,8 @@ import { appFilterShell, appFormSelect } from "@/lib/ui/app-form";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { tradeWinRatePercent } from "@/lib/user-data/kpi";
+import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
+import { trackProductEvent } from "@/lib/analytics/track-product-event";
 
 type WeeklyReflectionSummary = {
   weekStart: string;
@@ -58,6 +60,10 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
     searchParams.get("accountScope") === "all" ? "all" : "active",
   );
   const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
+
+  useEffect(() => {
+    trackProductEvent(PRODUCT_ANALYTICS_EVENTS.calendarOpened, { surface: "calendar" });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

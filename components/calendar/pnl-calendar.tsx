@@ -471,7 +471,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
         </div>
       ) : null}
 
-      <div className="w-full min-w-0 overflow-x-hidden overflow-y-visible pb-1">
+      <div className="w-full min-w-0 overflow-x-auto overflow-y-visible pb-1 overscroll-x-contain">
         <div className="w-full min-w-0">
           <div
             className={cn(
@@ -606,7 +606,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                   })}
                   <Link
                     href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
-                    className="col-span-5 flex min-h-[3.25rem] items-center justify-between gap-3 overflow-hidden rounded-lg border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3 py-2.5 text-left sm:col-span-6 sm:hidden lg:hidden"
+                    className="col-span-5 flex min-h-[3.25rem] flex-col gap-2 overflow-hidden rounded-lg border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3 py-2.5 text-left min-[400px]:flex-row min-[400px]:items-center min-[400px]:justify-between min-[400px]:gap-3 sm:col-span-6 sm:hidden lg:hidden"
                     title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
                   >
                     <div className="min-w-0">

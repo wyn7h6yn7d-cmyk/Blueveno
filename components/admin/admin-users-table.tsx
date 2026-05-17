@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { useAppToast } from "@/components/app/app-toast-provider";
+import { formatUserError } from "@/lib/feedback/format-error";
 import { MoreHorizontal } from "lucide-react";
 import type { AdminUserListItem } from "@/lib/access/admin-types";
 import {
@@ -63,8 +65,8 @@ function formatDateTime(v: string | null): string {
 }
 
 export function AdminUsersTable({ users }: Props) {
+  const toast = useAppToast();
   const [pending, startTransition] = useTransition();
-  const [toast, setToast] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [pendingLabel, setPendingLabel] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState<AdminFilter>("all");
@@ -79,12 +81,6 @@ export function AdminUsersTable({ users }: Props) {
   const [notesBusy, setNotesBusy] = useState(false);
   const [internalNote, setInternalNote] = useState("");
   const [premiumReason, setPremiumReason] = useState("");
-
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 3200);
-    return () => window.clearTimeout(id);
-  }, [toast]);
 
   function isProtectedOwner(email: string): boolean {
     return email.toLowerCase().trim() === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
@@ -156,13 +152,12 @@ export function AdminUsersTable({ users }: Props) {
   }, [detailsUser]);
 
   function run(label: string, fn: () => Promise<void>) {
-    setToast(null);
     setPendingLabel(label);
     startTransition(() => {
       void fn()
-        .then(() => setToast({ tone: "success", text: `${label} saved.` }))
+        .then(() => toast.success(`${label} saved.`))
         .catch((e: unknown) =>
-          setToast({ tone: "error", text: e instanceof Error ? e.message : "Action failed." }),
+          toast.error(formatUserError(e, `Could not complete: ${label.toLowerCase()}.`)),
         )
         .finally(() => setPendingLabel(null));
     });
@@ -586,9 +581,9 @@ export function AdminUsersTable({ users }: Props) {
                           internalNote,
                           premiumGrantedReason: premiumReason,
                         });
-                        setToast({ tone: "success", text: "Admin notes saved." });
+                        toast.success("Admin notes saved.");
                       } catch (error) {
-                        setToast({ tone: "error", text: error instanceof Error ? error.message : "Could not save notes." });
+                        toast.error(formatUserError(error, "Could not save admin notes."));
                       } finally {
                         setNotesBusy(false);
                       }
@@ -601,19 +596,6 @@ export function AdminUsersTable({ users }: Props) {
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
-      {toast ? (
-        <div
-          role="status"
-          className={cn(
-            "fixed bottom-6 right-6 z-[120] min-w-[18rem] rounded-xl border px-4 py-3 text-[13px] shadow-[0_20px_60px_-24px_rgba(0,0,0,0.7)]",
-            toast.tone === "success"
-              ? "border-emerald-400/30 bg-[oklch(0.16_0.06_160/0.95)] text-emerald-100"
-              : "border-rose-400/30 bg-[oklch(0.16_0.06_20/0.95)] text-rose-100",
-          )}
-        >
-          {toast.text}
         </div>
       ) : null}
     </div>

@@ -323,7 +323,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       if (!canWriteJournal) {
         return {
           ok: false as const,
-          error: "Your trial has ended. Upgrade to Blueveno Premium to log new days.",
+          error: "Your trial has ended. Request Premium access to log new days.",
         };
       }
       const supabase = createClient();

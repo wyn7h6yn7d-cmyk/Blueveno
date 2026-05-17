@@ -549,6 +549,44 @@ body {
     inset 0 1px 0 0 oklch(1 0 0 / 0.12);
 
   --accent-glow: oklch(0.52 0.12 252 / 0.28);
+
+  /** Sticky in-page nav sits below the app topbar (wrap-aware). */
+  --app-topbar-offset: 3.75rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --app-topbar-offset: 4.15rem;
+  }
+}
+
+@layer utilities {
+  /** Edge fade hints horizontal tab scroll on phones. */
+  .app-scroll-tabs-x {
+    -webkit-overflow-scrolling: touch;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10px,
+      black calc(100% - 10px),
+      transparent
+    );
+  }
+
+  /** Full-width primary actions in stacked page headers (mobile). */
+  .app-page-actions-mobile > a,
+  .app-page-actions-mobile > button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  @media (min-width: 640px) {
+    .app-page-actions-mobile > a,
+    .app-page-actions-mobile > button {
+      width: auto;
+      justify-content: center;
+    }
+  }
 }
 
 @layer base {

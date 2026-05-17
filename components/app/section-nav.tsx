@@ -27,8 +27,8 @@ const variantShell: Record<SizeKey, string> = {
   default: "",
   compact: "",
   sticky: cn(
-    "sticky z-20 pb-2 pt-0.5 top-[4.75rem]",
-    "bg-[oklch(0.07_0.03_266/0.55)] backdrop-blur-md",
+    "sticky z-20 top-[var(--app-topbar-offset,3.75rem)] pb-2 pt-0.5",
+    "bg-[oklch(0.07_0.03_266/0.72)] backdrop-blur-md",
   ),
 };
 
@@ -40,8 +40,8 @@ const variantTrack: Record<SizeKey, string> = {
 
 const variantTab: Record<SizeKey, string> = {
   default: "h-9 gap-2 rounded-xl px-3.5 text-[13px]",
-  compact: "h-8 gap-1.5 rounded-lg px-3 text-[12px]",
-  sticky: "h-9 gap-2 rounded-xl px-3.5 text-[13px]",
+  compact: "h-10 min-h-10 gap-1.5 rounded-lg px-3.5 text-[13px]",
+  sticky: "h-10 min-h-10 gap-2 rounded-xl px-3.5 text-[13px]",
 };
 
 const variantIcon: Record<SizeKey, string> = {
@@ -103,7 +103,7 @@ export function SectionNav({
   const track = (
     <div
       className={cn(
-        "max-w-full overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "app-scroll-tabs-x max-w-full overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
@@ -136,7 +136,7 @@ export function SectionNav({
               tabIndex={isActive ? 0 : -1}
               onClick={() => onChange(item.id)}
               className={cn(
-                "inline-flex shrink-0 items-center font-medium whitespace-nowrap transition-[color,background,box-shadow]",
+                "inline-flex shrink-0 snap-start items-center font-medium whitespace-nowrap transition-[color,background,box-shadow]",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
                 variantTab[size],
                 isActive

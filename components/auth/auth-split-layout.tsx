@@ -65,7 +65,7 @@ export function AuthSplitLayout({
           </aside>
 
           <div className="relative flex min-h-screen flex-col border-white/[0.06] lg:border-l lg:bg-gradient-to-br lg:from-bv-raised/40 lg:via-bv-surface/25 lg:to-bv-void/80 lg:backdrop-blur-[2px]">
-            <header className="flex items-center justify-between border-b border-white/[0.06] px-6 py-5 sm:px-10 lg:border-transparent lg:bg-transparent lg:px-12 lg:pt-14">
+            <header className="flex items-center justify-between border-b border-white/[0.06] px-4 py-4 sm:px-10 sm:py-5 lg:border-transparent lg:bg-transparent lg:px-12 lg:pt-14">
               <LogoLink className="font-display text-lg font-medium tracking-tight text-zinc-50 outline-none ring-offset-2 ring-offset-bv-void focus-visible:ring-2 focus-visible:ring-primary lg:hidden">
                 Blueveno
               </LogoLink>
@@ -79,7 +79,7 @@ export function AuthSplitLayout({
               </div>
             </header>
 
-            <div className="flex flex-1 flex-col justify-center px-6 pb-16 pt-6 sm:px-10 lg:px-14 lg:pb-20 lg:pt-4 xl:px-16">
+            <div className="flex flex-1 flex-col justify-center px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:px-10 sm:pb-16 sm:pt-6 lg:px-14 lg:pb-20 lg:pt-4 xl:px-16">
               <div className="mx-auto w-full max-w-[440px]">
                 <div className="mb-10 lg:hidden">
                   <p className="app-eyebrow text-[13px]">{eyebrow}</p>
@@ -101,7 +101,7 @@ export function AuthSplitLayout({
                   </Link>
                 </p>
 
-                <p className="mt-8 text-center text-[11px] leading-relaxed text-zinc-600">
+                <p className="mt-8 text-center text-[12px] leading-relaxed text-zinc-600">
                   By continuing you agree to our{" "}
                   <Link
                     href="/terms"
@@ -109,12 +109,19 @@ export function AuthSplitLayout({
                   >
                     Terms of Service
                   </Link>{" "}
-                  and{" "}
+                  ,{" "}
                   <Link
                     href="/privacy"
                     className="text-zinc-500 underline-offset-2 transition hover:text-zinc-400 hover:underline"
                   >
                     Privacy Policy
+                  </Link>
+                  , and{" "}
+                  <Link
+                    href="/cookies"
+                    className="text-zinc-500 underline-offset-2 transition hover:text-zinc-400 hover:underline"
+                  >
+                    Cookie Policy
                   </Link>
                   .
                 </p>

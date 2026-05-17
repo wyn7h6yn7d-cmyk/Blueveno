@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Reveal } from "./Reveal";
 import { Section } from "./Section";
 import { marketingCtas } from "@/lib/marketing-ctas";
+import { BLUEVENO_SUPPORT_EMAIL, SUPPORT_REQUEST_MAILTO } from "@/lib/legal/constants";
 
 export function FinalCta() {
   return (
@@ -49,10 +50,10 @@ export function FinalCta() {
               <p className="mt-8 font-mono text-[10px] leading-snug text-zinc-600">
                 Questions?{" "}
                 <a
-                  href="mailto:kennethalto95@gmail.com"
+                  href={SUPPORT_REQUEST_MAILTO}
                   className="text-zinc-500 underline-offset-2 hover:text-zinc-400 hover:underline"
                 >
-                  kennethalto95@gmail.com
+                  {BLUEVENO_SUPPORT_EMAIL}
                 </a>
               </p>
             </div>

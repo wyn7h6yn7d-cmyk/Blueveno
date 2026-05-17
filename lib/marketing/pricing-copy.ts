@@ -13,8 +13,8 @@ export const PRICING_EUR = {
 export const PREMIUM_BENEFITS = [
   "Ongoing journaling after trial",
   "Up to 5 trading accounts",
-  "Calendar with weekly totals",
-  "Stats, behavior review, and discipline score",
+  "Full calendar history",
+  "Stats and behavior review",
   "Linked chart on every entry",
 ] as const;
 

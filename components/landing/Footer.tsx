@@ -1,4 +1,5 @@
 import { LogoLink } from "@/components/landing/LogoLink";
+import { SUPPORT_REQUEST_MAILTO } from "@/lib/legal/constants";
 import { Section } from "./Section";
 
 const cols = [
@@ -16,7 +17,7 @@ const cols = [
     title: "Company",
     links: [
       { label: "Pricing", href: "/pricing" },
-      { label: "Contact", href: "mailto:kennethalto95@gmail.com" },
+      { label: "Contact", href: SUPPORT_REQUEST_MAILTO },
     ],
   },
   {
@@ -24,6 +25,7 @@ const cols = [
     links: [
       { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "/terms" },
+      { label: "Cookies", href: "/cookies" },
     ],
   },
 ];

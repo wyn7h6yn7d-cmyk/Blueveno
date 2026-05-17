@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LegalContactLink } from "@/components/legal/legal-contact-link";
+import { LegalList, LegalPageLayout, LegalSection } from "@/components/legal/legal-page-layout";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
-  description: "How Blueveno uses cookies and similar storage.",
+  description: "How Blueveno uses cookies, session storage, and privacy-safe analytics.",
   alternates: {
     canonical: "/cookies",
   },
@@ -16,51 +18,70 @@ export const metadata: Metadata = {
 
 export default function CookiesPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-2xl bg-background px-5 py-24 text-zinc-100 sm:px-8">
-      <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-500">Legal</p>
-      <h1 className="font-display mt-4 text-3xl font-semibold tracking-tight">Cookie Policy</h1>
+    <LegalPageLayout
+      currentPath="/cookies"
+      title="Cookie Policy"
+      intro="This policy explains how Blueveno uses cookies and similar browser technologies, including authentication storage and product analytics."
+    >
+      <LegalSection title="1. What we use today">
+        <LegalList
+          items={[
+            <>
+              <span className="font-medium text-zinc-200">Essential cookies and session storage</span> — required for
+              sign-in, session continuity, security, and core app behavior. These cannot be disabled while using the
+              signed-in workspace.
+            </>,
+            <>
+              <span className="font-medium text-zinc-200">Product analytics</span> — when the site is deployed on our
+              hosting provider, we use Vercel Web Analytics for aggregated page views and privacy-safe product events
+              (for example, which features are used). Analytics events do not include journal notes, P&amp;L values,
+              symbols, or other trading content. See the{" "}
+              <Link href="/privacy" className="text-bv-ice/90 underline-offset-4 hover:underline">
+                Privacy Policy
+              </Link>{" "}
+              for more detail.
+            </>,
+            <>
+              <span className="font-medium text-zinc-200">Local preference storage</span> — for example, cookie consent
+              choices and UI preferences stored in your browser.
+            </>,
+          ]}
+        />
+      </LegalSection>
 
-      <p className="mt-6 text-[15px] leading-relaxed text-zinc-400">
-        This policy explains how Blueveno uses cookies and similar browser storage, and how cookie preferences are handled.
-      </p>
+      <LegalSection title="2. What we do not use">
+        <p>
+          We do not use advertising or cross-site tracking cookies for Blueveno today. We do not sell data collected
+          through cookies.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">1. Essential cookies and session storage</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Blueveno uses essential cookies and session storage for authentication, session continuity, security, and core app
-        behavior. These are required for sign-in and protected workspace access.
-      </p>
+      <LegalSection title="3. Optional categories (consent banner)">
+        <p>
+          Where shown, our cookie banner lets you accept or adjust optional categories (such as third-party or marketing
+          cookies) before they are enabled. Necessary cookies remain active so the site can function. You can reopen
+          cookie settings from the banner when available.
+        </p>
+        <p>
+          If optional marketing cookies are introduced later, we will update this policy and ask for consent where
+          required by law.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">2. Optional cookies (if enabled later)</h2>
-      <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-zinc-400">
-        <li>
-          <span className="font-medium text-zinc-200">Analytics cookies:</span> may be added in the future to understand
-          product usage and improve reliability.
-        </li>
-        <li>
-          <span className="font-medium text-zinc-200">Marketing cookies:</span> may be added later for campaign measurement or
-          marketing attribution.
-        </li>
-      </ul>
+      <LegalSection title="4. Managing cookies in your browser">
+        <p>
+          You can clear or block cookies in your browser settings. Blocking essential cookies may prevent sign-in or
+          break protected areas of the app.
+        </p>
+      </LegalSection>
 
-      <h2 className="mt-10 text-xl font-semibold tracking-tight text-zinc-100">3. Managing preferences</h2>
-      <p className="mt-4 text-[15px] leading-relaxed text-zinc-400">
-        Blueveno currently uses essential authentication/session storage only. If non-essential cookies are added in the
-        future, we will introduce consent controls so you can accept, reject, and change preferences at any time.
-      </p>
-
-      <p className="mt-10 text-[15px] leading-relaxed text-zinc-400">
-        Questions about this policy can be sent to{" "}
-        <a href="mailto:kennethalto95@gmail.com" className="text-bv-ice/90 underline-offset-4 hover:underline">
-          kennethalto95@gmail.com
-        </a>
-        .
-      </p>
-
-      <p className="mt-12">
-        <Link href="/" className="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-300">
-          ← Back to home
-        </Link>
-      </p>
-    </main>
+      <LegalSection title="5. Contact">
+        <p>
+          Questions about cookies or analytics:{" "}
+          <LegalContactLink subject="Blueveno Cookie Policy" className="text-bv-ice/90 underline-offset-4 hover:underline" />
+          .
+        </p>
+      </LegalSection>
+    </LegalPageLayout>
   );
 }
