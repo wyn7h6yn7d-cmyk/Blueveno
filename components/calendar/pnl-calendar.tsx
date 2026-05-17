@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Fragment } from "react";
 import Link from "next/link";
 import { CalendarDayDrawer } from "@/components/calendar/calendar-day-drawer";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, LineChart } from "lucide-react";
 import type { JournalRow } from "@/lib/user-data/types";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import { computeDisciplineScorePercent, formatDisciplinePercent } from "@/lib/user-data/discipline-stats";
@@ -552,10 +552,18 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     const aggregateRows = cell.sourceKeys.map((k) => aggregates.get(k)).filter(Boolean) as DayAggregate[];
                     const total = aggregateRows.reduce((sum, row) => sum + row.total, 0);
                     const count = aggregateRows.reduce((sum, row) => sum + row.count, 0);
+                    const hasChartLink = aggregateRows.some((row) => row.hasChartLink);
                     const hasData = count > 0;
                     const cellClasses = dayCellClasses(total, hasData, cell.inMonth, cell.isWeekend);
                     const isSelected = cell.key === selectedCellKey && drawerOpen;
                     const isToday = cell.sourceKeys.includes(todayKey);
+                    const entryLabel = count === 1 ? "1 entry" : `${count} entries`;
+                    const ariaParts = [
+                      cell.label,
+                      hasData ? formatSignedPnlAmount(total, displayCurrency) : "no trades",
+                      hasData ? entryLabel : null,
+                      hasChartLink ? "linked chart" : null,
+                    ].filter(Boolean);
 
                     return (
                       <button
@@ -566,7 +574,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                           "group/cell min-h-0 min-w-0 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.5)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
                           cell.isWeekend && "hidden sm:block",
                         )}
-                        aria-label={`${cell.label}, ${hasData ? formatSignedPnlAmount(total, displayCurrency) : "no trades"}`}
+                        aria-label={ariaParts.join(", ")}
                       >
                         <div
                           className={cn(
@@ -578,7 +586,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                               "group-hover/cell:brightness-[1.03] group-hover/cell:ring-1 group-hover/cell:ring-white/[0.14]",
                           )}
                         >
-                          <div className="flex items-start">
+                          <div className="flex items-start justify-between gap-1">
                             <span
                               className={dayLabelBadgeClasses({
                                 hasData,
@@ -589,6 +597,24 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                             >
                               {cell.label}
                             </span>
+                            {hasData ? (
+                              <div className="flex shrink-0 items-center gap-1">
+                                <span
+                                  className="flex size-5 items-center justify-center rounded-full border border-white/[0.14] bg-black/40 font-mono text-[9px] font-medium tabular-nums text-zinc-100"
+                                  title={entryLabel}
+                                >
+                                  {count}
+                                </span>
+                                {hasChartLink ? (
+                                  <span
+                                    className="flex size-5 items-center justify-center rounded-full border border-[oklch(0.58_0.12_252/0.4)] bg-[oklch(0.58_0.12_252/0.2)] text-[oklch(0.82_0.1_252)]"
+                                    title="Linked chart"
+                                  >
+                                    <LineChart className="size-3" strokeWidth={2} aria-hidden />
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : null}
                           </div>
                           {hasData ? (
                             <p
