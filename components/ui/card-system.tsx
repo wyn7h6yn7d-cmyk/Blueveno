@@ -31,9 +31,9 @@ export function CardShell({ variant = "shell", className, children, as: Tag = "d
 
 type MetricCardProps = Omit<CardShellProps, "variant" | "as">;
 
-export function MetricCard({ className, children, as }: MetricCardProps) {
+export function MetricCard({ className, children }: MetricCardProps) {
   return (
-    <CardShell variant="kpi" className={className} as={as}>
+    <CardShell variant="kpi" className={className}>
       {children}
     </CardShell>
   );
