@@ -1,8 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { MiniSparkline } from "@/components/dashboard/mini-sparkline";
+import { DayRangeIndicator } from "@/components/analytics/day-range-indicator";
+import { GreenRedRatioBar } from "@/components/analytics/green-red-ratio-bar";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
-import { appCardPrimary, appKicker, appMetricLabel } from "@/lib/ui/app-surface";
+import { appCardPrimary, appMetricLabel } from "@/lib/ui/app-surface";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -64,23 +67,11 @@ function parseStreak(raw: string): {
 function CompactStat({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className={cn(appKicker, "whitespace-nowrap")}>{label}</p>
+      <p className={appMetricLabel}>{label}</p>
       <div className="mt-1.5 text-[15px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[16px]">
         {children}
       </div>
     </div>
-  );
-}
-
-function GreenRedSplit({ green, red, empty }: { green: number; red: number; empty: boolean }) {
-  if (empty) return <span className="text-zinc-500">—</span>;
-  return (
-    <span className="inline-flex items-baseline gap-1 whitespace-nowrap tabular-nums">
-      <span className="text-emerald-200/95">{green}</span>
-      <span className="text-[13px] font-normal text-zinc-600">green /</span>
-      <span className="text-rose-200/95">{red}</span>
-      <span className="text-[13px] font-normal text-zinc-600">red</span>
-    </span>
   );
 }
 
@@ -108,128 +99,123 @@ export function DayBreakdownModule({
 
   return (
     <section
-      className={cn(appCardPrimary, "overflow-hidden px-5 py-5 sm:px-7 sm:py-6")}
+      className={cn(
+        appCardPrimary,
+        "overflow-hidden px-5 py-5 shadow-[0_0_48px_-28px_oklch(0.48_0.14_252/0.45)] sm:px-7 sm:py-6",
+      )}
       aria-label="Day breakdown"
     >
-      <header className="flex flex-col gap-4 border-b border-white/[0.08] pb-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <header className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h2 className="font-display text-[1.15rem] font-semibold tracking-[-0.03em] text-zinc-50 sm:text-[1.25rem]">
+          <h2 className="font-display text-[1.2rem] font-semibold tracking-[-0.03em] text-zinc-50 sm:text-[1.3rem]">
             Day breakdown
           </h2>
-          <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-zinc-500">
-            Your logged days, average result, range, and current momentum.
+          <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-zinc-500">
+            Average result, day mix, range, and momentum from your logged days.
           </p>
         </div>
         {greenDayShare !== null ? (
-          <p
-            className={cn(
-              "inline-flex shrink-0 items-center self-start rounded-full px-3 py-1.5 text-[12px] font-medium",
-              "border border-emerald-400/20 bg-emerald-500/[0.08] text-zinc-300",
-            )}
-          >
-            <span className="tabular-nums text-emerald-200">{greenDayShare}%</span>
-            <span className="ml-1.5 text-zinc-500">green days</span>
+          <p className="text-[13px] text-zinc-400">
+            <span className="tabular-nums font-medium text-emerald-200">{greenDayShare}%</span> green days
           </p>
         ) : null}
       </header>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)_minmax(10.5rem,12.5rem)] lg:gap-8 lg:items-stretch">
-        <div className="min-w-0 lg:py-1">
+      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+        <div className="min-w-0">
           <p className={appMetricLabel}>Average day</p>
           <p
             className={cn(
-              "font-display mt-2.5 text-[2.15rem] leading-none tabular-nums tracking-[-0.04em] sm:text-[2.65rem]",
+              "font-display mt-2 text-[2.35rem] leading-none tabular-nums tracking-[-0.04em] sm:text-[2.85rem]",
               pnlClass(hasEntries ? averageDay : null),
             )}
           >
             {hasEntries ? moneyOrDash(averageDay, displayCurrency) : "—"}
           </p>
-          <p className="mt-2.5 text-[13px] text-zinc-500">
+          <p className="mt-2 text-[14px] text-zinc-500">
             {hasEntries
               ? `Across ${tradedDays} traded day${tradedDays === 1 ? "" : "s"}`
               : "Log days to see your average"}
           </p>
+          {hasEntries ? (
+            <div className="mt-5 max-w-md">
+              <GreenRedRatioBar green={winningDays} red={losingDays} />
+            </div>
+          ) : null}
         </div>
 
-        <div className="grid min-w-0 grid-cols-2 gap-x-6 gap-y-5 border-t border-white/[0.08] pt-5 sm:gap-x-10 lg:border-l lg:border-t-0 lg:pt-0 lg:pl-8">
+        <div className="grid gap-6 sm:grid-cols-2">
           <CompactStat label="Traded days">
             <span className="tabular-nums">{hasEntries ? tradedDays : "—"}</span>
           </CompactStat>
           <CompactStat label="Green / red">
-            <GreenRedSplit green={winningDays} red={losingDays} empty={!hasEntries} />
+            {hasEntries ? (
+              <span className="inline-flex items-baseline gap-1 whitespace-nowrap tabular-nums">
+                <span className="text-emerald-200">{winningDays}</span>
+                <span className="text-[13px] font-normal text-zinc-600">green /</span>
+                <span className="text-rose-200">{losingDays}</span>
+                <span className="text-[13px] font-normal text-zinc-600">red</span>
+              </span>
+            ) : (
+              <span className="text-zinc-500">—</span>
+            )}
           </CompactStat>
-          <CompactStat label="Best day">
-            <span className={cn("tabular-nums", pnlClass(hasEntries ? bestDay : null))}>
-              {hasEntries ? moneyOrDash(bestDay, displayCurrency) : "—"}
-            </span>
-          </CompactStat>
-          <CompactStat label={lossMetricLabel}>
-            <span className={cn("tabular-nums", pnlClass(hasEntries ? lossMetricValue : null))}>
-              {hasEntries ? moneyOrDash(lossMetricValue, displayCurrency) : "—"}
-            </span>
-          </CompactStat>
+          <div className="sm:col-span-2">
+            <p className={appMetricLabel}>Best vs worst</p>
+            <div className="mt-3">
+              <DayRangeIndicator
+                best={hasEntries ? bestDay : null}
+                worst={hasEntries ? lossMetricValue : null}
+                currency={displayCurrency}
+              />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div
-          className={cn(
-            "flex min-w-0 flex-col justify-between rounded-xl px-4 py-4 sm:px-4.5",
-            "border-t border-white/[0.08] pt-5 lg:border-t-0 lg:pt-0",
-            streak.variant === "green" && "bg-emerald-500/[0.07]",
-            streak.variant === "red" && "bg-rose-500/[0.07]",
-            streak.variant === "neutral" && "bg-white/[0.03]",
-          )}
-        >
-          <div>
-            <p className={cn(appKicker, "whitespace-nowrap")}>Current streak</p>
-            <p
-              className={cn(
-                "mt-2 text-[17px] font-semibold leading-tight tracking-tight",
-                streak.variant === "green" && "text-emerald-200",
-                streak.variant === "red" && "text-rose-200",
-                streak.variant === "neutral" && "text-zinc-400",
-              )}
-            >
-              {hasEntries ? streak.title : "—"}
-            </p>
-            <p className="mt-1 whitespace-nowrap text-[13px] text-zinc-500">
-              {hasEntries ? streak.detail : "No momentum yet"}
+      <div className="mt-8 grid gap-6 border-t border-white/[0.06] pt-6 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <p className={appMetricLabel}>Avg green day</p>
+            <p className={cn("mt-1.5 font-display text-xl tabular-nums tracking-tight", pnlClass(avgGreenDay))}>
+              {hasEntries ? moneyOrDash(avgGreenDay, displayCurrency) : "—"}
             </p>
           </div>
-          <div className="mt-4">
-            <div className="h-1 overflow-hidden rounded-full bg-white/[0.08]">
+          <div className="min-w-0">
+            <p className={appMetricLabel}>Avg red day</p>
+            <p className={cn("mt-1.5 font-display text-xl tabular-nums tracking-tight", pnlClass(avgRedDay))}>
+              {hasEntries ? moneyOrDash(avgRedDay, displayCurrency) : "—"}
+            </p>
+          </div>
+        </div>
+
+        <div className="min-w-[11rem] lg:text-right">
+          <p className={appMetricLabel}>Current streak</p>
+          <p
+            className={cn(
+              "mt-1.5 text-[17px] font-semibold tracking-tight",
+              streak.variant === "green" && "text-emerald-200",
+              streak.variant === "red" && "text-rose-200",
+              streak.variant === "neutral" && "text-zinc-400",
+            )}
+          >
+            {hasEntries ? streak.title : "—"}
+          </p>
+          <p className="mt-0.5 text-[13px] text-zinc-500">{hasEntries ? streak.detail : "No momentum yet"}</p>
+          <div className="mt-3 lg:ml-auto lg:max-w-[12rem]">
+            <MiniSparkline positive={streak.variant !== "red"} />
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.08]">
               <div
                 className={cn(
                   "h-full rounded-full transition-[width] duration-500",
-                  streak.variant === "green" && "bg-emerald-400/75",
-                  streak.variant === "red" && "bg-rose-400/75",
+                  streak.variant === "green" && "bg-emerald-400/80",
+                  streak.variant === "red" && "bg-rose-400/80",
                   streak.variant === "neutral" && "bg-zinc-600/50",
                 )}
                 style={{ width: hasEntries ? `${streakProgress}%` : "0%" }}
               />
             </div>
-            {hasEntries && tradedDays > 0 ? (
-              <p className="mt-2 text-[11px] tabular-nums text-zinc-600">
-                {streak.days} of {tradedDays} recent days
-              </p>
-            ) : null}
           </div>
-        </div>
-      </div>
-
-      <div className="mt-6 grid gap-4 border-t border-white/[0.08] pt-5 sm:grid-cols-2 sm:gap-5">
-        <div className="relative min-w-0 pl-3.5">
-          <span className="absolute inset-y-0 left-0 w-[3px] rounded-full bg-emerald-400/55" aria-hidden />
-          <p className={appKicker}>Avg green day</p>
-          <p className={cn("mt-1.5 text-[17px] font-semibold tabular-nums tracking-tight", pnlClass(avgGreenDay))}>
-            {hasEntries ? moneyOrDash(avgGreenDay, displayCurrency) : "—"}
-          </p>
-        </div>
-        <div className="relative min-w-0 pl-3.5">
-          <span className="absolute inset-y-0 left-0 w-[3px] rounded-full bg-rose-400/55" aria-hidden />
-          <p className={appKicker}>Avg red day</p>
-          <p className={cn("mt-1.5 text-[17px] font-semibold tabular-nums tracking-tight", pnlClass(avgRedDay))}>
-            {hasEntries ? moneyOrDash(avgRedDay, displayCurrency) : "—"}
-          </p>
         </div>
       </div>
     </section>

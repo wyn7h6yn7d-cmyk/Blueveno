@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUpRight, BarChart3, CalendarDays, NotebookPen } from "lucide-react";
+import { ArrowUpRight, BarChart3, CalendarDays, NotebookPen, Shield, Target, TrendingUp } from "lucide-react";
+import { MetricTile } from "@/components/analytics/metric-tile";
+import { InsightMetricCard } from "@/components/analytics/insight-metric-card";
+import type { BehaviorInsight } from "@/lib/user-data/behavior-insights";
 import { useAccess } from "@/components/access/access-provider";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { PageHeader } from "@/components/app/page-header";
@@ -17,7 +20,7 @@ import { DayBreakdownModule } from "@/components/dashboard/day-breakdown-module"
 import { OverviewOnboardingChecklist } from "@/components/dashboard/overview-onboarding-checklist";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { getOverviewOnboardingChecklist } from "@/lib/onboarding/overview-checklist";
-import { appCardPrimary, appKicker, appMetricLabel, appSecondaryCta } from "@/lib/ui/app-surface";
+import { appKicker, appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { createClient } from "@/lib/supabase/client";
 
@@ -42,6 +45,11 @@ function localDayKey(date: Date): string {
 
 function percentOrDash(value: number | null): string {
   return value === null || !Number.isFinite(value) ? "—" : `${Math.round(value)}%`;
+}
+
+function insightHeadline(insight: BehaviorInsight): string {
+  const about = insight.detail.match(/^About\s+(.+?)\s+per/i);
+  return about ? about[1] : insight.detail.split(".")[0] ?? insight.detail;
 }
 
 export function OverviewDashboard({ userId, email, initialWorkspace, userTimezone }: Props) {
@@ -158,22 +166,26 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       label: "Week P&L",
       value: hasEntries ? signedMoney(overviewStats.weekPnl, displayCurrency) : "—",
       tone: hasEntries ? overviewStats.weekPnl : 0,
+      icon: TrendingUp,
     },
     {
       label: "Month P&L",
       value: hasEntries ? signedMoney(overviewStats.monthPnl, displayCurrency) : "—",
       tone: hasEntries ? overviewStats.monthPnl : 0,
+      icon: BarChart3,
     },
     {
       label: "Win rate",
       value: hasEntries ? percentOrDash(overviewStats.winRate) : "—",
       tone: 0,
+      icon: Target,
     },
     {
       label: "Discipline score",
       value: hasEntries ? disciplineDisplay.value : "—",
       tone: 0,
       hint: hasEntries ? disciplineDisplay.hint : undefined,
+      icon: Shield,
     },
   ];
 
@@ -218,7 +230,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
         variant="signature"
         eyebrow="Blueveno"
         title="Overview"
-        description="Today and this week at a glance."
+        description="Your data tells the story — today and this week at a glance."
         actions={
           <Link href="/app/journal#add" className={appSecondaryCta}>
             <NotebookPen className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
@@ -248,28 +260,19 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
           <>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {primaryKpis.map((card) => (
-                <div
+                <MetricTile
                   key={card.label}
-                  className={cn(appCardPrimary, "px-5 py-5 sm:px-6 sm:py-6")}
-                >
-                  <p className={appMetricLabel}>{card.label}</p>
-                  <p
-                    className={cn(
-                      "font-display mt-2.5 text-[1.75rem] tabular-nums leading-none tracking-[-0.035em] sm:text-[2rem]",
-                      card.tone > 0 && "text-emerald-200",
-                      card.tone < 0 && "text-rose-200",
-                      card.tone === 0 && "text-zinc-50",
-                      card.label === "Discipline score" &&
-                        card.value === "Not enough discipline data" &&
-                        "text-[1.15rem] sm:text-[1.35rem]",
-                    )}
-                  >
-                    {card.value}
-                  </p>
-                  {card.hint ? (
-                    <p className={cn(appKicker, "mt-2 leading-snug")}>{card.hint}</p>
-                  ) : null}
-                </div>
+                  label={card.label}
+                  value={card.value}
+                  tone={card.tone}
+                  hint={card.hint}
+                  icon={card.icon}
+                  className={
+                    card.label === "Discipline score" && card.value === "Not enough discipline data"
+                      ? "[&_p:nth-child(2)]:text-[1.2rem] sm:[&_p:nth-child(2)]:text-[1.35rem]"
+                      : undefined
+                  }
+                />
               ))}
             </div>
 
@@ -295,31 +298,49 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
         <DashboardCard
           eyebrow="Mini calendar preview"
           title="Current week"
-          description="Outcome color and total in one line."
+          description="Scan green and red days at a glance."
         >
-          <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2.5 min-[400px]:grid-cols-3 sm:grid-cols-6">
             {weekCells.map((cell) => {
               const pnl = cell.keys.reduce((acc, key) => acc + (dayAggMap.get(key) ?? 0), 0);
+              const hasPnl = pnl !== 0;
               const tone =
                 pnl > 0
-                  ? "border-emerald-400/30 bg-emerald-500/[0.14] text-emerald-100"
+                  ? "border-emerald-400/35 bg-emerald-500/[0.16] shadow-[0_0_20px_-8px_oklch(0.42_0.16_155/0.55)]"
                   : pnl < 0
-                    ? "border-rose-400/30 bg-rose-500/[0.13] text-rose-100"
-                    : "border-white/[0.1] bg-white/[0.03] text-zinc-300";
+                    ? "border-rose-400/35 bg-rose-500/[0.15] shadow-[0_0_20px_-8px_oklch(0.42_0.18_15/0.5)]"
+                    : "border-white/[0.08] bg-white/[0.03]";
               return (
-                <div key={cell.key} className={cn("rounded-xl p-2 text-center ring-1 ring-inset ring-white/[0.06] sm:p-2.5", tone)}>
-                  <p className="text-[12px] font-medium text-zinc-400">{cell.label}</p>
-                  <p className="mt-1 text-[13px] font-semibold tabular-nums sm:text-sm">{cell.day}</p>
-                  <p className="mt-1 text-[12px] tabular-nums text-zinc-300">{pnl === 0 ? "—" : signedMoney(pnl, displayCurrency)}</p>
+                <div
+                  key={cell.key}
+                  className={cn(
+                    "flex min-h-[4.75rem] flex-col items-center justify-center rounded-xl border px-1.5 py-2 text-center sm:min-h-[5.25rem] sm:px-2 sm:py-2.5",
+                    tone,
+                  )}
+                >
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">{cell.label}</p>
+                  <p className="mt-1 font-display text-[15px] font-semibold tabular-nums text-zinc-100 sm:text-base">
+                    {cell.day}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1 text-[12px] font-medium tabular-nums sm:text-[13px]",
+                      !hasPnl && "text-zinc-500",
+                      pnl > 0 && "text-emerald-200",
+                      pnl < 0 && "text-rose-200",
+                    )}
+                  >
+                    {hasPnl ? signedMoney(pnl, displayCurrency) : "—"}
+                  </p>
                 </div>
               );
             })}
           </div>
-          <div className="mt-4 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-3.5 py-2.5">
-            <p className="text-[11px] font-medium text-zinc-500">Weekly total</p>
+          <div className="mt-4 flex items-center justify-between gap-4 border-t border-white/[0.06] pt-4">
+            <p className="text-[13px] text-zinc-500">Weekly total</p>
             <p
               className={cn(
-                "font-display text-lg tabular-nums tracking-[-0.02em]",
+                "font-display text-[1.35rem] tabular-nums tracking-[-0.03em]",
                 !hasEntries && "text-zinc-300",
                 hasEntries && weekTotal > 0 && "text-emerald-200",
                 hasEntries && weekTotal < 0 && "text-rose-200",
@@ -374,8 +395,8 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       <section className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]" aria-label="Behavior insights and weekly review">
         <DashboardCard
           eyebrow="Behavior insights"
-          title="Patterns from your entries"
-          description="Based on the account you're viewing."
+          title="Understand what works"
+          description="Short reads from mood, discipline, and tags on this account."
         >
           {behaviorInsightsResult.showEmptyState ? (
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-6 text-sm text-zinc-500">
@@ -397,13 +418,19 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                 </p>
               ) : null}
               {behaviorInsightsResult.insights.map((insight) => (
-                <div
+                <InsightMetricCard
                   key={insight.title}
-                  className="rounded-xl border border-[oklch(0.58_0.1_252/0.2)] bg-[linear-gradient(160deg,oklch(0.15_0.04_260/0.85),oklch(0.095_0.03_264/0.9))] px-4 py-3.5 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)]"
-                >
-                  <p className="text-[14px] font-medium leading-snug text-zinc-100">{insight.title}</p>
-                  <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-400">{insight.detail}</p>
-                </div>
+                  title={insight.title}
+                  value={insightHeadline(insight)}
+                  detail={insight.detail}
+                  variant={
+                    insight.detail.includes("lifts") || insight.title.toLowerCase().includes("best")
+                      ? "positive"
+                      : insight.title.toLowerCase().includes("watch") || insight.title.toLowerCase().includes("mistake")
+                        ? "negative"
+                        : "default"
+                  }
+                />
               ))}
             </div>
           )}

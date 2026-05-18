@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
@@ -9,6 +9,9 @@ import {
   LayoutGrid,
   LineChart,
   Sparkles,
+  Target,
+  TrendingDown,
+  TrendingUp,
   UserCheck,
   Wallet,
 } from "lucide-react";
@@ -53,6 +56,18 @@ import { computeMonthlyReview } from "@/lib/user-data/monthly-review";
 import { mapJournalRowFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { MonthlyReviewCard } from "@/components/reports/monthly-review-card";
 import { DEFAULT_STATS_TAB, parseStatsTab, type StatsTabId } from "@/lib/stats/stats-tabs";
+import {
+  CumulativeChart,
+  DailyBars,
+  WeeklyTrend,
+  MoodDistributionChart,
+  DisciplineTrend,
+} from "@/components/analytics/analytics-charts";
+import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
+import { MetricStrip } from "@/components/analytics/metric-strip";
+import { SupportMetricCard } from "@/components/analytics/support-metric-card";
+import { InsightMetricCard } from "@/components/analytics/insight-metric-card";
+import { StatsSummaryDashboard } from "@/components/stats/stats-summary-dashboard";
 
 type Props = {
   userId: string;
@@ -213,397 +228,6 @@ function TagPerformanceList({
           >
             {fmtPnl(row.totalPnl, currency)}
           </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CumulativeChart({
-  points,
-  currency,
-  compact = false,
-}: {
-  points: { i: number; t: string; y: number }[];
-  currency: string;
-  compact?: boolean;
-}) {
-  const [tipIndex, setTipIndex] = useState<number | null>(null);
-  const uid = useId();
-  const fillId = `${uid}-cum-fill`;
-  const w = 860;
-  const h = compact ? 220 : 320;
-  const pad = 32;
-  if (points.length < 2) {
-    return (
-      <div
-        className={cn(
-          "flex items-center justify-center rounded-xl border border-white/[0.06] bg-black/20 px-5 text-center text-[13px] text-zinc-500",
-          compact ? "h-36" : "h-44",
-        )}
-      >
-        Add a few trading days to unlock performance and behavior patterns.
-      </div>
-    );
-  }
-  const ys = points.map((p) => p.y);
-  const minY = Math.min(0, ...ys);
-  const maxY = Math.max(0, ...ys);
-  const span = Math.max(maxY - minY, 1e-6);
-  const n = points.length;
-  const endY = points[n - 1]?.y ?? 0;
-  const net = endY;
-  const toX = (i: number) => pad + (i / Math.max(n - 1, 1)) * (w - pad * 2);
-  const plotBottom = h - 28;
-  const toY = (y: number) => pad + (1 - (y - minY) / span) * (plotBottom - pad);
-  const d = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${toX(i).toFixed(1)} ${toY(p.y).toFixed(1)}`)
-    .join(" ");
-
-  const showTip = (i: number) => () => {
-    setTipIndex((prev) => (prev === i ? prev : i));
-  };
-
-  const xTickIndexes = [0, Math.floor((n - 1) / 2), n - 1];
-  const xTickLabels = xTickIndexes.map((i) => ({ i, date: points[i]?.t ?? "" }));
-  const tipPoint =
-    tipIndex !== null
-      ? {
-          x: toX(tipIndex),
-          y: toY(points[tipIndex]?.y ?? 0),
-          value: points[tipIndex]?.y ?? 0,
-          date: points[tipIndex]?.t ?? "",
-        }
-      : null;
-
-  return (
-    <div className="relative space-y-3" onPointerLeave={() => setTipIndex(null)}>
-      <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
-        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-          <p className="app-kicker">Current</p>
-          <p className="mt-1 font-mono text-[13px] tabular-nums text-zinc-100">{formatSignedPnlAmount(endY, currency)}</p>
-        </div>
-        <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2">
-          <p className="app-kicker">Change</p>
-          <p
-            className={cn(
-              "mt-1 font-mono text-[13px] tabular-nums",
-              net >= 0 ? "text-emerald-200" : "text-rose-200",
-            )}
-          >
-            {formatSignedPnlAmount(net, currency)}
-          </p>
-        </div>
-      </div>
-
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-[18.5rem] w-full max-w-full sm:h-[21.5rem]" role="img" aria-label="Cumulative P and L">
-        <defs>
-          <linearGradient id={fillId} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="oklch(0.58 0.14 252)" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="oklch(0.1 0.04 266)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path
-          d={`${d} L ${toX(n - 1)} ${plotBottom} L ${toX(0)} ${plotBottom} Z`}
-          fill={`url(#${fillId})`}
-          className="opacity-95"
-        />
-        {[0.25, 0.5, 0.75].map((m) => {
-          const y = pad + (plotBottom - pad) * m;
-          return (
-            <line
-              key={`grid-${m}`}
-              x1={pad}
-              y1={y}
-              x2={w - pad}
-              y2={y}
-              stroke="oklch(0.4 0.02 260)"
-              strokeOpacity="0.22"
-              strokeWidth="1"
-            />
-          );
-        })}
-        <path
-          d={d}
-          fill="none"
-          stroke="oklch(0.74 0.11 250)"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="drop-shadow-[0_0_14px_oklch(0.55_0.12_252/0.28)]"
-        />
-        <line x1={pad} y1={plotBottom} x2={w - pad} y2={plotBottom} stroke="oklch(0.4 0.02 260)" strokeOpacity="0.35" strokeWidth="1" />
-
-        {xTickLabels.map(({ i, date }) => (
-          <text key={`tick-${i}`} x={toX(i)} y={h - 10} textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"} className="fill-zinc-500 font-mono text-[10px]">
-            {date}
-          </text>
-        ))}
-
-        {points.map((p, i) => (
-          <rect
-            key={`hit-${i}`}
-            x={toX(i) - ((w - pad * 2) / Math.max(n - 1, 1)) / 2}
-            y={0}
-            width={(w - pad * 2) / Math.max(n - 1, 1)}
-            height={h}
-            fill="transparent"
-            className="cursor-default"
-            onPointerEnter={showTip(i)}
-            onPointerMove={showTip(i)}
-          />
-        ))}
-
-        {tipIndex !== null ? (
-          <circle
-            cx={toX(tipIndex)}
-            cy={toY(points[tipIndex]?.y ?? 0)}
-            r={5}
-            fill="oklch(0.74 0.11 250)"
-            stroke="oklch(0.11 0.03 266)"
-            strokeWidth="1.5"
-          />
-        ) : null}
-
-        <text
-          x={w - pad}
-          y={toY(maxY) - 4}
-          textAnchor="end"
-          className="fill-zinc-500 font-mono text-[10px]"
-        >
-          {formatSignedPnlAmount(maxY, currency)}
-        </text>
-        <text
-          x={w - pad}
-          y={toY(minY) - 4}
-          textAnchor="end"
-          className="fill-zinc-500 font-mono text-[10px]"
-        >
-          {formatSignedPnlAmount(minY, currency)}
-        </text>
-      </svg>
-      {tipPoint ? (
-        <div
-          role="tooltip"
-          className={cn(
-            "pointer-events-none absolute z-[20] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]",
-            tipPoint.x > w - 120 ? "-translate-x-full -translate-y-[115%]" : "-translate-x-1/2 -translate-y-[115%]",
-          )}
-          style={{
-            left: `${(tipPoint.x / w) * 100}%`,
-            top: `${(tipPoint.y / h) * 100}%`,
-          }}
-        >
-          <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
-            {formatSignedPnlAmount(tipPoint.value, currency)}
-          </p>
-          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{tipPoint.date}</p>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function DailyBars({ bars, currency }: { bars: { date: string; pnl: number }[]; currency: string }) {
-  const [tipIndex, setTipIndex] = useState<number | null>(null);
-  const visibleBars = bars.slice(-7);
-  const w = 860;
-  const h = 240;
-  const pad = 24;
-  if (visibleBars.length === 0) {
-    return null;
-  }
-  const maxAbs = Math.max(...visibleBars.map((b) => Math.abs(b.pnl)), 1e-6);
-  const inner = w - pad * 2;
-  const barW = Math.max(8, Math.min(22, inner / Math.max(visibleBars.length, 1) - 2));
-  const step = inner / Math.max(visibleBars.length, 1);
-  const labelBand = 26;
-  const midY = (h - labelBand) / 2;
-  const maxH = midY - pad;
-
-  const showTip = (i: number) => () => {
-    setTipIndex((prev) => (prev === i ? prev : i));
-  };
-
-  const tipPoint =
-    tipIndex !== null
-      ? (() => {
-          const b = visibleBars[tipIndex];
-          const x = pad + tipIndex * step + step / 2;
-          const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
-          const y = b.pnl >= 0 ? midY - bh : midY + bh;
-          return { x, y, pnl: b.pnl, date: b.date };
-        })()
-      : null;
-
-  return (
-    <div className="relative" onPointerLeave={() => setTipIndex(null)}>
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-56 w-full max-w-full" role="img" aria-label="Daily P and L bars">
-        <line
-          x1={pad}
-          y1={midY}
-          x2={w - pad}
-          y2={midY}
-          stroke="oklch(0.4 0.02 260)"
-          strokeOpacity="0.35"
-          strokeWidth="1"
-        />
-        {visibleBars.map((b, i) => {
-          const x = pad + i * step + (step - barW) / 2;
-          const bh = (Math.abs(b.pnl) / maxAbs) * maxH;
-          const fill = b.pnl >= 0 ? "oklch(0.58 0.14 155)" : "oklch(0.55 0.17 18)";
-          if (b.pnl >= 0) {
-            return (
-              <rect
-                key={b.date}
-                x={x}
-                y={midY - bh}
-                width={barW}
-                height={Math.max(bh, 1)}
-                rx={4}
-                fill={fill}
-                opacity={0.9}
-              />
-            );
-          }
-          return (
-            <rect key={b.date} x={x} y={midY} width={barW} height={Math.max(bh, 1)} rx={4} fill={fill} opacity={0.92} />
-          );
-        })}
-        {visibleBars.map((b, i) => (
-          <rect
-            key={`hit-${b.date}`}
-            x={pad + i * step}
-            y={0}
-            width={step}
-            height={h}
-            fill="transparent"
-            className="cursor-default"
-            onPointerEnter={showTip(i)}
-            onPointerMove={showTip(i)}
-          />
-        ))}
-        {visibleBars.map((b, i) => (
-          <text
-            key={`label-${b.date}`}
-            x={pad + i * step + step / 2}
-            y={h - 7}
-            textAnchor="middle"
-            className="fill-zinc-500 font-mono text-[10px]"
-          >
-            {b.date.slice(5)}
-          </text>
-        ))}
-      </svg>
-      {tipPoint ? (
-        <div
-          role="tooltip"
-          className={cn(
-            "pointer-events-none absolute z-[20] rounded-lg border border-white/[0.12] bg-[oklch(0.11_0.035_266/0.98)] px-3 py-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.75)]",
-            tipPoint.x > w - 130 ? "-translate-x-full -translate-y-[115%]" : "-translate-x-1/2 -translate-y-[115%]",
-          )}
-          style={{
-            left: `${(tipPoint.x / w) * 100}%`,
-            top: `${Math.max(((tipPoint.y - 8) / h) * 100, 8)}%`,
-          }}
-        >
-          <p className="font-display text-[15px] tabular-nums tracking-[-0.02em] text-zinc-50">
-            {formatSignedPnlAmount(tipPoint.pnl, currency)}
-          </p>
-          <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{tipPoint.date}</p>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function WeeklyTrend({ weekly, currency }: { weekly: { label: string; total: number }[]; currency: string }) {
-  if (weekly.length === 0) return null;
-  const last = weekly.slice(-8);
-  const maxAbs = Math.max(...last.map((w) => Math.abs(w.total)), 1e-6);
-  return (
-    <div className="grid gap-2.5">
-      {last.map((w) => (
-        <div
-          key={w.label}
-          className="rounded-xl border border-white/[0.07] bg-black/15 px-4 py-3 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)]"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <p className="font-mono text-[11px] text-zinc-400">{w.label}</p>
-            <p
-              className={cn(
-                "font-display text-[1rem] tabular-nums tracking-[-0.02em] whitespace-nowrap",
-                w.total >= 0 ? "text-emerald-200" : "text-rose-200",
-              )}
-            >
-              {fmtPnl(w.total, currency)}
-            </p>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className={cn("h-full rounded-full", w.total >= 0 ? "bg-emerald-400/85" : "bg-rose-400/85")}
-              style={{ width: `${(Math.abs(w.total) / maxAbs) * 100}%` }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function MoodDistributionChart({
-  moodBreakdown,
-}: {
-  moodBreakdown: { calm: number; focused: number; hesitant: number; tilted: number };
-}) {
-  const rows = [
-    { label: "Calm", value: moodBreakdown.calm, tone: "bg-[oklch(0.58_0.12_200)]" },
-    { label: "Focused", value: moodBreakdown.focused, tone: "bg-[oklch(0.72_0.12_252)]" },
-    { label: "Hesitant", value: moodBreakdown.hesitant, tone: "bg-[oklch(0.69_0.11_90)]" },
-    { label: "Tilted", value: moodBreakdown.tilted, tone: "bg-[oklch(0.58_0.16_20)]" },
-  ];
-  const total = rows.reduce((sum, r) => sum + r.value, 0);
-  return (
-    <div className="space-y-2.5">
-      {rows.map((row) => {
-        const pct = total > 0 ? Math.round((row.value / total) * 100) : 0;
-        return (
-          <div key={row.label} className="space-y-1.5">
-            <div className="flex items-center justify-between text-[12px]">
-              <p className="text-zinc-300">{row.label}</p>
-              <p className="font-mono text-zinc-400">
-                {row.value} <span className="text-zinc-600">({pct}%)</span>
-              </p>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
-              <div className={cn("h-full rounded-full", row.tone)} style={{ width: `${pct}%` }} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function DisciplineTrend({ weekly, weeklyReflections }: { weekly: { weekStart: string; label: string; total: number }[]; weeklyReflections: WeeklyReflectionStat[] }) {
-  const points = weekly.slice(-8).map((w) => {
-    const base = w.total > 0 ? 72 : w.total < 0 ? 46 : 58;
-    const reflected = weeklyReflections.some((r) => r.week_start === w.weekStart);
-    const score = Math.max(0, Math.min(100, base + (reflected ? 8 : 0)));
-    return { label: w.label, score };
-  });
-  const max = Math.max(...points.map((p) => p.score), 1);
-  return (
-    <div className="grid gap-2.5">
-      {points.map((p) => (
-        <div key={p.label} className="rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5">
-          <div className="flex items-center justify-between text-[12px]">
-            <p className="font-mono text-zinc-400">{p.label}</p>
-            <p className="font-display text-zinc-200">{p.score}%</p>
-          </div>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-            <div className="h-full rounded-full bg-[oklch(0.72_0.12_252)]" style={{ width: `${(p.score / max) * 100}%` }} />
-          </div>
         </div>
       ))}
     </div>
@@ -1146,260 +770,234 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             storageKey={`blueveno:monthly-review:stats:${accountScope}:${monthlyReview.monthKey}`}
             title="Monthly review report"
           />
-          <section className="grid gap-5 rounded-2xl border border-[oklch(0.52_0.12_252/0.18)] bg-[linear-gradient(165deg,oklch(0.14_0.038_262/0.94),oklch(0.09_0.03_266/0.92))] p-5 sm:p-6 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.05)] min-[460px]:grid-cols-2 lg:grid-cols-4" aria-label="Summary at a glance">
-            <div>
-              <p className="app-metric-label">Net P&L</p>
-              <p
-                className={cn(
-                  "font-display mt-2 text-3xl tabular-nums tracking-[-0.03em]",
-                  netR > 0 ? "text-emerald-200" : netR < 0 ? "text-rose-200" : "text-zinc-100",
-                )}
-              >
-                {fmtPnl(netR, displayCurrency)}
-              </p>
-            </div>
-            <div>
-              <p className="app-metric-label">Win / loss days</p>
-              <p className="font-display mt-2 text-3xl tabular-nums text-zinc-50">
-                {stats.winDays}
-                <span className="text-zinc-600"> · </span>
-                {stats.lossDays}
-              </p>
-            </div>
-            <div>
-              <p className="app-metric-label">Streak</p>
-              <p className="mt-2 font-display text-lg leading-snug tracking-tight text-zinc-100">{stats.streakLabel}</p>
-            </div>
-            <div>
-              <p className="app-metric-label">Trading days</p>
-              <p className="font-display mt-2 text-3xl tabular-nums text-zinc-50">{stats.dailyBars.length}</p>
-            </div>
-          </section>
-          <DashboardCard
-            eyebrow="Trend"
-            title="Cumulative P&L preview"
-            description="Running total for your current filter scope."
-            variant="inset"
-            className="overflow-hidden"
-          >
-            <CumulativeChart points={stats.cumulative} currency={displayCurrency} compact />
-          </DashboardCard>
+          <StatsSummaryDashboard
+            stats={stats}
+            netPnl={netR}
+            currency={displayCurrency}
+            weeklyReflections={weeklyReflections}
+          />
           </>
           ) : null}
 
           {activeTab === "performance" ? (
           <>
-          <section className="grid gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Performance extremes">
-            <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3 sm:col-span-2 xl:col-span-3">
-              <p className="app-metric-label">Risk &amp; efficiency</p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  { label: "Max drawdown", value: fmtPnl(stats.maxDrawdown, displayCurrency), tone: stats.maxDrawdown ?? 0 },
-                  { label: "Profit factor", value: formatProfitFactor(stats.profitFactor), tone: 0 },
-                  { label: "Avg green day", value: fmtPnl(stats.avgGreenDay, displayCurrency), tone: stats.avgGreenDay ?? 0 },
-                  { label: "Avg red day", value: fmtPnl(stats.avgRedDay, displayCurrency), tone: stats.avgRedDay ?? 0 },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <p className="text-[11px] text-zinc-500">{item.label}</p>
-                    <p className={cn("mt-1 font-display text-xl tabular-nums", item.tone > 0 ? "text-emerald-200" : item.tone < 0 ? "text-rose-200" : "text-zinc-100")}>{item.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-              <p className="app-metric-label">Best day</p>
-              <p className="mt-1.5 font-display text-lg tabular-nums text-emerald-200">{stats.bestDay ? fmtPnl(stats.bestDay.pnl, displayCurrency) : "—"}</p>
-              <p className="mt-1 text-[11px] text-zinc-500">{stats.bestDay?.date ?? "—"}</p>
-            </div>
-            <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-              <p className="app-metric-label">{stats.worstDay ? "Worst day" : "Smallest green day"}</p>
-              <p className="mt-1.5 font-display text-lg tabular-nums text-rose-200">
-                {stats.worstDay ? fmtPnl(stats.worstDay.pnl, displayCurrency) : stats.smallestGreenDay ? fmtPnl(stats.smallestGreenDay.pnl, displayCurrency) : "—"}
-              </p>
-              <p className="mt-1 text-[11px] text-zinc-500">{stats.worstDay?.date ?? stats.smallestGreenDay?.date ?? "—"}</p>
-            </div>
-          </section>
-          <section className="grid gap-4 sm:grid-cols-2" aria-label="Performance headline">
-            {[
-              { label: "Net P&L", value: fmtPnl(netR, displayCurrency), tone: netR },
-              { label: "Trade win rate", value: stats.winRateTrades !== null ? `${stats.winRateTrades}%` : "—", tone: 0 },
-            ].map((item) => (
-              <div key={item.label} className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
-                <p className="app-metric-label">{item.label}</p>
-                <p className={cn("mt-1.5 font-display text-[1.2rem] tabular-nums", item.tone > 0 ? "text-emerald-200" : item.tone < 0 ? "text-rose-200" : "text-zinc-100")}>
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </section>
-
-          <DashboardCard
-            eyebrow="Trend"
+          <MetricStrip
+            items={[
+              { label: "Net P&L", value: fmtPnl(netR, displayCurrency), tone: netR, icon: TrendingUp },
+              {
+                label: "Trade win rate",
+                value: stats.winRateTrades !== null ? `${stats.winRateTrades}%` : "—",
+                icon: Target,
+              },
+            ]}
+          />
+          <AnalyticsPanel
             title="Cumulative P&L"
-            description="Running total of daily P&amp;L, oldest to newest."
-            variant="inset"
-            className="overflow-hidden"
+            description="Running total of daily P&L, oldest to newest."
+            glow="blue"
+            contentClassName="overflow-hidden"
           >
             <CumulativeChart points={stats.cumulative} currency={displayCurrency} />
-          </DashboardCard>
-
-          <section className="grid gap-4 lg:grid-cols-2" aria-label="Secondary charts">
-            <DashboardCard eyebrow="Days" title="Daily P&amp;L bars" description="One bar per trading day." variant="inset" className="overflow-x-auto">
+          </AnalyticsPanel>
+          <section className="grid gap-5 lg:grid-cols-2">
+            <AnalyticsPanel title="Daily P&L" description="One bar per trading day in this scope.">
               <DailyBars bars={stats.dailyBars} currency={displayCurrency} />
-            </DashboardCard>
-            <DashboardCard eyebrow="Weeks" title="Weekly totals trend" description="Recent weeks at a glance.">
+            </AnalyticsPanel>
+            <AnalyticsPanel title="Weekly totals" description="Recent weeks at a glance." glow="none">
               <WeeklyTrend weekly={stats.weekly} currency={displayCurrency} />
-            </DashboardCard>
+            </AnalyticsPanel>
+          </section>
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Performance range and risk">
+            <SupportMetricCard
+              label="Max drawdown"
+              value={fmtPnl(stats.maxDrawdown, displayCurrency)}
+              tone={stats.maxDrawdown ?? 0}
+            />
+            <SupportMetricCard label="Profit factor" value={formatProfitFactor(stats.profitFactor)} tone={(stats.profitFactor ?? 0) >= 1 ? 1 : -1} />
+            <SupportMetricCard
+              label="Best day"
+              value={stats.bestDay ? fmtPnl(stats.bestDay.pnl, displayCurrency) : "—"}
+              detail={stats.bestDay?.date}
+              tone={stats.bestDay?.pnl ?? 0}
+            />
+            <SupportMetricCard
+              label={stats.worstDay ? "Worst day" : "Smallest green day"}
+              value={
+                stats.worstDay
+                  ? fmtPnl(stats.worstDay.pnl, displayCurrency)
+                  : stats.smallestGreenDay
+                    ? fmtPnl(stats.smallestGreenDay.pnl, displayCurrency)
+                    : "—"
+              }
+              detail={stats.worstDay?.date ?? stats.smallestGreenDay?.date}
+              tone={stats.worstDay?.pnl ?? stats.smallestGreenDay?.pnl ?? 0}
+            />
           </section>
           </>
           ) : null}
 
           {activeTab === "behavior" ? (
           <>
-          <section className="grid gap-4 lg:grid-cols-2" aria-label="Behavior charts">
-            <DashboardCard eyebrow="Behavior" title="Mood distribution" description="Which mood appears most often.">
+          <section className="grid gap-5 lg:grid-cols-2" aria-label="Behavior charts">
+            <AnalyticsPanel title="Mood distribution" description="How often each mood appears in your journal.">
               <MoodDistributionChart moodBreakdown={stats.moodBreakdown} />
-            </DashboardCard>
-            <DashboardCard eyebrow="Discipline" title="Discipline score trend" description="Weekly score with reflection bonus.">
+            </AnalyticsPanel>
+            <AnalyticsPanel title="Discipline trend" description="Weekly score with reflection bonus." glow="green">
               <DisciplineTrend weekly={stats.weekly} weeklyReflections={weeklyReflections} />
-              <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
-                <p className="app-metric-label">Weekly focus</p>
-                <p className="mt-1.5 text-[12px] text-zinc-300">
-                  Rule: {latestReviewRule?.trim() ? latestReviewRule : "No weekly rule saved yet."}
+              <div className="mt-5 rounded-xl bg-white/[0.03] px-4 py-3.5 ring-1 ring-inset ring-white/[0.08]">
+                <p className="text-[13px] font-medium text-zinc-400">Weekly focus</p>
+                <p className="mt-1.5 text-[14px] text-zinc-200">
+                  {latestReviewRule?.trim() ? latestReviewRule : "No weekly rule saved yet."}
                 </p>
-                <p className="mt-1 text-[12px] text-zinc-400">
-                  Confidence: {latestReviewConfidence ?? "—"}/5
+                <p className="mt-1 text-[13px] text-zinc-500">
+                  Confidence {latestReviewConfidence ?? "—"}/5
                 </p>
               </div>
-            </DashboardCard>
+            </AnalyticsPanel>
           </section>
 
-          <section aria-label="Behavior insights">
-            <DashboardCard
-              eyebrow="Behavior insights"
-              title="How behavior links to your P&L"
-              description="Averages day P&L against mood tags and discipline toggles. Unavailable metrics show as — until enough labeled days exist."
-            >
-              {behaviorInsightBlockers.length > 0 ? (
-                <p className="mb-4 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[12px] text-zinc-400">
-                  Some comparisons need more labeled days in your current filter scope. Cards below still show what is available.
-                </p>
-              ) : null}
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {[
-                  { title: "Avg P&L on Focused days", value: focusedAvg },
-                  { title: "Avg P&L on Calm days", value: calmAvg },
-                  { title: "Avg P&L when followed plan", value: followedPlanAvg },
-                  { title: "Avg P&L when plan was not followed", value: notFollowedPlanAvg },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-xl border border-white/[0.07] bg-black/15 px-4 py-3.5">
-                    <p className="app-kicker">
-                      {item.title}
-                    </p>
-                    <p
-                      className={cn(
-                        "mt-2 font-display text-2xl tabular-nums tracking-[-0.03em]",
-                        item.value === null ? "text-zinc-500" : (item.value ?? 0) >= 0 ? "text-emerald-200" : "text-rose-200",
-                      )}
-                    >
-                      {fmtPnl(item.value, displayCurrency)}
-                    </p>
-                  </div>
+          <AnalyticsPanel
+            title="Behavior and P&L"
+            description="See what your labeled days suggest — unavailable cards stay hidden until enough data exists."
+          >
+            {behaviorInsightBlockers.length > 0 ? (
+              <p className="mb-4 text-[13px] leading-relaxed text-zinc-500">
+                Some comparisons need more labeled days in your current filter scope.
+              </p>
+            ) : null}
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {[
+                { title: "Focused days", value: focusedAvg, detail: "Average result when mood is focused." },
+                { title: "Calm days", value: calmAvg, detail: "Average result when mood is calm." },
+                { title: "Plan followed", value: followedPlanAvg, detail: "Days where you followed your plan." },
+                { title: "Plan missed", value: notFollowedPlanAvg, detail: "Days where the plan was not followed.", variant: "negative" as const },
+              ]
+                .filter((item) => item.value !== null)
+                .map((item) => (
+                  <InsightMetricCard
+                    key={item.title}
+                    title={item.title}
+                    value={fmtPnl(item.value, displayCurrency)}
+                    detail={item.detail}
+                    variant={item.variant ?? ((item.value ?? 0) >= 0 ? "positive" : "negative")}
+                  />
                 ))}
-                <div className="rounded-xl border border-emerald-400/18 bg-emerald-500/[0.06] px-4 py-3.5">
-                  <p className="app-metric-label text-emerald-200/85">Best mood</p>
-                  <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-emerald-100">{bestBehavior?.state ?? "—"}</p>
-                  <p className="mt-1 text-[12px] text-zinc-400">
-                    {bestBehavior ? `${fmtPnl(bestBehavior.avg, displayCurrency)} · ${bestBehavior.sample} entries` : "—"}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-rose-400/18 bg-rose-500/[0.06] px-4 py-3.5">
-                  <p className="app-metric-label text-rose-200/85">Weakest mood</p>
-                  <p className="mt-2 font-display text-2xl tracking-[-0.03em] text-rose-100">{weakestBehavior?.state ?? "—"}</p>
-                  <p className="mt-1 text-[12px] text-zinc-400">
-                    {weakestBehavior ? `${fmtPnl(weakestBehavior.avg, displayCurrency)} · ${weakestBehavior.sample} entries` : "—"}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
-                  <p className="app-metric-label">Respected stop vs not</p>
-                  <p className="mt-2 text-[12px] text-zinc-300">
-                    {fmtPnl(stats.stopRespectedAvg, displayCurrency)} vs {fmtPnl(stats.stopNotRespectedAvg, displayCurrency)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-white/[0.08] bg-black/15 px-4 py-3.5">
-                  <p className="app-metric-label">No revenge vs revenge</p>
-                  <p className="mt-2 text-[12px] text-zinc-300">
-                    {fmtPnl(stats.noRevengeAvg, displayCurrency)} vs {fmtPnl(stats.revengeAvg, displayCurrency)}
-                  </p>
-                </div>
-              </div>
-            </DashboardCard>
-          </section>
+              {bestBehavior ? (
+                <InsightMetricCard
+                  title="Best mood"
+                  value={`${bestBehavior.state} · ${fmtPnl(bestBehavior.avg, displayCurrency)}`}
+                  detail={`${bestBehavior.sample} entries in this scope.`}
+                  variant="positive"
+                />
+              ) : null}
+              {weakestBehavior && weakestBehavior.state !== bestBehavior?.state ? (
+                <InsightMetricCard
+                  title="Weakest mood"
+                  value={`${weakestBehavior.state} · ${fmtPnl(weakestBehavior.avg, displayCurrency)}`}
+                  detail={`${weakestBehavior.sample} entries in this scope.`}
+                  variant="negative"
+                />
+              ) : null}
+              {stats.stopRespectedAvg !== null && stats.stopNotRespectedAvg !== null ? (
+                <InsightMetricCard
+                  title="Stop discipline"
+                  value={`${fmtPnl(stats.stopRespectedAvg, displayCurrency)} vs ${fmtPnl(stats.stopNotRespectedAvg, displayCurrency)}`}
+                  detail="Respected stop vs not respected."
+                />
+              ) : null}
+              {stats.noRevengeAvg !== null && stats.revengeAvg !== null ? (
+                <InsightMetricCard
+                  title="Revenge trades"
+                  value={`${fmtPnl(stats.noRevengeAvg, displayCurrency)} vs ${fmtPnl(stats.revengeAvg, displayCurrency)}`}
+                  detail="No revenge vs revenge taken."
+                />
+              ) : null}
+            </div>
+          </AnalyticsPanel>
 
-          <section aria-label="Rules analytics">
-            <DashboardCard eyebrow="Rules" title="Rule adherence and impact" description="How consistently rules are followed and what breaks cost.">
-              {rulesAnalytics.rows.length === 0 ? (
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-4 text-sm text-zinc-500">
-                  Create active rules in Settings to track adherence here.
+          <AnalyticsPanel title="Rule adherence" description="How consistently rules are followed and what breaks cost.">
+            {rulesAnalytics.rows.length === 0 ? (
+              <p className="rounded-xl bg-white/[0.03] px-4 py-6 text-[14px] text-zinc-500 ring-1 ring-inset ring-white/[0.08]">
+                Create active rules in Settings to track adherence here.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <SupportMetricCard
+                    label="Rule adherence"
+                    value={rulesAnalytics.adherence !== null ? `${rulesAnalytics.adherence}%` : "—"}
+                  />
+                  <SupportMetricCard label="Most broken" value={rulesAnalytics.mostBroken ?? "—"} />
+                  <SupportMetricCard
+                    label="Break cost"
+                    value={fmtPnl(rulesAnalytics.breakCost, displayCurrency)}
+                    tone={(rulesAnalytics.breakCost ?? 0) <= 0 ? -1 : 1}
+                  />
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="app-metric-label">Rule adherence</p>
-                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.adherence !== null ? `${rulesAnalytics.adherence}%` : "—"}</p>
-                    </div>
-                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="app-metric-label">Most broken rule</p>
-                      <p className="mt-1.5 text-[13px] text-zinc-100">{rulesAnalytics.mostBroken ?? "—"}</p>
-                    </div>
-                    <div className="rounded-lg border border-white/[0.08] bg-black/15 px-3.5 py-3">
-                      <p className="app-metric-label">Rule break cost</p>
-                      <p className={cn("mt-1.5 text-[13px] tabular-nums", (rulesAnalytics.breakCost ?? 0) <= 0 ? "text-rose-200" : "text-emerald-200")}>
-                        {fmtPnl(rulesAnalytics.breakCost, displayCurrency)}
+                <div className="space-y-2">
+                  {rulesAnalytics.rows.map((row) => (
+                    <div key={row.title} className="rounded-xl bg-black/20 px-4 py-3 ring-1 ring-inset ring-white/[0.07]">
+                      <p className="text-[14px] text-zinc-200">{row.title}</p>
+                      <p className="mt-1 text-[13px] text-zinc-500">
+                        Followed {row.followedPct !== null ? `${row.followedPct}%` : "—"} ·{" "}
+                        {fmtPnl(row.avgFollowed, displayCurrency)} when followed vs {fmtPnl(row.avgBroken, displayCurrency)} when broken
                       </p>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    {rulesAnalytics.rows.map((row) => (
-                      <div key={row.title} className="rounded-lg border border-white/[0.07] bg-black/15 px-3.5 py-2.5 text-[12px]">
-                        <p className="text-zinc-200">{row.title}</p>
-                        <p className="mt-1 text-zinc-500">
-                          Followed {row.followedPct !== null ? `${row.followedPct}%` : "—"} · {fmtPnl(row.avgFollowed, displayCurrency)} when followed vs {fmtPnl(row.avgBroken, displayCurrency)} when broken
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              )}
-            </DashboardCard>
-          </section>
+              </div>
+            )}
+          </AnalyticsPanel>
           </>
           ) : null}
 
           {activeTab === "patterns" ? (
           <>
           <section className="grid gap-4 lg:grid-cols-2" aria-label="Weekday and symbol performance">
-            <DashboardCard eyebrow="Weekday performance" title="How each weekday performs">
-              <div className="space-y-2.5">
-                {stats.weekdayPerformance.map((row) => (
-                  <div key={row.weekday} className="rounded-xl border border-white/[0.07] bg-black/15 px-4 py-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-mono text-[12px] text-zinc-300">{row.weekday}</p>
-                      <p className={cn("font-mono text-[12px] tabular-nums", row.totalPnl > 0 ? "text-emerald-200" : row.totalPnl < 0 ? "text-rose-200" : "text-zinc-300")}>
-                        {fmtPnl(row.totalPnl, displayCurrency)}
+            <AnalyticsPanel title="Weekday performance" description="See what repeats across the week.">
+              <div className="space-y-3">
+                {stats.weekdayPerformance.map((row) => {
+                  const maxAbs = Math.max(
+                    ...stats.weekdayPerformance.map((w) => Math.abs(w.totalPnl)),
+                    1,
+                  );
+                  const width = Math.round((Math.abs(row.totalPnl) / maxAbs) * 100);
+                  const isBest = row.weekday === stats.bestWeekday;
+                  const isWeakest = row.weekday === stats.weakestWeekday;
+                  return (
+                    <div key={row.weekday} className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-3 text-[13px]">
+                        <p className="text-zinc-200">
+                          {row.weekday}
+                          {isBest ? <span className="ml-2 text-emerald-300/80">Strongest</span> : null}
+                          {isWeakest ? <span className="ml-2 text-rose-300/80">Weakest</span> : null}
+                        </p>
+                        <p
+                          className={cn(
+                            "tabular-nums",
+                            row.totalPnl > 0 ? "text-emerald-200" : row.totalPnl < 0 ? "text-rose-200" : "text-zinc-400",
+                          )}
+                        >
+                          {fmtPnl(row.totalPnl, displayCurrency)}
+                        </p>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+                        <div
+                          className={cn(
+                            "h-full rounded-full",
+                            row.totalPnl >= 0 ? "bg-emerald-400/80" : "bg-rose-400/80",
+                          )}
+                          style={{ width: `${width}%` }}
+                        />
+                      </div>
+                      <p className="text-[12px] text-zinc-500">
+                        Avg {fmtPnl(row.averagePnl, displayCurrency)} · {row.tradedDays} days
                       </p>
                     </div>
-                    <p className="mt-1 text-[12px] text-zinc-500">
-                      Avg {fmtPnl(row.averagePnl, displayCurrency)} · {row.tradedDays} days
-                    </p>
-                  </div>
-                ))}
-                <p className="text-[12px] text-zinc-500">
-                  Best: {stats.bestWeekday ?? "—"} · Weakest: {stats.weakestWeekday ?? "—"}
-                </p>
+                  );
+                })}
               </div>
-            </DashboardCard>
+            </AnalyticsPanel>
             <DashboardCard eyebrow="Symbol performance" title="Ranked by contribution">
               <div className="space-y-2">
                 {stats.symbolPerformance.length === 0 ? (
