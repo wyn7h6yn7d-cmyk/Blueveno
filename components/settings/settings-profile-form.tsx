@@ -370,7 +370,6 @@ export function SettingsProfileForm() {
         onChange={(id) => navigateSection(id as SettingsSectionId)}
         ariaLabel="Settings sections"
         variant="compact"
-        className="app-scroll-tabs-x w-full"
       />
 
       <SettingsPanels

@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
+import { MetricCard } from "@/components/ui/card-system";
 import { cn } from "@/lib/utils";
-import { appCardPrimary, appMetricLabel } from "@/lib/ui/app-surface";
+import { appMetricLabel } from "@/lib/ui/app-surface";
 
 type MetricTileProps = {
   label: string;
@@ -13,9 +14,9 @@ type MetricTileProps = {
 
 export function MetricTile({ label, value, hint, tone = 0, icon: Icon, className }: MetricTileProps) {
   return (
-    <div className={cn(appCardPrimary, "relative overflow-hidden px-5 py-5 sm:px-6 sm:py-6", className)}>
+    <MetricCard className={cn("relative overflow-hidden px-5 py-5 sm:px-6 sm:py-6", className)}>
       <div
-        className="pointer-events-none absolute -right-8 -top-10 size-28 rounded-full bg-[radial-gradient(circle,oklch(0.48_0.14_252/0.22),transparent_68%)]"
+        className="pointer-events-none absolute -right-8 -top-10 size-28 rounded-full bg-[radial-gradient(circle,oklch(0.48_0.12_252/0.14),transparent_68%)]"
         aria-hidden
       />
       <div className="relative flex items-start justify-between gap-3">
@@ -34,11 +35,11 @@ export function MetricTile({ label, value, hint, tone = 0, icon: Icon, className
           {hint ? <p className="mt-2 text-[13px] leading-snug text-zinc-500">{hint}</p> : null}
         </div>
         {Icon ? (
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] text-[oklch(0.78_0.11_252)]">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-zinc-400">
             <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden />
           </span>
         ) : null}
       </div>
-    </div>
+    </MetricCard>
   );
 }

@@ -20,7 +20,8 @@ import { DayBreakdownModule } from "@/components/dashboard/day-breakdown-module"
 import { OverviewOnboardingChecklist } from "@/components/dashboard/overview-onboarding-checklist";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { getOverviewOnboardingChecklist } from "@/lib/onboarding/overview-checklist";
-import { appKicker, appSecondaryCta } from "@/lib/ui/app-surface";
+import { InnerPanel } from "@/components/ui/card-system";
+import { appCardShell, appInnerPanel, appKicker, appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { createClient } from "@/lib/supabase/client";
 
@@ -45,6 +46,11 @@ function localDayKey(date: Date): string {
 
 function percentOrDash(value: number | null): string {
   return value === null || !Number.isFinite(value) ? "—" : `${Math.round(value)}%`;
+}
+
+function formatProfitFactor(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return "—";
+  return value.toFixed(2);
 }
 
 function insightHeadline(insight: BehaviorInsight): string {
@@ -185,6 +191,11 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       icon: Target,
     },
     {
+      label: "Profit factor",
+      value: hasEntries ? formatProfitFactor(overviewStats.profitFactor) : "—",
+      tone: hasEntries && overviewStats.profitFactor !== null ? (overviewStats.profitFactor >= 1 ? 1 : -1) : 0,
+    },
+    {
       label: "Discipline score",
       value: hasEntries ? disciplineDisplay.value : "—",
       tone: 0,
@@ -250,19 +261,19 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       <section className="space-y-3" aria-label="Overview KPIs">
         {!ready ? (
           <div className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, i) => (
+            <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
+              {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-[8.5rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.03]"
+                  className={cn(appCardShell, "h-[8.5rem] animate-pulse bg-white/[0.02]")}
                 />
               ))}
             </div>
-            <div className="h-[17.5rem] animate-pulse rounded-2xl border border-white/[0.06] bg-white/[0.02] sm:h-[15.5rem]" />
+            <div className={cn(appCardShell, "h-[17.5rem] animate-pulse bg-white/[0.02] sm:h-[15.5rem]")} />
           </div>
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
               {primaryKpis.map((card) => (
                 <MetricTile
                   key={card.label}
@@ -315,7 +326,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                   ? "border-emerald-400/35 bg-emerald-500/[0.16] shadow-[0_0_20px_-8px_oklch(0.42_0.16_155/0.55)]"
                   : pnl < 0
                     ? "border-rose-400/35 bg-rose-500/[0.15] shadow-[0_0_20px_-8px_oklch(0.42_0.18_15/0.5)]"
-                    : "border-white/[0.08] bg-white/[0.03]";
+                    : cn(appInnerPanel, "border-white/[0.07] bg-white/[0.02]");
               return (
                 <div
                   key={cell.key}
@@ -385,7 +396,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                   </div>
                   <div className="flex items-center justify-end gap-2 sm:contents">
                   {item.mood ? (
-                    <p className="rounded-md bg-white/[0.04] px-2 py-1 text-[12px] text-zinc-300 ring-1 ring-inset ring-white/[0.06]">
+                    <p className={cn(appInnerPanel, "rounded-md px-2 py-1 text-[12px] text-zinc-300")}>
                       {item.mood}
                     </p>
                   ) : null}
@@ -405,7 +416,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
           description="Short reads from mood, discipline, and tags on this account."
         >
           {behaviorInsightsResult.showEmptyState ? (
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-6 text-sm text-zinc-500">
+            <InnerPanel className="px-4 py-6 text-sm text-zinc-500">
               <p>{behaviorInsightsResult.emptyMessage}</p>
               {behaviorInsightsResult.disciplineDataNote ? (
                 <p className="mt-2 text-[12px] leading-relaxed text-zinc-400">
@@ -415,7 +426,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
               <Link href="/app/journal#add" className="mt-3 inline-flex text-[12px] text-[oklch(0.78_0.11_252)] hover:underline">
                 Log a trading day
               </Link>
-            </div>
+            </InnerPanel>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {behaviorInsightsResult.disciplineDataNote ? (
@@ -443,7 +454,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
         </DashboardCard>
         <DashboardCard eyebrow="Weekly review" title="Current week">
           <div className="space-y-3">
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+            <InnerPanel className="px-4 py-3.5">
               <p className="text-[11px] font-medium text-zinc-500">Status</p>
               <p className="mt-1.5 text-[13px] text-zinc-100">
                 {weeklyReviewStatus.status === "saved"
@@ -452,16 +463,19 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
                     ? "Set next week's focus"
                     : "Review ready"}
               </p>
-            </div>
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5">
+            </InnerPanel>
+            <InnerPanel className="px-4 py-3.5">
               <p className="text-[11px] font-medium text-zinc-500">Next focus</p>
               <p className="mt-1.5 text-[12px] leading-relaxed text-zinc-300">
                 {weeklyReviewStatus.nextFocus ?? "Not set yet."}
               </p>
-            </div>
+            </InnerPanel>
             <Link
               href="/app/journal#weekly-review"
-              className="inline-flex h-9 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-3 text-[12px] text-zinc-200 hover:bg-white/[0.06]"
+              className={cn(
+                appInnerPanel,
+                "inline-flex h-9 items-center justify-center px-3 text-[12px] text-zinc-200 transition hover:bg-white/[0.04]",
+              )}
             >
               Close the week
             </Link>
@@ -480,7 +494,10 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
               <Link
                 key={action.href}
                 href={action.href}
-                className="group flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-zinc-200 transition hover:border-white/[0.16] hover:bg-white/[0.06]"
+                className={cn(
+                  appInnerPanel,
+                  "group flex items-center justify-between px-4 py-3 text-sm text-zinc-200 transition hover:border-white/[0.12] hover:bg-white/[0.04]",
+                )}
               >
                 <span>{action.label}</span>
                 <action.icon className="size-4 text-zinc-400 transition group-hover:text-zinc-200" strokeWidth={1.75} />

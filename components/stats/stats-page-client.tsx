@@ -749,7 +749,6 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             onChange={navigateTab}
             ariaLabel="Stats sections"
             variant="sticky"
-            className="app-scroll-tabs-x w-full"
           />
 
           {filteredEntries.length === 0 ? (
@@ -788,6 +787,23 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
                 label: "Trade win rate",
                 value: stats.winRateTrades !== null ? `${stats.winRateTrades}%` : "—",
                 icon: Target,
+              },
+              {
+                label: "Avg green day",
+                value: fmtPnl(stats.avgGreenDay, displayCurrency),
+                tone: stats.avgGreenDay ?? 0,
+                icon: TrendingUp,
+              },
+              {
+                label: "Avg red day",
+                value: fmtPnl(stats.avgRedDay, displayCurrency),
+                tone: stats.avgRedDay ?? 0,
+                icon: TrendingDown,
+              },
+              {
+                label: "Profit factor",
+                value: formatProfitFactor(stats.profitFactor),
+                tone: (stats.profitFactor ?? 0) >= 1 ? 1 : -1,
               },
             ]}
           />

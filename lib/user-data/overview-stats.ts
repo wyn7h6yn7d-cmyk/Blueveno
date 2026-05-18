@@ -25,6 +25,7 @@ type OverviewStats = {
   smallestGreenDay: number | null;
   avgGreenDay: number | null;
   avgRedDay: number | null;
+  profitFactor: number | null;
   streak: string;
   disciplineScore: number | null;
   greenRedSummary: string;
@@ -158,6 +159,10 @@ export function getOverviewStats({
   const worstLoss = pickWorstLossDay(dailyRows);
   const smallestGreen = pickSmallestGreenDay(dailyRows);
 
+  const grossProfit = daily.reduce((sum, d) => (d.pnl > 0 ? sum + d.pnl : sum), 0);
+  const grossLossAbs = Math.abs(daily.reduce((sum, d) => (d.pnl < 0 ? sum + d.pnl : sum), 0));
+  const profitFactor = grossLossAbs > 0 ? grossProfit / grossLossAbs : null;
+
   return {
     weekPnl,
     monthPnl,
@@ -171,6 +176,7 @@ export function getOverviewStats({
     smallestGreenDay: smallestGreen?.pnl ?? null,
     avgGreenDay: avg(positives.reduce((s, n) => s + n, 0), positives.length),
     avgRedDay: avg(negatives.reduce((s, n) => s + n, 0), negatives.length),
+    profitFactor,
     streak: streakFromDaily(daily),
     disciplineScore: computeDisciplineScorePercent(entries),
     greenRedSummary: `${winningDays} / ${losingDays}`,

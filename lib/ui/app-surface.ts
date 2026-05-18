@@ -29,19 +29,45 @@ export const appBodySmall = "text-[13px] leading-relaxed text-zinc-400";
 /** Muted paragraph */
 export const appBodyMuted = "text-[14px] leading-relaxed text-zinc-500";
 
-/** Hero KPI / primary metric cards */
-export const appCardPrimary = cn(
-  "rounded-2xl border border-[oklch(0.55_0.12_252/0.38)]",
-  "bg-[linear-gradient(158deg,oklch(0.21_0.052_258/0.98),oklch(0.11_0.034_264/0.99))]",
-  "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.12),0_32px_64px_-36px_oklch(0.48_0.14_252/0.48)]",
-  "ring-1 ring-[oklch(0.58_0.1_252/0.22)]",
+/** Base shell — standard Overview / app content cards */
+export const appCardShell = cn(
+  "rounded-2xl border border-white/[0.08]",
+  "bg-[linear-gradient(168deg,oklch(0.14_0.026_262/0.96),oklch(0.105_0.022_266/0.95))]",
+  "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.055),0_24px_56px_-40px_rgba(0,0,0,0.72)]",
 );
 
-/** Secondary grouped metrics / breakdown panels */
+/** KPI metric cards — same language as shell, slightly elevated with subtle brand accent */
+export const appCardKpi = cn(
+  appCardShell,
+  "border-white/[0.09]",
+  "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_26px_60px_-38px_rgba(0,0,0,0.76),0_0_40px_-36px_oklch(0.48_0.11_252/0.18)]",
+);
+
+/** Nested panels inside section cards */
+export const appInnerPanel = cn(
+  "rounded-xl border border-white/[0.07] bg-white/[0.025]",
+  "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]",
+);
+
+/** Semantic inner panels — use for positive / negative states only */
+export const appInnerPanelPositive = cn(
+  appInnerPanel,
+  "border-emerald-400/20 bg-emerald-500/[0.06]",
+);
+
+export const appInnerPanelNegative = cn(
+  appInnerPanel,
+  "border-rose-400/20 bg-rose-500/[0.06]",
+);
+
+/** @deprecated Use appCardKpi — kept for existing imports */
+export const appCardPrimary = appCardKpi;
+
+/** Secondary grouped metrics / analytics panels */
 export const appCardSecondary = cn(
-  "rounded-xl border border-white/[0.07]",
-  "bg-[linear-gradient(165deg,oklch(0.13_0.032_262/0.94),oklch(0.095_0.026_266/0.92))]",
-  "shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.04)]",
+  appCardShell,
+  "rounded-xl border-white/[0.07]",
+  "bg-[linear-gradient(165deg,oklch(0.13_0.024_262/0.94),oklch(0.098_0.02_266/0.92))]",
 );
 
 /** App main content width — use on shell inner wrapper */

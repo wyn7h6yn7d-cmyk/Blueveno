@@ -24,24 +24,24 @@ type SectionNavProps = {
 type SizeKey = SectionNavVariant | "default";
 
 const variantShell: Record<SizeKey, string> = {
-  default: "",
-  compact: "",
+  default: "w-fit max-w-full py-2",
+  compact: "w-fit max-w-full py-2",
   sticky: cn(
-    "sticky z-20 top-[var(--app-topbar-offset,3.75rem)] pb-2 pt-0.5",
-    "bg-[oklch(0.07_0.03_266/0.72)] backdrop-blur-md",
+    "sticky z-20 top-[var(--app-topbar-offset,3.75rem)]",
+    "w-fit max-w-full border-none bg-transparent py-2 shadow-none",
   ),
 };
 
 const variantTrack: Record<SizeKey, string> = {
-  default: "gap-0.5 rounded-2xl p-1",
-  compact: "gap-0.5 rounded-xl p-0.5",
-  sticky: "gap-0.5 rounded-2xl p-1",
+  default: "gap-1 rounded-2xl p-1",
+  compact: "gap-1 rounded-xl p-1",
+  sticky: "gap-1 rounded-2xl p-1",
 };
 
 const variantTab: Record<SizeKey, string> = {
-  default: "h-9 gap-2 rounded-xl px-3.5 text-[13px]",
-  compact: "h-10 min-h-10 gap-1.5 rounded-lg px-3.5 text-[13px]",
-  sticky: "h-10 min-h-10 gap-2 rounded-xl px-3.5 text-[13px]",
+  default: "min-h-9 gap-2 rounded-xl px-3.5 py-2 text-[13px] leading-none",
+  compact: "min-h-9 gap-1.5 rounded-lg px-3.5 py-2 text-[13px] leading-none",
+  sticky: "min-h-10 gap-2 rounded-xl px-3.5 py-2 text-[13px] leading-none",
 };
 
 const variantIcon: Record<SizeKey, string> = {
@@ -103,7 +103,8 @@ export function SectionNav({
   const track = (
     <div
       className={cn(
-        "app-scroll-tabs-x max-w-full overflow-x-auto overscroll-x-contain scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "w-fit max-w-full overflow-x-auto overflow-y-visible overscroll-x-contain scroll-smooth",
+        "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
@@ -112,9 +113,7 @@ export function SectionNav({
         aria-label={ariaLabel}
         onKeyDown={onKeyDown}
         className={cn(
-          "inline-flex min-w-0 items-center bg-[linear-gradient(180deg,oklch(0.12_0.034_262/0.85),oklch(0.09_0.028_266/0.9))]",
-          "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.06),0_12px_40px_-28px_oklch(0.45_0.14_252/0.35)]",
-          "ring-1 ring-white/[0.07]",
+          "inline-flex w-fit shrink-0 items-center border border-white/[0.08] bg-white/[0.03]",
           variantTrack[size],
         )}
       >
@@ -136,12 +135,12 @@ export function SectionNav({
               tabIndex={isActive ? 0 : -1}
               onClick={() => onChange(item.id)}
               className={cn(
-                "inline-flex shrink-0 snap-start items-center font-medium whitespace-nowrap transition-[color,background,box-shadow]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.58_0.12_252/0.45)] focus-visible:ring-offset-2 focus-visible:ring-offset-[oklch(0.08_0.03_266)]",
+                "inline-flex shrink-0 items-center font-medium whitespace-nowrap transition-[color,background,box-shadow,border-color]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
                 variantTab[size],
                 isActive
-                  ? "bg-[linear-gradient(180deg,oklch(0.62_0.13_252/0.22),oklch(0.52_0.12_252/0.14))] text-zinc-50 shadow-[inset_0_1px_0_0_oklch(1_0_0/0.1),0_0_0_1px_oklch(0.58_0.12_252/0.35)]"
-                  : "text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200",
+                  ? "border border-blue-400/30 bg-blue-500/15 text-zinc-50 shadow-[0_0_24px_rgba(59,130,246,0.20)]"
+                  : "border border-transparent text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200",
               )}
             >
               {Icon ? (
@@ -159,7 +158,7 @@ export function SectionNav({
     return <div className={variantShell.sticky}>{track}</div>;
   }
 
-  return track;
+  return <div className={variantShell[size]}>{track}</div>;
 }
 
 /** Aliases — same component. */
