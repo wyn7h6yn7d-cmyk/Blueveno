@@ -7,7 +7,7 @@ export type DonutMetricProps = {
   red: number;
   /** List legend, compact inline dots, or hidden */
   legend?: boolean | "inline";
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
   className?: string;
 };
 
@@ -73,7 +73,14 @@ export function DonutMetric({
   className,
 }: DonutMetricProps) {
   const state = donutState(green, red);
-  const ringSize = size === "lg" ? "size-[9.5rem]" : "size-[7.25rem]";
+  const ringSize =
+    size === "lg" ? "size-[9.5rem]" : size === "sm" ? "size-[5.75rem]" : "size-[7.25rem]";
+  const centerMainClass =
+    size === "sm"
+      ? "text-[1.15rem] sm:text-[1.2rem]"
+      : size === "lg"
+        ? "text-[1.45rem] sm:text-[1.6rem]"
+        : "text-[1.35rem] sm:text-[1.45rem]";
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
@@ -94,10 +101,15 @@ export function DonutMetric({
             "shadow-[inset_0_1px_0_0_oklch(1_0_0/0.08)]",
           )}
         >
-          <p className="font-display text-[1.45rem] font-semibold leading-none tabular-nums tracking-[-0.04em] text-zinc-50 sm:text-[1.6rem]">
+          <p
+            className={cn(
+              "font-display font-semibold leading-none tabular-nums tracking-[-0.04em] text-zinc-50",
+              centerMainClass,
+            )}
+          >
             {state.centerMain}
           </p>
-          <p className="mt-1 whitespace-nowrap text-[11px] font-medium text-zinc-500">{state.centerSub}</p>
+          <p className="mt-0.5 whitespace-nowrap text-[10px] font-medium text-zinc-500">{state.centerSub}</p>
         </div>
       </div>
 
