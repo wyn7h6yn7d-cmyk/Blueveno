@@ -64,6 +64,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   const activeAccountIdRef = useRef<string | null>(null);
   const lastFetchedAccountIdRef = useRef<string | null>(null);
   const didTokenRefreshRefetch = useRef(false);
+  const fetchJournalRowsRef = useRef<(targetAccountId?: string | null) => Promise<void>>(async () => {});
   /** Used to avoid accepting a transient empty client read right after load */
   const mountTimeRef = useRef(0);
 
@@ -200,6 +201,8 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       setReady(true);
     }
 
+    fetchJournalRowsRef.current = fetchJournalRows;
+
     async function load() {
       if (!userId) {
         setData(EMPTY_WORKSPACE);
@@ -313,6 +316,21 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- workspaceBootstrapKey encodes initialWorkspace + userId
   }, [userId, workspaceBootstrapKey, activeAccountId, topbarActiveAccountId]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (!userIdRef.current) return;
+      void fetchJournalRowsRef.current(activeAccountIdRef.current);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
+  const refetchJournal = useCallback(async () => {
+    if (!userIdRef.current) return;
+    await fetchJournalRowsRef.current(activeAccountIdRef.current);
+  }, []);
 
   const addRow = useCallback(
     async (row: Omit<JournalRow, "id">) => {
@@ -478,5 +496,5 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     if (userId) writeJournalCache(userId, next);
   }, [userId]);
 
-  return { data, ready, lastError, activeAccountId, addRow, updateRow, removeRow, resetJournal, replaceAll };
+  return { data, ready, lastError, activeAccountId, addRow, updateRow, removeRow, resetJournal, replaceAll, refetchJournal };
 }

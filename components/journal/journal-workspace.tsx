@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CalendarDays, Check, ChevronRight, LineChart, NotebookPen, Plus } from "lucide-react";
@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
-import { dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
+import { compareJournalRecency, dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
+import { localTodayKey, useFollowLocalToday } from "@/lib/user-data/local-today";
 import { EmptyState } from "@/components/app/empty-state";
 import { JournalDayList } from "@/components/journal/journal-day-list";
 import { chartUrlForSave, isValidChartUrl } from "@/lib/chart-link";
@@ -171,7 +172,7 @@ function JournalFormCollapsible({
     </details>
   );
 }
-const RECENT_ACTIVITY_PREVIEW = 3;
+const RECENT_ACTIVITY_PREVIEW = 5;
 
 type WeeklyReflectionRow = {
   week_start: string;
@@ -223,8 +224,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const { canWriteJournal, displayCurrency } = useAccess();
   const toast = useAppToast();
   const { accounts } = useTradingAccountsWorkspace();
-  const { data, ready, activeAccountId, addRow, lastError, resetJournal } = useUserWorkspace(userId, { initialWorkspace });
-  const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const { data, ready, activeAccountId, addRow, lastError, resetJournal, refetchJournal } = useUserWorkspace(userId, {
+    initialWorkspace,
+  });
+  const [entryDate, setEntryDate] = useState(() => localTodayKey());
+  const setEntryDateTracked = useFollowLocalToday(entryDate, setEntryDate);
   const [symbol, setSymbol] = useState("");
   const [pnl, setPnl] = useState("");
   const [setupTag, setSetupTag] = useState<"" | (typeof SETUP_TAG_OPTIONS)[number]>("");
@@ -241,7 +245,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [saveError, setSaveError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [weekAnchorDate, setWeekAnchorDate] = useState(() => initialWeekAnchorDate ?? new Date().toISOString().slice(0, 10));
+  const [weekAnchorDate, setWeekAnchorDate] = useState(() => initialWeekAnchorDate ?? localTodayKey());
+  const setWeekAnchorDateTracked = useFollowLocalToday(weekAnchorDate, setWeekAnchorDate, {
+    enabled: !initialWeekAnchorDate,
+  });
   const [weeklyWorked, setWeeklyWorked] = useState("");
   const [weeklySlipped, setWeeklySlipped] = useState("");
   const [weeklyFocus, setWeeklyFocus] = useState("");
@@ -269,13 +276,21 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     return toDayKey(startOfWeekMonday(base));
   }, [weekAnchorDate]);
 
-  const sortedRows = useMemo(() => {
-    return [...data.journal].sort((a, b) => {
-      const ak = dayKeyFromRow(a.entryDate, a.createdAt);
-      const bk = dayKeyFromRow(b.entryDate, b.createdAt);
-      return bk.localeCompare(ak);
-    });
-  }, [data.journal]);
+  const sortedRows = useMemo(() => [...data.journal].sort(compareJournalRecency), [data.journal]);
+
+  const lastSyncedDayRef = useRef(localTodayKey());
+  useEffect(() => {
+    const syncDay = () => {
+      const today = localTodayKey();
+      if (today !== lastSyncedDayRef.current) {
+        lastSyncedDayRef.current = today;
+        void refetchJournal();
+      }
+    };
+    syncDay();
+    const intervalId = window.setInterval(syncDay, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [refetchJournal]);
 
   useEffect(() => {
     let cancelled = false;
@@ -343,12 +358,12 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
 
   const recentActivityRows = useMemo(() => {
     if (highlightDate) {
-      return filteredRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === highlightDate);
+      return filteredRows
+        .filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === highlightDate)
+        .sort(compareJournalRecency);
     }
-    return [...filteredRows]
-      .filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) !== entryDate)
-      .sort((a, b) => dayKeyFromRow(b.entryDate, b.createdAt).localeCompare(dayKeyFromRow(a.entryDate, a.createdAt)));
-  }, [filteredRows, highlightDate, entryDate]);
+    return [...filteredRows].sort(compareJournalRecency);
+  }, [filteredRows, highlightDate]);
 
   const rowsForLatestEntries = useMemo(() => {
     if (highlightDate || recentExpanded) return recentActivityRows;
@@ -761,7 +776,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     id="jw-date"
                     type="date"
                     value={entryDate}
-                    onChange={(e) => setEntryDate(e.target.value)}
+                    onChange={(e) => setEntryDateTracked(e.target.value)}
                     required
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "disabled:opacity-45")}
@@ -1046,7 +1061,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           description={
             highlightDate
               ? "All trades logged for this calendar day, including full notes."
-              : "Other logged days with mood and discipline — refreshes when you change the date above."
+              : "Your most recent entries — sorted by trading day, refreshed when you return or a new day starts."
           }
         >
           {filtersActive ? (
@@ -1172,9 +1187,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   ? "Entries exist, but current filters hide them."
                   : highlightDate
                     ? "Nothing logged for this calendar day in the current account scope."
-                    : sortedRows.some((row) => dayKeyFromRow(row.entryDate, row.createdAt) === entryDate)
-                      ? "Only the selected date has entries. Pick another date or log an earlier day."
-                      : "Log your first trading day to see activity here."
+                    : "Log a trading day to see it listed here."
               }
               action={
                 filtersActive ? (
@@ -1231,7 +1244,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               value={weekAnchorDate}
               onChange={(e) => {
                 touchWeeklyForm();
-                setWeekAnchorDate(e.target.value);
+                setWeekAnchorDateTracked(e.target.value);
               }}
               disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
               className={cn(inputCls, "disabled:opacity-45")}

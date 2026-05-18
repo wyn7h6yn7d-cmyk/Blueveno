@@ -16,6 +16,13 @@ export function dayKeyFromRow(entryDate?: string, createdAt?: string): string {
   return toDayKey(new Date());
 }
 
+/** Newest entry first: trading day, then created_at within the day. */
+export function compareJournalRecency(a: JournalRow, b: JournalRow): number {
+  const dayCmp = dayKeyFromRow(b.entryDate, b.createdAt).localeCompare(dayKeyFromRow(a.entryDate, a.createdAt));
+  if (dayCmp !== 0) return dayCmp;
+  return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+}
+
 export function startOfWeekMonday(base: Date) {
   const copy = new Date(base);
   const day = (copy.getDay() + 6) % 7;
