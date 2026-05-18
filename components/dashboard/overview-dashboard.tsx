@@ -62,6 +62,10 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
   }>({ status: "review_ready", nextFocus: null });
 
   const dayAgg = useMemo(() => buildDayAgg(data.journal), [data.journal]);
+  const dailyPnls = useMemo(
+    () => [...dayAgg].sort((a, b) => a.key.localeCompare(b.key)).map((d) => d.pnl),
+    [dayAgg],
+  );
   const overviewStats = useMemo(
     () =>
       getOverviewStats({
@@ -282,6 +286,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
               tradedDays={overviewStats.tradedDays}
               winningDays={overviewStats.winningDays}
               losingDays={overviewStats.losingDays}
+              winRate={overviewStats.winRate}
               averageDay={overviewStats.averageDay}
               bestDay={overviewStats.bestDay}
               lossMetricLabel={lossMetricLabel}
@@ -289,6 +294,7 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
               avgGreenDay={overviewStats.avgGreenDay}
               avgRedDay={overviewStats.avgRedDay}
               streakRaw={overviewStats.streak}
+              dailyPnls={dailyPnls}
             />
           </>
         )}

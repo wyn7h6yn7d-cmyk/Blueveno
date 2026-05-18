@@ -1,11 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { MiniSparkline } from "@/components/dashboard/mini-sparkline";
-import { DayRangeIndicator } from "@/components/analytics/day-range-indicator";
-import { GreenRedRatioBar } from "@/components/analytics/green-red-ratio-bar";
+import { DonutMetric } from "@/components/analytics/donut-metric";
+import { PnlTrendSparkline } from "@/components/analytics/pnl-trend-sparkline";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
-import { appCardPrimary, appMetricLabel } from "@/lib/ui/app-surface";
+import { appCardPrimary } from "@/lib/ui/app-surface";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -14,6 +13,7 @@ type Props = {
   tradedDays: number;
   winningDays: number;
   losingDays: number;
+  winRate: number | null;
   averageDay: number | null;
   bestDay: number | null;
   lossMetricLabel: string;
@@ -21,6 +21,7 @@ type Props = {
   avgGreenDay: number | null;
   avgRedDay: number | null;
   streakRaw: string;
+  dailyPnls: number[];
 };
 
 function moneyOrDash(value: number | null, currency: string): string {
@@ -47,7 +48,7 @@ function parseStreak(raw: string): {
     return {
       variant: "green",
       title: "Green streak",
-      detail: days === 1 ? "1 day" : `${days} days`,
+      detail: days === 1 ? "1d" : `${days}d`,
       days,
     };
   }
@@ -57,20 +58,20 @@ function parseStreak(raw: string): {
     return {
       variant: "red",
       title: "Red streak",
-      detail: days === 1 ? "1 day" : `${days} days`,
+      detail: days === 1 ? "1d" : `${days}d`,
       days,
     };
   }
-  return { variant: "neutral", title: "—", detail: "No active run", days: 0 };
+  return { variant: "neutral", title: "—", detail: "—", days: 0 };
 }
 
-function CompactStat({ label, children }: { label: string; children: ReactNode }) {
+function SupportItem({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="min-w-0">
-      <p className={appMetricLabel}>{label}</p>
-      <div className="mt-1.5 text-[15px] font-semibold leading-none tracking-tight text-zinc-100 sm:text-[16px]">
+    <div className="flex min-w-0 items-baseline gap-2 whitespace-nowrap">
+      <span className="shrink-0 text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-600">{label}</span>
+      <span className="truncate font-display text-[15px] font-semibold tabular-nums tracking-tight sm:text-[16px]">
         {children}
-      </div>
+      </span>
     </div>
   );
 }
@@ -81,6 +82,7 @@ export function DayBreakdownModule({
   tradedDays,
   winningDays,
   losingDays,
+  winRate,
   averageDay,
   bestDay,
   lossMetricLabel,
@@ -88,135 +90,145 @@ export function DayBreakdownModule({
   avgGreenDay,
   avgRedDay,
   streakRaw,
+  dailyPnls,
 }: Props) {
-  const greenDayShare =
-    hasEntries && tradedDays > 0 ? Math.round((winningDays / tradedDays) * 100) : null;
   const streak = hasEntries ? parseStreak(streakRaw) : parseStreak("");
-  const streakProgress =
-    hasEntries && tradedDays > 0 && streak.days > 0
-      ? Math.min(100, Math.round((streak.days / tradedDays) * 100))
-      : 0;
+  const trendPoints = dailyPnls.filter((p) => Number.isFinite(p)).slice(-14);
+  const lossLabelShort = lossMetricLabel === "Smallest green day" ? "Smallest +" : "Worst";
 
   return (
     <section
       className={cn(
         appCardPrimary,
-        "overflow-hidden px-5 py-5 shadow-[0_0_48px_-28px_oklch(0.48_0.14_252/0.45)] sm:px-7 sm:py-6",
+        "relative overflow-hidden px-5 py-5 sm:px-7 sm:py-6",
+        "shadow-[0_0_56px_-30px_oklch(0.48_0.14_252/0.48)]",
       )}
       aria-label="Day breakdown"
     >
-      <header className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <div
+        className="pointer-events-none absolute -right-16 top-0 size-56 rounded-full bg-[radial-gradient(circle,oklch(0.48_0.14_252/0.14),transparent_68%)]"
+        aria-hidden
+      />
+
+      <header className="relative flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="font-display text-[1.2rem] font-semibold tracking-[-0.03em] text-zinc-50 sm:text-[1.3rem]">
+          <h2 className="font-display text-[1.15rem] font-semibold tracking-[-0.03em] text-zinc-50 sm:text-[1.22rem]">
             Day breakdown
           </h2>
-          <p className="mt-1 max-w-xl text-[14px] leading-relaxed text-zinc-500">
-            Average result, day mix, range, and momentum from your logged days.
+          <p className="mt-0.5 hidden text-[13px] text-zinc-600 sm:block">
+            Average · split · momentum
           </p>
         </div>
-        {greenDayShare !== null ? (
-          <p className="text-[13px] text-zinc-400">
-            <span className="tabular-nums font-medium text-emerald-200">{greenDayShare}%</span> green days
-          </p>
-        ) : null}
       </header>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start">
+      {/* Main composition */}
+      <div className="relative mt-6 grid items-center gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(10.5rem,auto)_minmax(5.5rem,6.5rem)] lg:gap-5 xl:gap-8">
+        {/* Hero — average + trend */}
         <div className="min-w-0">
-          <p className={appMetricLabel}>Average day</p>
+          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500">Average day</p>
           <p
             className={cn(
-              "font-display mt-2 text-[2.35rem] leading-none tabular-nums tracking-[-0.04em] sm:text-[2.85rem]",
+              "font-display mt-1 text-[2.5rem] leading-[0.95] tabular-nums tracking-[-0.045em] sm:text-[3rem]",
               pnlClass(hasEntries ? averageDay : null),
             )}
           >
             {hasEntries ? moneyOrDash(averageDay, displayCurrency) : "—"}
           </p>
-          <p className="mt-2 text-[14px] text-zinc-500">
-            {hasEntries
-              ? `Across ${tradedDays} traded day${tradedDays === 1 ? "" : "s"}`
-              : "Log days to see your average"}
+          <p className="mt-1.5 whitespace-nowrap text-[13px] tabular-nums text-zinc-600">
+            {hasEntries ? `${tradedDays} traded days` : "Log days to begin"}
           </p>
-          {hasEntries ? (
-            <div className="mt-5 max-w-md">
-              <GreenRedRatioBar green={winningDays} red={losingDays} />
-            </div>
+          <div className="mt-5 h-11 w-full max-w-[15rem] opacity-90">
+            <PnlTrendSparkline points={trendPoints} height={44} />
+          </div>
+        </div>
+
+        {/* Donut — dominant visual */}
+        <div className="flex flex-col items-center justify-self-center">
+          <DonutMetric
+            green={hasEntries ? winningDays : 0}
+            red={hasEntries ? losingDays : 0}
+            size="lg"
+            legend="inline"
+            className="[&_p]:text-zinc-50"
+          />
+          {hasEntries && (avgGreenDay !== null || avgRedDay !== null) ? (
+            <p className="mt-2 flex max-w-full items-center justify-center gap-3 whitespace-nowrap text-[12px] tabular-nums">
+              {avgGreenDay !== null ? (
+                <span className="text-emerald-300/85">{moneyOrDash(avgGreenDay, displayCurrency)}</span>
+              ) : null}
+              {avgGreenDay !== null && avgRedDay !== null ? (
+                <span className="size-0.5 rounded-full bg-zinc-700" aria-hidden />
+              ) : null}
+              {avgRedDay !== null ? (
+                <span className="text-rose-300/85">{moneyOrDash(avgRedDay, displayCurrency)}</span>
+              ) : null}
+            </p>
           ) : null}
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          <CompactStat label="Traded days">
-            <span className="tabular-nums">{hasEntries ? tradedDays : "—"}</span>
-          </CompactStat>
-          <CompactStat label="Green / red">
-            {hasEntries ? (
-              <span className="inline-flex items-baseline gap-1 whitespace-nowrap tabular-nums">
-                <span className="text-emerald-200">{winningDays}</span>
-                <span className="text-[13px] font-normal text-zinc-600">green /</span>
-                <span className="text-rose-200">{losingDays}</span>
-                <span className="text-[13px] font-normal text-zinc-600">red</span>
-              </span>
-            ) : (
-              <span className="text-zinc-500">—</span>
-            )}
-          </CompactStat>
-          <div className="sm:col-span-2">
-            <p className={appMetricLabel}>Best vs worst</p>
-            <div className="mt-3">
-              <DayRangeIndicator
-                best={hasEntries ? bestDay : null}
-                worst={hasEntries ? lossMetricValue : null}
-                currency={displayCurrency}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8 grid gap-6 border-t border-white/[0.06] pt-6 lg:grid-cols-[1fr_auto] lg:items-center">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="min-w-0">
-            <p className={appMetricLabel}>Avg green day</p>
-            <p className={cn("mt-1.5 font-display text-xl tabular-nums tracking-tight", pnlClass(avgGreenDay))}>
-              {hasEntries ? moneyOrDash(avgGreenDay, displayCurrency) : "—"}
-            </p>
-          </div>
-          <div className="min-w-0">
-            <p className={appMetricLabel}>Avg red day</p>
-            <p className={cn("mt-1.5 font-display text-xl tabular-nums tracking-tight", pnlClass(avgRedDay))}>
-              {hasEntries ? moneyOrDash(avgRedDay, displayCurrency) : "—"}
-            </p>
-          </div>
-        </div>
-
-        <div className="min-w-[11rem] lg:text-right">
-          <p className={appMetricLabel}>Current streak</p>
+        {/* Streak — compact insight */}
+        <div
+          className={cn(
+            "flex flex-col items-center border-t border-white/[0.06] pt-6 lg:border-l lg:border-t-0 lg:items-end lg:justify-self-center lg:pl-6 lg:pt-0",
+            streak.variant === "green" && "border-emerald-500/25 lg:border-emerald-500/20",
+            streak.variant === "red" && "border-rose-500/25 lg:border-rose-500/20",
+          )}
+        >
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-600">Streak</p>
           <p
             className={cn(
-              "mt-1.5 text-[17px] font-semibold tracking-tight",
+              "mt-1 max-w-[6.5rem] truncate font-display text-[1.35rem] font-semibold leading-none tracking-tight sm:max-w-none sm:text-[1.5rem]",
               streak.variant === "green" && "text-emerald-200",
               streak.variant === "red" && "text-rose-200",
-              streak.variant === "neutral" && "text-zinc-400",
+              streak.variant === "neutral" && "text-zinc-500",
             )}
           >
             {hasEntries ? streak.title : "—"}
           </p>
-          <p className="mt-0.5 text-[13px] text-zinc-500">{hasEntries ? streak.detail : "No momentum yet"}</p>
-          <div className="mt-3 lg:ml-auto lg:max-w-[12rem]">
-            <MiniSparkline positive={streak.variant !== "red"} />
-            <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.08]">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-[width] duration-500",
-                  streak.variant === "green" && "bg-emerald-400/80",
-                  streak.variant === "red" && "bg-rose-400/80",
-                  streak.variant === "neutral" && "bg-zinc-600/50",
-                )}
-                style={{ width: hasEntries ? `${streakProgress}%` : "0%" }}
-              />
-            </div>
+          <p className="mt-0.5 whitespace-nowrap text-[13px] tabular-nums text-zinc-500">
+            {hasEntries ? streak.detail : "—"}
+          </p>
+          <div className="mt-3 flex items-end gap-1" aria-hidden>
+            {Array.from({ length: 5 }).map((_, i) => {
+              const active = hasEntries && i >= 5 - Math.min(streak.days, 5);
+              return (
+                <span
+                  key={i}
+                  className={cn(
+                    "w-1 rounded-full transition-all",
+                    active && streak.variant === "green" && "bg-emerald-400/90",
+                    active && streak.variant === "red" && "bg-rose-400/90",
+                    active && streak.variant === "neutral" && "bg-zinc-600",
+                    !active && "bg-white/[0.08]",
+                    active ? "h-5" : "h-2.5",
+                  )}
+                />
+              );
+            })}
           </div>
         </div>
+      </div>
+
+      {/* Support strip — one line, no boxes */}
+      <div className="relative mt-7 flex flex-col gap-3 border-t border-white/[0.06] pt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-8 sm:gap-y-2">
+        <SupportItem label="Best">
+          <span className={pnlClass(hasEntries ? bestDay : null)}>
+            {hasEntries ? moneyOrDash(bestDay, displayCurrency) : "—"}
+          </span>
+        </SupportItem>
+        <SupportItem label={lossLabelShort}>
+          <span className={pnlClass(hasEntries ? lossMetricValue : null)}>
+            {hasEntries ? moneyOrDash(lossMetricValue, displayCurrency) : "—"}
+          </span>
+        </SupportItem>
+        <SupportItem label="Days">
+          <span className="text-zinc-100">{hasEntries ? tradedDays : "—"}</span>
+        </SupportItem>
+        <SupportItem label="Win">
+          <span className="text-zinc-100">
+            {hasEntries && winRate !== null && Number.isFinite(winRate) ? `${Math.round(winRate)}%` : "—"}
+          </span>
+        </SupportItem>
       </div>
     </section>
   );
