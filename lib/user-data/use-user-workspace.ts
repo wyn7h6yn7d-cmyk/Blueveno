@@ -12,6 +12,7 @@ import {
   insertJournalWithPayloadFallback,
   updateJournalWithPayloadFallback,
 } from "@/lib/user-data/journal-write-payloads";
+import { mergeJournalRows } from "@/lib/user-data/journal-metrics";
 import { mapJournalRowFromDb, mapJournalRowsFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { clearJournalCache, readJournalCache, writeJournalCache } from "@/lib/user-data/journal-cache";
 import { useAccess } from "@/components/access/access-provider";
@@ -182,20 +183,21 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       }
 
       setData((prev) => {
-        const next = mapJournalRowsFromDb(resolved);
+        const serverRows = mapJournalRowsFromDb(resolved).journal;
         const sinceMount = Date.now() - mountTimeRef.current;
         // Transient empty client read (RLS/JWT): ignore for a short window, then trust server
         if (
           prev.journal.length > 0 &&
-          next.journal.length === 0 &&
+          serverRows.length === 0 &&
           sinceMount < 45_000 &&
           lastFetchedAccountIdRef.current === accountId
         ) {
           return prev;
         }
         lastFetchedAccountIdRef.current = accountId;
-        if (uid) writeJournalCache(uid, next);
-        return next;
+        const merged = { version: 1 as const, journal: mergeJournalRows(prev.journal, serverRows) };
+        if (uid) writeJournalCache(uid, merged);
+        return merged;
       });
       setLastError(null);
       setReady(true);

@@ -23,6 +23,16 @@ export function compareJournalRecency(a: JournalRow, b: JournalRow): number {
   return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
 }
 
+/** Keep optimistic rows until the server fetch includes them. */
+export function mergeJournalRows(prev: JournalRow[], server: JournalRow[], limit = 200): JournalRow[] {
+  const byId = new Map<string, JournalRow>();
+  for (const row of server) byId.set(row.id, row);
+  for (const row of prev) {
+    if (!byId.has(row.id)) byId.set(row.id, row);
+  }
+  return Array.from(byId.values()).sort(compareJournalRecency).slice(0, limit);
+}
+
 export function startOfWeekMonday(base: Date) {
   const copy = new Date(base);
   const day = (copy.getDay() + 6) % 7;

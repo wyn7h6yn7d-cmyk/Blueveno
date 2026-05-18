@@ -365,14 +365,41 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     return [...filteredRows].sort(compareJournalRecency);
   }, [filteredRows, highlightDate]);
 
+  /** Today first so new sessions always appear at the top of Latest activity. */
+  const prioritizedActivityRows = useMemo(() => {
+    if (highlightDate) return recentActivityRows;
+    const today = localTodayKey();
+    const todayRows = recentActivityRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === today);
+    const earlierRows = recentActivityRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) !== today);
+    return [...todayRows, ...earlierRows];
+  }, [highlightDate, recentActivityRows]);
+
   const rowsForLatestEntries = useMemo(() => {
-    if (highlightDate || recentExpanded) return recentActivityRows;
-    return recentActivityRows.slice(0, RECENT_ACTIVITY_PREVIEW);
-  }, [recentActivityRows, highlightDate, recentExpanded]);
+    if (highlightDate || recentExpanded) return prioritizedActivityRows;
+    return prioritizedActivityRows.slice(0, RECENT_ACTIVITY_PREVIEW);
+  }, [prioritizedActivityRows, highlightDate, recentExpanded]);
 
   const recentHiddenCount = highlightDate
     ? 0
-    : Math.max(0, recentActivityRows.length - RECENT_ACTIVITY_PREVIEW);
+    : Math.max(0, prioritizedActivityRows.length - RECENT_ACTIVITY_PREVIEW);
+
+  const todayActivityCount = useMemo(() => {
+    const today = localTodayKey();
+    return recentActivityRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === today).length;
+  }, [recentActivityRows]);
+
+  useEffect(() => {
+    if (highlightDate) return;
+    const today = localTodayKey();
+    if (entryDate < today) {
+      setEntryDateTracked(today);
+    }
+  }, [highlightDate, entryDate, setEntryDateTracked]);
+
+  useEffect(() => {
+    if (!ready || !activeAccountId) return;
+    void refetchJournal();
+  }, [ready, activeAccountId, refetchJournal]);
 
   const symbolOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.sym), [sortedRows]);
   const moodOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.moodState), [sortedRows]);
@@ -501,6 +528,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     }
     trackProductEvent(PRODUCT_ANALYTICS_EVENTS.journalEntryCreated, { surface: "journal" });
     toast.success("Trading day saved.");
+    void refetchJournal();
     setSymbol("");
     setPnl("");
     setSetupTag("Pullback");
@@ -1061,7 +1089,9 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
           description={
             highlightDate
               ? "All trades logged for this calendar day, including full notes."
-              : "Your most recent entries — sorted by trading day, refreshed when you return or a new day starts."
+              : todayActivityCount > 0
+                ? `${todayActivityCount} logged today (${localTodayKey()}) — plus earlier days below. Updates after each save.`
+                : `No entries for today (${localTodayKey()}) yet. Showing your most recent logged days.`
           }
         >
           {filtersActive ? (
@@ -1088,13 +1118,20 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               </div>
             </div>
           ) : null}
-          <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setFiltersOpen((v) => !v)}
               className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
             >
               {filtersOpen ? "Hide activity filters" : "Filter activity"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void refetchJournal()}
+              className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
+            >
+              Refresh list
             </button>
           </div>
           {filtersOpen ? (
