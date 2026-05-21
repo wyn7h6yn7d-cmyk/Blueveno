@@ -552,6 +552,8 @@ body {
 
   /** Sticky in-page nav sits below the app topbar (wrap-aware). */
   --app-topbar-offset: 3.75rem;
+  /** Height reserved for sticky section tabs (topbar + tabs). */
+  --app-section-nav-offset: 3.5rem;
 }
 
 @media (min-width: 768px) {

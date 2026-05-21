@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, BarChart3, CalendarDays, NotebookPen, Shield, Target, TrendingUp } from "lucide-react";
 import { MetricTile } from "@/components/analytics/metric-tile";
 import { InsightMetricCard } from "@/components/analytics/insight-metric-card";
+import { SessionComparisonPanel } from "@/components/analytics/session-comparison-panel";
 import type { BehaviorInsight } from "@/lib/user-data/behavior-insights";
 import { useAccess } from "@/components/access/access-provider";
 import { DashboardCard } from "@/components/app/dashboard-card";
@@ -15,6 +16,7 @@ import { buildDayAgg, signedMoney } from "@/lib/user-data/journal-metrics";
 import { getDisciplineDisplay, summarizeDisciplineCoverage } from "@/lib/user-data/discipline-stats";
 import { entryDisciplineFraction } from "@/lib/user-data/stats-display";
 import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-stats";
+import { getSessionAnalysis } from "@/lib/user-data/session-analysis";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { DayBreakdownModule } from "@/components/dashboard/day-breakdown-module";
 import { OverviewOnboardingChecklist } from "@/components/dashboard/overview-onboarding-checklist";
@@ -155,6 +157,10 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
         currency: displayCurrency,
       }),
     [data.journal, activeAccountId, userTimezone, displayCurrency],
+  );
+  const sessionAnalysis = useMemo(
+    () => getSessionAnalysis(data.journal, { minTagEntries: 1 }),
+    [data.journal],
   );
 
   const hasEntries = data.journal.length > 0;
@@ -408,6 +414,28 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
           )}
         </DashboardCard>
       </section>
+
+      {hasEntries ? (
+        <section aria-label="Session analysis">
+          <DashboardCard
+            eyebrow="Sessions"
+            title="Where you trade best"
+            description="Compare profitability across market windows and your logged session tags."
+          >
+            <SessionComparisonPanel
+              marketSessions={sessionAnalysis.marketSessions}
+              taggedSessions={sessionAnalysis.taggedSessions}
+              currency={displayCurrency}
+              bestMarketSession={sessionAnalysis.bestMarketSession}
+              weakestMarketSession={sessionAnalysis.weakestMarketSession}
+              bestTaggedSession={sessionAnalysis.bestTaggedSession}
+              weakestTaggedSession={sessionAnalysis.weakestTaggedSession}
+              compact
+              statsHref="/app/stats?tab=summary"
+            />
+          </DashboardCard>
+        </section>
+      ) : null}
 
       <section className="grid gap-4 xl:grid-cols-[1.45fr_0.85fr]" aria-label="Behavior insights and weekly review">
         <DashboardCard

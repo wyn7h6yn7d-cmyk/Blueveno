@@ -28,7 +28,9 @@ const variantShell: Record<SizeKey, string> = {
   compact: "w-fit max-w-full py-2",
   sticky: cn(
     "sticky z-20 top-[var(--app-topbar-offset,3.75rem)]",
-    "w-fit max-w-full border-none bg-transparent py-2 shadow-none",
+    "-mx-3 mb-3 border-b border-white/[0.06] px-3 pb-3 pt-2 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8 lg:-mx-10 lg:px-10",
+    "bg-[linear-gradient(180deg,oklch(0.085_0.055_266/0.97),oklch(0.085_0.055_266/0.9))] backdrop-blur-md",
+    "shadow-[0_10px_28px_-22px_rgba(0,0,0,0.65)]",
   ),
 };
 

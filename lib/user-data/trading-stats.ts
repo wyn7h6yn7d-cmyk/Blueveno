@@ -108,7 +108,7 @@ const SESSION_PNL_ORDER: (ForexSessionLabel | "Between")[] = [
   "Between",
 ];
 
-function computeSessionPnlBreakdown(journal: JournalRow[]): SessionPnlRow[] {
+export function computeSessionPnlBreakdown(journal: JournalRow[]): SessionPnlRow[] {
   const map = new Map<ForexSessionLabel | "Between", { sum: number; n: number; wins: number }>();
   for (const s of SESSION_PNL_ORDER) {
     map.set(s, { sum: 0, n: 0, wins: 0 });

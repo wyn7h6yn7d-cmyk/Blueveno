@@ -56,6 +56,8 @@ import { computeMonthlyReview } from "@/lib/user-data/monthly-review";
 import { mapJournalRowFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import { MonthlyReviewCard } from "@/components/reports/monthly-review-card";
 import { DEFAULT_STATS_TAB, parseStatsTab, type StatsTabId } from "@/lib/stats/stats-tabs";
+import { SessionComparisonPanel } from "@/components/analytics/session-comparison-panel";
+import { computeSessionTagPerformance, getSessionAnalysis } from "@/lib/user-data/session-analysis";
 import {
   CumulativeChart,
   DailyBars,
@@ -500,13 +502,10 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
     router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
   };
 
+  const sessionAnalysis = useMemo(() => getSessionAnalysis(filteredEntries), [filteredEntries]);
+
   const sessionTagPerformance = useMemo(
-    () =>
-      computeTagPerformance(
-        filteredEntries,
-        (row) => row.sessionTag,
-        (label) => label === "Other" || label === "—",
-      ),
+    () => computeSessionTagPerformance(filteredEntries, 2),
     [filteredEntries],
   );
 
@@ -759,7 +758,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               role="tabpanel"
               id={`stats-tabpanel-${activeTab}`}
               aria-labelledby={`section-tab-${activeTab}`}
-              className="space-y-6"
+              className="space-y-6 scroll-mt-[calc(var(--app-topbar-offset)+var(--app-section-nav-offset))]"
             >
           {activeTab === "summary" ? (
           <>
@@ -774,6 +773,7 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
             netPnl={netR}
             currency={displayCurrency}
             weeklyReflections={weeklyReflections}
+            sessionAnalysis={sessionAnalysis}
           />
           </>
           ) : null}
@@ -823,6 +823,21 @@ export function StatsPageClient({ userId, initialWorkspace }: Props) {
               <WeeklyTrend weekly={stats.weekly} currency={displayCurrency} />
             </AnalyticsPanel>
           </section>
+          <DashboardCard
+            eyebrow="Sessions"
+            title="Session profitability"
+            description="Compare P&amp;L across FX windows (UTC) and the session tags you log."
+          >
+            <SessionComparisonPanel
+              marketSessions={sessionAnalysis.marketSessions}
+              taggedSessions={sessionAnalysis.taggedSessions}
+              currency={displayCurrency}
+              bestMarketSession={sessionAnalysis.bestMarketSession}
+              weakestMarketSession={sessionAnalysis.weakestMarketSession}
+              bestTaggedSession={sessionAnalysis.bestTaggedSession}
+              weakestTaggedSession={sessionAnalysis.weakestTaggedSession}
+            />
+          </DashboardCard>
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Performance range and risk">
             <SupportMetricCard
               label="Max drawdown"

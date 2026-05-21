@@ -9,8 +9,10 @@ import {
 import { AnalyticsPanel } from "@/components/analytics/analytics-panel";
 import { GreenRedRatioBar } from "@/components/analytics/green-red-ratio-bar";
 import { MetricStrip } from "@/components/analytics/metric-strip";
+import { SessionComparisonPanel } from "@/components/analytics/session-comparison-panel";
 import { SupportMetricCard } from "@/components/analytics/support-metric-card";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import type { SessionAnalysis } from "@/lib/user-data/session-analysis";
 import type { TradingStatsSnapshot, WeeklyReflectionStat } from "@/lib/user-data/trading-stats";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +21,7 @@ type StatsSummaryDashboardProps = {
   netPnl: number;
   currency: string;
   weeklyReflections: WeeklyReflectionStat[];
+  sessionAnalysis: SessionAnalysis;
 };
 
 function fmtPnl(n: number | null, currency: string) {
@@ -36,6 +39,7 @@ export function StatsSummaryDashboard({
   netPnl,
   currency,
   weeklyReflections,
+  sessionAnalysis,
 }: StatsSummaryDashboardProps) {
   const tradedDays = stats.dailyBars.length;
   const dayWinRate =
@@ -113,6 +117,22 @@ export function StatsSummaryDashboard({
           <DisciplineTrend weekly={stats.weekly} weeklyReflections={weeklyReflections} />
         </AnalyticsPanel>
       </section>
+
+      <AnalyticsPanel
+        title="Session comparison"
+        description="See which market windows and session tags contribute the most P&amp;L in this scope."
+        glow="none"
+      >
+        <SessionComparisonPanel
+          marketSessions={sessionAnalysis.marketSessions}
+          taggedSessions={sessionAnalysis.taggedSessions}
+          currency={currency}
+          bestMarketSession={sessionAnalysis.bestMarketSession}
+          weakestMarketSession={sessionAnalysis.weakestMarketSession}
+          bestTaggedSession={sessionAnalysis.bestTaggedSession}
+          weakestTaggedSession={sessionAnalysis.weakestTaggedSession}
+        />
+      </AnalyticsPanel>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Day highlights">
         <SupportMetricCard
