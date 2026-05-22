@@ -85,17 +85,19 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
   useEffect(() => {
     if (!userId) return;
     if (initialWorkspace !== undefined) {
-      if (initialWorkspace.journal.length > 0) writeJournalCache(userId, initialWorkspace);
+      if (initialWorkspace.journal.length > 0 && topbarActiveAccountId) {
+        writeJournalCache(userId, topbarActiveAccountId, initialWorkspace);
+      }
       return;
     }
-    const cached = readJournalCache(userId);
+    const cached = readJournalCache(userId, topbarActiveAccountId);
     if (cached && cached.journal.length > 0) {
       /* eslint-disable react-hooks/set-state-in-effect -- hydrate from local cache when no RSC snapshot */
       setData((prev) => (prev.journal.length === 0 ? cached : prev));
       setReady(true);
       /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }, [userId, initialWorkspace]);
+  }, [userId, initialWorkspace, topbarActiveAccountId]);
 
   useEffect(() => {
     didTokenRefreshRefetch.current = false;
@@ -107,13 +109,16 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     if (initialWorkspace !== undefined) {
       /* eslint-disable react-hooks/set-state-in-effect -- server props after router.refresh / navigation */
       setData((prev) => {
+        const resolvedAccountId = topbarActiveAccountId ?? activeAccountIdRef.current;
         if (initialWorkspace.journal.length > 0) {
-          if (userId) writeJournalCache(userId, initialWorkspace);
+          if (userId && resolvedAccountId) writeJournalCache(userId, resolvedAccountId, initialWorkspace);
           return initialWorkspace;
         }
-        if (prev.journal.length > 0) return prev;
-        if (userId) {
-          const cached = readJournalCache(userId);
+        if (prev.journal.length > 0 && resolvedAccountId && lastFetchedAccountIdRef.current === resolvedAccountId) {
+          return prev;
+        }
+        if (userId && resolvedAccountId) {
+          const cached = readJournalCache(userId, resolvedAccountId);
           if (cached && cached.journal.length > 0) return cached;
         }
         return initialWorkspace;
@@ -184,19 +189,24 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
 
       setData((prev) => {
         const serverRows = mapJournalRowsFromDb(resolved).journal;
+        const priorAccountId = lastFetchedAccountIdRef.current;
+        const accountChanged = priorAccountId !== accountId;
+        lastFetchedAccountIdRef.current = accountId;
+
+        if (accountChanged) {
+          const next = { version: 1 as const, journal: serverRows };
+          if (uid) writeJournalCache(uid, accountId, next);
+          return next;
+        }
+
         const sinceMount = Date.now() - mountTimeRef.current;
-        // Transient empty client read (RLS/JWT): ignore for a short window, then trust server
-        if (
-          prev.journal.length > 0 &&
-          serverRows.length === 0 &&
-          sinceMount < 45_000 &&
-          lastFetchedAccountIdRef.current === accountId
-        ) {
+        // Transient empty client read (RLS/JWT): ignore for a short window on the same account only
+        if (prev.journal.length > 0 && serverRows.length === 0 && sinceMount < 45_000) {
           return prev;
         }
-        lastFetchedAccountIdRef.current = accountId;
+
         const merged = { version: 1 as const, journal: mergeJournalRows(prev.journal, serverRows) };
-        if (uid) writeJournalCache(uid, merged);
+        if (uid) writeJournalCache(uid, accountId, merged);
         return merged;
       });
       setLastError(null);
@@ -277,6 +287,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       setActiveAccountId(activeId);
       activeAccountIdRef.current = activeId;
       if (previousActiveId !== activeId) {
+        lastFetchedAccountIdRef.current = null;
         setData(EMPTY_WORKSPACE);
       }
 
@@ -318,6 +329,19 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- workspaceBootstrapKey encodes initialWorkspace + userId
   }, [userId, workspaceBootstrapKey, activeAccountId, topbarActiveAccountId]);
+
+  /** Immediate journal reset when the topbar account changes (before profile reload effect). */
+  useEffect(() => {
+    if (!userId || !topbarActiveAccountId) return;
+    if (topbarActiveAccountId === activeAccountIdRef.current && lastFetchedAccountIdRef.current === topbarActiveAccountId) {
+      return;
+    }
+    activeAccountIdRef.current = topbarActiveAccountId;
+    setActiveAccountId(topbarActiveAccountId);
+    lastFetchedAccountIdRef.current = null;
+    setData(EMPTY_WORKSPACE);
+    void fetchJournalRowsRef.current(topbarActiveAccountId);
+  }, [userId, topbarActiveAccountId]);
 
   useEffect(() => {
     const onVisible = () => {
@@ -368,7 +392,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       const mapped = mapJournalRowFromDb(inserted);
       setData((prev) => {
         const next = { ...prev, journal: [mapped, ...prev.journal].slice(0, 200) };
-        if (userId) writeJournalCache(userId, next);
+        if (userId && activeAccountId) writeJournalCache(userId, activeAccountId, next);
         return next;
       });
       return { ok: true as const };
@@ -414,7 +438,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
           ...prev,
           journal: prev.journal.map((j) => (j.id === id ? mapped : j)),
         };
-        if (userId) writeJournalCache(userId, next);
+        if (userId && activeAccountId) writeJournalCache(userId, activeAccountId, next);
         return next;
       });
       return { ok: true as const };
@@ -449,7 +473,7 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       }
       setData((prev) => {
         const next = { ...prev, journal: prev.journal.filter((j) => j.id !== id) };
-        if (userId) writeJournalCache(userId, next);
+        if (userId && activeAccountId) writeJournalCache(userId, activeAccountId, next);
         return next;
       });
       return { ok: true as const };
@@ -489,14 +513,15 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     }
 
     setData(EMPTY_WORKSPACE);
-    clearJournalCache(userId);
+    clearJournalCache(userId, activeAccountId);
+    lastFetchedAccountIdRef.current = activeAccountId;
     return { ok: true as const };
   }, [userId, activeAccountId]);
 
   const replaceAll = useCallback((next: UserWorkspaceSnapshot) => {
     setData(next);
-    if (userId) writeJournalCache(userId, next);
-  }, [userId]);
+    if (userId && activeAccountId) writeJournalCache(userId, activeAccountId, next);
+  }, [userId, activeAccountId]);
 
   return { data, ready, lastError, activeAccountId, addRow, updateRow, removeRow, resetJournal, replaceAll, refetchJournal };
 }
