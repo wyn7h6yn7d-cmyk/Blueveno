@@ -19,6 +19,7 @@ import { getBehaviorInsights, getOverviewStats } from "@/lib/user-data/overview-
 import { getSessionAnalysis } from "@/lib/user-data/session-analysis";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { DayBreakdownModule } from "@/components/dashboard/day-breakdown-module";
+import { useAppToast } from "@/components/app/app-toast-provider";
 import { OverviewOnboardingChecklist } from "@/components/dashboard/overview-onboarding-checklist";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { getOverviewOnboardingChecklist } from "@/lib/onboarding/overview-checklist";
@@ -62,8 +63,11 @@ function insightHeadline(insight: BehaviorInsight): string {
 
 export function OverviewDashboard({ userId, email, initialWorkspace, userTimezone }: Props) {
   const { displayCurrency } = useAccess();
+  const toast = useAppToast();
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
   const { accounts, loading: accountsLoading } = useTradingAccountsWorkspace();
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [onboardingDismissBusy, setOnboardingDismissBusy] = useState(false);
   const [weeklyReviewStatus, setWeeklyReviewStatus] = useState<{
     status: "review_ready" | "saved" | "set_focus";
     nextFocus: string | null;
@@ -171,8 +175,9 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
         accountCount: accounts.length,
         entryCount: data.journal.length,
         tradedDays: overviewStats.tradedDays,
+        dismissed: onboardingDismissed,
       }),
-    [accounts.length, data.journal.length, overviewStats.tradedDays],
+    [accounts.length, data.journal.length, overviewStats.tradedDays, onboardingDismissed],
   );
   const noLosingDays = overviewStats.losingDays === 0;
   const lossMetricLabel = noLosingDays ? "Smallest green day" : "Worst day";
@@ -209,6 +214,45 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       icon: Shield,
     },
   ];
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+    const supabase = createClient();
+    void (async () => {
+      const { data: row, error } = await supabase
+        .from("user_profiles")
+        .select("overview_onboarding_dismissed_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        console.warn("[OverviewDashboard] onboarding preference:", error.message);
+        return;
+      }
+      setOnboardingDismissed(Boolean(row?.overview_onboarding_dismissed_at));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const dismissOnboarding = async () => {
+    if (!userId || onboardingDismissBusy || onboardingDismissed) return;
+    setOnboardingDismissBusy(true);
+    const dismissedAt = new Date().toISOString();
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("user_profiles")
+      .update({ overview_onboarding_dismissed_at: dismissedAt, updated_at: dismissedAt })
+      .eq("user_id", userId);
+    setOnboardingDismissBusy(false);
+    if (error) {
+      toast.error("Could not hide the tutorial. Try again.");
+      return;
+    }
+    setOnboardingDismissed(true);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -261,7 +305,11 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
       />
 
       {ready && !accountsLoading && onboarding.show ? (
-        <OverviewOnboardingChecklist items={onboarding.items} />
+        <OverviewOnboardingChecklist
+          items={onboarding.items}
+          onDismiss={() => void dismissOnboarding()}
+          dismissBusy={onboardingDismissBusy}
+        />
       ) : null}
 
       <section className="space-y-3" aria-label="Overview KPIs">

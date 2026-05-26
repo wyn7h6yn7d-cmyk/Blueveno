@@ -54,4 +54,15 @@ describe("getOverviewOnboardingChecklist", () => {
     const result = getOverviewOnboardingChecklist({ accountCount: 1, entryCount: 4, tradedDays: 4 });
     assert.equal(result.show, false);
   });
+
+  it("hides checklist when the user dismissed it", () => {
+    const result = getOverviewOnboardingChecklist({
+      accountCount: 0,
+      entryCount: 0,
+      tradedDays: 0,
+      dismissed: true,
+    });
+    assert.equal(result.show, false);
+    assert.equal(result.items.length, 0);
+  });
 });

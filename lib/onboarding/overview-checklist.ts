@@ -12,6 +12,8 @@ export type OverviewOnboardingInput = {
   accountCount: number;
   entryCount: number;
   tradedDays: number;
+  /** User chose to hide the Getting started card on Overview. */
+  dismissed?: boolean;
 };
 
 export type OverviewOnboardingItem = {
@@ -66,6 +68,10 @@ function buildAllItems(input: OverviewOnboardingInput): OverviewOnboardingItem[]
 }
 
 export function getOverviewOnboardingChecklist(input: OverviewOnboardingInput): OverviewOnboardingResult {
+  if (input.dismissed) {
+    return { show: false, items: [] };
+  }
+
   if (hasEnoughWorkspaceData(input.entryCount, input.tradedDays)) {
     return { show: false, items: [] };
   }

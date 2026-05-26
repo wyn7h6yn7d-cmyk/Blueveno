@@ -16,9 +16,11 @@ const ITEM_ICONS = {
 
 type Props = {
   items: OverviewOnboardingItem[];
+  onDismiss?: () => void;
+  dismissBusy?: boolean;
 };
 
-export function OverviewOnboardingChecklist({ items }: Props) {
+export function OverviewOnboardingChecklist({ items, onDismiss, dismissBusy }: Props) {
   if (items.length === 0) return null;
 
   return (
@@ -28,9 +30,21 @@ export function OverviewOnboardingChecklist({ items }: Props) {
           <p className={appEyebrow}>Getting started</p>
           <p className="mt-1.5 max-w-xl text-[14px] leading-relaxed text-zinc-400">{OVERVIEW_ONBOARDING_EMPTY_COPY}</p>
         </div>
-        <p className="shrink-0 text-[12px] tabular-nums text-zinc-500">
-          {items.length} step{items.length === 1 ? "" : "s"} left
-        </p>
+        <div className="flex shrink-0 flex-col items-start gap-1.5 sm:items-end">
+          <p className="text-[12px] tabular-nums text-zinc-500">
+            {items.length} step{items.length === 1 ? "" : "s"} left
+          </p>
+          {onDismiss ? (
+            <button
+              type="button"
+              onClick={onDismiss}
+              disabled={dismissBusy}
+              className="text-[12px] text-zinc-500 transition hover:text-zinc-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Hide tutorial
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <ul className="mt-4 space-y-2">
