@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, BarChart3, CalendarDays, NotebookPen, Shield, Target, TrendingUp } from "lucide-react";
 import { MetricTile } from "@/components/analytics/metric-tile";
 import { InsightMetricCard } from "@/components/analytics/insight-metric-card";
@@ -23,6 +23,11 @@ import { useAppToast } from "@/components/app/app-toast-provider";
 import { OverviewOnboardingChecklist } from "@/components/dashboard/overview-onboarding-checklist";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
 import { getOverviewOnboardingChecklist } from "@/lib/onboarding/overview-checklist";
+import {
+  dismissOverviewOnboarding,
+  loadOverviewOnboardingDismissed,
+  readOverviewOnboardingDismissedLocal,
+} from "@/lib/onboarding/overview-onboarding-preference";
 import { InnerPanel } from "@/components/ui/card-system";
 import { appCardShell, appInnerPanel, appKicker, appSecondaryCta } from "@/lib/ui/app-surface";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
@@ -66,8 +71,11 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
   const toast = useAppToast();
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
   const { accounts, loading: accountsLoading } = useTradingAccountsWorkspace();
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(() =>
+    readOverviewOnboardingDismissedLocal(userId),
+  );
   const [onboardingDismissBusy, setOnboardingDismissBusy] = useState(false);
+  const onboardingDismissInFlightRef = useRef(false);
   const [weeklyReviewStatus, setWeeklyReviewStatus] = useState<{
     status: "review_ready" | "saved" | "set_focus";
     nextFocus: string | null;
@@ -220,17 +228,8 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
     if (!userId) return;
     const supabase = createClient();
     void (async () => {
-      const { data: row, error } = await supabase
-        .from("user_profiles")
-        .select("overview_onboarding_dismissed_at")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) {
-        console.warn("[OverviewDashboard] onboarding preference:", error.message);
-        return;
-      }
-      setOnboardingDismissed(Boolean(row?.overview_onboarding_dismissed_at));
+      const dismissed = await loadOverviewOnboardingDismissed(supabase, userId);
+      if (!cancelled) setOnboardingDismissed(dismissed);
     })();
     return () => {
       cancelled = true;
@@ -238,16 +237,16 @@ export function OverviewDashboard({ userId, email, initialWorkspace, userTimezon
   }, [userId]);
 
   const dismissOnboarding = async () => {
-    if (!userId || onboardingDismissBusy || onboardingDismissed) return;
+    if (!userId || onboardingDismissed || onboardingDismissBusy || onboardingDismissInFlightRef.current) {
+      return;
+    }
+    onboardingDismissInFlightRef.current = true;
     setOnboardingDismissBusy(true);
-    const dismissedAt = new Date().toISOString();
     const supabase = createClient();
-    const { error } = await supabase
-      .from("user_profiles")
-      .update({ overview_onboarding_dismissed_at: dismissedAt, updated_at: dismissedAt })
-      .eq("user_id", userId);
+    const result = await dismissOverviewOnboarding(supabase, userId);
+    onboardingDismissInFlightRef.current = false;
     setOnboardingDismissBusy(false);
-    if (error) {
+    if (!result.ok) {
       toast.error("Could not hide the tutorial. Try again.");
       return;
     }
