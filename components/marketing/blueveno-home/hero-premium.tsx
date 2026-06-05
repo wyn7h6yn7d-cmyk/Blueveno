@@ -35,106 +35,6 @@ function weekCellTone(value: number) {
   return "border-white/[0.1] bg-white/[0.04] text-zinc-500";
 }
 
-function HeroChartLayer({
-  className,
-  duration,
-  reverse,
-  pathA,
-  pathB,
-  glow,
-  nodeColor,
-  nodeOpacity = 0.72,
-  enabled = true,
-}: {
-  className?: string;
-  duration: number;
-  reverse?: boolean;
-  pathA: string;
-  pathB: string;
-  glow: string;
-  nodeColor: string;
-  nodeOpacity?: number;
-  enabled?: boolean;
-}) {
-  const body = (
-    <svg viewBox="0 0 1600 300" preserveAspectRatio="none" className="h-full w-[50%] shrink-0">
-      <defs>
-        <linearGradient id={`line-grad-${duration}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={glow} stopOpacity="0.58" />
-          <stop offset="100%" stopColor={glow} stopOpacity="0.18" />
-        </linearGradient>
-        <radialGradient id={`node-grad-${duration}`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={nodeColor} stopOpacity={nodeOpacity} />
-          <stop offset="100%" stopColor={nodeColor} stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      {[24, 56, 88, 120, 152, 184, 216, 248].map((y) => (
-        <line key={y} x1="0" x2="1600" y1={y} y2={y} stroke="oklch(0.62 0.04 248)" strokeOpacity="0.09" strokeWidth="1" />
-      ))}
-      <path
-        d={pathA}
-        fill="none"
-        stroke={`url(#line-grad-${duration})`}
-        strokeWidth="2"
-        strokeLinecap="round"
-        style={{ filter: `drop-shadow(0 0 7px ${glow})` }}
-      />
-      <path
-        d={pathB}
-        fill="none"
-        stroke={`url(#line-grad-${duration})`}
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeOpacity="0.8"
-      />
-      {[
-        [180, 170],
-        [348, 136],
-        [522, 178],
-        [734, 102],
-        [980, 148],
-        [1240, 94],
-        [1450, 164],
-      ].map(([x, y], i) => (
-        <g key={`${duration}-${i}`}>
-          <circle cx={x} cy={y} r="10" fill={`url(#node-grad-${duration})`} />
-          <circle cx={x} cy={y} r="2.1" fill={nodeColor} fillOpacity={nodeOpacity} />
-        </g>
-      ))}
-      {[
-        [94, 112],
-        [270, 166],
-        [610, 126],
-        [838, 166],
-        [1160, 122],
-        [1370, 96],
-      ].map(([x, y], i) => (
-        <circle key={`minor-${duration}-${i}`} cx={x} cy={y} r="1.35" fill={nodeColor} fillOpacity="0.4" />
-      ))}
-      <line x1="0" y1="150" x2="1600" y2="150" stroke={glow} strokeOpacity="0.12" strokeWidth="1" strokeDasharray="4 6" />
-      {[160, 320, 480, 640, 800, 960, 1120, 1280, 1440].map((x) => (
-        <line key={`v-${duration}-${x}`} x1={x} y1="0" x2={x} y2="300" stroke={glow} strokeOpacity="0.08" strokeWidth="0.9" />
-      ))}
-    </svg>
-  );
-
-  if (!enabled) {
-    return <div className={cn("absolute inset-0 flex w-full", className)}>{body}</div>;
-  }
-
-  return (
-    <motion.div
-      className={cn("absolute inset-0 flex w-[200%]", className)}
-      animate={{ x: reverse ? ["-50%", "0%"] : ["0%", "-50%"] }}
-      transition={{ duration, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-      aria-hidden
-    >
-      {body}
-      {body}
-    </motion.div>
-  );
-}
-
 function WeekPanel() {
   return (
     <div className="flex h-full min-h-0 flex-col rounded-[1.35rem] border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.1_0.045_262/0.98),oklch(0.05_0.03_270/0.99))] p-4 shadow-[inset_0_1px_0_0_oklch(1_0_0_/0.08)] sm:p-5">
@@ -240,7 +140,6 @@ function WeekPanel() {
 
 export function HeroPremium() {
   const reducedMotion = useReducedMotion();
-  const heroMotionEnabled = !reducedMotion;
   const frameRef = useRef<number | null>(null);
   const rotateX = useSpring(0, { stiffness: 260, damping: 25, mass: 0.6 });
   const rotateY = useSpring(0, { stiffness: 260, damping: 25, mass: 0.6 });

@@ -1,5 +1,4 @@
 import type { JournalRow } from "@/lib/user-data/types";
-import { parsePnlAmount } from "@/lib/user-data/kpi";
 
 export type DayPnlRow = { date: string; pnl: number };
 

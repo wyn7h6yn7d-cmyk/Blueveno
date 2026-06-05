@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { KeyRound, LogOut, Shield, User } from "lucide-react";
-import { DashboardCard } from "@/components/app/dashboard-card";
+import { KeyRound, LogOut, Shield } from "lucide-react";
+import { InlineFeedback } from "@/components/app/inline-feedback";
+import { SectionCard } from "@/components/v2/cards";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,9 @@ import { TradingAccountsSection } from "@/components/settings/trading-accounts-s
 import { PersonalRulesSection } from "@/components/settings/personal-rules-section";
 import type { SettingsSectionId } from "@/lib/settings/sections";
 import { DELETION_REQUEST_MAILTO, SUPPORT_REQUEST_MAILTO } from "@/lib/legal/constants";
+import { feedbackToneFromMessage } from "@/lib/feedback/feedback-tone";
+import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import { v2InsetCell } from "@/lib/ui/v2-surface";
 
 type SaveFeedback = { section: "profile" | "preferences"; message: string } | null;
 
@@ -92,9 +96,9 @@ export function SettingsPanels({
     return (
       <form id="profile-form" onSubmit={(e) => void onSave(e, "profile")}>
         <div id="settings-profile">
-          <DashboardCard eyebrow="Profile" title="Your profile" description="Your public name and account email.">
+          <SectionCard eyebrow="Profile" title="Your profile" description="Your public name and account email.">
             {loading ? (
-              <p className="text-[15px] text-zinc-500">Loading profile…</p>
+              <p className="text-[14px] text-zinc-500">Loading profile…</p>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -119,20 +123,16 @@ export function SettingsPanels({
               </div>
             )}
             <div className="mt-4">
-              <Button
-                type="submit"
-                className="h-10 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.67_0.15_252))] px-4 text-[13px] font-semibold text-[oklch(0.1_0.04_265)] shadow-[0_12px_32px_-16px_oklch(0.45_0.14_252/0.58)] hover:brightness-[1.03]"
-                disabled={loading || saving}
-              >
+              <Button type="submit" className={appPrimaryCta} disabled={loading || saving}>
                 {saving ? "Saving…" : "Save profile"}
               </Button>
             </div>
             {saveFeedback?.section === "profile" ? (
-              <p className="mt-4 text-sm text-zinc-400" role="status">
-                {saveFeedback.message}
-              </p>
+              <div className="mt-4">
+                <InlineFeedback message={saveFeedback.message} tone={feedbackToneFromMessage(saveFeedback.message)} />
+              </div>
             ) : null}
-          </DashboardCard>
+          </SectionCard>
         </div>
       </form>
     );
@@ -146,9 +146,9 @@ export function SettingsPanels({
     return (
       <form id="preferences-form" onSubmit={(e) => void onSave(e, "preferences")}>
         <div id="settings-preferences">
-          <DashboardCard eyebrow="Preferences" title="Workspace preferences" description="Choose timezone and display currency.">
+          <SectionCard eyebrow="Preferences" title="Workspace preferences" description="Choose timezone and display currency.">
             {loading ? (
-              <p className="text-[15px] text-zinc-500">Loading preferences…</p>
+              <p className="text-[14px] text-zinc-500">Loading preferences…</p>
             ) : (
               <div className="grid gap-5">
                 <div className="space-y-2">
@@ -212,20 +212,16 @@ export function SettingsPanels({
               </div>
             )}
             <div className="mt-4">
-              <Button
-                type="submit"
-                className="h-10 rounded-xl bg-[linear-gradient(180deg,oklch(0.76_0.14_250),oklch(0.67_0.15_252))] px-4 text-[13px] font-semibold text-[oklch(0.1_0.04_265)] shadow-[0_12px_32px_-16px_oklch(0.45_0.14_252/0.58)] hover:brightness-[1.03]"
-                disabled={loading || saving}
-              >
+              <Button type="submit" className={appPrimaryCta} disabled={loading || saving}>
                 {saving ? "Saving…" : "Save preferences"}
               </Button>
             </div>
             {saveFeedback?.section === "preferences" ? (
-              <p className="mt-4 text-sm text-zinc-400" role="status">
-                {saveFeedback.message}
-              </p>
+              <div className="mt-4">
+                <InlineFeedback message={saveFeedback.message} tone={feedbackToneFromMessage(saveFeedback.message)} />
+              </div>
             ) : null}
-          </DashboardCard>
+          </SectionCard>
         </div>
       </form>
     );
@@ -237,11 +233,11 @@ export function SettingsPanels({
 
   if (section === "security") {
     return (
-      <div id="settings-security" className="space-y-6">
-        <DashboardCard eyebrow="Security" title="Security" description="Update sign-in details and keep your account secure.">
+      <div id="settings-security" className="space-y-5">
+        <SectionCard eyebrow="Security" title="Sign-in details" description="Update password and email for this workspace.">
           <div className="grid gap-6 xl:grid-cols-2">
             <form onSubmit={onUpdatePassword} className="space-y-4">
-              <p className="app-metric-label">Password</p>
+              <p className="text-[12px] font-medium uppercase tracking-wide text-zinc-500">Password</p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="new-password" className="text-[13px] text-zinc-300">
@@ -272,18 +268,13 @@ export function SettingsPanels({
                   />
                 </div>
               </div>
-              <Button
-                type="submit"
-                variant="outline"
-                className="h-9 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-                disabled={accountBusy}
-              >
+              <Button type="submit" variant="outline" className={appSecondaryCta} disabled={accountBusy}>
                 Update password
               </Button>
             </form>
 
             <form onSubmit={onUpdateEmail} className="space-y-4">
-              <p className="app-metric-label">Email</p>
+              <p className="text-[12px] font-medium uppercase tracking-wide text-zinc-500">Email</p>
               <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
                 <div className="space-y-2">
                   <Label htmlFor="pending-email" className="text-[13px] text-zinc-300">
@@ -299,66 +290,49 @@ export function SettingsPanels({
                     autoComplete="email"
                   />
                 </div>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="h-9 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-                  disabled={accountBusy}
-                >
+                <Button type="submit" variant="outline" className={appSecondaryCta} disabled={accountBusy}>
                   Update email
                 </Button>
               </div>
               <p className="text-[12px] text-zinc-500">We will ask you to confirm the new email from your inbox.</p>
             </form>
           </div>
-        </DashboardCard>
+        </SectionCard>
 
-        <DashboardCard eyebrow="Sessions" title="Active sessions" description="Manage where your account stays signed in.">
-          <div className="grid gap-4">
-            <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <SectionCard eyebrow="Sessions" title="Active sessions" description="Manage where your account stays signed in.">
+          <div className="grid gap-3">
+            <div className={cn(v2InsetCell, "flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between")}>
               <div className="flex items-start gap-3">
-                <Shield className="mt-0.5 size-5 text-[oklch(0.65_0.12_250)]" strokeWidth={1.75} />
+                <Shield className="mt-0.5 size-5 text-bv-ice" strokeWidth={1.75} />
                 <div>
-                  <p className="text-[15px] font-medium text-zinc-200">This device</p>
-                  <p className="text-sm text-zinc-500">Sign out from this browser session.</p>
+                  <p className="text-[14px] font-medium text-zinc-200">This device</p>
+                  <p className="text-[13px] text-zinc-500">Sign out from this browser session.</p>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-9 shrink-0 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-                disabled={accountBusy}
-                onClick={() => signOut("local")}
-              >
+              <Button type="button" variant="outline" className={appSecondaryCta} disabled={accountBusy} onClick={() => signOut("local")}>
                 <LogOut className="mr-2 size-4" />
                 Sign out
               </Button>
             </div>
-            <div className="flex flex-col gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className={cn(v2InsetCell, "flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between")}>
               <div className="flex items-start gap-3">
                 <KeyRound className="mt-0.5 size-5 text-zinc-500" strokeWidth={1.75} />
                 <div>
-                  <p className="text-[15px] font-medium text-zinc-200">Other devices</p>
-                  <p className="text-sm text-zinc-500">End sessions on other signed-in devices.</p>
+                  <p className="text-[14px] font-medium text-zinc-200">Other devices</p>
+                  <p className="text-[13px] text-zinc-500">End sessions on other signed-in devices.</p>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-9 shrink-0 rounded-xl border-white/[0.12] bg-white/[0.03] text-zinc-200 hover:bg-white/[0.08]"
-                disabled={accountBusy}
-                onClick={() => signOut("others")}
-              >
+              <Button type="button" variant="outline" className={appSecondaryCta} disabled={accountBusy} onClick={() => signOut("others")}>
                 Sign out others
               </Button>
             </div>
           </div>
           {accountMessage ? (
-            <p className="mt-4 text-sm text-zinc-400" role="status">
-              {accountMessage}
-            </p>
+            <div className="mt-4">
+              <InlineFeedback message={accountMessage} tone={feedbackToneFromMessage(accountMessage)} />
+            </div>
           ) : null}
-        </DashboardCard>
+        </SectionCard>
       </div>
     );
   }
@@ -366,72 +340,48 @@ export function SettingsPanels({
   if (section === "data") {
     return (
       <div id="settings-data-privacy">
-        <DashboardCard
+        <SectionCard
           eyebrow="Data & privacy"
           title="Data rights"
-          description="Export your data, access policy information, and contact us for deletion/support requests."
+          description="Export your data, access policy information, and contact us for deletion or support."
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-11 rounded-xl border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 hover:bg-white/[0.08]"
-              onClick={exportJournalCsv}
-              disabled={Boolean(exportBusy)}
-            >
+            <Button type="button" variant="outline" className={cn(appSecondaryCta, "min-h-11 w-full")} onClick={exportJournalCsv} disabled={Boolean(exportBusy)}>
               {exportBusy === "journal" ? "Exporting…" : "Export journal CSV"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-11 rounded-xl border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 hover:bg-white/[0.08]"
-              onClick={exportCalendarSummaryCsv}
-              disabled={Boolean(exportBusy)}
-            >
+            <Button type="button" variant="outline" className={cn(appSecondaryCta, "min-h-11 w-full")} onClick={exportCalendarSummaryCsv} disabled={Boolean(exportBusy)}>
               {exportBusy === "calendar" ? "Exporting…" : "Export calendar summary CSV"}
             </Button>
-            <Link
-              href="/privacy"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
-            >
+            <Link href="/privacy" className={cn(appSecondaryCta, "min-h-11 w-full")}>
               View privacy policy
             </Link>
-            <Link
-              href="/terms"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
-            >
+            <Link href="/terms" className={cn(appSecondaryCta, "min-h-11 w-full")}>
               Terms of Service
             </Link>
-            <Link
-              href="/cookies"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
-            >
+            <Link href="/cookies" className={cn(appSecondaryCta, "min-h-11 w-full")}>
               Cookie Policy
             </Link>
             <a
               href={DELETION_REQUEST_MAILTO}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-400/30 bg-rose-500/[0.08] px-4 text-[13px] text-rose-200 transition hover:bg-rose-500/[0.14]"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-rose-400/30 bg-rose-500/[0.08] px-4 text-[13px] text-rose-200 transition hover:bg-rose-500/[0.14]"
             >
               Request account deletion
             </a>
-            <a
-              href={SUPPORT_REQUEST_MAILTO}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.03] px-4 text-[13px] text-zinc-200 transition hover:bg-white/[0.08]"
-            >
+            <a href={SUPPORT_REQUEST_MAILTO} className={cn(appSecondaryCta, "min-h-11 w-full sm:col-span-2")}>
               Contact support
             </a>
           </div>
           {exportMessage ? (
-            <p className="mt-3 text-sm text-zinc-400" role="status">
-              {exportMessage}
-            </p>
+            <div className="mt-3">
+              <InlineFeedback message={exportMessage} tone={feedbackToneFromMessage(exportMessage)} />
+            </div>
           ) : null}
           {activeAccountId ? (
-            <p className="mt-1 text-[12px] text-zinc-500">
+            <p className="mt-2 text-[12px] text-zinc-500">
               Settings exports include all accounts you own. Page-level exports can follow active account scope.
             </p>
           ) : null}
-        </DashboardCard>
+        </SectionCard>
       </div>
     );
   }

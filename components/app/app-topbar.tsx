@@ -39,13 +39,13 @@ type AppTopbarProps = {
 function sectionLabel(pathname: string): string {
   if (pathname.startsWith("/app/admin")) return "Admin";
   if (pathname.startsWith("/app/stats")) return "Stats";
+  if (pathname.startsWith("/app/reports")) return "Reports";
+  if (pathname.startsWith("/app/capital")) return "Capital";
   if (pathname.startsWith("/app/calendar")) return "Calendar";
   if (pathname.startsWith("/app/journal")) return "Journal";
+  if (pathname.startsWith("/app/trades")) return "Trades";
   if (pathname.startsWith("/app/settings/billing")) return "Plan & access";
   if (pathname.startsWith("/app/settings")) return "Settings";
-  if (pathname.startsWith("/app/analytics")) return "Analytics";
-  if (pathname.startsWith("/app/reviews")) return "Reviews";
-  if (pathname.startsWith("/app/playbooks")) return "Playbooks";
   if (pathname === "/app" || pathname === "/app/") return "Overview";
   return "Workspace";
 }

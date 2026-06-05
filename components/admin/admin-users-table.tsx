@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { useAppToast } from "@/components/app/app-toast-provider";
 import { formatUserError } from "@/lib/feedback/format-error";
 import { MoreHorizontal } from "lucide-react";
+import { KpiGrid, MetricCard, StatStrip, StatusPill, type StatusPillTone } from "@/components/v2";
+import { SectionCard, TableCard } from "@/components/v2/cards";
+import { TopActionBar } from "@/components/v2/layout/top-action-bar";
+import { EmptyStatePanel } from "@/components/v2/states/empty-state-panel";
 import type { AdminUserListItem } from "@/lib/access/admin-types";
 import {
   extendTrialDays,
@@ -18,6 +22,7 @@ import { ADMIN_FULL_ACCESS_EMAIL } from "@/lib/billing/workspace-access";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { v2InsetCell, v2TableHeader, v2TableRow } from "@/lib/ui/v2-surface";
 import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import {
   DropdownMenu,
@@ -33,21 +38,25 @@ type Props = {
 type BadgeTone = "admin" | "premium" | "trial" | "readonly" | "default" | "disabled";
 type AdminFilter = "all" | "admin" | "premium" | "trial_active" | "trial_expired" | "read_only" | "disabled";
 
-function badgeClass(tone: BadgeTone): string {
+function pillTone(tone: BadgeTone): StatusPillTone {
   switch (tone) {
     case "admin":
-      return "border-amber-400/35 bg-amber-500/12 text-amber-100";
+      return "warning";
     case "premium":
-      return "border-emerald-400/30 bg-emerald-500/10 text-emerald-100";
+      return "success";
     case "trial":
-      return "border-sky-400/25 bg-sky-500/10 text-sky-100";
+      return "info";
     case "readonly":
-      return "border-zinc-500/30 bg-zinc-800/40 text-zinc-300";
+      return "neutral";
     case "disabled":
-      return "border-rose-400/30 bg-rose-500/10 text-rose-100";
+      return "danger";
     default:
-      return "border-white/15 bg-white/[0.04] text-zinc-300";
+      return "neutral";
   }
+}
+
+function AccessBadge({ tone, children }: { tone: BadgeTone; children: ReactNode }) {
+  return <StatusPill tone={pillTone(tone)}>{children}</StatusPill>;
 }
 
 function formatDate(v: string | null): string {
@@ -62,6 +71,23 @@ function formatDateTime(v: string | null): string {
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString();
+}
+
+function isProtectedOwner(email: string): boolean {
+  return email.toLowerCase().trim() === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
+}
+
+function premiumActive(u: AdminUserListItem): boolean {
+  return (
+    isProtectedOwner(u.email) ||
+    u.premium_active ||
+    u.manual_premium ||
+    u.subscription_label.toLowerCase().includes("active")
+  );
+}
+
+function isReadOnly(u: AdminUserListItem): boolean {
+  return u.access_state === "trial_expired" && !u.account_disabled;
 }
 
 export function AdminUsersTable({ users }: Props) {
@@ -81,23 +107,7 @@ export function AdminUsersTable({ users }: Props) {
   const [notesBusy, setNotesBusy] = useState(false);
   const [internalNote, setInternalNote] = useState("");
   const [premiumReason, setPremiumReason] = useState("");
-
-  function isProtectedOwner(email: string): boolean {
-    return email.toLowerCase().trim() === ADMIN_FULL_ACCESS_EMAIL.toLowerCase();
-  }
-
-  function premiumActive(u: AdminUserListItem): boolean {
-    return (
-      isProtectedOwner(u.email) ||
-      u.premium_active ||
-      u.manual_premium ||
-      u.subscription_label.toLowerCase().includes("active")
-    );
-  }
-
-  function isReadOnly(u: AdminUserListItem): boolean {
-    return u.access_state === "trial_expired" && !u.account_disabled;
-  }
+  const [summaryAnchorMs] = useState(() => Date.now());
 
   const filtered = useMemo((): AdminUserListItem[] => {
     const q = query.trim().toLowerCase();
@@ -120,7 +130,7 @@ export function AdminUsersTable({ users }: Props) {
   }, [users, query, stateFilter]);
 
   const summary = useMemo(() => {
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const sevenDaysAgo = summaryAnchorMs - 7 * 24 * 60 * 60 * 1000;
     let admins = 0;
     let premium = 0;
     let trialActive = 0;
@@ -143,13 +153,13 @@ export function AdminUsersTable({ users }: Props) {
       if (!Number.isNaN(createdAt) && createdAt >= sevenDaysAgo) newUsers += 1;
     }
     return { admins, premium, trialActive, trialExpired, readOnly, disabled, accounts, entries, newUsers };
-  }, [users]);
+  }, [users, summaryAnchorMs]);
 
-  useEffect(() => {
-    if (!detailsUser) return;
-    setInternalNote(detailsUser.internal_note ?? "");
-    setPremiumReason(detailsUser.premium_granted_reason ?? "");
-  }, [detailsUser]);
+  function openDetails(user: AdminUserListItem) {
+    setDetailsUser(user);
+    setInternalNote(user.internal_note ?? "");
+    setPremiumReason(user.premium_granted_reason ?? "");
+  }
 
   function run(label: string, fn: () => Promise<void>) {
     setPendingLabel(label);
@@ -165,82 +175,69 @@ export function AdminUsersTable({ users }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.12_0.03_264/0.82),oklch(0.09_0.03_266/0.88))] p-4">
-        <p className="app-metric-label">Overview metrics</p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="app-metric-label">Total users</p>
-            <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{users.length}</p>
-          </div>
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="app-metric-label">Premium users</p>
-            <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.premium}</p>
-          </div>
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="app-metric-label">Read-only + disabled</p>
-            <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.readOnly + summary.disabled}</p>
-          </div>
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
-            <p className="app-metric-label">New users (7d)</p>
-            <p className="mt-1 font-display text-2xl tabular-nums text-zinc-100">{summary.newUsers}</p>
-          </div>
-        </div>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
-          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Admins</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.admins}</p></div>
-          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Trial active</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.trialActive}</p></div>
-          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Trial expired</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.trialExpired}</p></div>
-          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Disabled</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.disabled}</p></div>
-          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Trading accounts</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.accounts}</p></div>
-          <div className="rounded-lg bg-black/20 px-3 py-2 ring-1 ring-inset ring-white/[0.06]"><p className="app-metric-label">Journal entries</p><p className="text-[13px] tabular-nums text-zinc-200">{summary.entries}</p></div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 rounded-xl border border-white/[0.08] bg-black/20 p-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <span className="app-metric-label">Filters</span>
-          {stateFilter !== "all" ? (
-            <span className="rounded-md border border-[oklch(0.58_0.11_252/0.35)] bg-[oklch(0.58_0.11_252/0.12)] px-2 py-0.5 text-[11px] text-zinc-200">
-              {stateFilter.replace("_", " ")}
-            </span>
-          ) : null}
-        </div>
-        <p className="font-mono text-[11px] text-zinc-500">
-          {filtered.length} of {users.length} users
-          {pendingLabel ? ` · ${pendingLabel}…` : ""}
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex max-w-2xl flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-          <Input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by email or display name…"
-            className="h-10 flex-1 rounded-xl border-white/[0.1] bg-black/25 text-[14px] placeholder:text-zinc-600"
-            aria-label="Search users by email or display name"
+      <SectionCard eyebrow="Overview" title="Workspace metrics" description="Aggregate counts across all registered users.">
+        <KpiGrid columns={4}>
+          <MetricCard label="Total users" value={String(users.length)} />
+          <MetricCard label="Premium users" value={String(summary.premium)} tone="positive" />
+          <MetricCard label="Read-only + disabled" value={String(summary.readOnly + summary.disabled)} tone="caution" />
+          <MetricCard label="New users (7d)" value={String(summary.newUsers)} />
+        </KpiGrid>
+        <div className="mt-4">
+          <StatStrip
+            items={[
+              { id: "admins", label: "Admins", value: String(summary.admins) },
+              { id: "trial", label: "Trial active", value: String(summary.trialActive), tone: "neutral" },
+              { id: "expired", label: "Trial expired", value: String(summary.trialExpired), tone: "caution" },
+              { id: "disabled", label: "Disabled", value: String(summary.disabled), tone: "negative" },
+              { id: "accounts", label: "Trading accounts", value: String(summary.accounts) },
+              { id: "entries", label: "Journal entries", value: String(summary.entries) },
+            ]}
           />
-          <select
-            value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value as AdminFilter)}
-            className="h-10 rounded-xl border border-white/[0.1] bg-black/25 px-3 text-[13px] text-zinc-200"
-            aria-label="Filter by access state"
-          >
-            <option value="all">All</option>
-            <option value="admin">Admin</option>
-            <option value="premium">Premium</option>
-            <option value="trial_active">Trial active</option>
-            <option value="trial_expired">Trial expired</option>
-            <option value="read_only">Read-only</option>
-            <option value="disabled">Disabled</option>
-          </select>
         </div>
-      </div>
+      </SectionCard>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-[linear-gradient(180deg,oklch(0.11_0.035_264/0.92),oklch(0.085_0.03_266/0.94))] shadow-[0_24px_64px_-40px_rgba(0,0,0,0.75)]">
+      <TableCard
+        eyebrow="Users"
+        title="User directory"
+        description={`${filtered.length} of ${users.length} users shown${pendingLabel ? ` · ${pendingLabel}…` : ""}`}
+        toolbar={
+          <TopActionBar
+            left={
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search by email or display name…"
+                  className={cn(v2InsetCell, "h-9 flex-1 text-[13px] placeholder:text-zinc-600")}
+                  aria-label="Search users by email or display name"
+                />
+                <select
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value as AdminFilter)}
+                  className={cn(v2InsetCell, "h-9 px-3 text-[12px] text-zinc-200")}
+                  aria-label="Filter by access state"
+                >
+                  <option value="all">All</option>
+                  <option value="admin">Admin</option>
+                  <option value="premium">Premium</option>
+                  <option value="trial_active">Trial active</option>
+                  <option value="trial_expired">Trial expired</option>
+                  <option value="read_only">Read-only</option>
+                  <option value="disabled">Disabled</option>
+                </select>
+                {stateFilter !== "all" ? (
+                  <StatusPill tone="active">{stateFilter.replace("_", " ")}</StatusPill>
+                ) : null}
+              </div>
+            }
+          />
+        }
+      >
+        <div className="overflow-x-auto">
         <table className="w-full min-w-[1360px] border-collapse text-left text-[13px]">
           <thead>
-            <tr className="border-b border-white/[0.08] bg-black/20 app-metric-label">
+            <tr className={cn(v2TableHeader, "text-[11px] uppercase tracking-wide text-zinc-500")}>
               <th className="px-4 py-3.5">Email</th>
               <th className="px-4 py-3.5">Display name</th>
               <th className="px-4 py-3.5">Role</th>
@@ -257,9 +254,12 @@ export function AdminUsersTable({ users }: Props) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={11} className="px-6 py-12 text-center">
-                  <p className="font-display text-lg text-zinc-200">No users match your filters.</p>
-                  <p className="mt-1 text-sm text-zinc-500">Adjust filters or search to continue managing access.</p>
+                <td colSpan={11} className="px-2 py-2">
+                  <EmptyStatePanel
+                    title="No users match your filters"
+                    description="Adjust filters or search to continue managing access."
+                    compact
+                  />
                 </td>
               </tr>
             ) : null}
@@ -268,67 +268,33 @@ export function AdminUsersTable({ users }: Props) {
               const isPaid = premiumActive(u);
               const ownerReason = isOwner ? "Owner account is protected." : undefined;
               return (
-                <tr
-                  key={u.user_id}
-                  className="border-b border-white/[0.04] text-zinc-200 transition hover:bg-white/[0.02] last:border-0"
-                >
+                <tr key={u.user_id} className={cn(v2TableRow, "text-zinc-200 last:border-0")}>
                   <td className="max-w-[16rem] truncate px-4 py-3.5 font-mono text-[12px] text-zinc-300">
                     <div className="flex items-center gap-2">
                       <span className="truncate">{u.email}</span>
-                      {isOwner ? (
-                        <span className="rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-100">
-                          Owner
-                        </span>
-                      ) : null}
+                      {isOwner ? <StatusPill tone="warning">Owner</StatusPill> : null}
                     </div>
                   </td>
                   <td className="max-w-[10rem] truncate px-4 py-3.5 text-zinc-300">{u.display_name ?? "—"}</td>
                   <td className="px-4 py-3.5">
-                    <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", u.is_admin ? badgeClass("admin") : badgeClass("default"))}>
-                      {u.is_admin ? "Admin" : "User"}
-                    </span>
+                    <AccessBadge tone={u.is_admin ? "admin" : "default"}>{u.is_admin ? "Admin" : "User"}</AccessBadge>
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex flex-wrap gap-1.5">
-                      {u.access_state === "trial_active" ? (
-                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("trial"))}>
-                          Trial active
-                        </span>
-                      ) : null}
+                      {u.access_state === "trial_active" ? <AccessBadge tone="trial">Trial active</AccessBadge> : null}
                       {u.access_state === "trial_expired" ? (
                         <>
-                          <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("readonly"))}>
-                            Trial expired
-                          </span>
-                          <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("readonly"))}>
-                            Read-only
-                          </span>
+                          <AccessBadge tone="readonly">Trial expired</AccessBadge>
+                          <AccessBadge tone="readonly">Read-only</AccessBadge>
                         </>
                       ) : null}
-                      {u.access_state === "premium_active" ? (
-                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("premium"))}>
-                          Premium
-                        </span>
-                      ) : null}
-                      {u.account_disabled ? (
-                        <span className={cn("inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide", badgeClass("disabled"))}>
-                          Disabled
-                        </span>
-                      ) : null}
+                      {u.access_state === "premium_active" ? <AccessBadge tone="premium">Premium</AccessBadge> : null}
+                      {u.account_disabled ? <AccessBadge tone="disabled">Disabled</AccessBadge> : null}
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3.5 text-zinc-500">{formatDate(u.trial_ends_at)}</td>
                   <td className="px-4 py-3.5">
-                    <span
-                      className={cn(
-                        "inline-flex rounded-lg border px-2 py-0.5 text-[11px] font-medium tracking-wide",
-                        isPaid
-                          ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100"
-                          : "border-zinc-500/30 bg-zinc-800/40 text-zinc-300",
-                      )}
-                    >
-                      {isPaid ? "Active" : "Inactive"}
-                    </span>
+                    <AccessBadge tone={isPaid ? "premium" : "readonly"}>{isPaid ? "Active" : "Inactive"}</AccessBadge>
                   </td>
                   <td className="px-4 py-3.5 tabular-nums text-zinc-400">{u.account_count}</td>
                   <td className="px-4 py-3.5 tabular-nums text-zinc-400">{u.journal_entry_count}</td>
@@ -339,16 +305,17 @@ export function AdminUsersTable({ users }: Props) {
                       <DropdownMenuTrigger
                         type="button"
                         disabled={pending}
+                        aria-busy={pendingLabel !== null}
                         className={cn(
                           buttonVariants({ variant: "outline", size: "sm" }),
-                          "h-8 rounded-lg border-white/[0.1] bg-white/[0.02] px-2.5 text-[11px] text-zinc-200 hover:bg-white/[0.06]",
+                          "h-8 rounded-lg border-white/[0.1] bg-white/[0.02] px-2.5 text-[11px] text-zinc-200 hover:bg-white/[0.06] disabled:opacity-50",
                         )}
                       >
                         <MoreHorizontal className="mr-1 size-4" />
-                        Actions
+                        {pendingLabel ? `${pendingLabel}…` : "Actions"}
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="min-w-[13rem] rounded-xl border border-white/[0.09] bg-[oklch(0.125_0.028_262)] p-1.5 text-zinc-100 shadow-bv-float ring-1 ring-white/[0.04]">
-                        <DropdownMenuItem className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px]" onClick={() => setDetailsUser(u)}>
+                        <DropdownMenuItem className="cursor-pointer rounded-lg px-2.5 py-2 text-[13px]" onClick={() => openDetails(u)}>
                           View details
                         </DropdownMenuItem>
                         {isOwner ? (
@@ -441,7 +408,8 @@ export function AdminUsersTable({ users }: Props) {
             })}
           </tbody>
         </table>
-      </div>
+        </div>
+      </TableCard>
       <ConfirmDialog
         open={confirmState !== null}
         onCancel={() => {
@@ -461,25 +429,24 @@ export function AdminUsersTable({ users }: Props) {
       />
       {detailsUser ? (
         <div className="fixed inset-0 z-[115] flex items-center justify-center bg-black/70 p-4 backdrop-blur-[1px]">
-          <div className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-white/[0.1] bg-[linear-gradient(180deg,oklch(0.13_0.035_264/0.97),oklch(0.09_0.03_266/0.98))] p-5 shadow-[0_30px_90px_-45px_rgba(0,0,0,0.85)]">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-display text-xl text-zinc-100">{detailsUser.email}</p>
-                <p className="mt-1 text-[12px] text-zinc-500">User details</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDetailsUser(null)}
-                className="rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-1.5 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
-              >
-                Close
-              </button>
-            </div>
-            <div className="mt-3 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3 py-2 text-[12px] text-zinc-400">
-              Internal admin view. Sensitive actions should always use confirmations.
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-3">
+          <div className="max-h-[88vh] w-full max-w-3xl overflow-y-auto">
+            <SectionCard
+              variant="featured"
+              eyebrow="User details"
+              title={detailsUser.email}
+              description="Internal admin view. Sensitive actions should always use confirmations."
+              actions={
+                <button
+                  type="button"
+                  onClick={() => setDetailsUser(null)}
+                  className="rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 py-1.5 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
+                >
+                  Close
+                </button>
+              }
+            >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className={cn(v2InsetCell, "px-3.5 py-3")}>
                 <p className="app-metric-label">Display name</p>
                 <p className="mt-1.5 text-[13px] text-zinc-100">{detailsUser.display_name ?? "—"}</p>
               </div>
@@ -595,6 +562,7 @@ export function AdminUsersTable({ users }: Props) {
                 </div>
               </div>
             </div>
+            </SectionCard>
           </div>
         </div>
       ) : null}

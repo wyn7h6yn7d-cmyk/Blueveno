@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Clock, Tag } from "lucide-react";
-import { InnerPanel } from "@/components/ui/card-system";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import type { SessionPnlRow } from "@/lib/user-data/trading-stats";
 import type { SessionAnalysisHighlight, SessionTagPerformanceRow } from "@/lib/user-data/session-analysis";

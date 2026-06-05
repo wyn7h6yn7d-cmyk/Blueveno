@@ -50,11 +50,7 @@ export function useSectionScrollSpy(sectionIds: string[], options?: Options) {
     return () => observer.disconnect();
   }, [enabled, sectionIds]);
 
-  useEffect(() => {
-    if (sectionIds[0] && !sectionIds.includes(activeId)) {
-      setActiveId(sectionIds[0]);
-    }
-  }, [activeId, sectionIds]);
+  const resolvedActiveId = sectionIds.includes(activeId) ? activeId : (sectionIds[0] ?? activeId);
 
-  return { activeId, scrollToSection };
+  return { activeId: resolvedActiveId, scrollToSection };
 }

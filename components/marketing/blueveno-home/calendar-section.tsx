@@ -229,7 +229,6 @@ export function CalendarSection({ className }: CalendarSectionProps) {
                               type="button"
                               aria-pressed={isSelected}
                               aria-label={dayAriaLabel(day as string, pnl)}
-                              role="gridcell"
                               className={baseTile}
                               onClick={() => setSelectedDay((s) => (s === day ? null : (day as string)))}
                               whileTap={reducedMotion ? undefined : { scale: 0.988 }}

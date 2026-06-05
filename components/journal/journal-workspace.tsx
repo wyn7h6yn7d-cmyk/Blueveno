@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CalendarDays, Check, ChevronRight, LineChart, NotebookPen, Plus } from "lucide-react";
@@ -14,7 +14,10 @@ import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { compareJournalRecency, dayKeyFromRow, startOfWeekMonday, toDayKey } from "@/lib/user-data/journal-metrics";
 import { localTodayKey, useFollowLocalToday } from "@/lib/user-data/local-today";
 import { EmptyState } from "@/components/app/empty-state";
-import { JournalDayList } from "@/components/journal/journal-day-list";
+import { JournalEntryDetailPanel } from "@/components/journal/journal-entry-detail-panel";
+import { JournalNotebookIndex } from "@/components/journal/journal-notebook-index";
+import { JournalNotebookLayout, type JournalWorkspaceTab } from "@/components/journal/journal-notebook-layout";
+import { JournalWeeklyReviewPanel } from "@/components/journal/journal-weekly-review-panel";
 import { chartUrlForSave, isValidChartUrl } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
@@ -45,11 +48,8 @@ import {
   applyEntryFilters,
   DAY_COLOR_FILTER_LABELS,
   EMPTY_ENTRY_FILTERS,
-  FILTER_DIMENSION_ALL_LABEL,
-  filterChips,
   hasActiveFilters,
   parseFiltersFromParams,
-  uniqueValues,
   writeFiltersToParams,
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
@@ -59,6 +59,7 @@ import {
   isWeeklyReflectionTableMissing,
   queryWeeklyReflectionWithFallback,
 } from "@/lib/user-data/weekly-reflection-columns";
+import { formatWeekHeadline } from "@/lib/user-data/week-labels";
 
 type Props = {
   userId: string;
@@ -70,8 +71,11 @@ type Props = {
 
 const labelCls = appFormLabel;
 const inputCls = appFormControl;
+const notebookTextareaCls = cn(
+  "w-full resize-y rounded-xl border border-white/[0.1] bg-black/20 px-4 py-3.5 text-[15px] leading-relaxed text-zinc-100 placeholder:text-zinc-600",
+  "shadow-[inset_0_1px_2px_oklch(0_0_0/0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
+);
 const MOOD_OPTIONS = ["Calm", "Focused", "Hesitant", "Tilted"] as const;
-
 function CheckPill({
   label,
   checked,
@@ -172,8 +176,6 @@ function JournalFormCollapsible({
     </details>
   );
 }
-const RECENT_ACTIVITY_PREVIEW = 5;
-
 type WeeklyReflectionRow = {
   week_start: string;
   account_id: string | null;
@@ -259,7 +261,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [weeklySaving, setWeeklySaving] = useState(false);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [weeklyUnavailable, setWeeklyUnavailable] = useState(false);
-  const [weeklySaved, setWeeklySaved] = useState(false);
+  const [savedWeekKey, setSavedWeekKey] = useState<string | null>(null);
   const [resettingJournal, setResettingJournal] = useState(false);
   const [resetMsg, setResetMsg] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
@@ -267,16 +269,78 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [recentExpanded, setRecentExpanded] = useState(false);
-  const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
+  const [workspaceTab, setWorkspaceTab] = useState<JournalWorkspaceTab>(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#add") return "add";
+    return "review";
+  });
+  const [reviewedWeekStarts, setReviewedWeekStarts] = useState<string[]>([]);
+  const selectedEntryId = searchParams.get("entry");
+  const filters = useMemo(
+    () => parseFiltersFromParams(new URLSearchParams(searchParams.toString())),
+    [searchParams],
+  );
   const [personalRules, setPersonalRules] = useState<PersonalRuleRow[]>([]);
-  const [ruleChecks, setRuleChecks] = useState<Record<string, boolean>>({});
+  const [manualRuleChecks, setManualRuleChecks] = useState<Record<string, boolean>>({});
+  const ruleChecks = useMemo(() => {
+    const next: Record<string, boolean> = { ...manualRuleChecks };
+    for (const r of personalRules) {
+      if (!(r.id in next)) next[r.id] = false;
+    }
+    for (const rule of personalRules) {
+      const t = rule.title.toLowerCase();
+      if (t === "followed my plan") next[rule.id] = followedPlan;
+      else if (t === "respected my stop") next[rule.id] = respectedStop;
+      else if (t === "no revenge trade") next[rule.id] = noRevengeTrade;
+    }
+    return next;
+  }, [manualRuleChecks, personalRules, followedPlan, respectedStop, noRevengeTrade]);
+  const [fetchedRelatedWeekly, setFetchedRelatedWeekly] = useState<WeeklyReflectionRow | null>(null);
   const weekStartKey = useMemo(() => {
     const base = new Date(`${weekAnchorDate}T12:00:00`);
     return toDayKey(startOfWeekMonday(base));
   }, [weekAnchorDate]);
+  const weeklySaved =
+    savedWeekKey !== null && savedWeekKey === `${weekStartKey}:${activeAccountId ?? ""}`;
 
   const sortedRows = useMemo(() => [...data.journal].sort(compareJournalRecency), [data.journal]);
+
+  const selectEntry = useCallback(
+    (id: string) => {
+      const base = new URLSearchParams(searchParams.toString());
+      base.set("entry", id);
+      const nextQuery = base.toString();
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+      setWorkspaceTab("review");
+    },
+    [pathname, router, searchParams],
+  );
+
+  const replaceSearchParams = useCallback(
+    (mutate: (base: URLSearchParams) => void) => {
+      const base = new URLSearchParams(searchParams.toString());
+      mutate(base);
+      const nextQuery = base.toString();
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const setFilters = useCallback(
+    (updater: EntryFilters | ((prev: EntryFilters) => EntryFilters)) => {
+      const next = typeof updater === "function" ? updater(filters) : updater;
+      replaceSearchParams((base) => {
+        writeFiltersToParams(base, next);
+      });
+    },
+    [filters, replaceSearchParams],
+  );
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || window.location.hash !== "#add") return;
+    window.requestAnimationFrame(() => {
+      document.getElementById("add")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   const lastSyncedDayRef = useRef(localTodayKey());
   useEffect(() => {
@@ -310,7 +374,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       if (cancelled) return;
       const active = (rows ?? []) as PersonalRuleRow[];
       setPersonalRules(active);
-      setRuleChecks((prev) => {
+      setManualRuleChecks((prev) => {
         const next = { ...prev };
         for (const r of active) {
           if (!(r.id in next)) next[r.id] = false;
@@ -323,70 +387,30 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     };
   }, []);
 
-  useEffect(() => {
-    if (personalRules.length === 0) return;
-    setRuleChecks((prev) => {
-      const next = { ...prev };
-      for (const rule of personalRules) {
-        const t = rule.title.toLowerCase();
-        if (t === "followed my plan") next[rule.id] = followedPlan;
-        if (t === "respected my stop") next[rule.id] = respectedStop;
-        if (t === "no revenge trade") next[rule.id] = noRevengeTrade;
-      }
-      return next;
-    });
-  }, [followedPlan, noRevengeTrade, personalRules, respectedStop]);
-
-  useEffect(() => {
-    setFilters(parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
-  }, [searchParams]);
-
-  useEffect(() => {
-    const next = writeFiltersToParams(new URLSearchParams(searchParams.toString()), filters);
-    const nextQuery = next.toString();
-    const current = searchParams.toString();
-    if (nextQuery === current) return;
-    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
-  }, [filters, pathname, router, searchParams]);
-
   const filteredRows = useMemo(() => applyEntryFilters(sortedRows, filters), [sortedRows, filters]);
   const filtersActive = hasActiveFilters(filters);
 
-  useEffect(() => {
-    setRecentExpanded(false);
-  }, [entryDate, highlightDate]);
+  const effectiveSelectedEntryId = useMemo(() => {
+    if (selectedEntryId) return selectedEntryId;
+    if (workspaceTab === "review" && filteredRows.length > 0) return filteredRows[0]!.id;
+    return null;
+  }, [selectedEntryId, workspaceTab, filteredRows]);
 
-  const recentActivityRows = useMemo(() => {
-    if (highlightDate) {
-      return filteredRows
-        .filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === highlightDate)
-        .sort(compareJournalRecency);
-    }
-    return [...filteredRows].sort(compareJournalRecency);
-  }, [filteredRows, highlightDate]);
+  const selectedEntry = useMemo(() => {
+    if (!effectiveSelectedEntryId) return null;
+    return sortedRows.find((row) => row.id === effectiveSelectedEntryId) ?? null;
+  }, [effectiveSelectedEntryId, sortedRows]);
 
-  /** Today first so new sessions always appear at the top of Latest activity. */
-  const prioritizedActivityRows = useMemo(() => {
-    if (highlightDate) return recentActivityRows;
-    const today = localTodayKey();
-    const todayRows = recentActivityRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === today);
-    const earlierRows = recentActivityRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) !== today);
-    return [...todayRows, ...earlierRows];
-  }, [highlightDate, recentActivityRows]);
-
-  const rowsForLatestEntries = useMemo(() => {
-    if (highlightDate || recentExpanded) return prioritizedActivityRows;
-    return prioritizedActivityRows.slice(0, RECENT_ACTIVITY_PREVIEW);
-  }, [prioritizedActivityRows, highlightDate, recentExpanded]);
-
-  const recentHiddenCount = highlightDate
-    ? 0
-    : Math.max(0, prioritizedActivityRows.length - RECENT_ACTIVITY_PREVIEW);
+  const selectedEntryWeekStart = useMemo(() => {
+    if (!selectedEntry) return null;
+    const dayKey = dayKeyFromRow(selectedEntry.entryDate, selectedEntry.createdAt);
+    return toDayKey(startOfWeekMonday(new Date(`${dayKey}T12:00:00`)));
+  }, [selectedEntry]);
 
   const todayActivityCount = useMemo(() => {
     const today = localTodayKey();
-    return recentActivityRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === today).length;
-  }, [recentActivityRows]);
+    return filteredRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === today).length;
+  }, [filteredRows]);
 
   useEffect(() => {
     if (highlightDate) return;
@@ -401,21 +425,14 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     void refetchJournal();
   }, [ready, activeAccountId, refetchJournal]);
 
-  const symbolOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.sym), [sortedRows]);
-  const moodOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.moodState), [sortedRows]);
-  const setupOptions = useMemo(() => uniqueValues(sortedRows, (row) => String(row.setup)), [sortedRows]);
-  const mistakeOptions = useMemo(() => uniqueValues(sortedRows, (row) => String(row.tag)), [sortedRows]);
-  const sessionOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.sessionTag), [sortedRows]);
-  const marketOptions = useMemo(() => uniqueValues(sortedRows, (row) => row.marketCondition), [sortedRows]);
-
   useEffect(() => {
-    if (!highlightDate || !ready || rowsForLatestEntries.length === 0) return;
+    if (!highlightDate || !ready || filteredRows.length === 0) return;
     const t = window.setTimeout(() => {
       const el = document.querySelector(`[data-journal-date="${highlightDate}"]`);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 50);
     return () => window.clearTimeout(t);
-  }, [highlightDate, ready, rowsForLatestEntries.length]);
+  }, [highlightDate, ready, filteredRows.length]);
 
   const applyWeeklyRow = useCallback((row: WeeklyReflectionRow | null) => {
     setWeeklyWorked(row?.what_worked ?? "");
@@ -470,12 +487,150 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   }, [userId, weekStartKey, activeAccountId, applyWeeklyRow]);
 
   useEffect(() => {
-    setWeeklySaved(false);
-    void loadWeeklyReflection();
-  }, [loadWeeklyReflection]);
+    let cancelled = false;
+    void (async () => {
+      if (!userId || !activeAccountId) {
+        if (cancelled) return;
+        applyWeeklyRow(null);
+        setWeeklyMsg(null);
+        setWeeklyUnavailable(false);
+        setWeeklyLoading(false);
+        return;
+      }
+      setWeeklyLoading(true);
+      const supabase = createClient();
+      try {
+        const sessionOk = await waitForSessionUser(supabase, userId, () => cancelled);
+        if (!sessionOk || cancelled) {
+          throw { message: "Session not ready." } satisfies SupabaseErrorLike;
+        }
+        const { data, error } = await queryWeeklyReflectionWithFallback(async (select, useAccountScope) => {
+          let q = supabase
+            .from("weekly_reflections")
+            .select(select)
+            .eq("user_id", userId)
+            .eq("week_start", weekStartKey);
+          if (useAccountScope) {
+            q = q.eq("account_id", activeAccountId);
+          }
+          const result = await q.maybeSingle();
+          return { data: result.data, error: result.error };
+        });
+        if (cancelled) return;
+        if (error) throw error;
+        applyWeeklyRow((data ?? null) as WeeklyReflectionRow | null);
+        setWeeklyMsg(null);
+        setWeeklyUnavailable(false);
+      } catch (error) {
+        if (cancelled) return;
+        const err = error as SupabaseErrorLike;
+        const msg = weeklyReflectionErrorMessage(err, "load");
+        setWeeklyMsg(msg);
+        setWeeklyUnavailable(isWeeklyReflectionTableMissing(err?.message, err?.code));
+      } finally {
+        if (!cancelled) setWeeklyLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, weekStartKey, activeAccountId, applyWeeklyRow]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    const supabase = createClient();
+    void (async () => {
+      const { data: rows } = await supabase
+        .from("weekly_reflections")
+        .select("week_start, what_worked, what_slipped, next_week_focus")
+        .eq("user_id", userId);
+      if (cancelled) return;
+      const reviewed = ((rows ?? []) as Array<{ week_start: string; what_worked?: string | null; what_slipped?: string | null; next_week_focus?: string | null }>)
+        .filter((row) => Boolean(row.what_worked?.trim() || row.what_slipped?.trim() || row.next_week_focus?.trim()))
+        .map((row) => row.week_start);
+      setReviewedWeekStarts(reviewed);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, savedWeekKey]);
+
+  const relatedWeeklyReflection = useMemo((): WeeklyReflectionRow | null => {
+    if (!selectedEntryWeekStart) return null;
+    if (selectedEntryWeekStart === weekStartKey && !weeklyLoading) {
+      return {
+        week_start: weekStartKey,
+        account_id: activeAccountId,
+        what_worked: weeklyWorked.trim() || null,
+        what_slipped: weeklySlipped.trim() || null,
+        next_week_focus: weeklyFocus.trim() || null,
+        next_week_rule: weeklyRule.trim() || null,
+        confidence_score: weeklyConfidence,
+        weekly_note: weeklyNote.trim() || null,
+      };
+    }
+    return fetchedRelatedWeekly;
+  }, [
+    selectedEntryWeekStart,
+    weekStartKey,
+    weeklyLoading,
+    activeAccountId,
+    weeklyWorked,
+    weeklySlipped,
+    weeklyFocus,
+    weeklyRule,
+    weeklyConfidence,
+    weeklyNote,
+    fetchedRelatedWeekly,
+  ]);
+
+  useEffect(() => {
+    if (!selectedEntryWeekStart || !userId || selectedEntryWeekStart === weekStartKey) return;
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      const { data, error } = await queryWeeklyReflectionWithFallback(async (select, useAccountScope) => {
+        let q = supabase
+          .from("weekly_reflections")
+          .select(select)
+          .eq("user_id", userId)
+          .eq("week_start", selectedEntryWeekStart);
+        if (useAccountScope && activeAccountId) {
+          q = q.eq("account_id", activeAccountId);
+        }
+        const result = await q.maybeSingle();
+        return { data: result.data, error: result.error };
+      });
+      if (cancelled || error) return;
+      setFetchedRelatedWeekly((data ?? null) as WeeklyReflectionRow | null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedEntryWeekStart, weekStartKey, userId, activeAccountId]);
+
+  const relatedWeeklyReview = useMemo(() => {
+    if (!relatedWeeklyReflection || !selectedEntryWeekStart) return null;
+    const hasContent = Boolean(
+      relatedWeeklyReflection.what_worked?.trim() ||
+        relatedWeeklyReflection.what_slipped?.trim() ||
+        relatedWeeklyReflection.next_week_focus?.trim() ||
+        relatedWeeklyReflection.next_week_rule?.trim(),
+    );
+    if (!hasContent) return null;
+    return {
+      weekLabel: formatWeekHeadline(selectedEntryWeekStart),
+      whatWorked: relatedWeeklyReflection.what_worked,
+      whatSlipped: relatedWeeklyReflection.what_slipped,
+      nextWeekFocus: relatedWeeklyReflection.next_week_focus,
+      nextWeekRule: relatedWeeklyReflection.next_week_rule,
+      confidenceScore: relatedWeeklyReflection.confidence_score,
+    };
+  }, [relatedWeeklyReflection, selectedEntryWeekStart]);
 
   const touchWeeklyForm = useCallback(() => {
-    setWeeklySaved(false);
+    setSavedWeekKey(null);
   }, []);
 
   const onQuickAdd = async (e: React.FormEvent) => {
@@ -529,6 +684,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     trackProductEvent(PRODUCT_ANALYTICS_EVENTS.journalEntryCreated, { surface: "journal" });
     toast.success("Trading day saved.");
     void refetchJournal();
+    if (result.ok && result.id) selectEntry(result.id);
+    setWorkspaceTab("review");
     setSymbol("");
     setPnl("");
     setSetupTag("Pullback");
@@ -542,7 +699,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     setFollowedPlan(false);
     setRespectedStop(false);
     setNoRevengeTrade(false);
-    setRuleChecks((prev) => Object.fromEntries(Object.keys(prev).map((k) => [k, false])));
+    setManualRuleChecks((prev) => Object.fromEntries(Object.keys(prev).map((k) => [k, false])));
   };
 
   const onSaveWeeklyReflection = async (e: React.FormEvent) => {
@@ -553,7 +710,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     }
     if (!userId || !activeAccountId) return;
     setWeeklyMsg(null);
-    setWeeklySaved(false);
+    setSavedWeekKey(null);
     setWeeklySaving(true);
     const supabase = createClient();
     const { data: authUser } = await supabase.auth.getUser();
@@ -647,7 +804,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     const reloaded = await loadWeeklyReflection();
     setWeeklySaving(false);
     if (reloaded) {
-      setWeeklySaved(true);
+      setSavedWeekKey(`${weekStartKey}:${activeAccountId}`);
       trackProductEvent(PRODUCT_ANALYTICS_EVENTS.weeklyReviewSaved, { surface: "journal" });
       setWeeklyMsg("Weekly review saved.");
       toast.success("Weekly review saved.");
@@ -756,8 +913,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       <PageHeader
         variant="signature"
         eyebrow="Journal"
-        title="Add trading day"
-        description="Log the day once. Calendar and stats update automatically."
+        title="Trading notebook"
+        description="Add entries fast, review your notebook, and close the week in one calm workspace."
         actions={
           <div className="app-page-actions-mobile flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
             <Link href="/app/calendar" className={appSecondaryCta}>
@@ -768,10 +925,21 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <LineChart className="mr-2 size-4 opacity-90" strokeWidth={1.75} />
               {exportBusy ? "Exporting…" : "Export CSV"}
             </button>
-            <a href="#add" className={cn(appPrimaryCta, "shadow-[0_18px_45px_-22px_oklch(0.52_0.14_252/0.62)]")}>
-              <Plus className="mr-2 size-4" strokeWidth={2} />
-              Add trading day
-            </a>
+            {canWriteJournal ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setWorkspaceTab("add");
+                  window.requestAnimationFrame(() => {
+                    document.getElementById("add")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
+                }}
+                className={cn(appPrimaryCta, "shadow-[0_18px_45px_-22px_oklch(0.52_0.14_252/0.62)]")}
+              >
+                <Plus className="mr-2 size-4" strokeWidth={2} />
+                Add entry
+              </button>
+            ) : null}
           </div>
         }
       />
@@ -782,7 +950,71 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       ) : null}
       <InlineFeedback message={exportMsg} tone={feedbackToneFromMessage(exportMsg)} />
 
-      <section className="grid min-w-0 gap-6 lg:grid-cols-[1.18fr_0.82fr] lg:items-start lg:gap-8 xl:gap-10">
+      <JournalNotebookLayout
+        tab={workspaceTab}
+        onTabChange={setWorkspaceTab}
+        reviewIndex={
+          <DashboardCard
+            eyebrow="Notebook"
+            title={highlightDate ? `Entries · ${highlightDate}` : "Entry index"}
+            className="min-h-0 min-w-0"
+            description={
+              highlightDate
+                ? "Entries for the selected calendar day."
+                : todayActivityCount > 0
+                  ? `${todayActivityCount} logged today · ${filteredRows.length} in view`
+                  : "Select an entry to review, or log a new day."
+            }
+          >
+            {filtersActive ? (
+              <div className="mb-3 rounded-xl border border-[oklch(0.58_0.12_252/0.28)] bg-[oklch(0.58_0.12_252/0.1)] px-3 py-2">
+                <button type="button" onClick={() => setFilters(EMPTY_ENTRY_FILTERS)} className="text-[11px] text-bv-ice hover:underline">
+                  Clear filters
+                </button>
+              </div>
+            ) : null}
+            <div className="mb-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((v) => !v)}
+                className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
+              >
+                {filtersOpen ? "Hide filters" : "Filter"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void refetchJournal()}
+                className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
+              >
+                Refresh
+              </button>
+            </div>
+            {filtersOpen ? (
+              <div className="mb-3 grid gap-2 rounded-xl bg-white/[0.02] p-3">
+                <Input value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} placeholder="Search symbol or note" className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[13px]" />
+                <select value={filters.dayColor} onChange={(e) => setFilters((f) => ({ ...f, dayColor: e.target.value as EntryFilters["dayColor"] }))} className={appFormSelect}>
+                  {(Object.keys(DAY_COLOR_FILTER_LABELS) as EntryFilters["dayColor"][]).map((key) => (
+                    <option key={key} value={key}>{DAY_COLOR_FILTER_LABELS[key]}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+            {sortedRows.length === 0 ? (
+              <EmptyState icon={NotebookPen} title="No entries yet" description="Log your first trading day to start the notebook." className="border-none bg-transparent py-6 ring-0" />
+            ) : filteredRows.length === 0 ? (
+              <EmptyState icon={NotebookPen} title="No matches" description="Adjust filters to see entries." className="border-none bg-transparent py-6 ring-0" />
+            ) : (
+              <JournalNotebookIndex
+                rows={filteredRows}
+                selectedId={effectiveSelectedEntryId}
+                onSelect={selectEntry}
+                displayCurrency={displayCurrency}
+                highlightDate={highlightDate}
+              />
+            )}
+          </DashboardCard>
+        }
+        addPanel={
         <DashboardCard
           eyebrow="Add trading day"
           title="New journal entry"
@@ -902,7 +1134,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                         key={rule.id}
                         label={rule.title}
                         checked={Boolean(ruleChecks[rule.id])}
-                        onChange={(next) => setRuleChecks((prev) => ({ ...prev, [rule.id]: next }))}
+                        onChange={(next) => setManualRuleChecks((prev) => ({ ...prev, [rule.id]: next }))}
                         disabled={!canWriteJournal}
                       />
                     ))}
@@ -1003,13 +1235,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     id="jw-note"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    rows={3}
-                    placeholder="What stood out today?"
+                    rows={4}
+                    placeholder="What stood out today? Execution, emotions, and context."
                     disabled={!canWriteJournal}
-                    className={cn(
-                      "w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600",
-                      "shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
-                    )}
+                    className={cn(notebookTextareaCls, "disabled:opacity-45")}
                   />
                 </div>
                 <div className="space-y-2">
@@ -1020,13 +1249,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                     id="jw-lesson"
                     value={lessonLearned}
                     onChange={(e) => setLessonLearned(e.target.value)}
-                    rows={2}
+                    rows={3}
                     placeholder="One thing to repeat or avoid next time."
                     disabled={!canWriteJournal}
-                    className={cn(
-                      "w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[14px] text-zinc-100 placeholder:text-zinc-600",
-                      "shadow-[inset_0_1px_2px_oklch(0_0_0/0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[oklch(0.55_0.12_252/0.35)] disabled:opacity-45",
-                    )}
+                    className={cn(notebookTextareaCls, "text-[14px] disabled:opacity-45")}
                   />
                 </div>
               </div>
@@ -1081,364 +1307,109 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
             </div>
           </form>
         </DashboardCard>
-
-        <DashboardCard
-          eyebrow={highlightDate ? "Selected day" : "Recent"}
-          title={highlightDate ? `Entries for ${highlightDate}` : "Latest activity"}
-          className="min-h-0 min-w-0 lg:sticky lg:top-6"
-          description={
-            highlightDate
-              ? "All trades logged for this calendar day, including full notes."
-              : todayActivityCount > 0
-                ? `${todayActivityCount} logged today (${localTodayKey()}) — plus earlier days below. Updates after each save.`
-                : `No entries for today (${localTodayKey()}) yet. Showing your most recent logged days.`
-          }
-        >
-          {filtersActive ? (
-            <div className="mb-4 rounded-xl border border-[oklch(0.58_0.12_252/0.28)] bg-[oklch(0.58_0.12_252/0.1)] px-3 py-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-[11px] font-medium text-zinc-300">Filtering recent activity</p>
-                <button
-                  type="button"
-                  onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
-                  className="text-[11px] font-medium text-[oklch(0.78_0.11_252)] hover:underline"
-                >
-                  Clear filters
-                </button>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {filterChips(filters).map((chip) => (
-                  <span
-                    key={chip}
-                    className="rounded-full border border-[oklch(0.58_0.12_252/0.4)] bg-[oklch(0.58_0.12_252/0.18)] px-2 py-0.5 text-[10px] text-zinc-100"
-                  >
-                    {chip}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((v) => !v)}
-              className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
+        }
+        reviewDetail={
+          selectedEntry ? (
+            <DashboardCard
+              eyebrow="Review"
+              title="Entry detail"
+              className="min-h-0 min-w-0"
+              description="Calm read-only review of your logged fields."
             >
-              {filtersOpen ? "Hide activity filters" : "Filter activity"}
-            </button>
-            <button
-              type="button"
-              onClick={() => void refetchJournal()}
-              className="inline-flex h-8 items-center rounded-lg border border-white/[0.1] bg-white/[0.03] px-3 text-[12px] text-zinc-300 hover:bg-white/[0.06]"
-            >
-              Refresh list
-            </button>
-          </div>
-          {filtersOpen ? (
-            <div className="mb-4 grid gap-2 rounded-xl bg-white/[0.02] p-3 sm:grid-cols-2">
-              <Input value={filters.search} onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))} placeholder="Search symbol or note" className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[13px]" />
-              <div className="grid grid-cols-2 gap-2">
-                <Input type="date" value={filters.from} onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))} className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[12px]" />
-                <Input type="date" value={filters.to} onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))} className="h-9 rounded-lg border-white/[0.1] bg-black/25 text-[12px]" />
-              </div>
-              {[
-                { key: "symbol", values: symbolOptions },
-                { key: "mood", values: moodOptions },
-                { key: "setup", values: setupOptions },
-                { key: "mistake", values: mistakeOptions },
-                { key: "session", values: sessionOptions },
-                { key: "market", values: marketOptions },
-              ].map((item) => (
-                <select
-                  key={item.key}
-                  value={filters[item.key as keyof EntryFilters] as string}
-                  onChange={(e) => setFilters((f) => ({ ...f, [item.key]: e.target.value }))}
-                  className={appFormSelect}
-                >
-                  <option value="all">{FILTER_DIMENSION_ALL_LABEL[item.key] ?? "All"}</option>
-                  {item.values.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              ))}
-              <select
-                value={filters.dayColor}
-                onChange={(e) => setFilters((f) => ({ ...f, dayColor: e.target.value as EntryFilters["dayColor"] }))}
-                className={appFormSelect}
-              >
-                {(Object.keys(DAY_COLOR_FILTER_LABELS) as EntryFilters["dayColor"][]).map((key) => (
-                  <option key={key} value={key}>
-                    {DAY_COLOR_FILTER_LABELS[key]}
-                  </option>
-                ))}
-              </select>
-              <div className="col-span-full flex flex-wrap gap-2 pt-1">
-                {[
-                  { key: "followedPlan", label: "followed plan" },
-                  { key: "respectedStop", label: "respected stop" },
-                  { key: "noRevengeTrade", label: "no revenge" },
-                ].map((c) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    onClick={() => setFilters((f) => ({ ...f, [c.key]: !f[c.key as keyof EntryFilters] }))}
-                    className={cn(
-                      "rounded-full border px-2.5 py-1 text-[11px]",
-                      filters[c.key as keyof EntryFilters]
-                        ? "border-[oklch(0.62_0.12_252/0.45)] bg-[oklch(0.58_0.12_252/0.2)] text-zinc-100"
-                        : "border-white/[0.12] bg-white/[0.03] text-zinc-400",
-                    )}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-          {sortedRows.length === 0 ? (
-            <EmptyState
-              icon={NotebookPen}
-              title="No trading days logged yet"
-              description={
-                canWriteJournal
-                  ? "No trading days logged yet."
-                  : "Your history stays available in read-only mode."
-              }
-              action={
-                canWriteJournal ? (
-                  <a href="#add" className={appPrimaryCta}>
-                    Add trading day
-                  </a>
-                ) : undefined
-              }
-              className="border-none bg-transparent py-8 ring-0"
-            />
-          ) : rowsForLatestEntries.length === 0 ? (
-            <EmptyState
-              icon={NotebookPen}
-              title={filtersActive ? "Hidden by filters" : highlightDate ? "No entries this day" : "No other days yet"}
-              description={
-                filtersActive
-                  ? "Entries exist, but current filters hide them."
-                  : highlightDate
-                    ? "Nothing logged for this calendar day in the current account scope."
-                    : "Log a trading day to see it listed here."
-              }
-              action={
-                filtersActive ? (
-                  <button
-                    type="button"
-                    onClick={() => setFilters(EMPTY_ENTRY_FILTERS)}
-                    className={appSecondaryCta}
-                  >
-                    Clear filters
-                  </button>
-                ) : undefined
-              }
-              className="border-none bg-transparent py-8 ring-0"
-            />
-          ) : (
-            <>
-              <JournalDayList
-                rows={rowsForLatestEntries}
-                highlightDate={highlightDate}
-                displayCurrency={displayCurrency}
-                expandNotes={Boolean(highlightDate)}
+              <JournalEntryDetailPanel
+                row={selectedEntry}
+                currency={displayCurrency}
                 canWriteJournal={canWriteJournal}
-              />
-              {!highlightDate && recentHiddenCount > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => setRecentExpanded((v) => !v)}
-                  className={cn(
-                    "mt-4 inline-flex h-9 w-full items-center justify-center rounded-lg border border-white/[0.1] bg-white/[0.03] text-[13px] font-medium text-zinc-300 transition hover:border-white/[0.16] hover:bg-white/[0.06] hover:text-zinc-100",
-                  )}
-                >
-                  {recentExpanded ? "Show less" : `See more (${recentHiddenCount})`}
-                </button>
-              ) : null}
-            </>
-          )}
-        </DashboardCard>
-      </section>
-
-      <section id="weekly-review">
-      <DashboardCard
-        eyebrow="Weekly review"
-        title="Close the week"
-        description="Capture what happened and set one rule for next week."
-      >
-        <form className="space-y-4" onSubmit={onSaveWeeklyReflection}>
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:items-center">
-            <Label htmlFor="jr-week" className={labelCls}>
-              Week anchor date
-            </Label>
-            <Input
-              id="jr-week"
-              type="date"
-              value={weekAnchorDate}
-              onChange={(e) => {
-                touchWeeklyForm();
-                setWeekAnchorDateTracked(e.target.value);
-              }}
-              disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
-              className={cn(inputCls, "disabled:opacity-45")}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="jr-worked" className={labelCls}>
-                What worked?
-              </Label>
-              <textarea
-                id="jr-worked"
-                value={weeklyWorked}
-                onChange={(e) => {
-                  touchWeeklyForm();
-                  setWeeklyWorked(e.target.value);
+                weekReviewed={selectedEntryWeekStart ? reviewedWeekStarts.includes(selectedEntryWeekStart) : false}
+                weekLabel={selectedEntryWeekStart ? formatWeekHeadline(selectedEntryWeekStart) : undefined}
+                relatedWeeklyReview={relatedWeeklyReview}
+                onOpenWeekReview={() => {
+                  if (!selectedEntry) return;
+                  const dayKey = dayKeyFromRow(selectedEntry.entryDate, selectedEntry.createdAt);
+                  setWeekAnchorDateTracked(dayKey);
+                  setWorkspaceTab("weekly");
+                  window.requestAnimationFrame(() => {
+                    document.getElementById("weekly-review")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  });
                 }}
-                rows={4}
-                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
-                className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="jr-slipped" className={labelCls}>
-                What slipped?
-              </Label>
-              <textarea
-                id="jr-slipped"
-                value={weeklySlipped}
-                onChange={(e) => {
-                  touchWeeklyForm();
-                  setWeeklySlipped(e.target.value);
-                }}
-                rows={4}
-                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
-                className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
+            </DashboardCard>
+          ) : (
+            <DashboardCard eyebrow="Review" title="Select an entry" description="Choose a day from the notebook index.">
+              <EmptyState
+                icon={NotebookPen}
+                title="Nothing selected"
+                description="Pick an entry on the left, or switch to Add entry to log a new trading day."
+                action={
+                  canWriteJournal ? (
+                    <button type="button" onClick={() => setWorkspaceTab("add")} className={appPrimaryCta}>
+                      Add entry
+                    </button>
+                  ) : undefined
+                }
+                className="border-none bg-transparent py-8 ring-0"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="jr-focus" className={labelCls}>
-                Next focus
-              </Label>
-              <textarea
-                id="jr-focus"
-                value={weeklyFocus}
-                onChange={(e) => {
-                  touchWeeklyForm();
-                  setWeeklyFocus(e.target.value);
-                }}
-                rows={4}
-                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
-                className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
-              />
-            </div>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="jr-rule" className={cn(labelCls, "text-zinc-200")}>
-                Rule for next week
-              </Label>
-              <textarea
-                id="jr-rule"
-                value={weeklyRule}
-                onChange={(e) => {
-                  touchWeeklyForm();
-                  setWeeklyRule(e.target.value);
-                }}
-                rows={2}
-                placeholder="One non-negotiable rule for next week."
-                disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
-                className="w-full resize-none rounded-xl border border-[oklch(0.58_0.12_252/0.28)] bg-[oklch(0.11_0.03_266/0.6)] px-3.5 py-3 text-[15px] text-zinc-100 placeholder:text-zinc-500 disabled:opacity-45"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className={labelCls}>Confidence for next week</Label>
-              <div className="flex flex-wrap gap-2">
-                {[1, 2, 3, 4, 5].map((score) => (
-                  <button
-                    key={score}
-                    type="button"
-                    onClick={() => {
-                      touchWeeklyForm();
-                      setWeeklyConfidence(score);
-                    }}
-                    disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
-                    className={cn(
-                      "inline-flex h-9 w-9 items-center justify-center rounded-full border text-[13px] font-semibold transition",
-                      weeklyConfidence === score
-                        ? "border-[oklch(0.62_0.12_252/0.65)] bg-[oklch(0.58_0.12_252/0.22)] text-zinc-100"
-                        : "border-white/[0.12] bg-white/[0.03] text-zinc-400 hover:bg-white/[0.08]",
-                    )}
-                    aria-label={`Confidence score ${score}`}
-                  >
-                    {score}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[12px] text-zinc-500">1 = uncertain, 5 = very clear and committed.</p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="jr-note" className={labelCls}>
-              Optional weekly note
-            </Label>
-            <textarea
-              id="jr-note"
-              value={weeklyNote}
-              onChange={(e) => {
-                touchWeeklyForm();
-                setWeeklyNote(e.target.value);
-              }}
-              rows={2}
-              placeholder="Anything else worth carrying into next week."
-              disabled={!canWriteJournal || weeklyLoading || weeklyUnavailable}
-              className="w-full resize-none rounded-xl border border-white/[0.1] bg-black/25 px-3.5 py-3 text-[14px] text-zinc-100 placeholder:text-zinc-600 disabled:opacity-45"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={!canWriteJournal || weeklySaving || weeklyLoading || weeklyUnavailable} className="h-10 rounded-xl px-4">
-              {weeklySaving
-                ? "Saving…"
-                : weeklyLoading
-                  ? "Loading…"
-                  : weeklyUnavailable
-                    ? "Weekly review unavailable"
-                    : weeklySaved
-                      ? "Update weekly review"
-                      : "Save weekly review"}
-            </Button>
-            {weeklySaved && !weeklySaving && !weeklyLoading ? (
-              <span
-                className="inline-flex h-10 items-center gap-2 rounded-xl border border-emerald-400/35 bg-[linear-gradient(180deg,oklch(0.22_0.09_160/0.4),oklch(0.16_0.08_160/0.28))] px-4 text-[13px] font-medium text-emerald-100 shadow-[0_0_20px_-10px_rgba(52,211,153,0.65),inset_0_1px_0_0_rgba(255,255,255,0.15)]"
-                role="status"
-              >
-                <Check className="size-4 shrink-0" strokeWidth={2.25} aria-hidden />
-                Saved for this week
-              </span>
-            ) : null}
-            {!canWriteJournal ? (
-              <ReadOnlyBlockedNotice compact context="saving weekly reflections" />
-            ) : null}
-            {canWriteJournal && weeklyUnavailable ? (
-              <p className="text-[13px] text-zinc-500">
-                Weekly review is not available yet. Try again later or contact support if this persists.
-              </p>
-            ) : null}
-            {canWriteJournal && !activeAccountId ? (
-              <p className="text-[13px] text-zinc-500">Select an active account to save weekly review.</p>
-            ) : null}
-            <InlineFeedback
-              message={weeklyMsg && !weeklySaved ? weeklyMsg : null}
-              tone={weeklyMsg?.toLowerCase().includes("saved") ? "success" : "error"}
-            />
-          </div>
-        </form>
-      </DashboardCard>
-      </section>
+            </DashboardCard>
+          )
+        }
+        weeklyPanel={
+          <JournalWeeklyReviewPanel
+            weekAnchorDate={weekAnchorDate}
+            onWeekAnchorDateChange={(value) => {
+              touchWeeklyForm();
+              setWeekAnchorDateTracked(value);
+            }}
+            weekStartKey={weekStartKey}
+            weeklyWorked={weeklyWorked}
+            onWeeklyWorkedChange={(value) => {
+              touchWeeklyForm();
+              setWeeklyWorked(value);
+            }}
+            weeklySlipped={weeklySlipped}
+            onWeeklySlippedChange={(value) => {
+              touchWeeklyForm();
+              setWeeklySlipped(value);
+            }}
+            weeklyFocus={weeklyFocus}
+            onWeeklyFocusChange={(value) => {
+              touchWeeklyForm();
+              setWeeklyFocus(value);
+            }}
+            weeklyRule={weeklyRule}
+            onWeeklyRuleChange={(value) => {
+              touchWeeklyForm();
+              setWeeklyRule(value);
+            }}
+            weeklyConfidence={weeklyConfidence}
+            onWeeklyConfidenceChange={(value) => {
+              touchWeeklyForm();
+              setWeeklyConfidence(value);
+            }}
+            weeklyNote={weeklyNote}
+            onWeeklyNoteChange={(value) => {
+              touchWeeklyForm();
+              setWeeklyNote(value);
+            }}
+            onSubmit={onSaveWeeklyReflection}
+            canWriteJournal={canWriteJournal}
+            weeklySaving={weeklySaving}
+            weeklyLoading={weeklyLoading}
+            weeklyUnavailable={weeklyUnavailable}
+            weeklySaved={weeklySaved}
+            weeklyMsg={weeklyMsg}
+            activeAccountId={activeAccountId}
+            selectedEntryWeekStart={selectedEntryWeekStart}
+            onAlignWeekToEntry={
+              selectedEntry
+                ? () => {
+                    const dayKey = dayKeyFromRow(selectedEntry.entryDate, selectedEntry.createdAt);
+                    setWeekAnchorDateTracked(dayKey);
+                  }
+                : undefined
+            }
+          />
+        }
+      />
 
       <section className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

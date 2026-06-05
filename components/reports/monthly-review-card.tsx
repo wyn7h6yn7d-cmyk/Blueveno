@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowUpRight, BarChart3, CalendarRange, Sparkles } from "lucide-react";
 import { DashboardCard } from "@/components/app/dashboard-card";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,22 @@ function SectionBlock({
   );
 }
 
+function loadMonthlyReviewDraft(storageKey: string): { note: string; lesson: string; focus: string } {
+  if (typeof window === "undefined") return { note: "", lesson: "", focus: "" };
+  const raw = window.localStorage.getItem(storageKey);
+  if (!raw) return { note: "", lesson: "", focus: "" };
+  try {
+    const parsed = JSON.parse(raw) as { note?: string; lesson?: string; focus?: string };
+    return {
+      note: parsed.note ?? "",
+      lesson: parsed.lesson ?? "",
+      focus: parsed.focus ?? "",
+    };
+  } catch {
+    return { note: "", lesson: "", focus: "" };
+  }
+}
+
 export function MonthlyReviewCard({
   review,
   displayCurrency,
@@ -93,28 +109,11 @@ export function MonthlyReviewCard({
   title?: string;
 }) {
   const [copyMsg, setCopyMsg] = useState<string | null>(null);
-  const [note, setNote] = useState("");
-  const [lesson, setLesson] = useState("");
-  const [focus, setFocus] = useState("");
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw) as { note?: string; lesson?: string; focus?: string };
-      setNote(parsed.note ?? "");
-      setLesson(parsed.lesson ?? "");
-      setFocus(parsed.focus ?? "");
-    } catch {
-      // ignore invalid persisted value
-    }
-  }, [storageKey]);
+  const [draft, setDraft] = useState(() => loadMonthlyReviewDraft(storageKey));
+  const { note, lesson, focus } = draft;
 
   const persist = (next: { note: string; lesson: string; focus: string }) => {
-    setNote(next.note);
-    setLesson(next.lesson);
-    setFocus(next.focus);
+    setDraft(next);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(storageKey, JSON.stringify(next));
     }

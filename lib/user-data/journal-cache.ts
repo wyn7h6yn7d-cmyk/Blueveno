@@ -10,9 +10,9 @@ export function readJournalCache(
 ): UserWorkspaceSnapshot | null {
   if (typeof window === "undefined" || !userId) return null;
 
-  const keys: string[] = [];
-  if (accountId) keys.push(keyV3(userId, accountId));
-  keys.push(keyV2(userId), keyV1(userId));
+  const keys: string[] = accountId
+    ? [keyV3(userId, accountId)]
+    : [keyV2(userId), keyV1(userId)];
 
   for (const storageKey of keys) {
     try {

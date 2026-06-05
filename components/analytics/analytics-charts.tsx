@@ -4,7 +4,6 @@ import { useId, useState } from "react";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
 import type { WeeklyReflectionStat } from "@/lib/user-data/trading-stats";
 import { cn } from "@/lib/utils";
-import { appKicker } from "@/lib/ui/app-surface";
 
 function fmtPnl(n: number | null, currency: string) {
   if (n === null || !Number.isFinite(n)) return "—";

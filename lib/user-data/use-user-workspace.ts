@@ -81,15 +81,36 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     mountTimeRef.current = Date.now();
   }, [userId]);
 
+  const didBootstrapWorkspaceRef = useRef(false);
+
+  useEffect(() => {
+    didBootstrapWorkspaceRef.current = false;
+  }, [workspaceBootstrapKey]);
+
+  /** Bootstrap RSC snapshot once per server payload — not on account switch */
+  useEffect(() => {
+    if (!userId || initialWorkspace === undefined || didBootstrapWorkspaceRef.current) return;
+    didBootstrapWorkspaceRef.current = true;
+    const resolvedAccountId = topbarActiveAccountId ?? activeAccountIdRef.current;
+    setData((prev) => {
+      if (initialWorkspace.journal.length > 0) {
+        if (resolvedAccountId) writeJournalCache(userId, resolvedAccountId, initialWorkspace);
+        return initialWorkspace;
+      }
+      if (prev.journal.length > 0) return prev;
+      if (resolvedAccountId) {
+        const cached = readJournalCache(userId, resolvedAccountId);
+        if (cached && cached.journal.length > 0) return cached;
+      }
+      return initialWorkspace;
+    });
+    setReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bootstrap once per workspaceBootstrapKey via ref
+  }, [userId, workspaceBootstrapKey]);
+
   /** Hydrate from local cache when there is no RSC snapshot */
   useEffect(() => {
-    if (!userId) return;
-    if (initialWorkspace !== undefined) {
-      if (initialWorkspace.journal.length > 0 && topbarActiveAccountId) {
-        writeJournalCache(userId, topbarActiveAccountId, initialWorkspace);
-      }
-      return;
-    }
+    if (!userId || initialWorkspace !== undefined) return;
     const cached = readJournalCache(userId, topbarActiveAccountId);
     if (cached && cached.journal.length > 0) {
       /* eslint-disable react-hooks/set-state-in-effect -- hydrate from local cache when no RSC snapshot */
@@ -104,28 +125,6 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
     let cancelled = false;
     const isCancelled = () => cancelled;
     const supabase = createClient();
-
-    // RSC refresh / navigation: merge so empty server props never wipe cache / optimistic rows
-    if (initialWorkspace !== undefined) {
-      /* eslint-disable react-hooks/set-state-in-effect -- server props after router.refresh / navigation */
-      setData((prev) => {
-        const resolvedAccountId = topbarActiveAccountId ?? activeAccountIdRef.current;
-        if (initialWorkspace.journal.length > 0) {
-          if (userId && resolvedAccountId) writeJournalCache(userId, resolvedAccountId, initialWorkspace);
-          return initialWorkspace;
-        }
-        if (prev.journal.length > 0 && resolvedAccountId && lastFetchedAccountIdRef.current === resolvedAccountId) {
-          return prev;
-        }
-        if (userId && resolvedAccountId) {
-          const cached = readJournalCache(userId, resolvedAccountId);
-          if (cached && cached.journal.length > 0) return cached;
-        }
-        return initialWorkspace;
-      });
-      setReady(true);
-      /* eslint-enable react-hooks/set-state-in-effect */
-    }
 
     async function fetchJournalRows(targetAccountId?: string | null): Promise<void> {
       const uid = userIdRef.current;
@@ -391,11 +390,11 @@ export function useUserWorkspace(userId: string | undefined, options?: UseUserWo
       }
       const mapped = mapJournalRowFromDb(inserted);
       setData((prev) => {
-        const next = { ...prev, journal: [mapped, ...prev.journal].slice(0, 200) };
+        const next = { ...prev, journal: [mapped, ...prev.journal] };
         if (userId && activeAccountId) writeJournalCache(userId, activeAccountId, next);
         return next;
       });
-      return { ok: true as const };
+      return { ok: true as const, id: mapped.id };
     },
     [userId, canWriteJournal, activeAccountId],
   );

@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { StatsPageClient } from "@/components/stats/stats-page-client";
+import { StatsPageV2 } from "@/components/stats/stats-page-v2";
 import { getUserWorkspaceSnapshotForUser } from "@/lib/user-data/get-user-workspace-server";
 
 export default async function StatsPage() {
@@ -11,5 +11,5 @@ export default async function StatsPage() {
 
   const initialWorkspace = await getUserWorkspaceSnapshotForUser(session.user.id);
 
-  return <StatsPageClient userId={session.user.id} initialWorkspace={initialWorkspace} />;
+  return <StatsPageV2 userId={session.user.id} initialWorkspace={initialWorkspace} />;
 }

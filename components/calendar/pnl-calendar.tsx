@@ -142,28 +142,6 @@ function dayLabelBadgeClasses({
   );
 }
 
-function weekRailClasses(total: number): string {
-  if (total > 0) {
-    return cn(
-      "border border-emerald-400/45 bg-[linear-gradient(160deg,oklch(0.24_0.09_155/0.55),oklch(0.1_0.04_160/0.48))] text-emerald-50",
-      "shadow-[inset_0_1px_0_0_oklch(0.88_0.08_155/0.18),0_0_0_1px_oklch(0.42_0.14_155/0.15)]",
-    );
-  }
-  if (total < 0) {
-    return cn(
-      "border border-rose-400/42 bg-[linear-gradient(160deg,oklch(0.26_0.08_15/0.5),oklch(0.11_0.04_18/0.42))] text-rose-50",
-      "shadow-[inset_0_1px_0_0_oklch(0.9_0.05_15/0.12),0_0_0_1px_oklch(0.42_0.14_15/0.12)]",
-    );
-  }
-  return "border border-white/[0.14] bg-[linear-gradient(165deg,oklch(0.14_0.04_262/0.65),oklch(0.09_0.03_266/0.58))] text-zinc-300";
-}
-
-function weekAccent(total: number): string {
-  if (total > 0) return "bg-emerald-400/80";
-  if (total < 0) return "bg-rose-400/80";
-  return "bg-zinc-500/50";
-}
-
 function startOfWeekMonday(date: Date): Date {
   const copy = new Date(date);
   const day = (copy.getDay() + 6) % 7;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Trash2 } from "lucide-react";
@@ -96,7 +96,17 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [personalRules, setPersonalRules] = useState<PersonalRuleRow[]>([]);
-  const [ruleChecks, setRuleChecks] = useState<Record<string, boolean>>(initialRow.ruleChecks ?? {});
+  const [manualRuleChecks, setManualRuleChecks] = useState<Record<string, boolean>>(initialRow.ruleChecks ?? {});
+  const ruleChecks = useMemo(() => {
+    const next: Record<string, boolean> = { ...manualRuleChecks };
+    for (const rule of personalRules) {
+      const t = rule.title.toLowerCase();
+      if (t === "followed my plan") next[rule.id] = followedPlan;
+      else if (t === "respected my stop") next[rule.id] = respectedStop;
+      else if (t === "no revenge trade") next[rule.id] = noRevengeTrade;
+    }
+    return next;
+  }, [manualRuleChecks, personalRules, followedPlan, respectedStop, noRevengeTrade]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +126,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       if (cancelled) return;
       const active = (rows ?? []) as PersonalRuleRow[];
       setPersonalRules(active);
-      setRuleChecks((prev) => {
+      setManualRuleChecks((prev) => {
         const next = { ...prev };
         for (const r of active) {
           if (!(r.id in next)) next[r.id] = false;
@@ -128,20 +138,6 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
       cancelled = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (personalRules.length === 0) return;
-    setRuleChecks((prev) => {
-      const next = { ...prev };
-      for (const rule of personalRules) {
-        const t = rule.title.toLowerCase();
-        if (t === "followed my plan") next[rule.id] = followedPlan;
-        if (t === "respected my stop") next[rule.id] = respectedStop;
-        if (t === "no revenge trade") next[rule.id] = noRevengeTrade;
-      }
-      return next;
-    });
-  }, [followedPlan, noRevengeTrade, personalRules, respectedStop]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -445,7 +441,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
                       <input
                         type="checkbox"
                         checked={Boolean(ruleChecks[rule.id])}
-                        onChange={(e) => setRuleChecks((prev) => ({ ...prev, [rule.id]: e.target.checked }))}
+                        onChange={(e) => setManualRuleChecks((prev) => ({ ...prev, [rule.id]: e.target.checked }))}
                         disabled={!canWriteJournal}
                         className="size-4 rounded border-white/[0.2] bg-transparent"
                       />

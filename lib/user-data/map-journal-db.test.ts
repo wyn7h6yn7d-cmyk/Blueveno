@@ -16,6 +16,8 @@ describe("mapJournalRowFromDb discipline", () => {
       followed_plan: false,
       respected_stop: true,
       no_revenge_trade: false,
+      note: null,
+      chart_link_url: null,
     });
 
     assert.equal(row.followedPlan, false);
@@ -36,6 +38,8 @@ describe("mapJournalRowFromDb discipline", () => {
       followed_plan: null,
       respected_stop: null,
       no_revenge_trade: null,
+      note: null,
+      chart_link_url: null,
     });
 
     assert.equal(row.followedPlan, undefined);
@@ -53,6 +57,8 @@ describe("mapJournalRowFromDb discipline", () => {
       setup: "Pullback",
       r_value: "100",
       tag: "None",
+      note: null,
+      chart_link_url: null,
     });
 
     assert.equal(row.followedPlan, undefined);

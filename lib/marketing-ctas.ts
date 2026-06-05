@@ -21,8 +21,8 @@ export const marketingCtas = {
     intro: { label: "Preview the workspace", href: "/#day" as const },
     rows: [
       { label: "Start 7-day trial", href: "/signup" as const },
-      { label: "Explore analytics", href: "/app/analytics" as const },
-      { label: "See how review works", href: "/app/reviews" as const },
+      { label: "Explore analytics", href: "/app/stats" as const },
+      { label: "See how review works", href: "/app/journal" as const },
       { label: "Preview the workspace", href: "/#calendar" as const },
       { label: "Start 7-day trial", href: "/signup" as const },
       { label: "View pricing", href: "/pricing" as const },
@@ -35,11 +35,11 @@ export const marketingCtas = {
     loop: { label: "See the operating loop", href: "/#core" as const },
   },
   workflow: {
-    explore: { label: "Explore analytics", href: "/app/analytics" as const },
+    explore: { label: "Explore analytics", href: "/app/stats" as const },
     plans: { label: "View pricing", href: "/pricing" as const },
   },
   traderTypes: {
-    review: { label: "See how review works", href: "/app/reviews" as const },
+    review: { label: "See how review works", href: "/app/journal" as const },
   },
   testimonials: {
     next: { label: "Start 7-day trial", href: "/signup" as const },

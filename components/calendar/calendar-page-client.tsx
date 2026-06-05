@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays } from "lucide-react";
 import { DashboardCard } from "@/components/app/dashboard-card";
-import { EmptyState } from "@/components/app/empty-state";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { mapJournalRowFromDb, type JournalRowDb } from "@/lib/user-data/map-journal-db";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { useAccess } from "@/components/access/access-provider";
 import { PnlCalendar } from "@/components/calendar/pnl-calendar";
-import { appPrimaryCta } from "@/lib/ui/app-surface";
 import { createClient } from "@/lib/supabase/client";
 import {
   applyEntryFilters,
@@ -25,8 +21,7 @@ import {
   writeFiltersToParams,
   type EntryFilters,
 } from "@/lib/user-data/entry-filters";
-import { appFilterShell, appFormSelect } from "@/lib/ui/app-form";
-import { cn } from "@/lib/utils";
+import { appFilterShell } from "@/lib/ui/app-form";
 import { Input } from "@/components/ui/input";
 import { tradeWinRatePercent } from "@/lib/user-data/kpi";
 import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
@@ -55,11 +50,44 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
   const { data, ready, activeAccountId } = useUserWorkspace(userId, { initialWorkspace });
   const [weeklyReflections, setWeeklyReflections] = useState<WeeklyReflectionSummary[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [filters, setFilters] = useState<EntryFilters>(() => parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
-  const [accountScope, setAccountScope] = useState<"active" | "all">(
-    searchParams.get("accountScope") === "all" ? "all" : "active",
-  );
   const [allAccountEntries, setAllAccountEntries] = useState<JournalRow[]>([]);
+
+  const filters = useMemo(
+    () => parseFiltersFromParams(new URLSearchParams(searchParams.toString())),
+    [searchParams],
+  );
+  const accountScope: "active" | "all" = searchParams.get("accountScope") === "all" ? "all" : "active";
+  const [allEntriesLoaded, setAllEntriesLoaded] = useState(accountScope !== "all");
+
+  const replaceSearchParams = useCallback(
+    (mutate: (base: URLSearchParams) => void) => {
+      const base = new URLSearchParams(searchParams.toString());
+      mutate(base);
+      const nextQuery = base.toString();
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const setFilters = useCallback(
+    (updater: EntryFilters | ((prev: EntryFilters) => EntryFilters)) => {
+      const next = typeof updater === "function" ? updater(filters) : updater;
+      replaceSearchParams((base) => {
+        writeFiltersToParams(base, next);
+      });
+    },
+    [filters, replaceSearchParams],
+  );
+
+  const setAccountScope = useCallback(
+    (scope: "active" | "all") => {
+      replaceSearchParams((base) => {
+        if (scope === "all") base.set("accountScope", "all");
+        else base.delete("accountScope");
+      });
+    },
+    [replaceSearchParams],
+  );
 
   useEffect(() => {
     trackProductEvent(PRODUCT_ANALYTICS_EVENTS.calendarOpened, { surface: "calendar" });
@@ -131,28 +159,21 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
       const rows = (secondary?.data ?? primary.data ?? []) as JournalRowDb[];
       if (cancelled) return;
       setAllAccountEntries(rows.map(mapJournalRowFromDb));
+      setAllEntriesLoaded(true);
     })();
     return () => {
       cancelled = true;
     };
   }, [userId, accountScope]);
 
-  useEffect(() => {
-    setFilters(parseFiltersFromParams(new URLSearchParams(searchParams.toString())));
-  }, [searchParams]);
+  const baseEntries = useMemo(() => {
+    if (accountScope === "all") {
+      return allEntriesLoaded ? allAccountEntries : [];
+    }
+    return data.journal;
+  }, [accountScope, allEntriesLoaded, allAccountEntries, data.journal]);
 
-  useEffect(() => {
-    const base = new URLSearchParams(searchParams.toString());
-    if (accountScope === "all") base.set("accountScope", "all");
-    else base.delete("accountScope");
-    const next = writeFiltersToParams(base, filters);
-    const nextQuery = next.toString();
-    const current = searchParams.toString();
-    if (nextQuery === current) return;
-    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
-  }, [accountScope, filters, pathname, router, searchParams]);
-
-  const baseEntries = accountScope === "all" ? allAccountEntries : data.journal;
+  const calendarReady = ready && (accountScope !== "all" || allEntriesLoaded);
   const symbolOptions = useMemo(() => uniqueValues(baseEntries, (row) => row.sym), [baseEntries]);
   const moodOptions = useMemo(() => uniqueValues(baseEntries, (row) => row.moodState), [baseEntries]);
   const setupOptions = useMemo(() => uniqueValues(baseEntries, (row) => String(row.setup)), [baseEntries]);
@@ -227,7 +248,7 @@ export function CalendarPageClient({ userId, initialWorkspace }: Props) {
 
   return (
     <div className="space-y-10 pt-2">
-      {!ready ? (
+      {!calendarReady ? (
         <DashboardCard eyebrow="Loading" title="Preparing your calendar" description="Loading your latest journal days.">
           <div className="h-48 animate-pulse rounded-xl border border-white/[0.05] bg-white/[0.03]" />
         </DashboardCard>

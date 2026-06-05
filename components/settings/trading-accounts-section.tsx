@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { DashboardCard } from "@/components/app/dashboard-card";
+import { SectionCard } from "@/components/v2/cards";
+import { StatusPill } from "@/components/v2";
+import { EmptyStatePanel } from "@/components/v2/states/empty-state-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +27,8 @@ import { useAppToast } from "@/components/app/app-toast-provider";
 import { InlineFeedback } from "@/components/app/inline-feedback";
 import { formatUserError } from "@/lib/feedback/format-error";
 import { feedbackToneFromMessage } from "@/lib/feedback/feedback-tone";
+import { v2InsetCell } from "@/lib/ui/v2-surface";
+import { appPrimaryCta } from "@/lib/ui/app-surface";
 import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
 import { trackProductEvent } from "@/lib/analytics/track-product-event";
 
@@ -230,7 +234,7 @@ export function TradingAccountsSection() {
 
   return (
     <div id="accounts">
-      <DashboardCard
+      <SectionCard
         eyebrow="Trading accounts"
         title="Trading accounts"
         description="Create, edit, delete, and switch your main trading account."
@@ -246,7 +250,7 @@ export function TradingAccountsSection() {
       {!loading ? (
         <div className="space-y-5">
           <AccountAccessLimits />
-          <form onSubmit={onSaveAccount} className="grid gap-3 rounded-xl bg-white/[0.02] p-4 ring-1 ring-inset ring-white/[0.06]">
+          <form onSubmit={onSaveAccount} className={cn(v2InsetCell, "grid gap-3 p-4")}>
             <p className="app-metric-label">
               {editingId ? "Edit account" : "Create account"}
             </p>
@@ -325,7 +329,7 @@ export function TradingAccountsSection() {
               <Button
                 type="submit"
                 disabled={!canManage || saving || (!editingId && atAccountLimit)}
-                className="h-9 rounded-xl px-3.5"
+                className={appPrimaryCta}
               >
                 <Plus className="mr-1.5 size-4" />
                 {editingId ? "Save account" : "Create account"}
@@ -360,21 +364,25 @@ export function TradingAccountsSection() {
           </form>
 
           {accounts.length === 0 ? (
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-sm text-zinc-500">
-              <p>No trading accounts yet. Add one account to start journaling.</p>
-              {canManage ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const el = document.getElementById("accounts-create-name");
-                    if (el instanceof HTMLElement) el.focus();
-                  }}
-                  className="mt-3 inline-flex text-[12px] text-[oklch(0.78_0.11_252)] hover:underline"
-                >
-                  Create your first account
-                </button>
-              ) : null}
-            </div>
+            <EmptyStatePanel
+              title="No trading accounts yet"
+              description="Add one account to start journaling."
+              compact
+              action={
+                canManage ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById("accounts-create-name");
+                      if (el instanceof HTMLElement) el.focus();
+                    }}
+                    className="text-[12px] text-bv-ice hover:underline"
+                  >
+                    Create your first account
+                  </button>
+                ) : undefined
+              }
+            />
           ) : (
             <div className="space-y-2.5">
               {accounts.map((account) => (
@@ -397,9 +405,9 @@ export function TradingAccountsSection() {
                       </p>
                     </div>
                     {activeAccountId === account.id ? (
-                      <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1 text-[11px] font-medium text-emerald-100">
+                      <StatusPill tone="active" dot>
                         Main
-                      </span>
+                      </StatusPill>
                     ) : null}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -464,7 +472,7 @@ export function TradingAccountsSection() {
           description="This cannot be undone. All journal entries linked to this account will be deleted."
           confirmLabel="Delete account"
         />
-      </DashboardCard>
+      </SectionCard>
     </div>
   );
 }

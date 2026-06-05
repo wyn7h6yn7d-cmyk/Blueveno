@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { DashboardCard } from "@/components/app/dashboard-card";
+import { SectionCard } from "@/components/v2/cards";
+import { StatusPill } from "@/components/v2";
+import { EmptyStatePanel } from "@/components/v2/states/empty-state-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,8 @@ import { InlineFeedback } from "@/components/app/inline-feedback";
 import { formatUserError } from "@/lib/feedback/format-error";
 import { notifyReadOnlyBlocked } from "@/lib/feedback/read-only-action";
 import { feedbackToneFromMessage } from "@/lib/feedback/feedback-tone";
+import { v2InsetCell } from "@/lib/ui/v2-surface";
+import { appPrimaryCta } from "@/lib/ui/app-surface";
 
 const RULE_CATEGORIES = ["Risk", "Entry", "Exit", "Session", "Behavior", "Other"] as const;
 type RuleCategory = (typeof RULE_CATEGORIES)[number];
@@ -86,7 +90,54 @@ export function PersonalRulesSection() {
   }
 
   useEffect(() => {
-    void loadRules();
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data, error } = await supabase
+        .from("personal_rules")
+        .select("id,title,category,is_active,description")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+      if (cancelled) return;
+      if (error) {
+        if (isMissingPersonalRulesTableError(error.message, error.code)) {
+          setSetupRequired(true);
+          setMessage(PERSONAL_RULES_SETUP_MESSAGE);
+          setRules([]);
+          setLoading(false);
+          return;
+        }
+        setMessage(error.message);
+        setLoading(false);
+        return;
+      }
+      setSetupRequired(false);
+      let rows = (data ?? []) as RuleRow[];
+      if (rows.length === 0) {
+        await supabase.rpc("seed_default_personal_rules", { p_user_id: user.id });
+        const { data: seeded, error: reloadError } = await supabase
+          .from("personal_rules")
+          .select("id,title,category,is_active,description")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true });
+        if (cancelled) return;
+        if (reloadError) {
+          setMessage(reloadError.message);
+          setLoading(false);
+          return;
+        }
+        rows = (seeded ?? []) as RuleRow[];
+      }
+      setRules(rows);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function onCreate(e: React.FormEvent) {
@@ -168,12 +219,12 @@ export function PersonalRulesSection() {
   }
 
   return (
-    <DashboardCard eyebrow="Rules" title="Personal trading rules" description="Active rules appear in your journal checklist and stats.">
+    <SectionCard eyebrow="Rules" title="Personal trading rules" description="Active rules appear in your journal checklist and stats.">
       {loading ? (
         <p className="text-[14px] text-zinc-500">Loading rules…</p>
       ) : (
         <div className="space-y-4">
-          <form onSubmit={onCreate} className="grid gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 sm:grid-cols-2">
+          <form onSubmit={onCreate} className={cn(v2InsetCell, "grid gap-3 p-4 sm:grid-cols-2")}>
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-[13px] text-zinc-300">Rule title</Label>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Stop after 2 losses" disabled={!canWriteJournal || saving || setupRequired} className="h-10 rounded-xl border-white/[0.12] bg-black/25" />
@@ -193,13 +244,16 @@ export function PersonalRulesSection() {
               <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Extra context" disabled={!canWriteJournal || saving || setupRequired} className="h-10 rounded-xl border-white/[0.12] bg-black/25" />
             </div>
             <div className="sm:col-span-2">
-              <Button type="submit" disabled={!canWriteJournal || saving || setupRequired} className="h-9 rounded-xl px-4">
+              <Button type="submit" disabled={!canWriteJournal || saving || setupRequired} className={appPrimaryCta}>
                 {saving ? "Saving…" : "Add rule"}
               </Button>
             </div>
           </form>
 
           <div className="space-y-2">
+            {rules.length === 0 ? (
+              <EmptyStatePanel title="No rules yet" description="Add your first rule to track discipline in journal and stats." compact />
+            ) : null}
             {rules.map((rule) => (
               <div key={rule.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-black/20 px-3.5 py-2.5">
                 <div className="min-w-0">
@@ -207,18 +261,10 @@ export function PersonalRulesSection() {
                   <p className="text-[11px] text-zinc-500">{rule.category}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void toggleRule(rule.id, rule.is_active)}
-                    disabled={!canWriteJournal}
-                    className={cn(
-                      "rounded-full border px-2.5 py-1 text-[11px]",
-                      rule.is_active
-                        ? "border-emerald-400/35 bg-emerald-500/[0.14] text-emerald-100"
-                        : "border-white/[0.12] bg-white/[0.03] text-zinc-400",
-                    )}
-                  >
-                    {rule.is_active ? "Active" : "Inactive"}
+                  <button type="button" onClick={() => void toggleRule(rule.id, rule.is_active)} disabled={!canWriteJournal}>
+                    <StatusPill tone={rule.is_active ? "disciplined" : "pending"} dot={rule.is_active}>
+                      {rule.is_active ? "Active" : "Inactive"}
+                    </StatusPill>
                   </button>
                   <button type="button" onClick={() => void deleteRule(rule.id)} disabled={!canWriteJournal} className="text-[11px] text-rose-300 hover:underline">
                     Delete
@@ -235,6 +281,6 @@ export function PersonalRulesSection() {
           {!canWriteJournal ? <ReadOnlyBlockedNotice compact context="editing rules" className="mt-2" /> : null}
         </div>
       )}
-    </DashboardCard>
+    </SectionCard>
   );
 }

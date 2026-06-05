@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
-import { PageHeader } from "@/components/app/page-header";
+import { PageHeader } from "@/components/v2/layout";
+import { ActionCard } from "@/components/v2/cards";
 import {
   Database,
   Landmark,
@@ -407,18 +408,20 @@ export function SettingsProfileForm() {
         activeAccountId={activeAccountId}
       />
 
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
-        <div className="flex items-center gap-3">
-          <User className="size-5 text-zinc-500" strokeWidth={1.75} />
-          <p className="text-sm text-zinc-500">
-            Plan and access details are available from the{" "}
-            <Link href="/app/settings/billing" className="text-[oklch(0.78_0.11_252)] hover:underline">
-              Plan &amp; access
-            </Link>{" "}
-            section.
-          </p>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 app-metric-label">
+      <ActionCard
+        eyebrow="Workspace"
+        title="Plan & legal"
+        icon={User}
+        cta={
+          <Link href="/app/settings/billing" className="text-[12px] text-bv-ice hover:underline">
+            Open Plan &amp; access
+          </Link>
+        }
+      >
+        <p className="text-[13px] leading-relaxed text-zinc-500">
+          Subscription status, account limits, and Premium options live on the Plan &amp; access page.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-zinc-500">
           <Link href="/privacy" className="transition hover:text-zinc-300">
             Privacy
           </Link>
@@ -429,7 +432,7 @@ export function SettingsProfileForm() {
             Cookies
           </Link>
         </div>
-      </div>
+      </ActionCard>
     </div>
   );
 

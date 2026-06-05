@@ -7,9 +7,12 @@ import {
   BookOpen,
   CalendarDays,
   CreditCard,
+  FileSpreadsheet,
   LayoutDashboard,
+  Rows3,
   Settings,
   Shield,
+  TrendingUp,
 } from "lucide-react";
 import { BluevenoWordmark } from "@/components/brand/blueveno-wordmark";
 import { cn } from "@/lib/utils";
@@ -17,8 +20,11 @@ import { cn } from "@/lib/utils";
 const MAIN_NAV = [
   { href: "/app", label: "Overview", icon: LayoutDashboard, match: (p: string) => p === "/app" || p === "/app/" },
   { href: "/app/journal", label: "Journal", icon: BookOpen, match: (p: string) => p.startsWith("/app/journal") },
+  { href: "/app/trades", label: "Trades", icon: Rows3, match: (p: string) => p.startsWith("/app/trades") },
   { href: "/app/calendar", label: "Calendar", icon: CalendarDays, match: (p: string) => p.startsWith("/app/calendar") },
   { href: "/app/stats", label: "Stats", icon: BarChart3, match: (p: string) => p.startsWith("/app/stats") },
+  { href: "/app/reports", label: "Reports", icon: FileSpreadsheet, match: (p: string) => p.startsWith("/app/reports") },
+  { href: "/app/capital", label: "Capital", icon: TrendingUp, match: (p: string) => p.startsWith("/app/capital") },
   { href: "/app/settings", label: "Settings", icon: Settings, match: (p: string) => p.startsWith("/app/settings") && !p.startsWith("/app/settings/billing") },
   {
     href: "/app/settings/billing",

@@ -323,12 +323,7 @@ export function computeTradingStats(
 
   const sessionPnl = computeSessionPnlBreakdown(journal);
 
-  let disciplineTotal = 0;
-  let disciplineDays = 0;
-  for (const [dayKey, v] of dayDisciplineMap.entries()) {
-    const dayScore = Math.round(v.sum / Math.max(v.count, 1));
-    disciplineTotal += dayScore;
-    disciplineDays += 1;
+  for (const dayKey of dayDisciplineMap.keys()) {
     const mood = dayMoodMap.get(dayKey);
     if (mood === "Calm") moodBreakdown.calm += 1;
     if (mood === "Focused") moodBreakdown.focused += 1;

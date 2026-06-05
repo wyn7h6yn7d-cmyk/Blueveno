@@ -24,6 +24,8 @@ export type JournalRow = {
   marketCondition?: MarketCondition | string;
   lessonLearned?: string;
   ruleChecks?: Record<string, boolean>;
+  /** Present when loaded from journal_entries.account_id */
+  accountId?: string;
 };
 
 export type UserWorkspaceSnapshot = {

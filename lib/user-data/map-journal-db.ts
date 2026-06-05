@@ -21,6 +21,7 @@ export type JournalRowDb = {
   market_condition?: string | null;
   lesson_learned?: string | null;
   rule_checks?: Record<string, unknown> | null;
+  account_id?: string | null;
 };
 
 function mapDisciplineFields(
@@ -69,6 +70,7 @@ export function mapJournalRowFromDb(r: JournalRowDb): JournalRow {
           Object.entries(r.rule_checks).map(([k, v]) => [k, Boolean(v)]),
         )
       : undefined,
+    accountId: r.account_id ?? undefined,
   };
 }
 

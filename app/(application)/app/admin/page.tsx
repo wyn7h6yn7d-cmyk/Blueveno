@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { loadAccessForUser } from "@/lib/access/load-access";
-import { PageHeader } from "@/components/app/page-header";
+import { PageHeader } from "@/components/v2/layout";
 import { AdminAccessDenied } from "@/components/admin/admin-access-denied";
 import { AdminServiceUnavailable } from "@/components/admin/admin-service-unavailable";
 import { AdminUsersTable } from "@/components/admin/admin-users-table";
