@@ -4,7 +4,18 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartWell } from "@/components/v2/charts/chart-well";
 import { ChartEmpty } from "@/components/v2/charts/chart-empty";
 import { ChartLegend, type ChartLegendItem } from "@/components/v2/charts/chart-legend";
+import { V2_CHART_COLORS } from "@/components/v2/charts/chart-colors";
 import { V2_RECHARTS_THEME } from "@/components/v2/charts/recharts-theme";
+
+function donutSliceColor(slice: DonutSlice, index: number): string {
+  if (slice.color) return slice.color;
+  const id = slice.id.toLowerCase();
+  const label = slice.label.toLowerCase();
+  if (id === "green" || id === "wins" || label.includes("green")) return V2_CHART_COLORS.positive;
+  if (id === "red" || id === "losses" || label.includes("red")) return V2_CHART_COLORS.negative;
+  if (id === "flat" || label.includes("flat")) return V2_CHART_COLORS.neutral;
+  return V2_RECHARTS_THEME.colors[index % V2_RECHARTS_THEME.colors.length];
+}
 
 export type DonutSlice = {
   id: string;
@@ -39,11 +50,11 @@ export function DonutChart({
     );
   }
 
-  const legendItems: ChartLegendItem[] = slices.map((s) => ({
+  const legendItems: ChartLegendItem[] = slices.map((s, i) => ({
     id: s.id,
     label: s.label,
     value: `${Math.round((s.value / total) * 100)}%`,
-    color: s.color,
+    color: donutSliceColor(s, i),
   }));
 
   return (
@@ -62,7 +73,7 @@ export function DonutChart({
               stroke="transparent"
             >
               {slices.map((slice, i) => (
-                <Cell key={slice.id} fill={slice.color ?? V2_RECHARTS_THEME.colors[i % V2_RECHARTS_THEME.colors.length]} />
+                <Cell key={slice.id} fill={donutSliceColor(slice, i)} />
               ))}
             </Pie>
           </PieChart>

@@ -33,11 +33,12 @@ import { v2InsetCell } from "@/lib/ui/v2-surface";
 type Props = {
   userId: string;
   initialWorkspace: UserWorkspaceSnapshot;
+  userTimezone?: string | null;
 };
 
-export function TradesPageClient({ userId, initialWorkspace }: Props) {
+export function TradesPageClient({ userId, initialWorkspace, userTimezone }: Props) {
   const { displayCurrency, canWriteJournal } = useAccess();
-  const data = useTradesBrowserData(userId, initialWorkspace, displayCurrency);
+  const data = useTradesBrowserData(userId, initialWorkspace, displayCurrency, userTimezone);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [exportBusy, setExportBusy] = useState(false);
@@ -93,7 +94,7 @@ export function TradesPageClient({ userId, initialWorkspace }: Props) {
         description="Browse, filter, and review every logged entry in one dense table."
         actions={
           canWriteJournal ? (
-            <Link href="/app/journal#add" className={appPrimaryCta}>
+            <Link href="/app/journal?tab=add" className={appPrimaryCta}>
               Log the day
             </Link>
           ) : null
@@ -200,7 +201,7 @@ export function TradesPageClient({ userId, initialWorkspace }: Props) {
           description="Your trades table fills automatically from journal entries. Log your first day to get started."
           action={
             canWriteJournal ? (
-              <Link href="/app/journal#add" className={appPrimaryCta}>
+              <Link href="/app/journal?tab=add" className={appPrimaryCta}>
                 Log the day
               </Link>
             ) : undefined

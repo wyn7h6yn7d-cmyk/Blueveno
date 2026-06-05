@@ -56,9 +56,20 @@ export function buildBalanceEquityCurve(dailyBars: DailyBar[], startingBalance: 
   if (dailyBars.length === 0) return [];
   const base = startingBalance ?? 0;
   let equity = base;
+  let cumulativePnl = 0;
   return dailyBars.map((d) => {
-    equity += d.pnl;
-    return { day: shortDate(d.date), pnl: Number(equity.toFixed(2)) };
+    const dailyPnl = Number.isFinite(d.pnl) ? d.pnl : 0;
+    cumulativePnl += dailyPnl;
+    equity += dailyPnl;
+    const balance = Number(equity.toFixed(2));
+    return {
+      day: shortDate(d.date),
+      dayKey: d.date,
+      pnl: balance,
+      balance,
+      dailyPnl: Number(dailyPnl.toFixed(2)),
+      cumulativePnl: Number(cumulativePnl.toFixed(2)),
+    };
   });
 }
 

@@ -203,7 +203,19 @@ export function CapitalPageClient({ userId, initialWorkspace }: Props) {
             emptyTitle="Not enough data"
             emptyDescription="Log more trading days to draw a capital curve."
           >
-            <LineAreaChart data={progress.equityCurve} xKey="day" yKey="pnl" variant="area" height={280} />
+            <LineAreaChart
+              data={progress.equityCurve}
+              xKey="day"
+              yKey="pnl"
+              variant="area"
+              height={280}
+              yScale="balance"
+              startingBalance={progress.startingBalance}
+              referenceValue={progress.startingBalance}
+              referenceLabel="Starting balance"
+              tooltipVariant="balance"
+              currency={currency}
+            />
           </ChartCard>
 
           <div className="grid gap-5 xl:grid-cols-2">

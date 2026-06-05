@@ -7,7 +7,7 @@ import { LabelValueRow } from "@/components/v2/data/label-value-row";
 import { StatusPill } from "@/components/v2/data/status-pill";
 import { signedMoney } from "@/lib/user-data/journal-metrics";
 import { cn } from "@/lib/utils";
-import { v2InsetCell } from "@/lib/ui/v2-surface";
+import { overviewCard, overviewInsetCell } from "@/lib/ui/overview-surface";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
 
 export type WeekPreviewCell = {
@@ -48,6 +48,7 @@ export function OverviewWeekPreview({
         </Link>
       }
       contentClassName="p-4 sm:p-5"
+      className={overviewCard}
     >
       <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-6">
         {weekCells.map((cell) => {
@@ -58,7 +59,7 @@ export function OverviewWeekPreview({
               ? "border-emerald-400/30 bg-emerald-500/12"
               : pnl < 0
                 ? "border-rose-400/30 bg-rose-500/12"
-                : "border-white/[0.07] bg-white/[0.02]";
+                : "border-white/[0.09] bg-[linear-gradient(180deg,oklch(0.12_0.032_264/0.55),oklch(0.1_0.03_268/0.5))] shadow-[inset_0_1px_0_0_oklch(1_0_0/0.04)]";
           return (
             <div
               key={cell.key}
@@ -67,8 +68,8 @@ export function OverviewWeekPreview({
                 tone,
               )}
             >
-              <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-500">{cell.label}</p>
-              <p className="mt-1 font-mono text-[14px] font-semibold tabular-nums text-zinc-100">{cell.day}</p>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-zinc-400">{cell.label}</p>
+              <p className="mt-1 font-mono text-[14px] font-semibold tabular-nums text-zinc-50">{cell.day}</p>
               <p
                 className={cn(
                   "mt-1 text-[11px] font-medium tabular-nums",
@@ -85,7 +86,7 @@ export function OverviewWeekPreview({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-        <div className={cn(v2InsetCell, "space-y-1 px-4 py-3")}>
+        <div className={cn(overviewInsetCell, "space-y-1 px-4 py-3")}>
           <LabelValueRow
             label="Week total"
             value={hasEntries ? signedMoney(weekTotal, displayCurrency) : "—"}

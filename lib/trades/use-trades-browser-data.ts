@@ -30,7 +30,12 @@ export type TradeResultFilter = "all" | "wins" | "losses";
 
 export type TradeAccountFilter = "active" | "all" | string;
 
-export function useTradesBrowserData(userId: string, initialWorkspace: UserWorkspaceSnapshot, currency: string) {
+export function useTradesBrowserData(
+  userId: string,
+  initialWorkspace: UserWorkspaceSnapshot,
+  currency: string,
+  timezone?: string | null,
+) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -209,9 +214,9 @@ export function useTradesBrowserData(userId: string, initialWorkspace: UserWorks
 
   const filteredEntries = useMemo(() => applyEntryFilters(baseEntries, filters), [baseEntries, filters]);
   const tradeRows = useMemo(() => {
-    const mapped = mapJournalRowsToTradeRows(filteredEntries, currency, accountLookup);
+    const mapped = mapJournalRowsToTradeRows(filteredEntries, currency, accountLookup, timezone);
     return filterTradeRowsByResult(mapped, resultFilter);
-  }, [filteredEntries, currency, accountLookup, resultFilter]);
+  }, [filteredEntries, currency, accountLookup, resultFilter, timezone]);
 
   const selectedTrade = useMemo(
     () => tradeRows.find((r) => r.id === selectedEntryId) ?? null,

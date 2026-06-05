@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 type KpiGridProps = {
   children: ReactNode;
-  columns?: 2 | 3 | 4 | 5;
+  columns?: 2 | 3 | 4 | 5 | 6;
   className?: string;
 };
 
@@ -12,6 +12,7 @@ const colClass: Record<NonNullable<KpiGridProps["columns"]>, string> = {
   3: "sm:grid-cols-2 xl:grid-cols-3",
   4: "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
   5: "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+  6: "sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6",
 };
 
 export function KpiGrid({ children, columns = 4, className }: KpiGridProps) {

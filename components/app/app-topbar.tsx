@@ -60,7 +60,7 @@ export function AppTopbar({ user, canWriteJournal = true, isAdmin = false }: App
   const fallbackInitial = displayName.charAt(0).toUpperCase() || "A";
   const label = sectionLabel(pathname);
   const hasActiveAccount = Boolean(activeAccountId);
-  const newEntryHref = hasActiveAccount ? "/app/journal#add" : "/app/settings?section=accounts&new=1#accounts";
+  const newEntryHref = hasActiveAccount ? "/app/journal?tab=add" : "/app/settings?section=accounts&new=1#accounts";
   const newEntryDisabled = !canWriteJournal || accountsLoading;
   /** Greeting: profile display name when set, otherwise email (same source as Settings). */
   const helloName = user.name?.trim() || user.email?.trim() || "";

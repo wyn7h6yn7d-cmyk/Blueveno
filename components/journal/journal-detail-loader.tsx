@@ -6,15 +6,17 @@ import { fetchJournalEntryForUser } from "@/lib/user-data/fetch-journal-entry-cl
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { JournalDetailView } from "@/components/journal/journal-detail-view";
+import { JOURNAL_ADD_ENTRY_HREF } from "@/lib/journal/journal-tab";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   userId: string;
   entryId: string;
   initialWorkspace: UserWorkspaceSnapshot;
+  userTimezone?: string | null;
 };
 
-export function JournalDetailLoader({ userId, entryId, initialWorkspace }: Props) {
+export function JournalDetailLoader({ userId, entryId, initialWorkspace, userTimezone }: Props) {
   const [row, setRow] = useState<JournalRowDb | null>(null);
   const [phase, setPhase] = useState<"loading" | "ready" | "missing" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export function JournalDetailLoader({ userId, entryId, initialWorkspace }: Props
             Try again
           </Button>
           <Link
-            href="/app/journal"
+            href={JOURNAL_ADD_ENTRY_HREF}
             className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-[14px] text-zinc-400 transition hover:text-zinc-200"
           >
             Back to journal
@@ -78,7 +80,14 @@ export function JournalDetailLoader({ userId, entryId, initialWorkspace }: Props
   }
 
   if (phase === "ready" && row) {
-    return <JournalDetailView row={row} userId={userId} initialWorkspace={initialWorkspace} />;
+    return (
+      <JournalDetailView
+        row={row}
+        userId={userId}
+        initialWorkspace={initialWorkspace}
+        userTimezone={userTimezone}
+      />
+    );
   }
 
   return (
@@ -87,7 +96,7 @@ export function JournalDetailLoader({ userId, entryId, initialWorkspace }: Props
         This journal entry is no longer available.
       </p>
       <Link
-        href="/app/journal"
+        href={JOURNAL_ADD_ENTRY_HREF}
         className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-[14px] text-zinc-400 transition hover:text-zinc-200"
       >
         Back to journal

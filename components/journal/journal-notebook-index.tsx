@@ -40,7 +40,7 @@ export function JournalNotebookIndex({
   highlightDate,
 }: JournalNotebookIndexProps) {
   return (
-    <div className="space-y-2">
+    <div className="blueveno-scrollbar max-h-[min(28rem,55vh)] space-y-2 overflow-y-auto pr-0.5 lg:max-h-none lg:overflow-visible lg:pr-0">
       {rows.map((row) => {
         const key = dayKey(row);
         const pnl = parsePnlAmount(row.r);
@@ -55,11 +55,11 @@ export function JournalNotebookIndex({
             onClick={() => onSelect(row.id)}
             data-journal-date={key}
             className={cn(
-              "w-full rounded-xl border px-3.5 py-3 text-left transition-colors",
+              "relative w-full rounded-xl border px-3.5 py-3 text-left transition-[border-color,background,box-shadow]",
               selected
-                ? "border-[oklch(0.58_0.12_252/0.5)] bg-[oklch(0.58_0.12_252/0.1)] shadow-[inset_0_0_0_1px_oklch(0.55_0.12_252/0.25)]"
-                : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.035]",
-              highlightDate && key === highlightDate && !selected && "ring-1 ring-[oklch(0.55_0.12_252/0.3)]",
+                ? "border-bv-blue-accent/45 bg-bv-blue-accent/10 shadow-[inset_3px_0_0_0_oklch(0.62_0.13_252/0.85),inset_0_0_0_1px_oklch(0.55_0.12_252/0.22)]"
+                : "border-white/[0.09] bg-white/[0.025] hover:border-white/[0.15] hover:bg-white/[0.04]",
+              highlightDate && key === highlightDate && !selected && "ring-1 ring-bv-blue-accent/30",
             )}
           >
             <div className="flex items-start justify-between gap-2">

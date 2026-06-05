@@ -19,6 +19,11 @@ export default async function JournalDetailPage({ params }: Props) {
   const initialWorkspace = await getUserWorkspaceSnapshotForUser(session.user.id);
 
   return (
-    <JournalDetailLoader userId={session.user.id} entryId={id} initialWorkspace={initialWorkspace} />
+    <JournalDetailLoader
+      userId={session.user.id}
+      entryId={id}
+      initialWorkspace={initialWorkspace}
+      userTimezone={session.user.timezone}
+    />
   );
 }

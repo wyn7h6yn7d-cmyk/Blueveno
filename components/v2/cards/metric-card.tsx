@@ -17,6 +17,9 @@ type MetricCardProps = {
   loading?: boolean;
   tone?: "neutral" | "positive" | "negative" | "caution";
   className?: string;
+  labelClassName?: string;
+  valueClassName?: string;
+  iconWrapClassName?: string;
 };
 
 const valueToneClass = {
@@ -38,6 +41,9 @@ export function MetricCard({
   loading = false,
   tone = "neutral",
   className,
+  labelClassName,
+  valueClassName,
+  iconWrapClassName,
 }: MetricCardProps) {
   if (loading) {
     return <CardSkeleton variant="metric" className={className} />;
@@ -47,8 +53,8 @@ export function MetricCard({
     <article className={cn(v2KpiShell, "relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5", className)}>
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className={v2KpiLabel}>{label}</p>
-          <p className={cn(v2KpiValue, "mt-2", valueToneClass[tone])}>{value}</p>
+          <p className={cn(v2KpiLabel, labelClassName)}>{label}</p>
+          <p className={cn(v2KpiValue, "mt-2", valueToneClass[tone], valueClassName)}>{value}</p>
           {delta ? (
             <div className="mt-2">
               <MetricDelta value={delta} direction={deltaDirection} label={deltaLabel} />
@@ -57,7 +63,12 @@ export function MetricCard({
           {hint ? <p className={cn(v2Supporting, "mt-2")}>{hint}</p> : null}
         </div>
         {Icon ? (
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-400">
+          <span
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-400",
+              iconWrapClassName,
+            )}
+          >
             <Icon className="size-[17px]" strokeWidth={1.75} aria-hidden />
           </span>
         ) : null}

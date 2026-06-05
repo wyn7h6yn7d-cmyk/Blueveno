@@ -4,6 +4,7 @@ import {
   queryJournalWithSelectFallback,
 } from "@/lib/user-data/journal-entry-columns";
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
+import { sanitizeSessionTagForDb } from "@/lib/user-data/journal-tags";
 import type { JournalRow } from "@/lib/user-data/types";
 
 export type JournalWriteInput = Omit<JournalRow, "id" | "createdAt">;
@@ -31,7 +32,7 @@ function behaviorFields(row: JournalWriteInput) {
 
 function contextFields(row: JournalWriteInput) {
   return {
-    session_tag: row.sessionTag ?? null,
+    session_tag: sanitizeSessionTagForDb(row.sessionTag),
     market_condition: row.marketCondition ?? null,
     lesson_learned: row.lessonLearned ?? null,
   };

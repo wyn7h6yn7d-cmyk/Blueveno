@@ -1,4 +1,5 @@
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
+import { displaySessionLabel } from "@/lib/session";
 import { rowDisciplineScorePercent } from "@/lib/trades/row-discipline-score";
 import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import { parsePnlAmount } from "@/lib/user-data/kpi";
@@ -79,6 +80,7 @@ export function mapJournalRowToTradeRow(
   row: JournalRow,
   currency = "USD",
   accountLookup?: TradeAccountLookup,
+  timezone?: string | null,
 ): TradeRow {
   const pnl = parsePnlAmount(row.r);
   const dayKey = dayKeyFromRow(row.entryDate, row.createdAt);
@@ -101,7 +103,7 @@ export function mapJournalRowToTradeRow(
     direction: null,
     setup: String(row.setup ?? "").trim() || "—",
     timeframe: null,
-    session: row.sessionTag?.trim() || null,
+    session: displaySessionLabel(row, timezone),
     risk: row.marketCondition?.trim() || null,
     mood: row.moodState ?? null,
     exitBehavior: exitBehaviorFromTag(tag ?? undefined) ?? (row.followedPlan === false ? "Missed plan" : null),
@@ -124,8 +126,9 @@ export function mapJournalRowsToTradeRows(
   rows: JournalRow[],
   currency = "USD",
   accountLookup?: TradeAccountLookup,
+  timezone?: string | null,
 ): TradeRow[] {
-  return rows.map((row) => mapJournalRowToTradeRow(row, currency, accountLookup));
+  return rows.map((row) => mapJournalRowToTradeRow(row, currency, accountLookup, timezone));
 }
 
 export function filterTradeRowsByResult(rows: TradeRow[], result: "all" | "wins" | "losses"): TradeRow[] {

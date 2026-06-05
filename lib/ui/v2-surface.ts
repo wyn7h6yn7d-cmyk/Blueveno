@@ -116,3 +116,4 @@ export const v2TabItemActive = cn(
 export const v2TextPositive = "text-emerald-300";
 export const v2TextNegative = "text-rose-300";
 export const v2TextCaution = "text-amber-300";
+

@@ -20,14 +20,17 @@ import { notifyReadOnlyBlocked } from "@/lib/feedback/read-only-action";
 import type { JournalRowDb } from "@/lib/user-data/map-journal-db";
 import type { UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { useTradingAccountsWorkspace } from "@/components/trading-accounts/trading-accounts-provider";
+import { JOURNAL_ADD_ENTRY_HREF } from "@/lib/journal/journal-tab";
+import { displaySessionLabel } from "@/lib/session";
 
 type Props = {
   row: JournalRowDb;
   userId: string;
   initialWorkspace: UserWorkspaceSnapshot;
+  userTimezone?: string | null;
 };
 
-export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
+export function JournalDetailView({ row, userId, initialWorkspace, userTimezone }: Props) {
   const router = useRouter();
   const { displayCurrency, canWriteJournal } = useAccess();
   const toast = useAppToast();
@@ -43,6 +46,15 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
   const pnlTitle = pnlNum !== null ? formatSignedPnlAmount(pnlNum, displayCurrency) : rawPnl;
   const accountName = accounts.find((a) => a.id === activeAccountId)?.name ?? "Active account";
   const entryDay = row.entry_date ?? (row.created_at ? row.created_at.slice(0, 10) : "");
+  const sessionLabel = displaySessionLabel(
+    {
+      sessionTag: (row.session_tag as string | null) ?? undefined,
+      entryDate: row.entry_date ?? undefined,
+      time: String(row.entry_time ?? ""),
+      createdAt: row.created_at ?? undefined,
+    },
+    userTimezone,
+  );
 
   const orderedRows = useMemo(() => {
     return [...initialWorkspace.journal].sort((a, b) => {
@@ -69,7 +81,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
     if (result.ok) {
       setConfirmOpen(false);
       toast.success("Entry deleted.");
-      router.push("/app/journal");
+      router.push(JOURNAL_ADD_ENTRY_HREF);
       router.refresh();
       return;
     }
@@ -131,7 +143,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
               </Button>
             ) : null}
             <Link
-              href="/app/journal"
+              href={JOURNAL_ADD_ENTRY_HREF}
               className={cn(
                 buttonVariants({ variant: "outline" }),
                 "h-9 rounded-xl border-white/[0.1] bg-white/[0.03] px-4 text-zinc-200 hover:bg-white/[0.06]",
@@ -162,7 +174,7 @@ export function JournalDetailView({ row, userId, initialWorkspace }: Props) {
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
               <p className="app-metric-label">Session</p>
-              <p className="mt-1.5 text-[13px] text-zinc-100">{(row.session_tag as string | null) ?? "—"}</p>
+              <p className="mt-1.5 text-[13px] text-zinc-100">{sessionLabel}</p>
             </div>
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
               <p className="app-metric-label">Market condition</p>

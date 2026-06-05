@@ -6,6 +6,7 @@ import { fetchJournalEntryForUser } from "@/lib/user-data/fetch-journal-entry-cl
 import { mapJournalRowFromDb } from "@/lib/user-data/map-journal-db";
 import type { JournalRow, UserWorkspaceSnapshot } from "@/lib/user-data/types";
 import { JournalEntryEditClient } from "@/components/journal/journal-entry-edit-client";
+import { JOURNAL_ADD_ENTRY_HREF } from "@/lib/journal/journal-tab";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -67,7 +68,7 @@ export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Pr
             Try again
           </Button>
           <Link
-            href="/app/journal"
+            href={JOURNAL_ADD_ENTRY_HREF}
             className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-[14px] text-zinc-400 transition hover:text-zinc-200"
           >
             Back to journal
@@ -84,7 +85,7 @@ export function JournalEntryEditLoader({ userId, entryId, initialWorkspace }: Pr
           This journal entry is no longer available.
         </p>
         <Link
-          href="/app/journal"
+          href={JOURNAL_ADD_ENTRY_HREF}
           className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-[14px] text-zinc-400 transition hover:text-zinc-200"
         >
           Back to journal

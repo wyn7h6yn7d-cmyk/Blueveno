@@ -37,6 +37,7 @@ type TradeDetailViewProps = {
   personalRules?: PersonalRuleRef[];
   accountLookup?: TradeAccountLookup;
   canWriteJournal?: boolean;
+  userTimezone?: string | null;
 };
 
 function DisciplineTile({ label, value }: { label: string; value: boolean | undefined }) {
@@ -87,9 +88,13 @@ export function TradeDetailView({
   personalRules = [],
   accountLookup,
   canWriteJournal = true,
+  userTimezone,
 }: TradeDetailViewProps) {
   const router = useRouter();
-  const trade = useMemo(() => mapJournalRowToTradeRow(entry, currency, accountLookup), [entry, currency, accountLookup]);
+  const trade = useMemo(
+    () => mapJournalRowToTradeRow(entry, currency, accountLookup, userTimezone),
+    [entry, currency, accountLookup, userTimezone],
+  );
   const comparison = buildTradeComparisonInsight(entry, siblings, currency);
   const weekContext = findWeeklyReflectionForEntry(entry, weeklyReflections);
   const ruleAdherence = buildTradeRuleAdherence(entry, personalRules);

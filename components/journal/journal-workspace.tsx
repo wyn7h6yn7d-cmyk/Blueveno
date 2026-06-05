@@ -16,7 +16,13 @@ import { localTodayKey, useFollowLocalToday } from "@/lib/user-data/local-today"
 import { EmptyState } from "@/components/app/empty-state";
 import { JournalEntryDetailPanel } from "@/components/journal/journal-entry-detail-panel";
 import { JournalNotebookIndex } from "@/components/journal/journal-notebook-index";
-import { JournalNotebookLayout, type JournalWorkspaceTab } from "@/components/journal/journal-notebook-layout";
+import { JournalNotebookLayout } from "@/components/journal/journal-notebook-layout";
+import {
+  journalTabToParam,
+  parseJournalHashTab,
+  resolveJournalTab,
+  type JournalWorkspaceTab,
+} from "@/lib/journal/journal-tab";
 import { JournalWeeklyReviewPanel } from "@/components/journal/journal-weekly-review-panel";
 import { chartUrlForSave, isValidChartUrl } from "@/lib/chart-link";
 import { useAccess } from "@/components/access/access-provider";
@@ -60,6 +66,7 @@ import {
   queryWeeklyReflectionWithFallback,
 } from "@/lib/user-data/weekly-reflection-columns";
 import { formatWeekHeadline } from "@/lib/user-data/week-labels";
+import { getDefaultSessionTagForNewEntry, sanitizeSessionTagForDb } from "@/lib/session";
 
 type Props = {
   userId: string;
@@ -67,6 +74,7 @@ type Props = {
   initialWorkspace: UserWorkspaceSnapshot;
   highlightDate?: string;
   initialWeekAnchorDate?: string;
+  userTimezone?: string | null;
 };
 
 const labelCls = appFormLabel;
@@ -219,7 +227,14 @@ function weeklyReflectionErrorMessage(error: SupabaseErrorLike | null | undefine
   return `${base} ${rawCode ? `[${rawCode}] ` : ""}${raw ?? ""}`.trim();
 }
 
-export function JournalWorkspace({ userId, email, initialWorkspace, highlightDate, initialWeekAnchorDate }: Props) {
+export function JournalWorkspace({
+  userId,
+  email,
+  initialWorkspace,
+  highlightDate,
+  initialWeekAnchorDate,
+  userTimezone,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -235,7 +250,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [pnl, setPnl] = useState("");
   const [setupTag, setSetupTag] = useState<"" | (typeof SETUP_TAG_OPTIONS)[number]>("");
   const [mistakeTag, setMistakeTag] = useState<"" | (typeof MISTAKE_TAG_OPTIONS)[number]>("");
-  const [sessionTag, setSessionTag] = useState<"" | (typeof SESSION_TAG_OPTIONS)[number]>("");
+  const sessionTagManualRef = useRef(false);
+  const [sessionTag, setSessionTag] = useState<"" | (typeof SESSION_TAG_OPTIONS)[number]>(() =>
+    getDefaultSessionTagForNewEntry(userTimezone),
+  );
   const [marketCondition, setMarketCondition] = useState<"" | (typeof MARKET_CONDITION_OPTIONS)[number]>("");
   const [note, setNote] = useState("");
   const [lessonLearned, setLessonLearned] = useState("");
@@ -269,11 +287,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [workspaceTab, setWorkspaceTab] = useState<JournalWorkspaceTab>(() => {
-    if (typeof window !== "undefined" && window.location.hash === "#add") return "add";
-    return "review";
-  });
   const [reviewedWeekStarts, setReviewedWeekStarts] = useState<string[]>([]);
+  const workspaceTab = useMemo(
+    () => resolveJournalTab(new URLSearchParams(searchParams.toString())),
+    [searchParams],
+  );
   const selectedEntryId = searchParams.get("entry");
   const filters = useMemo(
     () => parseFiltersFromParams(new URLSearchParams(searchParams.toString())),
@@ -304,17 +322,6 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
 
   const sortedRows = useMemo(() => [...data.journal].sort(compareJournalRecency), [data.journal]);
 
-  const selectEntry = useCallback(
-    (id: string) => {
-      const base = new URLSearchParams(searchParams.toString());
-      base.set("entry", id);
-      const nextQuery = base.toString();
-      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
-      setWorkspaceTab("review");
-    },
-    [pathname, router, searchParams],
-  );
-
   const replaceSearchParams = useCallback(
     (mutate: (base: URLSearchParams) => void) => {
       const base = new URLSearchParams(searchParams.toString());
@@ -323,6 +330,28 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
     },
     [pathname, router, searchParams],
+  );
+
+  const setWorkspaceTab = useCallback(
+    (tab: JournalWorkspaceTab, options?: { keepEntry?: boolean }) => {
+      replaceSearchParams((base) => {
+        base.set("tab", journalTabToParam(tab));
+        if (tab !== "review" && !options?.keepEntry) {
+          base.delete("entry");
+        }
+      });
+    },
+    [replaceSearchParams],
+  );
+
+  const selectEntry = useCallback(
+    (id: string) => {
+      replaceSearchParams((base) => {
+        base.set("entry", id);
+        base.set("tab", "review");
+      });
+    },
+    [replaceSearchParams],
   );
 
   const setFilters = useCallback(
@@ -335,12 +364,35 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     [filters, replaceSearchParams],
   );
 
+  const hashMigratedRef = useRef(false);
   useLayoutEffect(() => {
-    if (typeof window === "undefined" || window.location.hash !== "#add") return;
-    window.requestAnimationFrame(() => {
-      document.getElementById("add")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (typeof window === "undefined" || hashMigratedRef.current) return;
+    const hashTab = parseJournalHashTab(window.location.hash);
+    if (!hashTab) return;
+    hashMigratedRef.current = true;
+    replaceSearchParams((base) => {
+      base.set("tab", journalTabToParam(hashTab));
     });
-  }, []);
+    const url = new URL(window.location.href);
+    url.hash = "";
+    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+  }, [replaceSearchParams]);
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const tabParam = searchParams.get("tab");
+    const shouldScrollAdd = workspaceTab === "add" && tabParam === "add";
+    const shouldScrollWeekly =
+      workspaceTab === "weekly" && (tabParam === "week" || tabParam === "weekly");
+    if (!shouldScrollAdd && !shouldScrollWeekly) return;
+    window.requestAnimationFrame(() => {
+      if (shouldScrollAdd) {
+        document.getElementById("add")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (shouldScrollWeekly) {
+        document.getElementById("weekly-review")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  }, [workspaceTab, searchParams]);
 
   const lastSyncedDayRef = useRef(localTodayKey());
   useEffect(() => {
@@ -411,6 +463,11 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     const today = localTodayKey();
     return filteredRows.filter((row) => dayKeyFromRow(row.entryDate, row.createdAt) === today).length;
   }, [filteredRows]);
+
+  useEffect(() => {
+    if (!highlightDate) return;
+    setEntryDateTracked(highlightDate);
+  }, [highlightDate, setEntryDateTracked]);
 
   useEffect(() => {
     if (highlightDate) return;
@@ -669,7 +726,8 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
       followedPlan: behavior.followedPlan,
       respectedStop: behavior.respectedStop,
       noRevengeTrade: behavior.noRevengeTrade,
-      sessionTag: sessionTag || undefined,
+      sessionTag:
+        sanitizeSessionTagForDb(sessionTag) ?? getDefaultSessionTagForNewEntry(userTimezone),
       marketCondition: marketCondition || undefined,
       lessonLearned: lessonLearned.trim() || undefined,
       ruleChecks,
@@ -685,7 +743,6 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
     toast.success("Trading day saved.");
     void refetchJournal();
     if (result.ok && result.id) selectEntry(result.id);
-    setWorkspaceTab("review");
     setSymbol("");
     setPnl("");
     setSetupTag("Pullback");
@@ -1191,7 +1248,10 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
                   <select
                     id="jw-session"
                     value={sessionTag}
-                    onChange={(e) => setSessionTag(e.target.value as "" | (typeof SESSION_TAG_OPTIONS)[number])}
+                    onChange={(e) => {
+                      sessionTagManualRef.current = true;
+                      setSessionTag(e.target.value as "" | (typeof SESSION_TAG_OPTIONS)[number]);
+                    }}
                     disabled={!canWriteJournal}
                     className={cn(inputCls, "w-full rounded-xl px-3.5 disabled:opacity-45")}
                   >
@@ -1319,6 +1379,7 @@ export function JournalWorkspace({ userId, email, initialWorkspace, highlightDat
               <JournalEntryDetailPanel
                 row={selectedEntry}
                 currency={displayCurrency}
+                userTimezone={userTimezone}
                 canWriteJournal={canWriteJournal}
                 weekReviewed={selectedEntryWeekStart ? reviewedWeekStarts.includes(selectedEntryWeekStart) : false}
                 weekLabel={selectedEntryWeekStart ? formatWeekHeadline(selectedEntryWeekStart) : undefined}

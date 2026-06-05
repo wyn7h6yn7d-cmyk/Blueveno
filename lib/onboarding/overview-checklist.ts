@@ -44,7 +44,7 @@ function buildAllItems(input: OverviewOnboardingInput): OverviewOnboardingItem[]
     {
       id: "first-day",
       label: "Log your first trading day",
-      href: "/app/journal#add",
+      href: "/app/journal?tab=add",
       completed: entryCount >= 1,
     },
     {

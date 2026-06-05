@@ -31,6 +31,7 @@ export default async function JournalPage({ searchParams }: Props) {
       initialWorkspace={initialWorkspace}
       highlightDate={highlightDate}
       initialWeekAnchorDate={weekAnchorDate}
+      userTimezone={session.user.timezone}
     />
   );
 }

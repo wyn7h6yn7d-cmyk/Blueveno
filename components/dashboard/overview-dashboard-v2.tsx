@@ -12,24 +12,15 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import type { BehaviorInsight } from "@/lib/user-data/behavior-insights";
 import { useAccess } from "@/components/access/access-provider";
 import { OverviewAccountSelect } from "@/components/dashboard/overview-account-select";
 import { OverviewOnboardingChecklist } from "@/components/dashboard/overview-onboarding-checklist";
+import { OverviewPerformancePanel } from "@/components/dashboard/overview-performance-panel";
+import { OverviewRecentEntriesList } from "@/components/dashboard/overview-recent-entries-list";
+import { OverviewWeekPulse } from "@/components/dashboard/overview-week-pulse";
 import { OverviewWeekPreview, type WeekPreviewCell } from "@/components/dashboard/overview-week-preview";
+import { SectionCard } from "@/components/v2/cards";
 import {
-  ChartCard,
-  SectionCard,
-  TableCard,
-} from "@/components/v2/cards";
-import {
-  BarChart,
-  DonutChart,
-  LineAreaChart,
-  RadarChart,
-} from "@/components/v2/charts";
-import {
-  InsightList,
   KpiGrid,
   LabelValueRow,
   MetricCard,
@@ -37,19 +28,10 @@ import {
   StatusPill,
 } from "@/components/v2";
 import { PageHeader } from "@/components/v2/layout";
-import {
-  CompactCell,
-  DataTable,
-  PnlCell,
-  RowActionsCell,
-  TagCell,
-  type DataTableColumn,
-} from "@/components/v2/tables";
 import { EmptyStatePanel } from "@/components/v2/states/empty-state-panel";
 import {
   buildCumulativeChartData,
   buildDailyBarChartData,
-  buildRadarReviewScores,
   getAvgTradePnl,
   getDominantMood,
   getFollowedPlanPercent,
@@ -71,6 +53,20 @@ import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { useUserWorkspace } from "@/lib/user-data/use-user-workspace";
 import { createClient } from "@/lib/supabase/client";
 import { appPrimaryCta, appSecondaryCta } from "@/lib/ui/app-surface";
+import {
+  overviewCard,
+  overviewHeroAccent,
+  overviewKpi,
+  overviewKpiIcon,
+  overviewKpiIconLead,
+  overviewKpiLabel,
+  overviewKpiLead,
+  overviewKpiValueNeutral,
+  overviewPageGlow,
+  overviewPageGradient,
+  overviewPageShell,
+  overviewPerformanceGlow,
+} from "@/lib/ui/overview-surface";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -119,20 +115,6 @@ function percentOrDash(value: number | null): string {
 function formatProfitFactor(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return "—";
   return value.toFixed(2);
-}
-
-function insightToListItem(insight: BehaviorInsight, index: number) {
-  const isPositive =
-    insight.detail.includes("lifts") || insight.title.toLowerCase().includes("best");
-  const isNegative =
-    insight.title.toLowerCase().includes("watch") || insight.title.toLowerCase().includes("mistake");
-  return {
-    id: `insight-${index}`,
-    title: insight.title,
-    body: insight.detail,
-    severity: isPositive ? ("positive" as const) : isNegative ? ("negative" as const) : ("neutral" as const),
-    tag: isPositive ? "Strength" : isNegative ? "Watch" : "Pattern",
-  };
 }
 
 function accessStatusLabel(state: string, isAdmin: boolean): { label: string; tone: "active" | "info" | "warning" | "neutral" } {
@@ -241,15 +223,6 @@ export function OverviewDashboardV2({
 
   const cumulativeData = useMemo(() => buildCumulativeChartData(dayAgg), [dayAgg]);
   const dailyBarData = useMemo(() => buildDailyBarChartData(dayAgg, 14), [dayAgg]);
-  const radarData = useMemo(
-    () =>
-      buildRadarReviewScores({
-        entries: data.journal,
-        tradedDays: overviewStats.tradedDays,
-        winRate: overviewStats.winRate,
-      }),
-    [data.journal, overviewStats.tradedDays, overviewStats.winRate],
-  );
 
   const recentEntries = useMemo((): RecentEntryRow[] => {
     return [...data.journal]
@@ -258,7 +231,7 @@ export function OverviewDashboardV2({
         const bDate = b.entryDate ?? b.createdAt ?? "";
         return bDate.localeCompare(aDate);
       })
-      .slice(0, 8)
+      .slice(0, 5)
       .map((row) => ({
         id: row.id,
         symbol: row.sym?.trim() || "—",
@@ -272,7 +245,6 @@ export function OverviewDashboardV2({
   }, [data.journal]);
 
   const hasEntries = data.journal.length > 0;
-  const sparseData = data.journal.length < 3;
   const accessBadge = accessStatusLabel(access.state, access.isAdmin);
 
   const onboarding = useMemo(
@@ -284,55 +256,6 @@ export function OverviewDashboardV2({
         dismissed: onboardingDismissed,
       }),
     [accounts.length, data.journal.length, overviewStats.tradedDays, onboardingDismissed],
-  );
-
-  const recentColumns: DataTableColumn<RecentEntryRow>[] = useMemo(
-    () => [
-      {
-        id: "symbol",
-        header: "Symbol",
-        cell: (row) => <CompactCell primary={row.symbol} secondary={row.dateLabel} />,
-      },
-      {
-        id: "pnl",
-        header: "Result",
-        cell: (row) => <PnlCell value={row.pnl} currency={displayCurrency} />,
-        sortable: true,
-        sortValue: (row) => row.pnl,
-      },
-      {
-        id: "tags",
-        header: "Mood / tag",
-        cell: (row) => (
-          <TagCell
-            tags={[row.mood, row.tag].filter((t): t is string => Boolean(t))}
-            tone="info"
-          />
-        ),
-      },
-      {
-        id: "discipline",
-        header: "Rules",
-        cell: (row) => <span className="font-mono text-[12px] text-zinc-400">{row.discipline}</span>,
-      },
-      {
-        id: "actions",
-        header: "",
-        cell: (row) => (
-          <RowActionsCell
-            actions={[
-              {
-                id: "open",
-                label: "Open entry",
-                onSelect: () => router.push(`/app/journal/${row.id}`),
-              },
-            ]}
-          />
-        ),
-        className: "w-12",
-      },
-    ],
-    [displayCurrency, router],
   );
 
   useEffect(() => {
@@ -418,12 +341,36 @@ export function OverviewDashboardV2({
     (i) => i.title.toLowerCase().includes("watch") || i.title.toLowerCase().includes("mistake"),
   );
 
+  const behaviorInsight = useMemo(() => {
+    if (weeklyReview.whatWorked) return weeklyReview.whatWorked;
+    if (topStrength) return topStrength.detail;
+    if (weeklyReview.whatSlipped) return weeklyReview.whatSlipped;
+    if (topMistake) return topMistake.detail;
+    const first = behaviorInsightsResult.insights[0];
+    return first?.detail ?? null;
+  }, [
+    weeklyReview.whatWorked,
+    weeklyReview.whatSlipped,
+    topStrength,
+    topMistake,
+    behaviorInsightsResult.insights,
+  ]);
+
+  const kpiMetricProps = {
+    labelClassName: overviewKpiLabel,
+    iconWrapClassName: overviewKpiIcon,
+  };
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Dashboard"
-        title="Overview"
-        description="Your trading control center — performance, discipline, and weekly focus."
+    <div className={overviewPageShell}>
+      <div className={overviewPageGradient} aria-hidden />
+      <div className={overviewPageGlow} aria-hidden />
+      <div className="relative space-y-5">
+        <div className={overviewHeroAccent} aria-hidden />
+        <PageHeader
+          variant="signature"
+          title="Overview"
+          description="Your trading control center — performance, discipline, and weekly focus."
         meta={
           <div className="flex flex-wrap items-center gap-2">
             <OverviewAccountSelect />
@@ -432,7 +379,7 @@ export function OverviewDashboardV2({
         }
         actions={
           <>
-            <Link href="/app/journal#add" className={appPrimaryCta}>
+            <Link href="/app/journal?tab=add" className={appPrimaryCta}>
               <NotebookPen className="mr-2 size-4" strokeWidth={1.75} />
               New entry
             </Link>
@@ -456,292 +403,254 @@ export function OverviewDashboardV2({
         />
       ) : null}
 
-      {/* KPI strip */}
-      <section aria-label="Key metrics">
-        <KpiGrid columns={sparseData ? 3 : 4}>
-          <MetricCard
-            label="Net P&L"
-            value={hasEntries ? signedMoney(overviewStats.monthPnl, displayCurrency) : "—"}
-            hint="This month"
-            delta={hasEntries ? signedMoney(overviewStats.weekPnl, displayCurrency) : undefined}
-            deltaDirection={
-              overviewStats.weekPnl > 0 ? "up" : overviewStats.weekPnl < 0 ? "down" : "flat"
-            }
-            deltaLabel="this week"
-            tone={overviewStats.monthPnl > 0 ? "positive" : overviewStats.monthPnl < 0 ? "negative" : "neutral"}
-            icon={TrendingUp}
-            loading={!ready}
-          />
-          <MetricCard
-            label="Win rate"
-            value={hasEntries ? percentOrDash(overviewStats.winRate) : "—"}
-            icon={Target}
-            loading={!ready}
-          />
-          <MetricCard
-            label="Avg day"
-            value={hasEntries && overviewStats.averageDay !== null ? signedMoney(overviewStats.averageDay, displayCurrency) : "—"}
-            hint={
-              avgTrade !== null
-                ? `Avg trade ${signedMoney(avgTrade, displayCurrency)}`
-                : undefined
-            }
-            loading={!ready}
-          />
-          <MetricCard
-            label="Best day"
-            value={
-              hasEntries && overviewStats.bestDay !== null
-                ? signedMoney(overviewStats.bestDay, displayCurrency)
-                : "—"
-            }
-            tone="positive"
-            loading={!ready}
-          />
-          {!sparseData ? (
-            <>
-              <MetricCard
-                label="Discipline"
-                value={hasEntries ? disciplineDisplay.value : "—"}
-                hint={disciplineDisplay.hint}
-                icon={Shield}
-                loading={!ready}
-              />
-              <MetricCard
-                label="Streak"
-                value={hasEntries ? overviewStats.streak : "—"}
-                hint={dominantMood ? `Mood: ${dominantMood}` : undefined}
-                loading={!ready}
-              />
-              <MetricCard
-                label="Trade count"
-                value={hasEntries ? String(data.journal.length) : "—"}
-                hint={`${overviewStats.tradedDays} traded days`}
-                loading={!ready}
-              />
-              <MetricCard
-                label="Profit factor"
-                value={hasEntries ? formatProfitFactor(overviewStats.profitFactor) : "—"}
-                tone={
-                  overviewStats.profitFactor !== null && overviewStats.profitFactor >= 1
-                    ? "positive"
-                    : overviewStats.profitFactor !== null
-                      ? "negative"
-                      : "neutral"
-                }
-                loading={!ready}
-              />
-            </>
-          ) : null}
-        </KpiGrid>
-      </section>
-
-      {/* Main insight row */}
-      <section className="grid gap-4 xl:grid-cols-12" aria-label="Performance charts">
-        <div className="xl:col-span-7">
-          <ChartCard
-            eyebrow="Performance"
-            title="Cumulative P&L"
-            description="Equity curve from logged trading days."
-            hasData={cumulativeData.length >= 2}
-            loading={!ready}
-          >
-            <LineAreaChart data={cumulativeData} xKey="day" yKey="pnl" variant="area" height={260} />
-          </ChartCard>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:col-span-5">
-          <ChartCard
-            eyebrow="Daily"
-            title="Recent P&L bars"
-            hasData={dailyBarData.length > 0}
-            loading={!ready}
-          >
-            <BarChart data={dailyBarData} xKey="day" yKey="pnl" height={200} />
-          </ChartCard>
-          <ChartCard
-            eyebrow="Days"
-            title="Green / red split"
-            hasData={overviewStats.tradedDays > 0}
-            loading={!ready}
-          >
-            <DonutChart
-              slices={[
-                { id: "green", label: "Green days", value: overviewStats.winningDays },
-                { id: "red", label: "Red days", value: overviewStats.losingDays },
-              ]}
-              height={160}
-            />
-          </ChartCard>
-        </div>
-        {radarData ? (
-          <div className="xl:col-span-12 lg:col-span-6">
-            <ChartCard eyebrow="Review" title="Trading score radar" hasData>
-              <RadarChart data={radarData} height={220} />
-            </ChartCard>
-          </div>
-        ) : null}
-      </section>
-
-      {/* Calendar + recent entries */}
-      <section className="grid gap-4 xl:grid-cols-[1.15fr_1fr]" aria-label="Week and recent activity">
-        {weekCells.length > 0 ? (
-          <OverviewWeekPreview
-            weekCells={weekCells}
-            dayPnlMap={dayAggMap}
-            weekTotal={weekTotal}
-            hasEntries={hasEntries}
-            displayCurrency={displayCurrency}
-            winningDays={overviewStats.winningDays}
-            losingDays={overviewStats.losingDays}
-          />
-        ) : (
-          <SectionCard eyebrow="Calendar" title="Current week" description="Loading week view…">
-            <div className="h-32 animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.03]" />
-          </SectionCard>
-        )}
-
-        <TableCard
-          eyebrow="Journal"
-          title="Recent entries"
-          description="Latest trades on this account."
-          loading={!ready}
-        >
-          <DataTable
-            columns={recentColumns}
-            rows={recentEntries}
-            getRowKey={(row) => row.id}
-            empty={
-              <EmptyStatePanel
-                title="No entries yet"
-                description="Log your first trade to populate this table."
-                action={
-                  <Link href="/app/journal#add" className="text-[13px] text-bv-ice hover:underline">
-                    New entry
-                  </Link>
-                }
-                compact
-              />
-            }
-          />
-        </TableCard>
-      </section>
-
-      {/* Weekly review + behavior */}
-      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]" aria-label="Review and behavior">
-        <SectionCard eyebrow="Weekly review" title="Current week reflection">
-          <div className="space-y-3">
-            <StatStrip
-              items={[
-                {
-                  id: "status",
-                  label: "Status",
-                  value:
-                    weeklyReview.status === "saved"
-                      ? "Saved"
-                      : weeklyReview.status === "set_focus"
-                        ? "Set focus"
-                        : "Ready",
-                  tone:
-                    weeklyReview.status === "saved"
-                      ? "positive"
-                      : weeklyReview.status === "set_focus"
-                        ? "caution"
-                        : "neutral",
-                },
-                {
-                  id: "confidence",
-                  label: "Readiness",
-                  value:
-                    weeklyReview.confidence !== null
-                      ? `${weeklyReview.confidence}/10`
-                      : "—",
-                  tone: "neutral",
-                },
-              ]}
-            />
-            <LabelValueRow label="Next focus" value={weeklyReview.nextFocus ?? "Not set yet."} dense />
-            <LabelValueRow label="Non-negotiable rule" value={weeklyReview.nextRule ?? "Not set yet."} dense />
-            <Link
-              href="/app/journal#weekly-review"
-              className={cn(appSecondaryCta, "inline-flex h-9 px-4 text-[13px]")}
-            >
-              Close the week
-              <ArrowUpRight className="ml-1.5 size-3.5" />
-            </Link>
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          eyebrow="Behavior"
-          title="Snapshot"
-          description="Mood, plan adherence, and key signals."
-        >
-          {behaviorInsightsResult.showEmptyState && !hasEntries ? (
-            <EmptyStatePanel
-              title="No behavior data"
-              description={behaviorInsightsResult.emptyMessage}
-              action={
-                <Link href="/app/journal#add" className="text-[13px] text-bv-ice hover:underline">
-                  Log a trading day
-                </Link>
+        <section aria-label="Key metrics" className="relative">
+          <KpiGrid columns={6}>
+            <MetricCard
+              className={overviewKpiLead}
+              label="Net P&L"
+              value={hasEntries ? signedMoney(overviewStats.monthPnl, displayCurrency) : "—"}
+              hint="This month"
+              delta={hasEntries ? signedMoney(overviewStats.weekPnl, displayCurrency) : undefined}
+              deltaDirection={
+                overviewStats.weekPnl > 0 ? "up" : overviewStats.weekPnl < 0 ? "down" : "flat"
               }
-              compact
+              deltaLabel="this week"
+              tone={overviewStats.monthPnl > 0 ? "positive" : overviewStats.monthPnl < 0 ? "negative" : "neutral"}
+              icon={TrendingUp}
+              iconWrapClassName={overviewKpiIconLead}
+              labelClassName={overviewKpiLabel}
+              loading={!ready}
             />
-          ) : (
-            <div className="space-y-4">
+            <MetricCard
+              className={overviewKpi}
+              label="Win rate"
+              value={hasEntries ? percentOrDash(overviewStats.winRate) : "—"}
+              icon={Target}
+              valueClassName={overviewKpiValueNeutral}
+              loading={!ready}
+              {...kpiMetricProps}
+            />
+            <MetricCard
+              className={overviewKpi}
+              label="Avg day"
+              value={hasEntries && overviewStats.averageDay !== null ? signedMoney(overviewStats.averageDay, displayCurrency) : "—"}
+              hint={
+                avgTrade !== null
+                  ? `Avg trade ${signedMoney(avgTrade, displayCurrency)}`
+                  : undefined
+              }
+              valueClassName={overviewKpiValueNeutral}
+              loading={!ready}
+              {...kpiMetricProps}
+            />
+            <MetricCard
+              className={overviewKpi}
+              label="Best day"
+              value={
+                hasEntries && overviewStats.bestDay !== null
+                  ? signedMoney(overviewStats.bestDay, displayCurrency)
+                  : "—"
+              }
+              tone="positive"
+              loading={!ready}
+              {...kpiMetricProps}
+            />
+            <MetricCard
+              className={overviewKpi}
+              label="Discipline"
+              value={hasEntries ? disciplineDisplay.value : "—"}
+              hint={disciplineDisplay.hint}
+              icon={Shield}
+              valueClassName={overviewKpiValueNeutral}
+              loading={!ready}
+              {...kpiMetricProps}
+            />
+            <MetricCard
+              className={overviewKpi}
+              label="Profit factor"
+              value={hasEntries ? formatProfitFactor(overviewStats.profitFactor) : "—"}
+              hint={hasEntries ? `${data.journal.length} trades` : undefined}
+              tone={
+                overviewStats.profitFactor !== null && overviewStats.profitFactor >= 1
+                  ? "positive"
+                  : overviewStats.profitFactor !== null
+                    ? "negative"
+                    : "neutral"
+              }
+              loading={!ready}
+              {...kpiMetricProps}
+            />
+          </KpiGrid>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-12" aria-label="Performance and week pulse">
+          <div className="relative lg:col-span-8">
+            <div className={overviewPerformanceGlow} aria-hidden />
+            <OverviewPerformancePanel
+              cumulativeData={cumulativeData}
+              dailyBarData={dailyBarData}
+              loading={!ready}
+            />
+          </div>
+          <div className="lg:col-span-4">
+            <OverviewWeekPulse
+              winningDays={overviewStats.winningDays}
+              losingDays={overviewStats.losingDays}
+              streak={hasEntries ? overviewStats.streak : "—"}
+              disciplineValue={hasEntries ? disciplineDisplay.value : "—"}
+              reviewStatus={weeklyReview.status}
+              loading={!ready}
+            />
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-12" aria-label="Week and recent activity">
+          <div className="lg:col-span-7">
+            {weekCells.length > 0 ? (
+              <OverviewWeekPreview
+                weekCells={weekCells}
+                dayPnlMap={dayAggMap}
+                weekTotal={weekTotal}
+                hasEntries={hasEntries}
+                displayCurrency={displayCurrency}
+                winningDays={overviewStats.winningDays}
+                losingDays={overviewStats.losingDays}
+              />
+            ) : (
+              <SectionCard
+                eyebrow="Calendar"
+                title="Current week"
+                description="Loading week view…"
+                className={overviewCard}
+              >
+                <div className="h-32 animate-pulse rounded-xl border border-white/[0.08] bg-white/[0.04]" />
+              </SectionCard>
+            )}
+          </div>
+          <div className="lg:col-span-5">
+            <OverviewRecentEntriesList
+              entries={recentEntries}
+              displayCurrency={displayCurrency}
+              loading={!ready}
+              onOpenEntry={(id) => router.push(`/app/journal/${id}`)}
+            />
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-12" aria-label="Review and behavior">
+          <div className="lg:col-span-6">
+            <SectionCard
+              eyebrow="Weekly review"
+              title="Current week reflection"
+              description="What to carry forward into next week."
+              className={overviewCard}
+            >
+            <div className="space-y-3">
               <StatStrip
                 items={[
                   {
-                    id: "mood",
-                    label: "Dominant mood",
-                    value: dominantMood ?? "—",
-                    tone: "neutral",
-                  },
-                  {
-                    id: "plan",
-                    label: "Followed plan",
-                    value: followedPlanPct !== null ? `${followedPlanPct}%` : "—",
+                    id: "status",
+                    label: "Status",
+                    value:
+                      weeklyReview.status === "saved"
+                        ? "Saved"
+                        : weeklyReview.status === "set_focus"
+                          ? "Set focus"
+                          : "Ready",
                     tone:
-                      followedPlanPct !== null && followedPlanPct >= 70
+                      weeklyReview.status === "saved"
                         ? "positive"
-                        : followedPlanPct !== null && followedPlanPct < 50
-                          ? "negative"
+                        : weeklyReview.status === "set_focus"
+                          ? "caution"
                           : "neutral",
                   },
                   {
-                    id: "discipline",
-                    label: "Discipline",
-                    value: disciplineDisplay.value,
+                    id: "confidence",
+                    label: "Readiness",
+                    value:
+                      weeklyReview.confidence !== null
+                        ? `${weeklyReview.confidence}/10`
+                        : "—",
                     tone: "neutral",
                   },
                 ]}
               />
-              {(topStrength || topMistake || weeklyReview.whatWorked || weeklyReview.whatSlipped) && (
-                <InsightList
-                  items={[
-                    ...(weeklyReview.whatWorked
-                      ? [{ id: "worked", title: "What worked", body: weeklyReview.whatWorked, severity: "positive" as const, tag: "Review" }]
-                      : topStrength
-                        ? [insightToListItem(topStrength, 0)]
-                        : []),
-                    ...(weeklyReview.whatSlipped
-                      ? [{ id: "slipped", title: "What slipped", body: weeklyReview.whatSlipped, severity: "warning" as const, tag: "Review" }]
-                      : topMistake
-                        ? [insightToListItem(topMistake, 1)]
-                        : []),
-                  ]}
-                  empty={null}
-                />
-              )}
-              {behaviorInsightsResult.disciplineDataNote ? (
-                <p className="text-[12px] text-zinc-500">{behaviorInsightsResult.disciplineDataNote}</p>
-              ) : null}
+              <LabelValueRow label="Next focus" value={weeklyReview.nextFocus ?? "Not set yet."} dense />
+              <LabelValueRow label="Non-negotiable rule" value={weeklyReview.nextRule ?? "Not set yet."} dense />
+              <Link
+                href="/app/journal?tab=week"
+                className={cn(appSecondaryCta, "inline-flex h-9 px-4 text-[13px]")}
+              >
+                Close the week
+                <ArrowUpRight className="ml-1.5 size-3.5" />
+              </Link>
             </div>
-          )}
-        </SectionCard>
-      </section>
+            </SectionCard>
+          </div>
 
-      <p className="text-[12px] text-zinc-600">Signed in as {email}</p>
+          <div className="lg:col-span-6">
+            <SectionCard
+              eyebrow="Behavior"
+              title="Behavior snapshot"
+              description="Mood, plan adherence, and one signal to watch."
+              className={overviewCard}
+            >
+            {behaviorInsightsResult.showEmptyState && !hasEntries ? (
+              <EmptyStatePanel
+                title="No behavior data"
+                description={behaviorInsightsResult.emptyMessage}
+                action={
+                  <Link href="/app/journal?tab=add" className="text-[13px] text-bv-ice hover:underline">
+                    Log a trading day
+                  </Link>
+                }
+                compact
+              />
+            ) : (
+              <div className="space-y-4">
+                <StatStrip
+                  items={[
+                    {
+                      id: "mood",
+                      label: "Dominant mood",
+                      value: dominantMood ?? "—",
+                      tone: "neutral",
+                    },
+                    {
+                      id: "plan",
+                      label: "Followed plan",
+                      value: followedPlanPct !== null ? `${followedPlanPct}%` : "—",
+                      tone:
+                        followedPlanPct !== null && followedPlanPct >= 70
+                          ? "positive"
+                          : followedPlanPct !== null && followedPlanPct < 50
+                            ? "negative"
+                            : "neutral",
+                    },
+                    {
+                      id: "discipline",
+                      label: "Discipline",
+                      value: disciplineDisplay.value,
+                      tone: "neutral",
+                    },
+                  ]}
+                />
+                {behaviorInsight ? (
+                  <p className="rounded-lg border border-bv-blue-accent/18 bg-[linear-gradient(135deg,oklch(0.14_0.04_262/0.7),oklch(0.11_0.035_268/0.6))] px-3 py-2.5 text-[13px] leading-snug text-zinc-200">
+                    {behaviorInsight}
+                  </p>
+                ) : null}
+                {behaviorInsightsResult.disciplineDataNote ? (
+                  <p className="text-[12px] text-zinc-500">{behaviorInsightsResult.disciplineDataNote}</p>
+                ) : null}
+              </div>
+            )}
+            </SectionCard>
+          </div>
+        </section>
+
+        <p className="text-[12px] text-zinc-500">Signed in as {email}</p>
+      </div>
     </div>
   );
 }

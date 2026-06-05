@@ -18,5 +18,12 @@ export default async function TradeDetailPage({ params }: Props) {
   const { id } = await params;
   const initialWorkspace = await getUserWorkspaceSnapshotForUser(session.user.id);
 
-  return <TradeDetailLoader userId={session.user.id} entryId={id} initialWorkspace={initialWorkspace} />;
+  return (
+    <TradeDetailLoader
+      userId={session.user.id}
+      entryId={id}
+      initialWorkspace={initialWorkspace}
+      userTimezone={session.user.timezone}
+    />
+  );
 }

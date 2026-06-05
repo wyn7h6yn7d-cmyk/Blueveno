@@ -11,5 +11,11 @@ export default async function TradesPage() {
 
   const initialWorkspace = await getUserWorkspaceSnapshotForUser(session.user.id);
 
-  return <TradesPageClient userId={session.user.id} initialWorkspace={initialWorkspace} />;
+  return (
+    <TradesPageClient
+      userId={session.user.id}
+      initialWorkspace={initialWorkspace}
+      userTimezone={session.user.timezone}
+    />
+  );
 }

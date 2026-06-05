@@ -3,8 +3,9 @@
 import type { ReactNode } from "react";
 import { CalendarRange, NotebookPen, Plus } from "lucide-react";
 import { SegmentedTabs } from "@/components/v2/design-system";
+import type { JournalWorkspaceTab } from "@/lib/journal/journal-tab";
 
-export type JournalWorkspaceTab = "add" | "review" | "weekly";
+export type { JournalWorkspaceTab } from "@/lib/journal/journal-tab";
 
 type JournalNotebookLayoutProps = {
   tab: JournalWorkspaceTab;
@@ -58,11 +59,11 @@ export function JournalNotebookLayout({
       ) : null}
 
       {tab === "review" ? (
-        <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:items-start lg:gap-8">
-          <div className="min-h-0 min-w-0 lg:sticky lg:top-6 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto">
+        <div className="grid min-w-0 gap-5 overflow-x-hidden lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)] lg:items-start lg:gap-6 xl:gap-8">
+          <div className="blueveno-scrollbar min-h-0 min-w-0 lg:sticky lg:top-6 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:pr-1">
             {reviewIndex}
           </div>
-          <div className="min-h-0 min-w-0">{reviewDetail}</div>
+          <div className="min-h-0 min-w-0 overflow-x-hidden">{reviewDetail}</div>
         </div>
       ) : null}
 

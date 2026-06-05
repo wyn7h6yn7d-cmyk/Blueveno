@@ -46,7 +46,17 @@ export function PageHeader({
         >
           {title}
         </h1>
-        {description ? <p className={cn(v2Supporting, "max-w-2xl text-[13px] leading-relaxed")}>{description}</p> : null}
+        {description ? (
+          <p
+            className={cn(
+              v2Supporting,
+              "max-w-2xl text-[13px] leading-relaxed",
+              isSig && "text-zinc-400",
+            )}
+          >
+            {description}
+          </p>
+        ) : null}
         {meta ? <div className="pt-1">{meta}</div> : null}
       </div>
       {actions ? (

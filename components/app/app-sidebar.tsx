@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { JOURNAL_ADD_ENTRY_HREF } from "@/lib/journal/journal-tab";
 import {
   BarChart3,
   BookOpen,
@@ -19,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 const MAIN_NAV = [
   { href: "/app", label: "Overview", icon: LayoutDashboard, match: (p: string) => p === "/app" || p === "/app/" },
-  { href: "/app/journal", label: "Journal", icon: BookOpen, match: (p: string) => p.startsWith("/app/journal") },
+  { href: JOURNAL_ADD_ENTRY_HREF, label: "Journal", icon: BookOpen, match: (p: string) => p.startsWith("/app/journal") },
   { href: "/app/trades", label: "Trades", icon: Rows3, match: (p: string) => p.startsWith("/app/trades") },
   { href: "/app/calendar", label: "Calendar", icon: CalendarDays, match: (p: string) => p.startsWith("/app/calendar") },
   { href: "/app/stats", label: "Stats", icon: BarChart3, match: (p: string) => p.startsWith("/app/stats") },
@@ -49,17 +50,25 @@ type AppSidebarNavProps = {
 
 export function AppSidebarNav({ isAdmin = false, onNavigate, className }: AppSidebarNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <nav className={cn("flex flex-col gap-1", className)} aria-label="Workspace">
       <p className="app-kicker mb-2 px-3.5">Navigate</p>
       {MAIN_NAV.map((item) => {
         const active = item.match(pathname);
+        const isJournal = item.href === JOURNAL_ADD_ENTRY_HREF;
         return (
           <Link
             key={item.href}
             href={item.href}
-            onClick={onNavigate}
+            onClick={(e) => {
+              if (isJournal) {
+                e.preventDefault();
+                router.push(JOURNAL_ADD_ENTRY_HREF);
+              }
+              onNavigate?.();
+            }}
             className={cn(
               "group relative flex min-h-[2.8rem] items-center gap-3 rounded-xl px-3.5 py-2.5 text-[13px] transition-colors",
               active

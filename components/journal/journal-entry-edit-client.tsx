@@ -24,6 +24,7 @@ import { formatUserError } from "@/lib/feedback/format-error";
 import { notifyReadOnlyBlocked } from "@/lib/feedback/read-only-action";
 import { PRODUCT_ANALYTICS_EVENTS } from "@/lib/analytics/product-events";
 import { trackProductEvent } from "@/lib/analytics/track-product-event";
+import { JOURNAL_ADD_ENTRY_HREF } from "@/lib/journal/journal-tab";
 import {
   MARKET_CONDITION_OPTIONS,
   MISTAKE_TAG_OPTIONS,
@@ -205,7 +206,7 @@ export function JournalEntryEditClient({ userId, entryId, initialWorkspace, init
     if (result.ok) {
       setConfirmOpen(false);
       toast.success("Entry deleted.");
-      router.push("/app/journal");
+      router.push(JOURNAL_ADD_ENTRY_HREF);
       router.refresh();
       return;
     }

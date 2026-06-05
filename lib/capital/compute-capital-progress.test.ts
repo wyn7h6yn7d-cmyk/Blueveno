@@ -37,7 +37,12 @@ describe("compute-capital-progress", () => {
     );
     assert.equal(curve.length, 2);
     assert.equal(curve[0]?.pnl, 10100);
+    assert.equal(curve[0]?.balance, 10100);
+    assert.equal(curve[0]?.dailyPnl, 100);
+    assert.equal(curve[0]?.cumulativePnl, 100);
     assert.equal(curve[1]?.pnl, 10060);
+    assert.equal(curve[1]?.dailyPnl, -40);
+    assert.equal(curve[1]?.cumulativePnl, 60);
   });
 
   it("computes drawdown from peak equity", () => {

@@ -19,11 +19,12 @@ type Props = {
   userId: string;
   entryId: string;
   initialWorkspace: UserWorkspaceSnapshot;
+  userTimezone?: string | null;
 };
 
 type FetchStatus = "idle" | "loading" | "missing" | "error" | "done";
 
-export function TradeDetailLoader({ userId, entryId, initialWorkspace }: Props) {
+export function TradeDetailLoader({ userId, entryId, initialWorkspace, userTimezone }: Props) {
   const { displayCurrency, canWriteJournal } = useAccess();
   const { data } = useUserWorkspace(userId, { initialWorkspace });
   const { accounts } = useTradingAccountsWorkspace();
@@ -189,6 +190,7 @@ export function TradeDetailLoader({ userId, entryId, initialWorkspace }: Props) 
         personalRules={personalRules}
         accountLookup={accountLookup}
         canWriteJournal={canWriteJournal}
+        userTimezone={userTimezone}
       />
     );
   }

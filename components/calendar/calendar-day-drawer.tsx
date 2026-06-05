@@ -52,7 +52,9 @@ export function CalendarDayDrawer({ open, onOpenChange, dayKeys, entries, displa
 
   const dailyPnl = dayEntries.reduce((sum, row) => sum + (parsePnlAmount(row.r) ?? 0), 0);
   const primaryDayKey = dayKeys[0] ?? "";
-  const addHref = primaryDayKey ? `/app/journal?date=${encodeURIComponent(primaryDayKey)}#add` : "/app/journal#add";
+  const addHref = primaryDayKey
+    ? `/app/journal?date=${encodeURIComponent(primaryDayKey)}&tab=add`
+    : "/app/journal?tab=add";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

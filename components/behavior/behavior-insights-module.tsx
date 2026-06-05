@@ -129,7 +129,7 @@ export function BehaviorInsightsModule({
         title="Behavior insights need more entries"
         description="Log at least 3 trading days with mood and discipline checks to unlock behavior scores, rule correlations, and coaching insights."
         action={
-          <Link href="/app/journal" className="text-[13px] text-bv-ice hover:underline">
+          <Link href="/app/journal?tab=review" className="text-[13px] text-bv-ice hover:underline">
             Log the day
           </Link>
         }

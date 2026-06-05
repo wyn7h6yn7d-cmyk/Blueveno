@@ -609,7 +609,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     );
                   })}
                   <Link
-                    href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
+                    href={`/app/journal?week=${encodeURIComponent(weekStartKey)}&tab=week`}
                     className="col-span-5 flex min-h-[3.25rem] flex-col gap-2 overflow-hidden rounded-lg border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3 py-2.5 text-left min-[400px]:flex-row min-[400px]:items-center min-[400px]:justify-between min-[400px]:gap-3 sm:col-span-6 sm:hidden lg:hidden"
                     title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
                   >
@@ -633,7 +633,7 @@ export function PnlCalendar({ entries, summaryEntries, summaryWinRate, displayCu
                     </div>
                   </Link>
                   <Link
-                    href={`/app/journal?week=${encodeURIComponent(weekStartKey)}#weekly-review`}
+                    href={`/app/journal?week=${encodeURIComponent(weekStartKey)}&tab=week`}
                     className="relative hidden min-h-[5.75rem] rounded-xl border border-white/[0.1] bg-[linear-gradient(165deg,oklch(0.13_0.03_262/0.9),oklch(0.085_0.026_266/0.9))] px-3.5 py-3.5 text-left lg:flex lg:min-h-[6.25rem] lg:flex-col lg:justify-between"
                     title={weekSummaryFromReflection(weeklyReflection) ?? "No weekly reflection"}
                   >

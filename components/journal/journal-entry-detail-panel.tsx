@@ -8,6 +8,7 @@ import { parsePnlAmount } from "@/lib/user-data/kpi";
 import { formatTradeDayLabel } from "@/lib/trades/map-trade-row";
 import { dayKeyFromRow } from "@/lib/user-data/journal-metrics";
 import type { JournalRow } from "@/lib/user-data/types";
+import { displaySessionLabel } from "@/lib/session";
 import { appSecondaryCta } from "@/lib/ui/app-surface";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export type RelatedWeeklyReview = {
 type JournalEntryDetailPanelProps = {
   row: JournalRow;
   currency: string;
+  userTimezone?: string | null;
   canWriteJournal?: boolean;
   weekReviewed?: boolean;
   weekLabel?: string;
@@ -66,6 +68,7 @@ function ContextPill({ label, value }: { label: string; value: string | null | u
 export function JournalEntryDetailPanel({
   row,
   currency,
+  userTimezone,
   canWriteJournal = true,
   weekReviewed,
   weekLabel,
@@ -74,6 +77,7 @@ export function JournalEntryDetailPanel({
 }: JournalEntryDetailPanelProps) {
   const dayKey = dayKeyFromRow(row.entryDate, row.createdAt);
   const pnl = parsePnlAmount(row.r);
+  const sessionLabel = displaySessionLabel(row, userTimezone);
 
   return (
     <div className="space-y-5">
@@ -95,7 +99,7 @@ export function JournalEntryDetailPanel({
       <div className="flex flex-wrap items-center gap-2">
         <ContextPill label="Setup" value={String(row.setup ?? "")} />
         <ContextPill label="Mistake" value={row.tag ? String(row.tag) : null} />
-        <ContextPill label="Session" value={row.sessionTag} />
+        <ContextPill label="Session" value={sessionLabel} />
         <ContextPill label="Market" value={row.marketCondition} />
         {row.moodState ? (
           <StatusPill tone="info" size="sm">

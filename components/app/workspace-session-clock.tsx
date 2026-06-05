@@ -1,12 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  describeForexSession,
-  formatClockInTimeZone,
-  normalizeTimeZoneIana,
-  shortTimeZoneName,
-} from "@/lib/trading-session";
+import { getTradingSessionHeadline } from "@/lib/session";
+import { describeForexSession, formatClockInTimeZone, normalizeTimeZoneIana, shortTimeZoneName } from "@/lib/trading-session";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -30,7 +26,8 @@ export function WorkspaceSessionClock({ serverTimeZone }: Props) {
     [serverTimeZone],
   );
 
-  const { headline, weekend } = useMemo(() => describeForexSession(now), [now]);
+  const { weekend } = useMemo(() => describeForexSession(now), [now]);
+  const headline = useMemo(() => getTradingSessionHeadline(now), [now]);
   const clock = formatClockInTimeZone(now, zone);
   const abbr = shortTimeZoneName(now, zone);
 

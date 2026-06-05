@@ -13,10 +13,12 @@ import {
   DonutChart,
   EmptyState,
   MetricCard,
+  RadarChart,
   TableCard,
   TrendChart,
   type DataTableColumn,
 } from "@/components/v2/design-system";
+import { buildRadarReviewScores } from "@/lib/dashboard/overview-v2-metrics";
 import { InsightList, KpiGrid, StatStrip } from "@/components/v2";
 import { CompactCell, PnlCell } from "@/components/v2/tables";
 import { formatSignedPnlAmount } from "@/lib/format-pnl";
@@ -168,18 +170,40 @@ export function AnalyticsBehaviorPanel({ data, currency }: PanelProps) {
     personalRules,
   } = data;
 
+  const radarData = useMemo(
+    () =>
+      buildRadarReviewScores({
+        entries: filteredEntries,
+        tradedDays: stats.winDays + stats.lossDays + stats.flatDays,
+        winRate: stats.winRateTrades,
+      }),
+    [filteredEntries, stats],
+  );
+
   return (
-    <BehaviorInsightsModule
-      entries={filteredEntries}
-      currency={currency}
-      personalRules={personalRules}
-      reflectionWorked={latestReviewWorked}
-      reflectionSlipped={latestReviewSlipped}
-      weeklyReflections={weeklyReflections}
-      stats={stats}
-      latestReviewRule={latestReviewRule}
-      latestReviewConfidence={latestReviewConfidence}
-    />
+    <div className="space-y-5">
+      {radarData ? (
+        <ChartCard
+          eyebrow="Score profile"
+          title="Trading behavior radar"
+          description="Multi-axis view of discipline, plan adherence, and rule execution."
+          hasData
+        >
+          <RadarChart data={radarData} height={260} />
+        </ChartCard>
+      ) : null}
+      <BehaviorInsightsModule
+        entries={filteredEntries}
+        currency={currency}
+        personalRules={personalRules}
+        reflectionWorked={latestReviewWorked}
+        reflectionSlipped={latestReviewSlipped}
+        weeklyReflections={weeklyReflections}
+        stats={stats}
+        latestReviewRule={latestReviewRule}
+        latestReviewConfidence={latestReviewConfidence}
+      />
+    </div>
   );
 }
 
@@ -316,7 +340,7 @@ export function AnalyticsEmptyState() {
       title="No analytics yet"
       description="Add a few trading days to unlock performance and behavior patterns."
       action={
-        <Link href="/app/journal" className={appPrimaryCta}>
+        <Link href="/app/journal?tab=add" className={appPrimaryCta}>
           Log the day
         </Link>
       }
